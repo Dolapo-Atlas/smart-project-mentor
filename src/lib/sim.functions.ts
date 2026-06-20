@@ -18,7 +18,7 @@ export const getOverview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const [{ data: state }, { count: unread }, { count: openTasks }, { count: docs }] =
+    const [{ data: state }, { count: unread }, { count: openTasks }, { count: docs }, { count: pendingReviews }, { data: recentDocs }, { data: recentMsgs }, { data: recentTasks }] =
       await Promise.all([
         supabase.from("simulation_state").select("*").eq("user_id", userId).maybeSingle(),
         supabase
@@ -35,6 +35,29 @@ export const getOverview = createServerFn({ method: "GET" })
           .from("documents")
           .select("*", { count: "exact", head: true })
           .eq("user_id", userId),
+        supabase
+          .from("documents")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", userId)
+          .eq("status", "pending"),
+        supabase
+          .from("documents")
+          .select("id,title,status,created_at")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false })
+          .limit(5),
+        supabase
+          .from("inbox_messages")
+          .select("id,subject,sender_name,created_at")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false })
+          .limit(5),
+        supabase
+          .from("tasks")
+          .select("id,title,status,created_at,completed_at")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false })
+          .limit(5),
       ]);
     // Ensure state exists (in case trigger didn't run for some reason)
     let s = state;
@@ -46,11 +69,35 @@ export const getOverview = createServerFn({ method: "GET" })
         .single();
       s = ins.data;
     }
+    const activity = [
+      ...(recentDocs ?? []).map((d) => ({
+        kind: "document" as const,
+        id: d.id,
+        text: `Uploaded "${d.title}" (${d.status})`,
+        at: d.created_at,
+      })),
+      ...(recentMsgs ?? []).map((m) => ({
+        kind: "inbox" as const,
+        id: m.id,
+        text: `Email from ${m.sender_name}: ${m.subject}`,
+        at: m.created_at,
+      })),
+      ...(recentTasks ?? []).map((t) => ({
+        kind: "task" as const,
+        id: t.id,
+        text: `Task "${t.title}" (${t.status})`,
+        at: t.completed_at ?? t.created_at,
+      })),
+    ]
+      .sort((a, b) => +new Date(b.at) - +new Date(a.at))
+      .slice(0, 8);
     return {
       state: s,
       unread: unread ?? 0,
       openTasks: openTasks ?? 0,
       docs: docs ?? 0,
+      pendingReviews: pendingReviews ?? 0,
+      activity,
     };
   });
 
