@@ -557,6 +557,28 @@ const FeedbackSchema = z.object({
   next_phase_message: z.string().default(""),
 });
 
+function wholeScore(value: unknown, fallback = 50): number {
+  const n = typeof value === "number" && Number.isFinite(value) ? value : fallback;
+  return Math.max(0, Math.min(100, Math.round(n)));
+}
+
+function normalizeFeedback(raw: z.infer<typeof FeedbackSchema>): z.infer<typeof FeedbackSchema> {
+  return {
+    score: wholeScore(raw.score),
+    category_scores: {
+      clarity: wholeScore(raw.category_scores?.clarity),
+      completeness: wholeScore(raw.category_scores?.completeness),
+      professionalism: wholeScore(raw.category_scores?.professionalism),
+      governance: wholeScore(raw.category_scores?.governance),
+    },
+    summary: raw.summary || "The review is complete.",
+    strengths: raw.strengths ?? [],
+    weaknesses: raw.weaknesses ?? [],
+    recommendations: raw.recommendations ?? [],
+    next_phase_message: raw.next_phase_message || raw.summary || "The document has been reviewed and the project team is waiting for the next update.",
+  };
+}
+
 async function extractTextFromStorage(
   supabase: { storage: { from: (b: string) => { download: (p: string) => Promise<{ data: Blob | null; error: unknown }> } } },
   path: string,
@@ -639,11 +661,22 @@ Give 2-4 strengths, 2-4 weaknesses, and 2-4 concrete recommendations — all wri
 ${excerpt || "(non-text document — judge based on the title; assume minimal content was provided and the coordinator must resubmit with substance)"}
 --- END ---`;
 
-    const { output } = await generateText({
-      model: getModel(),
-      prompt,
-      output: Output.object({ schema: FeedbackSchema }),
-    });
+    let output: z.infer<typeof FeedbackSchema>;
+    try {
+      const res = await generateObject({
+        model: getModel(),
+        prompt,
+        schema: FeedbackSchema,
+      });
+      output = normalizeFeedback(res.object);
+    } catch {
+      const res = await generateText({
+        model: getModel(),
+        prompt: `${prompt}\n\nReturn only valid JSON matching the requested review fields. Use whole-number scores from 0 to 100.`,
+        output: Output.object({ schema: FeedbackSchema }),
+      });
+      output = normalizeFeedback(res.output);
+    }
 
     await supabase
       .from("documents")
