@@ -63,6 +63,29 @@ const ReplySchema = z.object({
   sentiment: z.enum(["positive", "neutral", "pushback", "concerned", "ignored"]),
 });
 
+function fallbackReply(
+  stakeholder: { role: string; name: string; title: string },
+  subject: string,
+  attachmentLabel?: string,
+): z.infer<typeof ReplySchema> {
+  const topic = attachmentLabel ? ` and the attached ${attachmentLabel}` : "";
+  const bodyByRole: Record<string, string> = {
+    pm: `I have reviewed your note${topic}. Please convert the key points into dated actions, then show me which items need sponsor or governance input before Friday.\n\nThanks,\nSarah`,
+    clinical: `I have picked this up${topic}. Before clinical governance can support it, I need the safety impact, approval route, and escalation triggers made explicit.\n\nRachel Stone`,
+    sponsor: `I have seen your update${topic}. What I need next is a concise decision-ready view: options, risk, cost, recommendation, and the consequence of waiting.\n\nDavid Okafor`,
+    finance: `I have reviewed the update${topic}. Please send the cost implication, forecast movement, and any approval required before this is treated as agreed.\n\nPriya Anand`,
+    tech: `I have checked this from the technical side${topic}. The next version needs to call out migration, downtime, integration ownership, and acceptance criteria.\n\nJames Lin`,
+    vendor: `We have reviewed the request${topic}. Please confirm whether this is within the agreed scope or should be handled as a formal change request.\n\nCareSoft Ltd`,
+    care_home: `I have read the update${topic}. Please make sure the plan reflects staff availability on the floor, training time, and what happens if the home is not ready.\n\nMargaret Hollis`,
+  };
+  return {
+    sender_role: stakeholder.title,
+    subject: `Re: ${subject}`,
+    body: bodyByRole[stakeholder.role] ?? `I have reviewed your note${topic}. Please send the next actions and owner list when ready.\n\n${stakeholder.name}`,
+    sentiment: ["clinical", "finance", "care_home"].includes(stakeholder.role) ? "concerned" : "neutral",
+  };
+}
+
 export const sendComm = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
@@ -103,6 +126,12 @@ export const sendComm = createServerFn({ method: "POST" })
       .maybeSingle();
 
     const stakeholders = STAKEHOLDERS.filter((s) => data.to_roles.includes(s.role));
+    const { data: recentReplies } = await supabase
+      .from("inbox_messages")
+      .select("sender_name,subject,body")
+      .eq("user_id", uid)
+      .order("created_at", { ascending: false })
+      .limit(8);
 
     for (const sh of stakeholders) {
       const prompt = `You are simulating "${sh.name}, ${sh.title}" on the "${state?.project_name ?? "Digital Care Records Rollout"}" project.
@@ -113,6 +142,7 @@ Subject: ${data.subject}
 Body:
 ${data.body}
 ${data.attachment_label ? `Attached: ${data.attachment_kind} — ${data.attachment_label}` : "No attachment."}
+Recent inbox replies to avoid repeating: ${JSON.stringify(recentReplies ?? [])}
 
 Write a realistic reply FROM ${sh.name} (${sh.title}) to the coordinator. Stay in character:
 - Finance pushes back on cost/value, asks for forecasts.
@@ -124,7 +154,7 @@ Write a realistic reply FROM ${sh.name} (${sh.title}) to the coordinator. Stay i
 - Tech lead talks integrations, data migration, downtime.
 
 About 40% of the time the reply should DISAGREE, push back, ask hard questions, or escalate. Don't make everyone helpful.
-2-4 short paragraphs. Sign off with name & role.
+2-4 short paragraphs. Sign off with name & role. Do not use generic placeholder wording like "Thanks for the note — I'll come back to you shortly".
 Choose sentiment honestly: positive, neutral, pushback, concerned, or ignored (if ignored, body is a short auto-reply / out of office).`;
 
       let out: z.infer<typeof ReplySchema>;
@@ -132,12 +162,11 @@ Choose sentiment honestly: positive, neutral, pushback, concerned, or ignored (i
         const res = await generateObject({ model: getModel(), prompt, schema: ReplySchema });
         out = res.object;
       } catch {
-        out = {
-          sender_role: sh.title,
-          subject: `Re: ${data.subject}`,
-          body: `Thanks for the note — I'll come back to you shortly.\n\n${sh.name}`,
-          sentiment: "neutral",
-        };
+        out = fallbackReply(sh, data.subject, data.attachment_label);
+      }
+
+      if ((recentReplies ?? []).some((m) => m.sender_name === sh.name && m.body.trim().toLowerCase() === out.body.trim().toLowerCase())) {
+        out = fallbackReply(sh, data.subject, data.attachment_label);
       }
 
       await supabase.from("comms_messages").insert({
@@ -158,7 +187,7 @@ Choose sentiment honestly: positive, neutral, pushback, concerned, or ignored (i
         sender_role: sh.title,
         subject: out.subject,
         body: out.body,
-        tone: out.sentiment === "pushback" || out.sentiment === "concerned" ? "negative" : out.sentiment === "positive" ? "positive" : "neutral",
+        tone: out.sentiment === "pushback" || out.sentiment === "concerned" ? "frustrated" : out.sentiment === "positive" ? "supportive" : "neutral",
       });
     }
 
