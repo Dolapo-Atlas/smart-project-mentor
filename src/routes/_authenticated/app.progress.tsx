@@ -8,7 +8,15 @@ export const Route = createFileRoute("/_authenticated/app/progress")({
   component: Progress,
 });
 
-const PHASES = ["kickoff", "discovery", "design", "build", "review", "launch"] as const;
+const PHASES = ["initiation", "planning", "execution", "monitoring", "closure"] as const;
+
+const PERF_LABELS: Record<string, string> = {
+  documentation: "Documentation",
+  stakeholder: "Stakeholder Management",
+  governance: "Governance",
+  risk: "Risk Management",
+  communication: "Communication",
+};
 
 type Beat = { at: string; phase: string; score: number; doc: string; beat: string };
 
@@ -17,13 +25,21 @@ function Progress() {
   const { data } = useQuery({ queryKey: ["overview"], queryFn: () => fetchOverview() });
   const state = data?.state;
   const story = (state?.story_log as Beat[] | undefined) ?? [];
-  const currentIdx = Math.max(0, PHASES.indexOf((state?.phase ?? "kickoff") as (typeof PHASES)[number]));
+  const currentIdx = Math.max(0, PHASES.indexOf((state?.phase ?? "initiation") as (typeof PHASES)[number]));
+  const perf = (state?.performance as Record<string, number> | undefined) ?? {};
+  const perfEntries = Object.entries(PERF_LABELS).map(([k, label]) => ({
+    key: k,
+    label,
+    value: perf[k] ?? 50,
+  }));
+  const strengths = [...perfEntries].sort((a, b) => b.value - a.value).slice(0, 2);
+  const improvements = [...perfEntries].sort((a, b) => a.value - b.value).slice(0, 2);
 
   return (
     <div className="space-y-10">
       <header>
-        <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">The arc</div>
-        <h1 className="font-display text-4xl font-medium">Progress</h1>
+        <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Performance dashboard</div>
+        <h1 className="font-display text-4xl font-medium">How you're doing</h1>
       </header>
 
       <section className="rounded-lg border border-border bg-card p-6">
@@ -60,6 +76,51 @@ function Progress() {
               );
             })}
           </ol>
+        </div>
+      </section>
+
+      <section className="rounded-lg border border-border bg-card p-6">
+        <h2 className="font-display text-2xl font-semibold">Competency scores</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Rolling averages from every document the AI panel reviews.
+        </p>
+        <div className="mt-5 grid gap-4 md:grid-cols-2">
+          {perfEntries.map((p) => (
+            <div key={p.key}>
+              <div className="flex items-baseline justify-between">
+                <span className="text-sm font-medium">{p.label}</span>
+                <span className="font-display text-sm font-semibold">{p.value}/100</span>
+              </div>
+              <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-primary transition-all"
+                  style={{ width: `${p.value}%` }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          <div className="rounded-md border border-emerald-500/30 bg-emerald-500/5 p-4">
+            <div className="text-xs font-semibold uppercase tracking-widest text-emerald-700 dark:text-emerald-400">
+              Strengths
+            </div>
+            <ul className="mt-2 space-y-1 text-sm">
+              {strengths.map((s) => (
+                <li key={s.key}>• {s.label} — {s.value}/100</li>
+              ))}
+            </ul>
+          </div>
+          <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-4">
+            <div className="text-xs font-semibold uppercase tracking-widest text-amber-700 dark:text-amber-400">
+              Areas to improve
+            </div>
+            <ul className="mt-2 space-y-1 text-sm">
+              {improvements.map((s) => (
+                <li key={s.key}>• {s.label} — {s.value}/100</li>
+              ))}
+            </ul>
+          </div>
         </div>
       </section>
 
