@@ -187,6 +187,54 @@ export type Database = {
         }
         Relationships: []
       }
+      raid_items: {
+        Row: {
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          kind: Database["public"]["Enums"]["raid_kind"]
+          likelihood: Database["public"]["Enums"]["raid_severity"]
+          mitigation: string | null
+          owner: string | null
+          severity: Database["public"]["Enums"]["raid_severity"]
+          status: Database["public"]["Enums"]["raid_status"]
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          kind: Database["public"]["Enums"]["raid_kind"]
+          likelihood?: Database["public"]["Enums"]["raid_severity"]
+          mitigation?: string | null
+          owner?: string | null
+          severity?: Database["public"]["Enums"]["raid_severity"]
+          status?: Database["public"]["Enums"]["raid_status"]
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["raid_kind"]
+          likelihood?: Database["public"]["Enums"]["raid_severity"]
+          mitigation?: string | null
+          owner?: string | null
+          severity?: Database["public"]["Enums"]["raid_severity"]
+          status?: Database["public"]["Enums"]["raid_status"]
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       simulation_state: {
         Row: {
           chapter: string
@@ -265,6 +313,33 @@ export type Database = {
         }
         Relationships: []
       }
+      workstream_rag: {
+        Row: {
+          area: Database["public"]["Enums"]["workstream_area"]
+          id: string
+          note: string | null
+          rag: Database["public"]["Enums"]["rag_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          area: Database["public"]["Enums"]["workstream_area"]
+          id?: string
+          note?: string | null
+          rag?: Database["public"]["Enums"]["rag_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          area?: Database["public"]["Enums"]["workstream_area"]
+          id?: string
+          note?: string | null
+          rag?: Database["public"]["Enums"]["rag_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -273,7 +348,18 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      rag_status: "green" | "amber" | "red"
+      raid_kind: "risk" | "assumption" | "issue" | "dependency"
+      raid_severity: "low" | "medium" | "high" | "critical"
+      raid_status: "open" | "mitigating" | "closed"
+      workstream_area:
+        | "scope"
+        | "schedule"
+        | "budget"
+        | "quality"
+        | "resources"
+        | "stakeholders"
+        | "risks"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -400,6 +486,20 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      rag_status: ["green", "amber", "red"],
+      raid_kind: ["risk", "assumption", "issue", "dependency"],
+      raid_severity: ["low", "medium", "high", "critical"],
+      raid_status: ["open", "mitigating", "closed"],
+      workstream_area: [
+        "scope",
+        "schedule",
+        "budget",
+        "quality",
+        "resources",
+        "stakeholders",
+        "risks",
+      ],
+    },
   },
 } as const
