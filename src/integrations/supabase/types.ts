@@ -138,19 +138,52 @@ export type Database = {
       }
       profiles: {
         Row: {
+          career_goal: string | null
+          company: string
+          country: string | null
           created_at: string
           display_name: string | null
+          first_name: string | null
           id: string
+          last_name: string | null
+          manager: string
+          onboarded: boolean
+          preferred_name: string | null
+          project_name: string
+          role: string
+          start_date: string | null
         }
         Insert: {
+          career_goal?: string | null
+          company?: string
+          country?: string | null
           created_at?: string
           display_name?: string | null
+          first_name?: string | null
           id: string
+          last_name?: string | null
+          manager?: string
+          onboarded?: boolean
+          preferred_name?: string | null
+          project_name?: string
+          role?: string
+          start_date?: string | null
         }
         Update: {
+          career_goal?: string | null
+          company?: string
+          country?: string | null
           created_at?: string
           display_name?: string | null
+          first_name?: string | null
           id?: string
+          last_name?: string | null
+          manager?: string
+          onboarded?: boolean
+          preferred_name?: string | null
+          project_name?: string
+          role?: string
+          start_date?: string | null
         }
         Relationships: []
       }
