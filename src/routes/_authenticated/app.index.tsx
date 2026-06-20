@@ -1,7 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getOverview, generateStakeholderMessage, listInbox } from "@/lib/sim.functions";
+import { useEffect, useRef } from "react";
+import {
+  getOverview,
+  generateStakeholderMessage,
+  listInbox,
+  runEscalations,
+} from "@/lib/sim.functions";
 import { Button } from "@/components/ui/button";
 import { Mail, Sparkles, FileText, ListChecks, Activity, ClipboardCheck } from "lucide-react";
 import { toast } from "sonner";
@@ -16,9 +22,29 @@ function Dashboard() {
   const fetchOverview = useServerFn(getOverview);
   const fetchInbox = useServerFn(listInbox);
   const genMessage = useServerFn(generateStakeholderMessage);
+  const escalateFn = useServerFn(runEscalations);
+  const ranEscalate = useRef(false);
 
   const { data: overview } = useQuery({ queryKey: ["overview"], queryFn: () => fetchOverview() });
   const { data: inbox } = useQuery({ queryKey: ["inbox"], queryFn: () => fetchInbox() });
+
+  // Auto-escalation: once per dashboard mount, ask stakeholders to re-ping
+  // any unread inbox messages older than 2 days.
+  useEffect(() => {
+    if (ranEscalate.current) return;
+    ranEscalate.current = true;
+    escalateFn()
+      .then((res) => {
+        if (res && res.escalated > 0) {
+          qc.invalidateQueries({ queryKey: ["inbox"] });
+          qc.invalidateQueries({ queryKey: ["overview"] });
+          toast.warning(
+            `${res.escalated} stakeholder${res.escalated === 1 ? "" : "s"} chased you for a reply.`,
+          );
+        }
+      })
+      .catch(() => {});
+  }, [escalateFn, qc]);
 
   const summon = useMutation({
     mutationFn: () => genMessage(),
