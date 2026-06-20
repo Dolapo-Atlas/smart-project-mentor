@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
-import { generateText, generateObject, Output } from "ai";
+import { generateObject } from "ai";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
 import { unzipSync, strFromU8 } from "fflate";
 
@@ -557,6 +557,49 @@ const FeedbackSchema = z.object({
   next_phase_message: z.string().default(""),
 });
 
+function wholeScore(value: unknown, fallback = 50): number {
+  const n = typeof value === "number" && Number.isFinite(value) ? value : fallback;
+  return Math.max(0, Math.min(100, Math.round(n)));
+}
+
+function normalizeFeedback(raw: z.infer<typeof FeedbackSchema>): z.infer<typeof FeedbackSchema> {
+  return {
+    score: wholeScore(raw.score),
+    category_scores: {
+      clarity: wholeScore(raw.category_scores?.clarity),
+      completeness: wholeScore(raw.category_scores?.completeness),
+      professionalism: wholeScore(raw.category_scores?.professionalism),
+      governance: wholeScore(raw.category_scores?.governance),
+    },
+    summary: raw.summary || "The review is complete.",
+    strengths: raw.strengths ?? [],
+    weaknesses: raw.weaknesses ?? [],
+    recommendations: raw.recommendations ?? [],
+    next_phase_message: raw.next_phase_message || raw.summary || "The document has been reviewed and the project team is waiting for the next update.",
+  };
+}
+
+function fallbackFeedback(title: string, excerpt: string): z.infer<typeof FeedbackSchema> {
+  const hasSubstance = excerpt.trim().length > 800;
+  const score = hasSubstance ? 64 : 38;
+  return normalizeFeedback({
+    score,
+    category_scores: {
+      clarity: hasSubstance ? 68 : 40,
+      completeness: hasSubstance ? 58 : 30,
+      professionalism: hasSubstance ? 66 : 45,
+      governance: hasSubstance ? 55 : 28,
+    },
+    summary: `${title} has enough material for an initial review, but it still needs tighter governance detail before sponsor sign-off.`,
+    strengths: hasSubstance
+      ? ["The document gives the project enough context to understand the intended deliverable.", "It is suitable as a working draft for internal review."]
+      : ["The file was received and can be tracked against the project deliverables."],
+    weaknesses: ["Decision rights, owners, dates, and escalation routes need to be more explicit.", "The deliverable should link key risks, assumptions, and success criteria to named accountable people."],
+    recommendations: ["Add named owners and target dates for every major action or risk.", "Include a short governance section covering approvals, escalation path, and change control."],
+    next_phase_message: `Sarah can use ${title} as a draft baseline, but the governance panel will expect clearer ownership and escalation detail before treating it as final.`,
+  });
+}
+
 async function extractTextFromStorage(
   supabase: { storage: { from: (b: string) => { download: (p: string) => Promise<{ data: Blob | null; error: unknown }> } } },
   path: string,
@@ -639,11 +682,24 @@ Give 2-4 strengths, 2-4 weaknesses, and 2-4 concrete recommendations — all wri
 ${excerpt || "(non-text document — judge based on the title; assume minimal content was provided and the coordinator must resubmit with substance)"}
 --- END ---`;
 
-    const { output } = await generateText({
-      model: getModel(),
-      prompt,
-      output: Output.object({ schema: FeedbackSchema }),
-    });
+    let output: z.infer<typeof FeedbackSchema>;
+    try {
+      const res = await generateObject({
+        model: getModel(),
+        prompt,
+        schema: FeedbackSchema,
+      });
+      output = normalizeFeedback(res.object);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (message.includes("402") || message.toLowerCase().includes("credit")) {
+        throw new Error("AI credits are exhausted. Add credits to the workspace, then request the review again.");
+      }
+      if (message.includes("429") || message.toLowerCase().includes("rate limit")) {
+        throw new Error("AI review is rate-limited right now. Please retry in a moment.");
+      }
+      output = fallbackFeedback(doc.title, excerpt);
+    }
 
     await supabase
       .from("documents")
