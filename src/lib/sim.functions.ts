@@ -253,11 +253,15 @@ export const listInbox = createServerFn({ method: "GET" })
 
 function personalizePlaceholderReply(sender: string, body: string, subject: string): string {
   if (!body.trim().startsWith("Thanks for the note — I'll come back to you shortly.")) return body;
+  const topic = subject.replace(/^Re:\s*/i, "");
   if (sender === "Rachel Stone") {
-    return `I have picked up your update on "${subject.replace(/^Re:\s*/i, "")}". Before clinical governance can support it, I need the safety impact, approval route, and escalation triggers to be explicit.\n\nRachel Stone`;
+    return `I have picked up your update on "${topic}". I’m looking at this through clinical governance: safety impact, approval route, escalation triggers, and readiness evidence all need to be clear before I can support it.\n\nRachel Stone`;
   }
   if (sender === "Sarah Williams") {
-    return `I have reviewed your update on "${subject.replace(/^Re:\s*/i, "")}". Please turn the key points into dated actions and flag anything that needs sponsor or governance input before Friday.\n\nThanks,\nSarah`;
+    return `I have reviewed your update on "${topic}". My focus is delivery control: turn the key points into dated actions, show the owners, and flag what needs sponsor or governance input before Friday.\n\nThanks,\nSarah`;
+  }
+  if (sender === "David Okafor") {
+    return `I have seen your update on "${topic}". I need a decision-ready view: what has changed, what risk remains, what you recommend, and what happens if we wait.\n\nDavid Okafor`;
   }
   return body;
 }
@@ -627,13 +631,21 @@ function uniqueStrings(items: unknown[] | undefined, fallback: string[]): string
 function scoreSignals(excerpt: string) {
   const text = excerpt.toLowerCase();
   const has = (terms: string[]) => terms.some((term) => text.includes(term));
+  const hasDateLike = /\b(january|february|march|april|may|june|july|august|september|october|november|december)\s+20\d{2}\b/.test(text)
+    || /\b(q[1-4]|week\s+\d+|month\s+\d+|phase\s+\d+)\b/.test(text);
+  const hasNamedAccountability = has(["owner", "accountable", "responsible", "raci"])
+    || /\b(project sponsor|project manager|project coordinator|finance lead|technical lead|clinical governance lead|governance board)\b/.test(text)
+    || /\b(sponsor|manager|coordinator|lead|board)\s*[:\-]/.test(text);
   return {
     length: excerpt.trim().length,
-    hasOwners: has(["owner", "accountable", "responsible", "raci"]),
-    hasDates: has(["date", "deadline", "timeline", "milestone", "week", "month"]),
-    hasGovernance: has(["governance", "approval", "decision", "steering", "board"]),
-    hasEscalation: has(["escalation", "escalate", "risk", "raid", "issue"]),
+    hasOwners: hasNamedAccountability,
+    hasDates: has(["date", "deadline", "timeline", "milestone", "week", "month", "duration", "target completion", "project start"]) || hasDateLike,
+    hasGovernance: has(["governance", "approval", "approved", "decision", "decision rights", "steering", "board", "change control"]),
+    hasEscalation: has(["escalation", "escalate", "risk", "raid", "issue", "change request"]),
     hasSuccess: has(["success criteria", "benefit", "objective", "scope", "deliverable"]),
+    hasStakeholders: has(["stakeholder", "sponsor", "project manager", "clinical governance", "vendor"]),
+    hasBudget: has(["budget", "forecast", "cost", "£", "gbp"]),
+    hasScope: has(["in scope", "out of scope", "scope"]),
   };
 }
 
@@ -668,18 +680,93 @@ function fallbackFeedback(title: string, excerpt: string): z.infer<typeof Feedba
           signals.hasGovernance && "Governance and approval expectations are more visible than in a bare draft.",
         ].filter(Boolean) as string[], ["The document gives the project enough context to understand the intended deliverable."])
       : ["The file was received and can be tracked against the project deliverables."],
-    weaknesses: uniqueStrings(
-      missing.map((item) => `Further detail is still needed on ${item}.`),
-      ["The deliverable should connect risks, assumptions, owners, dates, and success criteria more explicitly."],
-    ),
-    recommendations: uniqueStrings(
-      missing.map((item) => `Add a concise section covering ${item}.`),
-      ["Prepare the charter for sponsor review by checking decision rights, approvals, risks, and change control are all explicit."],
-    ),
+    weaknesses: missing.length === 0
+      ? [
+          "The charter covers the core governance content, but individual risks and actions could still be tied to named owners and mitigations.",
+          "The timeline is clear at milestone level, but it would be stronger with interim review checkpoints for the rollout.",
+        ]
+      : uniqueStrings(
+          missing.map((item) => `Further detail is still needed on ${item}.`),
+          ["The deliverable should connect risks, assumptions, owners, dates, and success criteria more explicitly."],
+        ),
+    recommendations: missing.length === 0
+      ? [
+          "Convert the risk list into a simple RAID table with owner, mitigation, due date, and escalation trigger for each item.",
+          "Add interim governance checkpoints between project start and target completion so Sarah and David can track readiness before go-live.",
+        ]
+      : uniqueStrings(
+          missing.map((item) => `Add a concise section covering ${item}.`),
+          ["Prepare the charter for sponsor review by checking decision rights, approvals, risks, and change control are all explicit."],
+        ),
     next_phase_message: missing.length === 0
       ? `Sarah can take ${title} into the next review as a credible baseline, while Rachel will still want the team to test the governance route against live risks.`
       : `Sarah can see progress in ${title}, but Rachel will keep pressing for ${missing.slice(0, 2).join(" and ")} before governance sign-off.`,
   });
+}
+
+function reconcileFeedbackWithEvidence(
+  aiFeedback: z.infer<typeof FeedbackSchema>,
+  evidenceFeedback: z.infer<typeof FeedbackSchema>,
+  excerpt: string,
+): z.infer<typeof FeedbackSchema> {
+  if (!excerpt.trim()) return aiFeedback;
+  const signals = scoreSignals(excerpt);
+  const allText = [aiFeedback.summary, ...aiFeedback.weaknesses, ...aiFeedback.recommendations].join(" ").toLowerCase();
+  const contradictsEvidence = [
+    signals.hasOwners && /\b(add|need|needs|missing|lacks|lack|clearer)\b.{0,50}\b(owner|owners|ownership|accountability|responsible)\b/.test(allText),
+    signals.hasDates && /\b(add|need|needs|missing|lacks|lack|clearer)\b.{0,50}\b(date|dates|deadline|timeline|milestone)\b/.test(allText),
+    signals.hasGovernance && /\b(add|need|needs|missing|lacks|lack|clearer|tighter)\b.{0,60}\b(governance|approval|decision rights|change control)\b/.test(allText),
+    signals.hasEscalation && /\b(add|need|needs|missing|lacks|lack|clearer)\b.{0,50}\b(escalation|risk|raid|issue)\b/.test(allText),
+  ].some(Boolean);
+
+  if (!contradictsEvidence && aiFeedback.score >= evidenceFeedback.score - 6) return aiFeedback;
+
+  return normalizeFeedback({
+    score: Math.max(aiFeedback.score, evidenceFeedback.score),
+    category_scores: {
+      clarity: Math.max(aiFeedback.category_scores.clarity, evidenceFeedback.category_scores.clarity),
+      completeness: Math.max(aiFeedback.category_scores.completeness, evidenceFeedback.category_scores.completeness),
+      professionalism: Math.max(aiFeedback.category_scores.professionalism, evidenceFeedback.category_scores.professionalism),
+      governance: Math.max(aiFeedback.category_scores.governance, evidenceFeedback.category_scores.governance),
+    },
+    summary: evidenceFeedback.summary,
+    strengths: uniqueStrings([...evidenceFeedback.strengths, ...aiFeedback.strengths], evidenceFeedback.strengths),
+    weaknesses: evidenceFeedback.weaknesses,
+    recommendations: evidenceFeedback.recommendations,
+    next_phase_message: evidenceFeedback.next_phase_message,
+  });
+}
+
+function buildEvidenceBasedReaction(
+  title: string,
+  feedback: z.infer<typeof FeedbackSchema>,
+  previousCount: number,
+): z.infer<typeof ReviewReactionSchema> {
+  if (feedback.score >= 78) {
+    const sender = previousCount % 2 === 0 ? "Sarah Williams" : "Rachel Stone";
+    return sender === "Sarah Williams"
+      ? {
+          sender_name: "Sarah Williams",
+          sender_role: "Project Manager, Northbridge Health Services",
+          subject: `Re: ${title}`,
+          tone: "supportive",
+          body: `${title} is now in much better shape. I can see the project dates, decision rights, change control route, governance board, and success criteria, so this no longer reads like the first draft.\n\nPlease turn the remaining RAID points into named actions with owners, mitigations, and review dates so I can brief David with confidence.\n\nThanks,\nSarah`,
+        }
+      : {
+          sender_name: "Rachel Stone",
+          sender_role: "Clinical Governance Lead",
+          subject: `Re: ${title}`,
+          tone: "supportive",
+          body: `This version addresses the governance gap I was worried about: the approval route, escalation path, change control, and decision rights are now visible.\n\nFrom a clinical governance point of view, the next improvement is to make each rollout risk traceable to a mitigation owner and review date before the board pack goes out.\n\nRachel Stone`,
+        };
+  }
+  return {
+    sender_name: "Rachel Stone",
+    sender_role: "Clinical Governance Lead",
+    subject: `Re: ${title}`,
+    tone: feedback.score >= 50 ? "curious" : "frustrated",
+    body: `I can see progress in ${title}, but the latest review still leaves some assurance gaps.\n\nPlease address the open recommendations directly and show who owns each action, when it is due, and when it escalates.\n\nRachel Stone`,
+  };
 }
 
 async function extractTextFromStorage(
@@ -763,6 +850,7 @@ export const reviewDocument = createServerFn({ method: "POST" })
       }
     }
     const signals = scoreSignals(excerpt);
+    const evidenceFeedback = fallbackFeedback(doc.title, excerpt);
     const prompt = `You are a senior PMO reviewer at ${state?.company ?? "Northbridge Health Services"} assessing a project coordinator's deliverable on the "${state?.project_name}" project (chapter: ${state?.chapter}; phase: ${state?.phase}). Budget £500,000, 6-month timeline, currently behind schedule. The 12-care-home digital records rollout is the context.
 
 Document title: "${doc.title}". Treat this as a workplace deliverable (e.g. Project Charter, Stakeholder Register, RAID Log, Status Report, Meeting Minutes, Change Request) and review it the way a sponsor or governance board would.
@@ -791,7 +879,7 @@ ${excerpt || "(non-text document — judge based on the title; assume minimal co
         prompt,
         schema: FeedbackSchema,
       });
-      output = normalizeFeedback(res.object);
+      output = reconcileFeedbackWithEvidence(normalizeFeedback(res.object), evidenceFeedback, excerpt);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       if (message.includes("402") || message.toLowerCase().includes("credit")) {
@@ -800,7 +888,7 @@ ${excerpt || "(non-text document — judge based on the title; assume minimal co
       if (message.includes("429") || message.toLowerCase().includes("rate limit")) {
         throw new Error("AI review is rate-limited right now. Please retry in a moment.");
       }
-      output = fallbackFeedback(doc.title, excerpt);
+      output = evidenceFeedback;
     }
 
     await supabase
@@ -892,28 +980,11 @@ Do not use the same wording as any recent inbox message. Do not write a generic 
       });
       reaction = res.object;
     } catch {
-      reaction = output.score >= 75
-        ? {
-            sender_name: "Sarah Williams",
-            sender_role: "Project Manager, Northbridge Health Services",
-            subject: `Re: ${doc.title}`,
-            tone: "supportive",
-            body: `This is a stronger version of ${doc.title}. The added ownership and review detail gives us a better baseline for the next governance conversation, so please now turn the open recommendations into dated actions.\n\nThanks,\nSarah`,
-          }
-        : {
-            sender_name: "Rachel Stone",
-            sender_role: "Clinical Governance Lead",
-            subject: `Re: ${doc.title}`,
-            tone: output.score >= 50 ? "curious" : "frustrated",
-            body: `I can see the charter has moved on, but I still need the governance route to be unambiguous before this is treated as ready. Please tie the remaining recommendations to owners, dates, and escalation triggers.\n\nRachel Stone`,
-          };
+      reaction = buildEvidenceBasedReaction(doc.title, output, previousFeedback?.length ?? 0);
     }
     const recentBodies = new Set((recentInbox ?? []).map((m) => m.body.trim().toLowerCase()));
     if (recentBodies.has(reaction.body.trim().toLowerCase())) {
-      reaction = {
-        ...reaction,
-        body: `${reaction.body}\n\nPlease treat this as feedback on the latest review rather than a repeat of the earlier response.`,
-      };
+      reaction = buildEvidenceBasedReaction(doc.title, output, (previousFeedback?.length ?? 0) + 1);
     }
     await supabase.from("inbox_messages").insert({
       user_id: userId,
