@@ -2,9 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listInbox, markRead, generateStakeholderMessage } from "@/lib/sim.functions";
+import { summonConflict } from "@/lib/pm.functions";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Mail } from "lucide-react";
+import { Sparkles, Mail, Flame } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
@@ -25,6 +26,7 @@ function Inbox() {
   const fetchInbox = useServerFn(listInbox);
   const markFn = useServerFn(markRead);
   const genFn = useServerFn(generateStakeholderMessage);
+  const stirFn = useServerFn(summonConflict);
   const { data: messages } = useQuery({ queryKey: ["inbox"], queryFn: () => fetchInbox() });
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected = messages?.find((m) => m.id === selectedId) ?? messages?.[0];
@@ -47,6 +49,16 @@ function Inbox() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
 
+  const stir = useMutation({
+    mutationFn: () => stirFn(),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["inbox"] });
+      qc.invalidateQueries({ queryKey: ["overview"] });
+      toast.success("Someone is unhappy.");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+
   return (
     <div className="space-y-6">
       <header className="flex items-center justify-between">
@@ -54,10 +66,16 @@ function Inbox() {
           <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Correspondence</div>
           <h1 className="font-display text-4xl font-medium">Inbox</h1>
         </div>
-        <Button onClick={() => summon.mutate()} disabled={summon.isPending}>
-          <Sparkles className="mr-2 h-4 w-4" />
-          {summon.isPending ? "Summoning…" : "Summon a stakeholder"}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => stir.mutate()} disabled={stir.isPending}>
+            <Flame className="mr-2 h-4 w-4" />
+            {stir.isPending ? "Stirring…" : "Stir the pot"}
+          </Button>
+          <Button onClick={() => summon.mutate()} disabled={summon.isPending}>
+            <Sparkles className="mr-2 h-4 w-4" />
+            {summon.isPending ? "Summoning…" : "Summon a stakeholder"}
+          </Button>
+        </div>
       </header>
 
       <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
