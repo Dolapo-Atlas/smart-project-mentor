@@ -140,9 +140,10 @@ export const getOverview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const [{ data: state }, { count: unread }, { count: openTasks }, { count: docs }, { count: pendingReviews }, { data: recentDocs }, { data: recentMsgs }, { data: recentTasks }] =
+    const [{ data: state }, { data: profile }, { count: unread }, { count: openTasks }, { count: docs }, { count: pendingReviews }, { data: recentDocs }, { data: recentMsgs }, { data: recentTasks }] =
       await Promise.all([
         supabase.from("simulation_state").select("*").eq("user_id", userId).maybeSingle(),
+        supabase.from("profiles").select("first_name,preferred_name,last_name,display_name").eq("id", userId).maybeSingle(),
         supabase
           .from("inbox_messages")
           .select("*", { count: "exact", head: true })
@@ -215,6 +216,7 @@ export const getOverview = createServerFn({ method: "GET" })
       .slice(0, 8);
     return {
       state: s,
+      profile: profile ?? null,
       unread: unread ?? 0,
       openTasks: openTasks ?? 0,
       docs: docs ?? 0,
