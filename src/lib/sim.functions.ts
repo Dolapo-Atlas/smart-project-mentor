@@ -627,13 +627,21 @@ function uniqueStrings(items: unknown[] | undefined, fallback: string[]): string
 function scoreSignals(excerpt: string) {
   const text = excerpt.toLowerCase();
   const has = (terms: string[]) => terms.some((term) => text.includes(term));
+  const hasDateLike = /\b(january|february|march|april|may|june|july|august|september|october|november|december)\s+20\d{2}\b/.test(text)
+    || /\b(q[1-4]|week\s+\d+|month\s+\d+|phase\s+\d+)\b/.test(text);
+  const hasNamedAccountability = has(["owner", "accountable", "responsible", "raci"])
+    || /\b(project sponsor|project manager|project coordinator|finance lead|technical lead|clinical governance lead|governance board)\b/.test(text)
+    || /\b(sponsor|manager|coordinator|lead|board)\s*[:\-]/.test(text);
   return {
     length: excerpt.trim().length,
-    hasOwners: has(["owner", "accountable", "responsible", "raci"]),
-    hasDates: has(["date", "deadline", "timeline", "milestone", "week", "month"]),
-    hasGovernance: has(["governance", "approval", "decision", "steering", "board"]),
-    hasEscalation: has(["escalation", "escalate", "risk", "raid", "issue"]),
+    hasOwners: hasNamedAccountability,
+    hasDates: has(["date", "deadline", "timeline", "milestone", "week", "month", "duration", "target completion", "project start"]) || hasDateLike,
+    hasGovernance: has(["governance", "approval", "approved", "decision", "decision rights", "steering", "board", "change control"]),
+    hasEscalation: has(["escalation", "escalate", "risk", "raid", "issue", "change request"]),
     hasSuccess: has(["success criteria", "benefit", "objective", "scope", "deliverable"]),
+    hasStakeholders: has(["stakeholder", "sponsor", "project manager", "clinical governance", "vendor"]),
+    hasBudget: has(["budget", "forecast", "cost", "£", "gbp"]),
+    hasScope: has(["in scope", "out of scope", "scope"]),
   };
 }
 
