@@ -676,17 +676,60 @@ function fallbackFeedback(title: string, excerpt: string): z.infer<typeof Feedba
           signals.hasGovernance && "Governance and approval expectations are more visible than in a bare draft.",
         ].filter(Boolean) as string[], ["The document gives the project enough context to understand the intended deliverable."])
       : ["The file was received and can be tracked against the project deliverables."],
-    weaknesses: uniqueStrings(
-      missing.map((item) => `Further detail is still needed on ${item}.`),
-      ["The deliverable should connect risks, assumptions, owners, dates, and success criteria more explicitly."],
-    ),
-    recommendations: uniqueStrings(
-      missing.map((item) => `Add a concise section covering ${item}.`),
-      ["Prepare the charter for sponsor review by checking decision rights, approvals, risks, and change control are all explicit."],
-    ),
+    weaknesses: missing.length === 0
+      ? [
+          "The charter covers the core governance content, but individual risks and actions could still be tied to named owners and mitigations.",
+          "The timeline is clear at milestone level, but it would be stronger with interim review checkpoints for the rollout.",
+        ]
+      : uniqueStrings(
+          missing.map((item) => `Further detail is still needed on ${item}.`),
+          ["The deliverable should connect risks, assumptions, owners, dates, and success criteria more explicitly."],
+        ),
+    recommendations: missing.length === 0
+      ? [
+          "Convert the risk list into a simple RAID table with owner, mitigation, due date, and escalation trigger for each item.",
+          "Add interim governance checkpoints between project start and target completion so Sarah and David can track readiness before go-live.",
+        ]
+      : uniqueStrings(
+          missing.map((item) => `Add a concise section covering ${item}.`),
+          ["Prepare the charter for sponsor review by checking decision rights, approvals, risks, and change control are all explicit."],
+        ),
     next_phase_message: missing.length === 0
       ? `Sarah can take ${title} into the next review as a credible baseline, while Rachel will still want the team to test the governance route against live risks.`
       : `Sarah can see progress in ${title}, but Rachel will keep pressing for ${missing.slice(0, 2).join(" and ")} before governance sign-off.`,
+  });
+}
+
+function reconcileFeedbackWithEvidence(
+  aiFeedback: z.infer<typeof FeedbackSchema>,
+  evidenceFeedback: z.infer<typeof FeedbackSchema>,
+  excerpt: string,
+): z.infer<typeof FeedbackSchema> {
+  if (!excerpt.trim()) return aiFeedback;
+  const signals = scoreSignals(excerpt);
+  const allText = [aiFeedback.summary, ...aiFeedback.weaknesses, ...aiFeedback.recommendations].join(" ").toLowerCase();
+  const contradictsEvidence = [
+    signals.hasOwners && /\b(add|need|needs|missing|lacks|lack|clearer)\b.{0,50}\b(owner|owners|ownership|accountability|responsible)\b/.test(allText),
+    signals.hasDates && /\b(add|need|needs|missing|lacks|lack|clearer)\b.{0,50}\b(date|dates|deadline|timeline|milestone)\b/.test(allText),
+    signals.hasGovernance && /\b(add|need|needs|missing|lacks|lack|clearer|tighter)\b.{0,60}\b(governance|approval|decision rights|change control)\b/.test(allText),
+    signals.hasEscalation && /\b(add|need|needs|missing|lacks|lack|clearer)\b.{0,50}\b(escalation|risk|raid|issue)\b/.test(allText),
+  ].some(Boolean);
+
+  if (!contradictsEvidence && aiFeedback.score >= evidenceFeedback.score - 6) return aiFeedback;
+
+  return normalizeFeedback({
+    score: Math.max(aiFeedback.score, evidenceFeedback.score),
+    category_scores: {
+      clarity: Math.max(aiFeedback.category_scores.clarity, evidenceFeedback.category_scores.clarity),
+      completeness: Math.max(aiFeedback.category_scores.completeness, evidenceFeedback.category_scores.completeness),
+      professionalism: Math.max(aiFeedback.category_scores.professionalism, evidenceFeedback.category_scores.professionalism),
+      governance: Math.max(aiFeedback.category_scores.governance, evidenceFeedback.category_scores.governance),
+    },
+    summary: evidenceFeedback.summary,
+    strengths: uniqueStrings([...evidenceFeedback.strengths, ...aiFeedback.strengths], evidenceFeedback.strengths),
+    weaknesses: evidenceFeedback.weaknesses,
+    recommendations: evidenceFeedback.recommendations,
+    next_phase_message: evidenceFeedback.next_phase_message,
   });
 }
 
