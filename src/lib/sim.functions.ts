@@ -562,6 +562,14 @@ const FeedbackSchema = z.object({
   next_phase_message: z.string().default(""),
 });
 
+const ReviewReactionSchema = z.object({
+  sender_name: z.string(),
+  sender_role: z.string(),
+  subject: z.string(),
+  body: z.string(),
+  tone: z.enum(["urgent", "supportive", "frustrated", "curious", "neutral"]),
+});
+
 function wholeScore(value: unknown, fallback = 50): number {
   const n = typeof value === "number" && Number.isFinite(value) ? value : fallback;
   return Math.max(0, Math.min(100, Math.round(n)));
@@ -582,6 +590,16 @@ function normalizeFeedback(raw: z.infer<typeof FeedbackSchema>): z.infer<typeof 
     recommendations: raw.recommendations ?? [],
     next_phase_message: raw.next_phase_message || raw.summary || "The document has been reviewed and the project team is waiting for the next update.",
   };
+}
+
+function uniqueStrings(items: unknown[] | undefined, fallback: string[]): string[] {
+  const seen = new Set<string>();
+  const cleaned = (items ?? [])
+    .filter((item): item is string => typeof item === "string")
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0 && !seen.has(item.toLowerCase()) && seen.add(item.toLowerCase()))
+    .slice(0, 4);
+  return cleaned.length > 0 ? cleaned : fallback;
 }
 
 function fallbackFeedback(title: string, excerpt: string): z.infer<typeof FeedbackSchema> {
