@@ -148,6 +148,57 @@ export type Database = {
         }
         Relationships: []
       }
+      comms_messages: {
+        Row: {
+          attachment_kind: string | null
+          attachment_label: string | null
+          attachment_ref: string | null
+          body: string
+          created_at: string
+          direction: string
+          from_role: string
+          id: string
+          msg_type: string
+          sentiment: string | null
+          subject: string
+          thread_id: string
+          to_roles: string[]
+          user_id: string
+        }
+        Insert: {
+          attachment_kind?: string | null
+          attachment_label?: string | null
+          attachment_ref?: string | null
+          body: string
+          created_at?: string
+          direction: string
+          from_role: string
+          id?: string
+          msg_type: string
+          sentiment?: string | null
+          subject: string
+          thread_id?: string
+          to_roles?: string[]
+          user_id: string
+        }
+        Update: {
+          attachment_kind?: string | null
+          attachment_label?: string | null
+          attachment_ref?: string | null
+          body?: string
+          created_at?: string
+          direction?: string
+          from_role?: string
+          id?: string
+          msg_type?: string
+          sentiment?: string | null
+          subject?: string
+          thread_id?: string
+          to_roles?: string[]
+          user_id?: string
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           content_excerpt: string | null

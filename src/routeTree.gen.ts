@@ -24,6 +24,7 @@ import { Route as AuthenticatedAppMeetingsRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAppInboxRouteImport } from './routes/_authenticated/app.inbox'
 import { Route as AuthenticatedAppGatesRouteImport } from './routes/_authenticated/app.gates'
 import { Route as AuthenticatedAppDocumentsRouteImport } from './routes/_authenticated/app.documents'
+import { Route as AuthenticatedAppCommsRouteImport } from './routes/_authenticated/app.comms'
 import { Route as AuthenticatedAppChangesRouteImport } from './routes/_authenticated/app.changes'
 import { Route as AuthenticatedAppBudgetRouteImport } from './routes/_authenticated/app.budget'
 
@@ -104,6 +105,11 @@ const AuthenticatedAppDocumentsRoute =
     path: '/documents',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppCommsRoute = AuthenticatedAppCommsRouteImport.update({
+  id: '/comms',
+  path: '/comms',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const AuthenticatedAppChangesRoute = AuthenticatedAppChangesRouteImport.update({
   id: '/changes',
   path: '/changes',
@@ -123,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/welcome': typeof AuthenticatedWelcomeRoute
   '/app/budget': typeof AuthenticatedAppBudgetRoute
   '/app/changes': typeof AuthenticatedAppChangesRoute
+  '/app/comms': typeof AuthenticatedAppCommsRoute
   '/app/documents': typeof AuthenticatedAppDocumentsRoute
   '/app/gates': typeof AuthenticatedAppGatesRoute
   '/app/inbox': typeof AuthenticatedAppInboxRoute
@@ -140,6 +147,7 @@ export interface FileRoutesByTo {
   '/welcome': typeof AuthenticatedWelcomeRoute
   '/app/budget': typeof AuthenticatedAppBudgetRoute
   '/app/changes': typeof AuthenticatedAppChangesRoute
+  '/app/comms': typeof AuthenticatedAppCommsRoute
   '/app/documents': typeof AuthenticatedAppDocumentsRoute
   '/app/gates': typeof AuthenticatedAppGatesRoute
   '/app/inbox': typeof AuthenticatedAppInboxRoute
@@ -160,6 +168,7 @@ export interface FileRoutesById {
   '/_authenticated/welcome': typeof AuthenticatedWelcomeRoute
   '/_authenticated/app/budget': typeof AuthenticatedAppBudgetRoute
   '/_authenticated/app/changes': typeof AuthenticatedAppChangesRoute
+  '/_authenticated/app/comms': typeof AuthenticatedAppCommsRoute
   '/_authenticated/app/documents': typeof AuthenticatedAppDocumentsRoute
   '/_authenticated/app/gates': typeof AuthenticatedAppGatesRoute
   '/_authenticated/app/inbox': typeof AuthenticatedAppInboxRoute
@@ -180,6 +189,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/app/budget'
     | '/app/changes'
+    | '/app/comms'
     | '/app/documents'
     | '/app/gates'
     | '/app/inbox'
@@ -197,6 +207,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/app/budget'
     | '/app/changes'
+    | '/app/comms'
     | '/app/documents'
     | '/app/gates'
     | '/app/inbox'
@@ -216,6 +227,7 @@ export interface FileRouteTypes {
     | '/_authenticated/welcome'
     | '/_authenticated/app/budget'
     | '/_authenticated/app/changes'
+    | '/_authenticated/app/comms'
     | '/_authenticated/app/documents'
     | '/_authenticated/app/gates'
     | '/_authenticated/app/inbox'
@@ -340,6 +352,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppDocumentsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/comms': {
+      id: '/_authenticated/app/comms'
+      path: '/comms'
+      fullPath: '/app/comms'
+      preLoaderRoute: typeof AuthenticatedAppCommsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/changes': {
       id: '/_authenticated/app/changes'
       path: '/changes'
@@ -360,6 +379,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedAppRouteChildren {
   AuthenticatedAppBudgetRoute: typeof AuthenticatedAppBudgetRoute
   AuthenticatedAppChangesRoute: typeof AuthenticatedAppChangesRoute
+  AuthenticatedAppCommsRoute: typeof AuthenticatedAppCommsRoute
   AuthenticatedAppDocumentsRoute: typeof AuthenticatedAppDocumentsRoute
   AuthenticatedAppGatesRoute: typeof AuthenticatedAppGatesRoute
   AuthenticatedAppInboxRoute: typeof AuthenticatedAppInboxRoute
@@ -374,6 +394,7 @@ interface AuthenticatedAppRouteChildren {
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppBudgetRoute: AuthenticatedAppBudgetRoute,
   AuthenticatedAppChangesRoute: AuthenticatedAppChangesRoute,
+  AuthenticatedAppCommsRoute: AuthenticatedAppCommsRoute,
   AuthenticatedAppDocumentsRoute: AuthenticatedAppDocumentsRoute,
   AuthenticatedAppGatesRoute: AuthenticatedAppGatesRoute,
   AuthenticatedAppInboxRoute: AuthenticatedAppInboxRoute,
