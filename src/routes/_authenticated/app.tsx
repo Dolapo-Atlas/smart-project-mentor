@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
-import { Mail, ListChecks, FileText, Gauge, LayoutDashboard, LogOut, ArrowLeft, ShieldAlert, FileBarChart2, Wallet, GitPullRequest, Gavel, Users } from "lucide-react";
+import { Mail, ListChecks, FileText, Gauge, LayoutDashboard, LogOut, ArrowLeft, ShieldAlert, FileBarChart2, Wallet, GitPullRequest, Gavel, Users, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -15,6 +15,7 @@ type NavItem = { to: string; label: string; icon: typeof Mail; exact?: boolean }
 const NAV: NavItem[] = [
   { to: "/app", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/app/inbox", label: "Inbox", icon: Mail },
+  { to: "/app/comms", label: "Comms", icon: Send },
   { to: "/app/meetings", label: "Meetings", icon: Users },
   { to: "/app/tasks", label: "Tasks", icon: ListChecks },
   { to: "/app/documents", label: "Documents", icon: FileText },
