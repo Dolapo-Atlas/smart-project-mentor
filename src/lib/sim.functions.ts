@@ -846,6 +846,7 @@ export const reviewDocument = createServerFn({ method: "POST" })
       }
     }
     const signals = scoreSignals(excerpt);
+    const evidenceFeedback = fallbackFeedback(doc.title, excerpt);
     const prompt = `You are a senior PMO reviewer at ${state?.company ?? "Northbridge Health Services"} assessing a project coordinator's deliverable on the "${state?.project_name}" project (chapter: ${state?.chapter}; phase: ${state?.phase}). Budget £500,000, 6-month timeline, currently behind schedule. The 12-care-home digital records rollout is the context.
 
 Document title: "${doc.title}". Treat this as a workplace deliverable (e.g. Project Charter, Stakeholder Register, RAID Log, Status Report, Meeting Minutes, Change Request) and review it the way a sponsor or governance board would.
@@ -874,7 +875,7 @@ ${excerpt || "(non-text document — judge based on the title; assume minimal co
         prompt,
         schema: FeedbackSchema,
       });
-      output = normalizeFeedback(res.object);
+      output = reconcileFeedbackWithEvidence(normalizeFeedback(res.object), evidenceFeedback, excerpt);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       if (message.includes("402") || message.toLowerCase().includes("credit")) {
@@ -883,7 +884,7 @@ ${excerpt || "(non-text document — judge based on the title; assume minimal co
       if (message.includes("429") || message.toLowerCase().includes("rate limit")) {
         throw new Error("AI review is rate-limited right now. Please retry in a moment.");
       }
-      output = fallbackFeedback(doc.title, excerpt);
+      output = evidenceFeedback;
     }
 
     await supabase
@@ -975,28 +976,11 @@ Do not use the same wording as any recent inbox message. Do not write a generic 
       });
       reaction = res.object;
     } catch {
-      reaction = output.score >= 75
-        ? {
-            sender_name: "Sarah Williams",
-            sender_role: "Project Manager, Northbridge Health Services",
-            subject: `Re: ${doc.title}`,
-            tone: "supportive",
-            body: `This is a stronger version of ${doc.title}. The added ownership and review detail gives us a better baseline for the next governance conversation, so please now turn the open recommendations into dated actions.\n\nThanks,\nSarah`,
-          }
-        : {
-            sender_name: "Rachel Stone",
-            sender_role: "Clinical Governance Lead",
-            subject: `Re: ${doc.title}`,
-            tone: output.score >= 50 ? "curious" : "frustrated",
-            body: `I can see the charter has moved on, but I still need the governance route to be unambiguous before this is treated as ready. Please tie the remaining recommendations to owners, dates, and escalation triggers.\n\nRachel Stone`,
-          };
+      reaction = buildEvidenceBasedReaction(doc.title, output, previousFeedback?.length ?? 0);
     }
     const recentBodies = new Set((recentInbox ?? []).map((m) => m.body.trim().toLowerCase()));
     if (recentBodies.has(reaction.body.trim().toLowerCase())) {
-      reaction = {
-        ...reaction,
-        body: `${reaction.body}\n\nPlease treat this as feedback on the latest review rather than a repeat of the earlier response.`,
-      };
+      reaction = buildEvidenceBasedReaction(doc.title, output, (previousFeedback?.length ?? 0) + 1);
     }
     await supabase.from("inbox_messages").insert({
       user_id: userId,
