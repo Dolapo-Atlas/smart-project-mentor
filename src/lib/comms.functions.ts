@@ -86,6 +86,11 @@ function fallbackReply(
   };
 }
 
+function isPlaceholderReply(body: string): boolean {
+  const cleaned = body.trim().toLowerCase();
+  return cleaned.startsWith("thanks for the note") || cleaned.includes("come back to you shortly");
+}
+
 export const sendComm = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
@@ -165,7 +170,7 @@ Choose sentiment honestly: positive, neutral, pushback, concerned, or ignored (i
         out = fallbackReply(sh, data.subject, data.attachment_label);
       }
 
-      if ((recentReplies ?? []).some((m) => m.sender_name === sh.name && m.body.trim().toLowerCase() === out.body.trim().toLowerCase())) {
+      if (isPlaceholderReply(out.body) || (recentReplies ?? []).some((m) => m.sender_name === sh.name && m.body.trim().toLowerCase() === out.body.trim().toLowerCase())) {
         out = fallbackReply(sh, data.subject, data.attachment_label);
       }
 
