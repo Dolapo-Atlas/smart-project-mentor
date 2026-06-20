@@ -49,7 +49,7 @@ function AppLayout() {
 
   return (
     <div className="min-h-screen bg-background text-foreground paper-texture">
-      <div className="mx-auto grid min-h-screen max-w-7xl grid-cols-1 md:grid-cols-[260px_1fr]">
+      <div className="mx-auto grid min-h-screen max-w-[1400px] grid-cols-1 md:grid-cols-[300px_1fr]">
         <aside className="border-b border-border bg-sidebar/60 px-5 py-6 md:border-b-0 md:border-r">
           <Link to="/app" className="font-display text-2xl font-semibold tracking-tight">
             Atlas <span className="text-primary">/</span>
@@ -58,7 +58,7 @@ function AppLayout() {
             {overview?.state?.project_name ?? "Loading…"}
           </div>
 
-          <nav className="mt-8 grid grid-cols-3 gap-2">
+          <nav className="mt-8 flex flex-col gap-1">
             {NAV.map(({ to, label, icon: Icon, exact }) => {
               const active = isActive(to, exact);
               const badge =
@@ -73,17 +73,17 @@ function AppLayout() {
                 <Link
                   key={to}
                   to={to}
-                  className={`relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-lg border border-border/60 p-2 text-center text-[11px] leading-tight transition ${
+                  className={`relative flex items-center gap-3 rounded-md px-3 py-2 text-sm transition ${
                     active
-                      ? "bg-foreground text-background border-foreground"
-                      : "bg-card text-foreground/80 hover:bg-accent hover:text-foreground"
+                      ? "bg-foreground text-background"
+                      : "text-foreground/80 hover:bg-accent hover:text-foreground"
                   }`}
                 >
-                  <Icon className="h-5 w-5 shrink-0" />
-                  <span className="line-clamp-2 px-1">{label}</span>
+                  <Icon className="h-4 w-4 shrink-0" />
+                  <span className="flex-1 truncate">{label}</span>
                   {badge ? (
                     <span
-                      className={`absolute right-1.5 top-1.5 min-w-[18px] rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
+                      className={`min-w-[20px] rounded-full px-1.5 py-0.5 text-center text-[10px] font-medium ${
                         active ? "bg-background/20 text-background" : "bg-primary/15 text-primary"
                       }`}
                     >
