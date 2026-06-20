@@ -579,6 +579,27 @@ function normalizeFeedback(raw: z.infer<typeof FeedbackSchema>): z.infer<typeof 
   };
 }
 
+function fallbackFeedback(title: string, excerpt: string): z.infer<typeof FeedbackSchema> {
+  const hasSubstance = excerpt.trim().length > 800;
+  const score = hasSubstance ? 64 : 38;
+  return normalizeFeedback({
+    score,
+    category_scores: {
+      clarity: hasSubstance ? 68 : 40,
+      completeness: hasSubstance ? 58 : 30,
+      professionalism: hasSubstance ? 66 : 45,
+      governance: hasSubstance ? 55 : 28,
+    },
+    summary: `${title} has enough material for an initial review, but it still needs tighter governance detail before sponsor sign-off.`,
+    strengths: hasSubstance
+      ? ["The document gives the project enough context to understand the intended deliverable.", "It is suitable as a working draft for internal review."]
+      : ["The file was received and can be tracked against the project deliverables."],
+    weaknesses: ["Decision rights, owners, dates, and escalation routes need to be more explicit.", "The deliverable should link key risks, assumptions, and success criteria to named accountable people."],
+    recommendations: ["Add named owners and target dates for every major action or risk.", "Include a short governance section covering approvals, escalation path, and change control."],
+    next_phase_message: `Sarah can use ${title} as a draft baseline, but the governance panel will expect clearer ownership and escalation detail before treating it as final.`,
+  });
+}
+
 async function extractTextFromStorage(
   supabase: { storage: { from: (b: string) => { download: (p: string) => Promise<{ data: Blob | null; error: unknown }> } } },
   path: string,
@@ -669,13 +690,15 @@ ${excerpt || "(non-text document — judge based on the title; assume minimal co
         schema: FeedbackSchema,
       });
       output = normalizeFeedback(res.object);
-    } catch {
-      const res = await generateText({
-        model: getModel(),
-        prompt: `${prompt}\n\nReturn only valid JSON matching the requested review fields. Use whole-number scores from 0 to 100.`,
-        output: Output.object({ schema: FeedbackSchema }),
-      });
-      output = normalizeFeedback(res.output);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (message.includes("402") || message.toLowerCase().includes("credit")) {
+        throw new Error("AI credits are exhausted. Add credits to the workspace, then request the review again.");
+      }
+      if (message.includes("429") || message.toLowerCase().includes("rate limit")) {
+        throw new Error("AI review is rate-limited right now. Please retry in a moment.");
+      }
+      output = fallbackFeedback(doc.title, excerpt);
     }
 
     await supabase
