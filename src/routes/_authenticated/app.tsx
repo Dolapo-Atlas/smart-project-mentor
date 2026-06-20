@@ -1,5 +1,5 @@
-import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Mail, ListChecks, FileText, Gauge, LayoutDashboard, LogOut } from "lucide-react";
+import { createFileRoute, Link, Outlet, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
+import { Mail, ListChecks, FileText, Gauge, LayoutDashboard, LogOut, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -22,6 +22,7 @@ const NAV: NavItem[] = [
 
 function AppLayout() {
   const navigate = useNavigate();
+  const router = useRouter();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const fetchOverview = useServerFn(getOverview);
   const { data: overview } = useQuery({
@@ -117,6 +118,15 @@ function AppLayout() {
         </aside>
 
         <main className="px-6 py-8 md:px-10 md:py-12">
+          {pathname !== "/app" && (
+            <button
+              type="button"
+              onClick={() => router.history.back()}
+              className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition hover:text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4" /> Back
+            </button>
+          )}
           <Outlet />
         </main>
       </div>
