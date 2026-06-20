@@ -12,6 +12,128 @@ function getModel() {
   return createLovableAiGatewayProvider(key)(MODEL);
 }
 
+/* ---------- PROFILE / ONBOARDING ---------- */
+
+export const getProfile = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", context.userId)
+      .maybeSingle();
+    if (error) throw error;
+    return data;
+  });
+
+const OnboardingSchema = z.object({
+  first_name: z.string().trim().min(1).max(80),
+  last_name: z.string().trim().min(1).max(80),
+  preferred_name: z.string().trim().max(80).optional().or(z.literal("")),
+  country: z.string().trim().min(1).max(80),
+  career_goal: z.enum([
+    "Project Coordinator",
+    "Project Manager",
+    "PMO Analyst",
+    "Business Analyst",
+    "Data Analyst",
+    "Scrum Master",
+    "Product Owner",
+    "Operations Manager",
+    "Customer Success Manager",
+  ]),
+});
+
+export const completeOnboarding = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => OnboardingSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const firstName = data.preferred_name?.trim() || data.first_name;
+    const today = new Date().toISOString().slice(0, 10);
+
+    const { error: pErr } = await supabase
+      .from("profiles")
+      .update({
+        first_name: data.first_name,
+        last_name: data.last_name,
+        preferred_name: data.preferred_name || null,
+        country: data.country,
+        career_goal: data.career_goal,
+        display_name: `${data.first_name} ${data.last_name}`.trim(),
+        role: "Project Coordinator",
+        company: "Northbridge Health Services",
+        manager: "Sarah Williams",
+        project_name: "Digital Care Records Rollout",
+        start_date: today,
+        onboarded: true,
+      })
+      .eq("id", userId);
+    if (pErr) throw pErr;
+
+    // Avoid double-seeding if user retried onboarding
+    const { count: existing } = await supabase
+      .from("inbox_messages")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", userId);
+
+    if (!existing || existing === 0) {
+      await supabase.from("inbox_messages").insert({
+        user_id: userId,
+        sender_name: "Sarah Williams",
+        sender_role: "Project Manager, Northbridge Health Services",
+        subject: "Welcome to the Digital Care Records Project",
+        tone: "supportive",
+        body:
+`Hi ${firstName},
+
+Welcome to Northbridge Health Services.
+
+You'll be joining the Digital Care Records Rollout Project as Project Coordinator. You'll be reporting to me, and working alongside our clinical, finance and vendor leads.
+
+I won't sugar-coat it: the project is currently three weeks behind schedule and the sponsor, David Okafor, has requested an update by Friday. Before then I need three deliverables on file:
+
+  1. A Project Charter — scope, objectives, success criteria, governance.
+  2. A Stakeholder Register — every internal and external party with interest, influence and engagement plan.
+  3. An initial RAID Log — be specific; generic entries will be challenged in governance.
+
+I've added these as tasks in your workspace. Assume you have authority to make sensible decisions and document them — shout if anything is unclear.
+
+Regards,
+
+Sarah Williams
+Project Manager
+Northbridge Health Services`,
+      });
+
+      await supabase.from("tasks").insert([
+        {
+          user_id: userId,
+          title: "Draft Project Charter",
+          description: "Scope, objectives, success criteria, assumptions, constraints, governance. Upload as PDF or DOCX.",
+          priority: "high",
+          status: "todo",
+        },
+        {
+          user_id: userId,
+          title: "Create Stakeholder Register",
+          description: "Identify all internal and external stakeholders for the 12-care-home rollout. Capture interest, influence, and engagement strategy.",
+          priority: "high",
+          status: "todo",
+        },
+        {
+          user_id: userId,
+          title: "Build initial RAID Log",
+          description: "Risks, Assumptions, Issues, Dependencies. Be specific — generic entries will be challenged in the governance meeting.",
+          priority: "medium",
+          status: "todo",
+        },
+      ]);
+    }
+
+    return { ok: true, first_name: firstName };
+  });
+
 /* ---------- READ STATE ---------- */
 
 export const getOverview = createServerFn({ method: "GET" })
