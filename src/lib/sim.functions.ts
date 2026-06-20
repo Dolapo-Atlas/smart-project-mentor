@@ -518,7 +518,12 @@ export const listDocuments = createServerFn({ method: "GET" })
       .eq("user_id", context.userId)
       .order("created_at", { ascending: false });
     if (error) throw error;
-    return data ?? [];
+    return (data ?? []).map((doc) => ({
+      ...doc,
+      ai_feedback: Array.isArray(doc.ai_feedback)
+        ? [...doc.ai_feedback].sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at))
+        : doc.ai_feedback,
+    }));
   });
 
 export const recordDocument = createServerFn({ method: "POST" })
