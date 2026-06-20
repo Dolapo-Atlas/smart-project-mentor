@@ -104,11 +104,21 @@ export const generateStakeholderMessage = createServerFn({ method: "POST" })
       .order("created_at", { ascending: false })
       .limit(3);
 
-    const prompt = `You are simulating stakeholders on a cross-functional project called "${state?.project_name ?? "Atlas Initiative"}".
-Current phase: ${state?.phase}. Coordinator reputation: ${state?.reputation}/100. Progress: ${state?.progress}/100.
-Recent documents: ${JSON.stringify(recentDocs ?? [])}.
+    const prompt = `You are simulating stakeholders on the "${state?.project_name ?? "Digital Care Records Rollout"}" project at ${state?.company ?? "Northbridge Health Services"}.
+Project: move 12 care homes from paper-based records to a digital care record platform. Budget £500,000. Timeline 6 months. The project is currently behind schedule.
+Current chapter: ${state?.chapter}. Project health: ${state?.health}. Coordinator reputation: ${state?.reputation}/100. Progress: ${state?.progress}/100.
+Recent documents from the coordinator: ${JSON.stringify(recentDocs ?? [])}.
 
-Write ONE in-character message from a plausible stakeholder (engineering lead, design director, finance, exec sponsor, client PM, legal, etc.) to the project coordinator (the user). Be specific, reference the phase, ask a pointed question, raise a risk, request a status, or escalate. Keep body 2–4 short paragraphs. Choose a tone that fits.`;
+Write ONE realistic, professional workplace email to the project coordinator (the user) from ONE of these stakeholders — pick whichever is most plausible given the state:
+- Sarah Williams, Project Manager (the coordinator's line manager)
+- David Okafor, Executive Sponsor (Director of Transformation)
+- Priya Anand, Finance Lead
+- James Lin, Technical Lead (digital records platform vendor liaison)
+- CareSoft Ltd (the vendor implementing the platform)
+- Margaret Hollis, Care Home Manager — Oakwood House
+- Rachel Stone, Clinical Governance Lead
+
+Style: like a real workplace email. No game-y language. Reference the rollout, RAID items, status reports, governance, change requests, vendor delays, care-home readiness, or training — whatever fits. Ask a pointed question, request a deliverable, raise a risk, or escalate. 2–4 short paragraphs. Sign off with the sender's name and role.`;
 
     const { output } = await generateText({
       model: getModel(),
@@ -231,6 +241,12 @@ export const recordDocument = createServerFn({ method: "POST" })
 
 const FeedbackSchema = z.object({
   score: z.number().int().min(0).max(100),
+  category_scores: z.object({
+    clarity: z.number().int().min(0).max(100),
+    completeness: z.number().int().min(0).max(100),
+    professionalism: z.number().int().min(0).max(100),
+    governance: z.number().int().min(0).max(100),
+  }),
   summary: z.string(),
   strengths: z.array(z.string()),
   weaknesses: z.array(z.string()),
@@ -257,11 +273,20 @@ export const reviewDocument = createServerFn({ method: "POST" })
       .single();
 
     const excerpt = (doc.content_excerpt ?? "").slice(0, 6000);
-    const prompt = `You are a sharp, fair AI reviewer simulating a panel of project stakeholders for the "${state?.project_name}" project (phase: ${state?.phase}).
-Review the following document titled "${doc.title}". Score quality 0-100 based on clarity, completeness, alignment to the phase, and risk awareness. Provide strengths, weaknesses, concrete recommendations. The next_phase_message should be a 1-2 sentence in-character narrative beat describing how the project moves forward (or stalls) because of this document.
+    const prompt = `You are a senior PMO reviewer at ${state?.company ?? "Northbridge Health Services"} assessing a project coordinator's deliverable on the "${state?.project_name}" project (chapter: ${state?.chapter}; phase: ${state?.phase}). Budget £500,000, 6-month timeline, currently behind schedule. The 12-care-home digital records rollout is the context.
+
+Document title: "${doc.title}". Treat this as a workplace deliverable (e.g. Project Charter, Stakeholder Register, RAID Log, Status Report, Meeting Minutes, Change Request) and review it the way a sponsor or governance board would.
+
+Score the overall quality 0–100, and ALSO score these four sub-categories 0–100:
+- clarity (is it easy to read; structure, language, headings)
+- completeness (does it actually cover what this artefact must cover; success criteria, assumptions, risks, stakeholders, dates, owners)
+- professionalism (tone, formatting, fit for sharing with a sponsor)
+- governance (RAID discipline, escalation paths, decision rights, traceability)
+
+Give 2-4 strengths, 2-4 weaknesses, and 2-4 concrete recommendations — all written like real workplace feedback ("Risks are listed but mitigations and owners are missing for R3 and R5"), not platitudes. next_phase_message should be a 1–2 sentence narrative beat describing how the project moves forward (or stalls) because of this document.
 
 --- DOCUMENT EXCERPT ---
-${excerpt || "(empty / non-text document — judge based on the title and assume minimal content)"}
+${excerpt || "(non-text document — judge based on the title; assume minimal content was provided and the coordinator must resubmit with substance)"}
 --- END ---`;
 
     const { output } = await generateText({
@@ -281,6 +306,7 @@ ${excerpt || "(empty / non-text document — judge based on the title and assume
         user_id: userId,
         document_id: doc.id,
         score: output.score,
+        category_scores: output.category_scores,
         summary: output.summary,
         strengths: output.strengths,
         weaknesses: output.weaknesses,
@@ -293,12 +319,25 @@ ${excerpt || "(empty / non-text document — judge based on the title and assume
     const delta = Math.round((output.score - 50) / 5); // -10..+10
     const newProgress = Math.max(0, Math.min(100, (state?.progress ?? 0) + Math.max(2, delta)));
     const newReputation = Math.max(0, Math.min(100, (state?.reputation ?? 50) + delta));
-    const phases = ["kickoff", "discovery", "design", "build", "review", "launch"];
-    const curIdx = Math.max(0, phases.indexOf(state?.phase ?? "kickoff"));
+    const phases = ["initiation", "planning", "execution", "monitoring", "closure"];
+    const curIdx = Math.max(0, phases.indexOf(state?.phase ?? "initiation"));
     const nextPhase =
       newProgress >= ((curIdx + 1) / phases.length) * 100 && curIdx < phases.length - 1
         ? phases[curIdx + 1]
         : state?.phase;
+
+    // Roll category scores into running performance averages
+    const prevPerf = (state?.performance ?? {}) as Record<string, number>;
+    const mix = (prev: number | undefined, next: number) =>
+      Math.round(((prev ?? 50) * 2 + next) / 3);
+    const newPerf = {
+      documentation: mix(prevPerf.documentation, output.category_scores.completeness),
+      stakeholder: mix(prevPerf.stakeholder, output.category_scores.clarity),
+      governance: mix(prevPerf.governance, output.category_scores.governance),
+      risk: mix(prevPerf.risk, Math.round((output.category_scores.governance + output.category_scores.completeness) / 2)),
+      communication: mix(prevPerf.communication, output.category_scores.professionalism),
+    };
+    const newHealth = newReputation >= 70 ? "green" : newReputation >= 45 ? "amber" : "red";
 
     const story = Array.isArray(state?.story_log) ? state!.story_log : [];
     story.push({
@@ -315,17 +354,24 @@ ${excerpt || "(empty / non-text document — judge based on the title and assume
         progress: newProgress,
         reputation: newReputation,
         phase: nextPhase,
+        health: newHealth,
+        performance: newPerf,
         story_log: story,
         updated_at: new Date().toISOString(),
       })
       .eq("user_id", userId);
 
-    // Trigger a follow-up stakeholder message reacting to the review
+    // Trigger a follow-up stakeholder reply reacting to the review
     const tone = output.score >= 75 ? "supportive" : output.score >= 50 ? "curious" : "frustrated";
+    const sender = output.score >= 75
+      ? { name: "Sarah Williams", role: "Project Manager, Northbridge Health Services" }
+      : output.score >= 50
+        ? { name: "Rachel Stone", role: "Clinical Governance Lead" }
+        : { name: "David Okafor", role: "Executive Sponsor, Director of Transformation" };
     await supabase.from("inbox_messages").insert({
       user_id: userId,
-      sender_name: "Priya Anand",
-      sender_role: "Executive Sponsor",
+      sender_name: sender.name,
+      sender_role: sender.role,
       subject: `Re: ${doc.title}`,
       tone,
       body: output.next_phase_message,
