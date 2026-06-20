@@ -266,6 +266,13 @@ export const generateStakeholderMessage = createServerFn({ method: "POST" })
       .select("*")
       .eq("user_id", userId)
       .maybeSingle();
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("first_name, preferred_name, last_name")
+      .eq("id", userId)
+      .maybeSingle();
+    const firstName =
+      profile?.preferred_name?.trim() || profile?.first_name || "the coordinator";
     const { data: recentDocs } = await supabase
       .from("documents")
       .select("title,status,quality_score")
@@ -278,7 +285,9 @@ Project: move 12 care homes from paper-based records to a digital care record pl
 Current chapter: ${state?.chapter}. Project health: ${state?.health}. Coordinator reputation: ${state?.reputation}/100. Progress: ${state?.progress}/100.
 Recent documents from the coordinator: ${JSON.stringify(recentDocs ?? [])}.
 
-Write ONE realistic, professional workplace email to the project coordinator (the user) from ONE of these stakeholders — pick whichever is most plausible given the state:
+The project coordinator's first name is "${firstName}". Address them by this first name in the email body (e.g. "Hi ${firstName},", "Thanks ${firstName}", "${firstName}, I need…"). Do not use generic salutations like "Hi there" or "Hi team".
+
+Write ONE realistic, professional workplace email to ${firstName} (the project coordinator) from ONE of these stakeholders — pick whichever is most plausible given the state:
 - Sarah Williams, Project Manager (the coordinator's line manager)
 - David Okafor, Executive Sponsor (Director of Transformation)
 - Priya Anand, Finance Lead
