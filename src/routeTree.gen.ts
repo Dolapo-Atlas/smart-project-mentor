@@ -17,6 +17,7 @@ import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as AuthenticatedAppTasksRouteImport } from './routes/_authenticated/app.tasks'
+import { Route as AuthenticatedAppRiskRouteImport } from './routes/_authenticated/app.risk'
 import { Route as AuthenticatedAppProgressRouteImport } from './routes/_authenticated/app.progress'
 import { Route as AuthenticatedAppInboxRouteImport } from './routes/_authenticated/app.inbox'
 import { Route as AuthenticatedAppDocumentsRouteImport } from './routes/_authenticated/app.documents'
@@ -60,6 +61,11 @@ const AuthenticatedAppTasksRoute = AuthenticatedAppTasksRouteImport.update({
   path: '/tasks',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppRiskRoute = AuthenticatedAppRiskRouteImport.update({
+  id: '/risk',
+  path: '/risk',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const AuthenticatedAppProgressRoute =
   AuthenticatedAppProgressRouteImport.update({
     id: '/progress',
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/app/documents': typeof AuthenticatedAppDocumentsRoute
   '/app/inbox': typeof AuthenticatedAppInboxRoute
   '/app/progress': typeof AuthenticatedAppProgressRoute
+  '/app/risk': typeof AuthenticatedAppRiskRoute
   '/app/tasks': typeof AuthenticatedAppTasksRoute
   '/app/': typeof AuthenticatedAppIndexRoute
 }
@@ -98,6 +105,7 @@ export interface FileRoutesByTo {
   '/app/documents': typeof AuthenticatedAppDocumentsRoute
   '/app/inbox': typeof AuthenticatedAppInboxRoute
   '/app/progress': typeof AuthenticatedAppProgressRoute
+  '/app/risk': typeof AuthenticatedAppRiskRoute
   '/app/tasks': typeof AuthenticatedAppTasksRoute
   '/app': typeof AuthenticatedAppIndexRoute
 }
@@ -112,6 +120,7 @@ export interface FileRoutesById {
   '/_authenticated/app/documents': typeof AuthenticatedAppDocumentsRoute
   '/_authenticated/app/inbox': typeof AuthenticatedAppInboxRoute
   '/_authenticated/app/progress': typeof AuthenticatedAppProgressRoute
+  '/_authenticated/app/risk': typeof AuthenticatedAppRiskRoute
   '/_authenticated/app/tasks': typeof AuthenticatedAppTasksRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
 }
@@ -126,6 +135,7 @@ export interface FileRouteTypes {
     | '/app/documents'
     | '/app/inbox'
     | '/app/progress'
+    | '/app/risk'
     | '/app/tasks'
     | '/app/'
   fileRoutesByTo: FileRoutesByTo
@@ -137,6 +147,7 @@ export interface FileRouteTypes {
     | '/app/documents'
     | '/app/inbox'
     | '/app/progress'
+    | '/app/risk'
     | '/app/tasks'
     | '/app'
   id:
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/documents'
     | '/_authenticated/app/inbox'
     | '/_authenticated/app/progress'
+    | '/_authenticated/app/risk'
     | '/_authenticated/app/tasks'
     | '/_authenticated/app/'
   fileRoutesById: FileRoutesById
@@ -218,6 +230,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppTasksRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/risk': {
+      id: '/_authenticated/app/risk'
+      path: '/risk'
+      fullPath: '/app/risk'
+      preLoaderRoute: typeof AuthenticatedAppRiskRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/progress': {
       id: '/_authenticated/app/progress'
       path: '/progress'
@@ -246,6 +265,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppDocumentsRoute: typeof AuthenticatedAppDocumentsRoute
   AuthenticatedAppInboxRoute: typeof AuthenticatedAppInboxRoute
   AuthenticatedAppProgressRoute: typeof AuthenticatedAppProgressRoute
+  AuthenticatedAppRiskRoute: typeof AuthenticatedAppRiskRoute
   AuthenticatedAppTasksRoute: typeof AuthenticatedAppTasksRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
 }
@@ -254,6 +274,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppDocumentsRoute: AuthenticatedAppDocumentsRoute,
   AuthenticatedAppInboxRoute: AuthenticatedAppInboxRoute,
   AuthenticatedAppProgressRoute: AuthenticatedAppProgressRoute,
+  AuthenticatedAppRiskRoute: AuthenticatedAppRiskRoute,
   AuthenticatedAppTasksRoute: AuthenticatedAppTasksRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
 }
