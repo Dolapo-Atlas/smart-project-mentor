@@ -3,6 +3,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { generateText, generateObject, Output } from "ai";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
+import { unzipSync, strFromU8 } from "fflate";
 
 const MODEL = "google/gemini-3-flash-preview";
 
@@ -542,19 +543,57 @@ export const recordDocument = createServerFn({ method: "POST" })
   });
 
 const FeedbackSchema = z.object({
-  score: z.number().int().min(0).max(100),
+  score: z.number().min(0).max(100),
   category_scores: z.object({
-    clarity: z.number().int().min(0).max(100),
-    completeness: z.number().int().min(0).max(100),
-    professionalism: z.number().int().min(0).max(100),
-    governance: z.number().int().min(0).max(100),
+    clarity: z.number().min(0).max(100),
+    completeness: z.number().min(0).max(100),
+    professionalism: z.number().min(0).max(100),
+    governance: z.number().min(0).max(100),
   }),
-  summary: z.string(),
-  strengths: z.array(z.string()),
-  weaknesses: z.array(z.string()),
-  recommendations: z.array(z.string()),
-  next_phase_message: z.string(),
+  summary: z.string().default(""),
+  strengths: z.array(z.string()).default([]),
+  weaknesses: z.array(z.string()).default([]),
+  recommendations: z.array(z.string()).default([]),
+  next_phase_message: z.string().default(""),
 });
+
+async function extractTextFromStorage(
+  supabase: { storage: { from: (b: string) => { download: (p: string) => Promise<{ data: Blob | null; error: unknown }> } } },
+  path: string,
+  mime: string | null,
+): Promise<string> {
+  try {
+    const { data, error } = await supabase.storage.from("project-documents").download(path);
+    if (error || !data) return "";
+    const buf = new Uint8Array(await data.arrayBuffer());
+    const isDocx = mime?.includes("wordprocessingml") || /\.docx$/i.test(path);
+    const isXlsx = mime?.includes("spreadsheetml") || /\.xlsx$/i.test(path);
+    const isPptx = mime?.includes("presentationml") || /\.pptx$/i.test(path);
+    if (isDocx || isXlsx || isPptx) {
+      const files = unzipSync(buf);
+      const targets = isDocx
+        ? ["word/document.xml"]
+        : isXlsx
+          ? ["xl/sharedStrings.xml"]
+          : Object.keys(files).filter((k) => /^ppt\/slides\/slide\d+\.xml$/.test(k));
+      let text = "";
+      for (const t of targets) {
+        if (files[t]) text += " " + strFromU8(files[t]);
+      }
+      return text
+        .replace(/<[^>]+>/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 8000);
+    }
+    if (mime?.startsWith("text/")) {
+      return strFromU8(buf).slice(0, 8000);
+    }
+    return "";
+  } catch {
+    return "";
+  }
+}
 
 export const reviewDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -574,7 +613,16 @@ export const reviewDocument = createServerFn({ method: "POST" })
       .eq("user_id", userId)
       .single();
 
-    const excerpt = (doc.content_excerpt ?? "").slice(0, 6000);
+    let excerpt = (doc.content_excerpt ?? "").slice(0, 6000);
+    if (!excerpt) {
+      excerpt = await extractTextFromStorage(supabase, doc.storage_path, doc.mime_type);
+      if (excerpt) {
+        await supabase
+          .from("documents")
+          .update({ content_excerpt: excerpt })
+          .eq("id", doc.id);
+      }
+    }
     const prompt = `You are a senior PMO reviewer at ${state?.company ?? "Northbridge Health Services"} assessing a project coordinator's deliverable on the "${state?.project_name}" project (chapter: ${state?.chapter}; phase: ${state?.phase}). Budget £500,000, 6-month timeline, currently behind schedule. The 12-care-home digital records rollout is the context.
 
 Document title: "${doc.title}". Treat this as a workplace deliverable (e.g. Project Charter, Stakeholder Register, RAID Log, Status Report, Meeting Minutes, Change Request) and review it the way a sponsor or governance board would.
