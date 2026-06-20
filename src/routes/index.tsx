@@ -4,16 +4,16 @@ import { ArrowRight, Mail, ListChecks, FileText, Sparkles } from "lucide-react";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Atlas — Project Coordinator Simulator" },
+      { title: "Atlas — A Coordinator's Diary" },
       {
         name: "description",
         content:
-          "Step into the chair of a project coordinator. Read stakeholder mail, manage tasks, ship documents, and watch an AI grade your every move.",
+          "Atlas is an immersive workplace simulation. Stakeholders write in. Tasks pile up. Documents are reviewed. Every decision shapes the story.",
       },
-      { property: "og:title", content: "Atlas — Project Coordinator Simulator" },
+      { property: "og:title", content: "Atlas — A Coordinator's Diary" },
       {
         property: "og:description",
-        content: "An AI-driven simulation of life as a project coordinator.",
+        content: "Experience a project coordinator role before you ever get hired.",
       },
     ],
   }),
@@ -26,7 +26,7 @@ function Landing() {
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
         <div className="font-display text-xl font-semibold tracking-tight">
           Atlas <span className="text-primary">/</span>{" "}
-          <span className="text-muted-foreground font-normal italic">a coordinator's diary</span>
+          <span className="text-muted-foreground font-normal italic">A Coordinator's Diary</span>
         </div>
         <Link
           to="/auth"
@@ -40,25 +40,30 @@ function Landing() {
         <section className="grid gap-10 lg:grid-cols-[1.4fr_1fr] lg:items-end">
           <div>
             <p className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs uppercase tracking-[0.18em] text-muted-foreground">
-              <Sparkles className="h-3.5 w-3.5 text-primary" /> Chapter One
+              <Sparkles className="h-3.5 w-3.5 text-primary" /> Chapter One · Northbridge Health
             </p>
             <h1 className="font-display text-5xl font-medium leading-[1.05] tracking-tight md:text-7xl">
               The project is{" "}
-              <span className="italic text-primary">already</span> behind.
+              <span className="italic text-primary">3 weeks</span> behind schedule.
               <br />
               You just opened your inbox.
             </h1>
+            <p className="mt-4 max-w-xl font-display text-2xl text-muted-foreground">
+              Welcome to your first day.
+            </p>
             <p className="mt-6 max-w-xl text-lg text-muted-foreground">
-              Atlas is a writing-room simulation of a cross-functional project. Stakeholders write
-              in. Tasks pile up. You upload documents — an AI panel grades them — and the story
-              moves on, for better or worse.
+              Atlas is an immersive workplace simulation. Stakeholders write in. Tasks pile up.
+              Documents are reviewed. Every decision shapes the story. Today you join Northbridge
+              Health Services as Project Coordinator on the £500,000 Digital Care Records Rollout —
+              moving 12 care homes off paper. Sarah Williams is your line manager. The sponsor is
+              already asking questions.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 to="/auth"
                 className="inline-flex items-center gap-2 rounded-md bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
               >
-                Begin the simulation <ArrowRight className="h-4 w-4" />
+                Start your first day <ArrowRight className="h-4 w-4" />
               </Link>
               <a
                 href="#how"
@@ -71,13 +76,12 @@ function Landing() {
 
           <aside className="rounded-lg border border-border bg-card p-6 shadow-sm">
             <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-              Field journal · Day 1
+              From: Sarah Williams · Project Manager
             </div>
-            <p className="mt-3 font-display text-xl leading-snug">
-              "Engineering wants scope cut. Design wants more time. Finance wants both, yesterday.
-              I haven't even finished my coffee."
+            <div className="mt-2 text-sm font-semibold">Subject: Governance Meeting Friday</div>
+            <p className="mt-3 whitespace-pre-line font-display text-base leading-relaxed text-foreground/90">
+              {`Hi,\n\nThe sponsor has requested an updated status report before Friday. Please prepare:\n\n• RAID Summary\n• Status Report\n• Stakeholder Update\n\nThanks,\nSarah`}
             </p>
-            <div className="mt-4 text-sm text-muted-foreground">— You, in about ten minutes.</div>
           </aside>
         </section>
 
@@ -87,21 +91,21 @@ function Landing() {
           {[
             {
               icon: Mail,
-              title: "Stakeholder mail",
+              title: "A real inbox",
               body:
-                "AI-driven stakeholders write with their own agendas. Read carefully — they remember what you ignored.",
+                "Sarah, the sponsor, finance, the vendor, care-home managers. Each writes in character. Read carefully — they remember what you ignored.",
             },
             {
               icon: ListChecks,
-              title: "A task list that judges you",
+              title: "Project tasks, not quiz questions",
               body:
-                "Triage, prioritize, ship. Completed tasks nudge the project forward. Stalled ones echo back through the inbox.",
+                "Draft the Charter, the Stakeholder Register, the RAID Log, Status Reports. Move them To Do → In Progress → Submitted → Completed.",
             },
             {
               icon: FileText,
-              title: "Documents on trial",
+              title: "AI review, workplace-grade",
               body:
-                "Upload a brief, a plan, a memo. An AI review panel scores it 0–100, and the story bends to the verdict.",
+                "Upload your work as PDF, DOCX or XLSX. The AI panel scores clarity, completeness, professionalism and governance, and the story bends to the verdict.",
             },
           ].map(({ icon: Icon, title, body }) => (
             <div key={title} className="rounded-lg border border-border bg-card p-6">
@@ -115,7 +119,7 @@ function Landing() {
 
       <footer className="border-t border-border">
         <div className="mx-auto max-w-6xl px-6 py-6 text-xs text-muted-foreground">
-          Atlas is a fictional simulation. No real stakeholders were harmed.
+          Atlas · A Coordinator's Diary. Northbridge Health Services is fictional; the project work is real practice.
         </div>
       </footer>
     </div>
