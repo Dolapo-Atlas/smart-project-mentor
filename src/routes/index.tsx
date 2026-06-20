@@ -40,7 +40,7 @@ function Landing() {
         <section className="grid gap-10 lg:grid-cols-[1.4fr_1fr] lg:items-end">
           <div>
             <p className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs uppercase tracking-[0.18em] text-muted-foreground">
-              <Sparkles className="h-3.5 w-3.5 text-primary" /> Chapter One · Northbridge Health
+              <Sparkles className="h-3.5 w-3.5 text-primary" /> Thousands of live projects
             </p>
             <h1 className="font-display text-5xl font-medium leading-[1.05] tracking-tight md:text-7xl">
               The project is{" "}
@@ -73,11 +73,11 @@ function Landing() {
 
           <aside className="rounded-lg border border-border bg-card p-6 shadow-sm">
             <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-              From: Sarah Williams · Project Manager
+              From: Your Project Manager
             </div>
             <div className="mt-2 text-sm font-semibold">Subject: Governance Meeting Friday</div>
             <p className="mt-3 whitespace-pre-line font-display text-base leading-relaxed text-foreground/90">
-              {`Hi,\n\nThe sponsor has requested an updated status report before Friday. Please prepare:\n\n• RAID Summary\n• Status Report\n• Stakeholder Update\n\nThanks,\nSarah`}
+              {`Hi,\n\nThe sponsor has requested an updated status report before Friday. Please prepare:\n\n• RAID Summary\n• Status Report\n• Stakeholder Update\n\nThanks,\nYour PM`}
             </p>
           </aside>
         </section>
@@ -90,7 +90,7 @@ function Landing() {
               icon: Mail,
               title: "A real inbox",
               body:
-                "Sarah, the sponsor, finance, the vendor, care-home managers. Each writes in character. Read carefully — they remember what you ignored.",
+                "Managers, sponsors, finance, vendors, end users. Each writes in character. Read carefully — they remember what you ignored.",
             },
             {
               icon: ListChecks,
@@ -116,7 +116,7 @@ function Landing() {
 
       <footer className="border-t border-border">
         <div className="mx-auto max-w-6xl px-6 py-6 text-xs text-muted-foreground">
-          Atlas · A Coordinator's Diary. Northbridge Health Services is fictional; the project work is real practice.
+          Atlas · A Coordinator's Diary. The companies and projects are fictional; the work is real practice.
         </div>
       </footer>
     </div>
