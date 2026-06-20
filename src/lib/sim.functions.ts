@@ -733,6 +733,38 @@ function reconcileFeedbackWithEvidence(
   });
 }
 
+function buildEvidenceBasedReaction(
+  title: string,
+  feedback: z.infer<typeof FeedbackSchema>,
+  previousCount: number,
+): z.infer<typeof ReviewReactionSchema> {
+  if (feedback.score >= 78) {
+    const sender = previousCount % 2 === 0 ? "Sarah Williams" : "Rachel Stone";
+    return sender === "Sarah Williams"
+      ? {
+          sender_name: "Sarah Williams",
+          sender_role: "Project Manager, Northbridge Health Services",
+          subject: `Re: ${title}`,
+          tone: "supportive",
+          body: `${title} is now in much better shape. I can see the project dates, decision rights, change control route, governance board, and success criteria, so this no longer reads like the first draft.\n\nPlease turn the remaining RAID points into named actions with owners, mitigations, and review dates so I can brief David with confidence.\n\nThanks,\nSarah`,
+        }
+      : {
+          sender_name: "Rachel Stone",
+          sender_role: "Clinical Governance Lead",
+          subject: `Re: ${title}`,
+          tone: "supportive",
+          body: `This version addresses the governance gap I was worried about: the approval route, escalation path, change control, and decision rights are now visible.\n\nFrom a clinical governance point of view, the next improvement is to make each rollout risk traceable to a mitigation owner and review date before the board pack goes out.\n\nRachel Stone`,
+        };
+  }
+  return {
+    sender_name: "Rachel Stone",
+    sender_role: "Clinical Governance Lead",
+    subject: `Re: ${title}`,
+    tone: feedback.score >= 50 ? "curious" : "frustrated",
+    body: `I can see progress in ${title}, but the latest review still leaves some assurance gaps.\n\nPlease address the open recommendations directly and show who owns each action, when it is due, and when it escalates.\n\nRachel Stone`,
+  };
+}
+
 async function extractTextFromStorage(
   supabase: { storage: { from: (b: string) => { download: (p: string) => Promise<{ data: Blob | null; error: unknown }> } } },
   path: string,
