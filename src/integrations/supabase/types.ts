@@ -61,6 +61,93 @@ export type Database = {
           },
         ]
       }
+      budget_lines: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          kind: Database["public"]["Enums"]["budget_kind"]
+          line_date: string
+          user_id: string
+          vendor: string | null
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          kind: Database["public"]["Enums"]["budget_kind"]
+          line_date?: string
+          user_id: string
+          vendor?: string | null
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["budget_kind"]
+          line_date?: string
+          user_id?: string
+          vendor?: string | null
+        }
+        Relationships: []
+      }
+      change_requests: {
+        Row: {
+          cost_impact: number
+          created_at: string
+          decided_at: string | null
+          decision_notes: string | null
+          description: string
+          id: string
+          impact_assessment: string | null
+          requested_by: string
+          risk_impact: Database["public"]["Enums"]["cr_risk"]
+          schedule_impact_days: number
+          status: Database["public"]["Enums"]["cr_status"]
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cost_impact?: number
+          created_at?: string
+          decided_at?: string | null
+          decision_notes?: string | null
+          description: string
+          id?: string
+          impact_assessment?: string | null
+          requested_by: string
+          risk_impact?: Database["public"]["Enums"]["cr_risk"]
+          schedule_impact_days?: number
+          status?: Database["public"]["Enums"]["cr_status"]
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cost_impact?: number
+          created_at?: string
+          decided_at?: string | null
+          decision_notes?: string | null
+          description?: string
+          id?: string
+          impact_assessment?: string | null
+          requested_by?: string
+          risk_impact?: Database["public"]["Enums"]["cr_risk"]
+          schedule_impact_days?: number
+          status?: Database["public"]["Enums"]["cr_status"]
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           content_excerpt: string | null
@@ -132,6 +219,90 @@ export type Database = {
           sender_role?: string
           subject?: string
           tone?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      meetings: {
+        Row: {
+          agenda: string | null
+          ai_summary: string | null
+          created_at: string
+          decisions: string | null
+          held: boolean
+          id: string
+          kind: Database["public"]["Enums"]["meeting_kind"]
+          minutes: string | null
+          scheduled_at: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          agenda?: string | null
+          ai_summary?: string | null
+          created_at?: string
+          decisions?: string | null
+          held?: boolean
+          id?: string
+          kind: Database["public"]["Enums"]["meeting_kind"]
+          minutes?: string | null
+          scheduled_at?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          agenda?: string | null
+          ai_summary?: string | null
+          created_at?: string
+          decisions?: string | null
+          held?: boolean
+          id?: string
+          kind?: Database["public"]["Enums"]["meeting_kind"]
+          minutes?: string | null
+          scheduled_at?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      phase_gates: {
+        Row: {
+          created_at: string
+          decided_at: string | null
+          feedback: Json | null
+          id: string
+          opened_at: string | null
+          phase: Database["public"]["Enums"]["gate_phase"]
+          score: number | null
+          status: Database["public"]["Enums"]["gate_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          decided_at?: string | null
+          feedback?: Json | null
+          id?: string
+          opened_at?: string | null
+          phase: Database["public"]["Enums"]["gate_phase"]
+          score?: number | null
+          status?: Database["public"]["Enums"]["gate_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          decided_at?: string | null
+          feedback?: Json | null
+          id?: string
+          opened_at?: string | null
+          phase?: Database["public"]["Enums"]["gate_phase"]
+          score?: number | null
+          status?: Database["public"]["Enums"]["gate_status"]
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -277,6 +448,51 @@ export type Database = {
         }
         Relationships: []
       }
+      status_reports: {
+        Row: {
+          achievements: string | null
+          ai_feedback: Json | null
+          ai_score: number | null
+          created_at: string
+          id: string
+          next_week: string | null
+          rag_summary: Database["public"]["Enums"]["rag_status"]
+          risks_blockers: string | null
+          submitted_at: string | null
+          updated_at: string
+          user_id: string
+          week_start: string
+        }
+        Insert: {
+          achievements?: string | null
+          ai_feedback?: Json | null
+          ai_score?: number | null
+          created_at?: string
+          id?: string
+          next_week?: string | null
+          rag_summary?: Database["public"]["Enums"]["rag_status"]
+          risks_blockers?: string | null
+          submitted_at?: string | null
+          updated_at?: string
+          user_id: string
+          week_start: string
+        }
+        Update: {
+          achievements?: string | null
+          ai_feedback?: Json | null
+          ai_score?: number | null
+          created_at?: string
+          id?: string
+          next_week?: string | null
+          rag_summary?: Database["public"]["Enums"]["rag_status"]
+          risks_blockers?: string | null
+          submitted_at?: string | null
+          updated_at?: string
+          user_id?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           completed_at: string | null
@@ -348,6 +564,12 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      budget_kind: "planned" | "actual" | "invoice" | "forecast"
+      cr_risk: "low" | "medium" | "high"
+      cr_status: "draft" | "submitted" | "approved" | "rejected"
+      gate_phase: "initiation" | "planning" | "execution" | "closure"
+      gate_status: "locked" | "open" | "passed" | "failed"
+      meeting_kind: "standup" | "steering" | "vendor" | "retro"
       rag_status: "green" | "amber" | "red"
       raid_kind: "risk" | "assumption" | "issue" | "dependency"
       raid_severity: "low" | "medium" | "high" | "critical"
@@ -487,6 +709,12 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      budget_kind: ["planned", "actual", "invoice", "forecast"],
+      cr_risk: ["low", "medium", "high"],
+      cr_status: ["draft", "submitted", "approved", "rejected"],
+      gate_phase: ["initiation", "planning", "execution", "closure"],
+      gate_status: ["locked", "open", "passed", "failed"],
+      meeting_kind: ["standup", "steering", "vendor", "retro"],
       rag_status: ["green", "amber", "red"],
       raid_kind: ["risk", "assumption", "issue", "dependency"],
       raid_severity: ["low", "medium", "high", "critical"],

@@ -298,7 +298,9 @@ Write ONE realistic, professional workplace email to ${firstName} (the project c
 - Margaret Hollis, Care Home Manager — Oakwood House
 - Rachel Stone, Clinical Governance Lead
 
-Style: like a real workplace email. No game-y language. Reference the rollout, RAID items, status reports, governance, change requests, vendor delays, care-home readiness, or training — whatever fits. Ask a pointed question, request a deliverable, raise a risk, or escalate. 2–4 short paragraphs. Sign off with the sender's name and role.`;
+Style: like a real workplace email. No game-y language. Reference the rollout, RAID items, status reports, governance, change requests, vendor delays, care-home readiness, or training — whatever fits. Ask a pointed question, request a deliverable, raise a risk, or escalate. 2–4 short paragraphs. Sign off with the sender's name and role.
+
+About half the time, this email should put the coordinator in an awkward position: contradict another stakeholder's recent message, push back on a sponsor decision, escalate over the PM's head, miss a deadline and ask for cover, or demand something Finance/Clinical will object to. Real projects are political — don't make every email supportive.`;
 
     let output: z.infer<typeof StakeholderSchema>;
     try {
