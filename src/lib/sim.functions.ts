@@ -616,6 +616,12 @@ export const reviewDocument = createServerFn({ method: "POST" })
     let excerpt = (doc.content_excerpt ?? "").slice(0, 6000);
     if (!excerpt) {
       excerpt = await extractTextFromStorage(supabase, doc.storage_path, doc.mime_type);
+      if (excerpt) {
+        await supabase
+          .from("documents")
+          .update({ content_excerpt: excerpt })
+          .eq("id", doc.id);
+      }
     }
     const prompt = `You are a senior PMO reviewer at ${state?.company ?? "Northbridge Health Services"} assessing a project coordinator's deliverable on the "${state?.project_name}" project (chapter: ${state?.chapter}; phase: ${state?.phase}). Budget £500,000, 6-month timeline, currently behind schedule. The 12-care-home digital records rollout is the context.
 
