@@ -22,6 +22,7 @@ import { Route as AuthenticatedAppReportsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAppProgressRouteImport } from './routes/_authenticated/app.progress'
 import { Route as AuthenticatedAppInboxRouteImport } from './routes/_authenticated/app.inbox'
 import { Route as AuthenticatedAppDocumentsRouteImport } from './routes/_authenticated/app.documents'
+import { Route as AuthenticatedAppBudgetRouteImport } from './routes/_authenticated/app.budget'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -89,6 +90,11 @@ const AuthenticatedAppDocumentsRoute =
     path: '/documents',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppBudgetRoute = AuthenticatedAppBudgetRouteImport.update({
+  id: '/budget',
+  path: '/budget',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -96,6 +102,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/welcome': typeof AuthenticatedWelcomeRoute
+  '/app/budget': typeof AuthenticatedAppBudgetRoute
   '/app/documents': typeof AuthenticatedAppDocumentsRoute
   '/app/inbox': typeof AuthenticatedAppInboxRoute
   '/app/progress': typeof AuthenticatedAppProgressRoute
@@ -109,6 +116,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/welcome': typeof AuthenticatedWelcomeRoute
+  '/app/budget': typeof AuthenticatedAppBudgetRoute
   '/app/documents': typeof AuthenticatedAppDocumentsRoute
   '/app/inbox': typeof AuthenticatedAppInboxRoute
   '/app/progress': typeof AuthenticatedAppProgressRoute
@@ -125,6 +133,7 @@ export interface FileRoutesById {
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/welcome': typeof AuthenticatedWelcomeRoute
+  '/_authenticated/app/budget': typeof AuthenticatedAppBudgetRoute
   '/_authenticated/app/documents': typeof AuthenticatedAppDocumentsRoute
   '/_authenticated/app/inbox': typeof AuthenticatedAppInboxRoute
   '/_authenticated/app/progress': typeof AuthenticatedAppProgressRoute
@@ -141,6 +150,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/onboarding'
     | '/welcome'
+    | '/app/budget'
     | '/app/documents'
     | '/app/inbox'
     | '/app/progress'
@@ -154,6 +164,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/onboarding'
     | '/welcome'
+    | '/app/budget'
     | '/app/documents'
     | '/app/inbox'
     | '/app/progress'
@@ -169,6 +180,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app'
     | '/_authenticated/onboarding'
     | '/_authenticated/welcome'
+    | '/_authenticated/app/budget'
     | '/_authenticated/app/documents'
     | '/_authenticated/app/inbox'
     | '/_authenticated/app/progress'
@@ -277,10 +289,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppDocumentsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/budget': {
+      id: '/_authenticated/app/budget'
+      path: '/budget'
+      fullPath: '/app/budget'
+      preLoaderRoute: typeof AuthenticatedAppBudgetRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
   }
 }
 
 interface AuthenticatedAppRouteChildren {
+  AuthenticatedAppBudgetRoute: typeof AuthenticatedAppBudgetRoute
   AuthenticatedAppDocumentsRoute: typeof AuthenticatedAppDocumentsRoute
   AuthenticatedAppInboxRoute: typeof AuthenticatedAppInboxRoute
   AuthenticatedAppProgressRoute: typeof AuthenticatedAppProgressRoute
@@ -291,6 +311,7 @@ interface AuthenticatedAppRouteChildren {
 }
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
+  AuthenticatedAppBudgetRoute: AuthenticatedAppBudgetRoute,
   AuthenticatedAppDocumentsRoute: AuthenticatedAppDocumentsRoute,
   AuthenticatedAppInboxRoute: AuthenticatedAppInboxRoute,
   AuthenticatedAppProgressRoute: AuthenticatedAppProgressRoute,
