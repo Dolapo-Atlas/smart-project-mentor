@@ -253,11 +253,15 @@ export const listInbox = createServerFn({ method: "GET" })
 
 function personalizePlaceholderReply(sender: string, body: string, subject: string): string {
   if (!body.trim().startsWith("Thanks for the note — I'll come back to you shortly.")) return body;
+  const topic = subject.replace(/^Re:\s*/i, "");
   if (sender === "Rachel Stone") {
-    return `I have picked up your update on "${subject.replace(/^Re:\s*/i, "")}". Before clinical governance can support it, I need the safety impact, approval route, and escalation triggers to be explicit.\n\nRachel Stone`;
+    return `I have picked up your update on "${topic}". I’m looking at this through clinical governance: safety impact, approval route, escalation triggers, and readiness evidence all need to be clear before I can support it.\n\nRachel Stone`;
   }
   if (sender === "Sarah Williams") {
-    return `I have reviewed your update on "${subject.replace(/^Re:\s*/i, "")}". Please turn the key points into dated actions and flag anything that needs sponsor or governance input before Friday.\n\nThanks,\nSarah`;
+    return `I have reviewed your update on "${topic}". My focus is delivery control: turn the key points into dated actions, show the owners, and flag what needs sponsor or governance input before Friday.\n\nThanks,\nSarah`;
+  }
+  if (sender === "David Okafor") {
+    return `I have seen your update on "${topic}". I need a decision-ready view: what has changed, what risk remains, what you recommend, and what happens if we wait.\n\nDavid Okafor`;
   }
   return body;
 }
