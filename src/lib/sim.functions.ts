@@ -715,6 +715,20 @@ export const reviewDocument = createServerFn({ method: "POST" })
       .select("*")
       .eq("user_id", userId)
       .single();
+    const [{ data: previousFeedback }, { data: recentInbox }] = await Promise.all([
+      supabase
+        .from("ai_feedback")
+        .select("score,summary,recommendations,created_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(4),
+      supabase
+        .from("inbox_messages")
+        .select("sender_name,subject,body")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(5),
+    ]);
 
     let excerpt = (doc.content_excerpt ?? "").slice(0, 6000);
     if (!excerpt) {
@@ -726,9 +740,15 @@ export const reviewDocument = createServerFn({ method: "POST" })
           .eq("id", doc.id);
       }
     }
+    const signals = scoreSignals(excerpt);
     const prompt = `You are a senior PMO reviewer at ${state?.company ?? "Northbridge Health Services"} assessing a project coordinator's deliverable on the "${state?.project_name}" project (chapter: ${state?.chapter}; phase: ${state?.phase}). Budget £500,000, 6-month timeline, currently behind schedule. The 12-care-home digital records rollout is the context.
 
 Document title: "${doc.title}". Treat this as a workplace deliverable (e.g. Project Charter, Stakeholder Register, RAID Log, Status Report, Meeting Minutes, Change Request) and review it the way a sponsor or governance board would.
+
+Recent previous reviews in this workspace: ${JSON.stringify(previousFeedback ?? [])}.
+Current document signals detected by the app: ${JSON.stringify(signals)}.
+
+If this is a re-upload or re-review, assess the CURRENT excerpt only. Do not repeat an earlier score, summary, weakness, or recommendation unless the current excerpt genuinely still lacks the same evidence. If the current charter now includes owners, dates, governance, escalation paths, or success criteria, acknowledge that improvement and adjust the score upward.
 
 Score the overall quality 0–100, and ALSO score these four sub-categories 0–100:
 - clarity (is it easy to read; structure, language, headings)
