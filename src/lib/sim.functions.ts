@@ -237,8 +237,30 @@ export const listInbox = createServerFn({ method: "GET" })
       .eq("user_id", context.userId)
       .order("created_at", { ascending: false });
     if (error) throw error;
-    return data ?? [];
+    const seen = new Set<string>();
+    return (data ?? [])
+      .map((message) => ({
+        ...message,
+        body: personalizePlaceholderReply(message.sender_name, message.body, message.subject),
+      }))
+      .filter((message) => {
+        const key = [message.sender_name, message.subject, message.body].join("\n").toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
   });
+
+function personalizePlaceholderReply(sender: string, body: string, subject: string): string {
+  if (!body.trim().startsWith("Thanks for the note — I'll come back to you shortly.")) return body;
+  if (sender === "Rachel Stone") {
+    return `I have picked up your update on "${subject.replace(/^Re:\s*/i, "")}". Before clinical governance can support it, I need the safety impact, approval route, and escalation triggers to be explicit.\n\nRachel Stone`;
+  }
+  if (sender === "Sarah Williams") {
+    return `I have reviewed your update on "${subject.replace(/^Re:\s*/i, "")}". Please turn the key points into dated actions and flag anything that needs sponsor or governance input before Friday.\n\nThanks,\nSarah`;
+  }
+  return body;
+}
 
 export const markRead = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -518,7 +540,12 @@ export const listDocuments = createServerFn({ method: "GET" })
       .eq("user_id", context.userId)
       .order("created_at", { ascending: false });
     if (error) throw error;
-    return data ?? [];
+    return (data ?? []).map((doc) => ({
+      ...doc,
+      ai_feedback: Array.isArray(doc.ai_feedback)
+        ? [...doc.ai_feedback].sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at))
+        : doc.ai_feedback,
+    }));
   });
 
 export const recordDocument = createServerFn({ method: "POST" })
@@ -557,6 +584,14 @@ const FeedbackSchema = z.object({
   next_phase_message: z.string().default(""),
 });
 
+const ReviewReactionSchema = z.object({
+  sender_name: z.string(),
+  sender_role: z.string(),
+  subject: z.string(),
+  body: z.string(),
+  tone: z.enum(["urgent", "supportive", "frustrated", "curious", "neutral"]),
+});
+
 function wholeScore(value: unknown, fallback = 50): number {
   const n = typeof value === "number" && Number.isFinite(value) ? value : fallback;
   return Math.max(0, Math.min(100, Math.round(n)));
@@ -579,24 +614,71 @@ function normalizeFeedback(raw: z.infer<typeof FeedbackSchema>): z.infer<typeof 
   };
 }
 
+function uniqueStrings(items: unknown[] | undefined, fallback: string[]): string[] {
+  const seen = new Set<string>();
+  const cleaned = (items ?? [])
+    .filter((item): item is string => typeof item === "string")
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0 && !seen.has(item.toLowerCase()) && seen.add(item.toLowerCase()))
+    .slice(0, 4);
+  return cleaned.length > 0 ? cleaned : fallback;
+}
+
+function scoreSignals(excerpt: string) {
+  const text = excerpt.toLowerCase();
+  const has = (terms: string[]) => terms.some((term) => text.includes(term));
+  return {
+    length: excerpt.trim().length,
+    hasOwners: has(["owner", "accountable", "responsible", "raci"]),
+    hasDates: has(["date", "deadline", "timeline", "milestone", "week", "month"]),
+    hasGovernance: has(["governance", "approval", "decision", "steering", "board"]),
+    hasEscalation: has(["escalation", "escalate", "risk", "raid", "issue"]),
+    hasSuccess: has(["success criteria", "benefit", "objective", "scope", "deliverable"]),
+  };
+}
+
 function fallbackFeedback(title: string, excerpt: string): z.infer<typeof FeedbackSchema> {
-  const hasSubstance = excerpt.trim().length > 800;
-  const score = hasSubstance ? 64 : 38;
+  const signals = scoreSignals(excerpt);
+  const hasSubstance = signals.length > 800;
+  const signalCount = [signals.hasOwners, signals.hasDates, signals.hasGovernance, signals.hasEscalation, signals.hasSuccess].filter(Boolean).length;
+  const score = hasSubstance ? Math.min(82, 52 + signalCount * 6 + Math.min(8, Math.floor(signals.length / 1200))) : 38;
+  const missing = [
+    !signals.hasOwners && "named owners/accountability",
+    !signals.hasDates && "dates or milestones",
+    !signals.hasGovernance && "governance/approval route",
+    !signals.hasEscalation && "risk and escalation detail",
+    !signals.hasSuccess && "success criteria",
+  ].filter(Boolean) as string[];
   return normalizeFeedback({
     score,
     category_scores: {
-      clarity: hasSubstance ? 68 : 40,
-      completeness: hasSubstance ? 58 : 30,
-      professionalism: hasSubstance ? 66 : 45,
-      governance: hasSubstance ? 55 : 28,
+      clarity: hasSubstance ? Math.min(86, 62 + (signals.hasSuccess ? 8 : 0) + (signals.hasDates ? 5 : 0)) : 40,
+      completeness: hasSubstance ? Math.min(86, 48 + signalCount * 7) : 30,
+      professionalism: hasSubstance ? Math.min(88, 60 + (signals.hasOwners ? 6 : 0) + (signals.hasDates ? 5 : 0)) : 45,
+      governance: hasSubstance ? Math.min(84, 42 + (signals.hasGovernance ? 14 : 0) + (signals.hasEscalation ? 12 : 0) + (signals.hasOwners ? 6 : 0)) : 28,
     },
-    summary: `${title} has enough material for an initial review, but it still needs tighter governance detail before sponsor sign-off.`,
+    summary: missing.length === 0
+      ? `${title} now reads as a stronger working charter with clearer accountability, timing, governance, and success measures.`
+      : `${title} is moving in the right direction, but the remaining gap is ${missing.slice(0, 2).join(" and ")}.`,
     strengths: hasSubstance
-      ? ["The document gives the project enough context to understand the intended deliverable.", "It is suitable as a working draft for internal review."]
+      ? uniqueStrings([
+          signals.hasSuccess && "The document explains the intended scope, objectives, or success measures.",
+          signals.hasOwners && "Accountability is starting to be tied to named owners or responsible roles.",
+          signals.hasDates && "The charter now gives the team a clearer timing or milestone reference.",
+          signals.hasGovernance && "Governance and approval expectations are more visible than in a bare draft.",
+        ].filter(Boolean) as string[], ["The document gives the project enough context to understand the intended deliverable."])
       : ["The file was received and can be tracked against the project deliverables."],
-    weaknesses: ["Decision rights, owners, dates, and escalation routes need to be more explicit.", "The deliverable should link key risks, assumptions, and success criteria to named accountable people."],
-    recommendations: ["Add named owners and target dates for every major action or risk.", "Include a short governance section covering approvals, escalation path, and change control."],
-    next_phase_message: `Sarah can use ${title} as a draft baseline, but the governance panel will expect clearer ownership and escalation detail before treating it as final.`,
+    weaknesses: uniqueStrings(
+      missing.map((item) => `Further detail is still needed on ${item}.`),
+      ["The deliverable should connect risks, assumptions, owners, dates, and success criteria more explicitly."],
+    ),
+    recommendations: uniqueStrings(
+      missing.map((item) => `Add a concise section covering ${item}.`),
+      ["Prepare the charter for sponsor review by checking decision rights, approvals, risks, and change control are all explicit."],
+    ),
+    next_phase_message: missing.length === 0
+      ? `Sarah can take ${title} into the next review as a credible baseline, while Rachel will still want the team to test the governance route against live risks.`
+      : `Sarah can see progress in ${title}, but Rachel will keep pressing for ${missing.slice(0, 2).join(" and ")} before governance sign-off.`,
   });
 }
 
@@ -655,6 +737,20 @@ export const reviewDocument = createServerFn({ method: "POST" })
       .select("*")
       .eq("user_id", userId)
       .single();
+    const [{ data: previousFeedback }, { data: recentInbox }] = await Promise.all([
+      supabase
+        .from("ai_feedback")
+        .select("score,summary,recommendations,created_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(4),
+      supabase
+        .from("inbox_messages")
+        .select("sender_name,subject,body")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(5),
+    ]);
 
     let excerpt = (doc.content_excerpt ?? "").slice(0, 6000);
     if (!excerpt) {
@@ -666,9 +762,15 @@ export const reviewDocument = createServerFn({ method: "POST" })
           .eq("id", doc.id);
       }
     }
+    const signals = scoreSignals(excerpt);
     const prompt = `You are a senior PMO reviewer at ${state?.company ?? "Northbridge Health Services"} assessing a project coordinator's deliverable on the "${state?.project_name}" project (chapter: ${state?.chapter}; phase: ${state?.phase}). Budget £500,000, 6-month timeline, currently behind schedule. The 12-care-home digital records rollout is the context.
 
 Document title: "${doc.title}". Treat this as a workplace deliverable (e.g. Project Charter, Stakeholder Register, RAID Log, Status Report, Meeting Minutes, Change Request) and review it the way a sponsor or governance board would.
+
+Recent previous reviews in this workspace: ${JSON.stringify(previousFeedback ?? [])}.
+Current document signals detected by the app: ${JSON.stringify(signals)}.
+
+If this is a re-upload or re-review, assess the CURRENT excerpt only. Do not repeat an earlier score, summary, weakness, or recommendation unless the current excerpt genuinely still lacks the same evidence. If the current charter now includes owners, dates, governance, escalation paths, or success criteria, acknowledge that improvement and adjust the score upward.
 
 Score the overall quality 0–100, and ALSO score these four sub-categories 0–100:
 - clarity (is it easy to read; structure, language, headings)
@@ -767,20 +869,59 @@ ${excerpt || "(non-text document — judge based on the title; assume minimal co
       })
       .eq("user_id", userId);
 
-    // Trigger a follow-up stakeholder reply reacting to the review
-    const tone = output.score >= 75 ? "supportive" : output.score >= 50 ? "curious" : "frustrated";
-    const sender = output.score >= 75
-      ? { name: "Sarah Williams", role: "Project Manager, Northbridge Health Services" }
-      : output.score >= 50
-        ? { name: "Rachel Stone", role: "Clinical Governance Lead" }
-        : { name: "David Okafor", role: "Executive Sponsor, Director of Transformation" };
+    // Trigger a follow-up stakeholder reply reacting to this specific review, not a canned repeat.
+    let reaction: z.infer<typeof ReviewReactionSchema>;
+    try {
+      const res = await generateObject({
+        model: getModel(),
+        schema: ReviewReactionSchema,
+        prompt: `Write ONE short workplace email reacting to the latest document review.
+
+Document: ${doc.title}
+Latest score: ${output.score}/100
+Latest summary: ${output.summary}
+Strengths: ${JSON.stringify(output.strengths)}
+Weaknesses: ${JSON.stringify(output.weaknesses)}
+Recommendations: ${JSON.stringify(output.recommendations)}
+Detected current-document signals: ${JSON.stringify(signals)}
+Recent inbox messages to avoid repeating: ${JSON.stringify(recentInbox ?? [])}
+
+Choose the most plausible sender from Sarah Williams (Project Manager), Rachel Stone (Clinical Governance Lead), or David Okafor (Executive Sponsor). If Rachel writes, focus on clinical governance and safety assurance. If Sarah writes, focus on delivery process and next steps. If David writes, focus on sponsor confidence and decision readiness.
+
+Do not use the same wording as any recent inbox message. Do not write a generic "Thanks for the note" response. Mention at least one concrete thing that changed or still needs action. 2 short paragraphs plus sign-off.`,
+      });
+      reaction = res.object;
+    } catch {
+      reaction = output.score >= 75
+        ? {
+            sender_name: "Sarah Williams",
+            sender_role: "Project Manager, Northbridge Health Services",
+            subject: `Re: ${doc.title}`,
+            tone: "supportive",
+            body: `This is a stronger version of ${doc.title}. The added ownership and review detail gives us a better baseline for the next governance conversation, so please now turn the open recommendations into dated actions.\n\nThanks,\nSarah`,
+          }
+        : {
+            sender_name: "Rachel Stone",
+            sender_role: "Clinical Governance Lead",
+            subject: `Re: ${doc.title}`,
+            tone: output.score >= 50 ? "curious" : "frustrated",
+            body: `I can see the charter has moved on, but I still need the governance route to be unambiguous before this is treated as ready. Please tie the remaining recommendations to owners, dates, and escalation triggers.\n\nRachel Stone`,
+          };
+    }
+    const recentBodies = new Set((recentInbox ?? []).map((m) => m.body.trim().toLowerCase()));
+    if (recentBodies.has(reaction.body.trim().toLowerCase())) {
+      reaction = {
+        ...reaction,
+        body: `${reaction.body}\n\nPlease treat this as feedback on the latest review rather than a repeat of the earlier response.`,
+      };
+    }
     await supabase.from("inbox_messages").insert({
       user_id: userId,
-      sender_name: sender.name,
-      sender_role: sender.role,
-      subject: `Re: ${doc.title}`,
-      tone,
-      body: output.next_phase_message,
+      sender_name: reaction.sender_name,
+      sender_role: reaction.sender_role,
+      subject: reaction.subject || `Re: ${doc.title}`,
+      tone: reaction.tone,
+      body: reaction.body,
     });
 
     return fb;
