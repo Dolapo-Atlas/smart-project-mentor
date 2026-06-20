@@ -2,12 +2,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listComms, listAttachables, sendComm, STAKEHOLDERS } from "@/lib/comms.functions";
-import { useMemo, useState } from "react";
+import { recordDocument } from "@/lib/sim.functions";
+import { supabase } from "@/integrations/supabase/client";
+import { useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Send, Paperclip, ChevronRight } from "lucide-react";
+import { Send, Paperclip, ChevronRight, Upload, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/app/comms")({
   component: Comms,
@@ -29,6 +31,7 @@ function Comms() {
   const fetchComms = useServerFn(listComms);
   const fetchAttach = useServerFn(listAttachables);
   const send = useServerFn(sendComm);
+  const recordFn = useServerFn(recordDocument);
 
   const { data: messages } = useQuery({ queryKey: ["comms"], queryFn: () => fetchComms() });
   const { data: attach } = useQuery({ queryKey: ["comms_attach"], queryFn: () => fetchAttach() });
@@ -39,6 +42,54 @@ function Comms() {
   const [body, setBody] = useState("");
   const [attachKind, setAttachKind] = useState<string>("none");
   const [attachRef, setAttachRef] = useState<string>("");
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function readTextExcerpt(file: File): Promise<string | undefined> {
+    if (file.type.startsWith("text/") || /\.(md|txt|json|csv)$/i.test(file.name)) {
+      try { return (await file.text()).slice(0, 8000); } catch { return undefined; }
+    }
+    return undefined;
+  }
+
+  async function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const uid = userData.user?.id;
+      if (!uid) throw new Error("Not signed in");
+      const path = `${uid}/${Date.now()}-${file.name.replace(/[^\w.\-]/g, "_")}`;
+      const { error } = await supabase.storage.from("project-documents").upload(path, file, {
+        contentType: file.type || "application/octet-stream",
+        upsert: false,
+      });
+      if (error) throw error;
+      const excerpt = await readTextExcerpt(file);
+      const doc = await recordFn({
+        data: {
+          title: file.name,
+          storage_path: path,
+          content_excerpt: excerpt,
+          mime_type: file.type,
+          size_bytes: file.size,
+        },
+      });
+      toast.success("Uploaded — also added to Documents.");
+      qc.invalidateQueries({ queryKey: ["comms_attach"] });
+      qc.invalidateQueries({ queryKey: ["documents"] });
+      qc.invalidateQueries({ queryKey: ["overview"] });
+      setAttachKind("document");
+      const newId = (doc as { id?: string } | undefined)?.id;
+      if (newId) setAttachRef(newId);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploading(false);
+      if (fileInput.current) fileInput.current.value = "";
+    }
+  }
 
   const attachOptions = useMemo(() => {
     if (!attach) return [] as { id: string; label: string }[];
@@ -149,18 +200,32 @@ function Comms() {
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <div className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground flex items-center gap-1"><Paperclip className="h-3 w-3" /> Attachment</div>
-              <select
-                value={attachKind}
-                onChange={(e) => { setAttachKind(e.target.value); setAttachRef(""); }}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-              >
-                <option value="none">None</option>
-                <option value="document">Document</option>
-                <option value="status_report">Status report</option>
-                <option value="raid">RAID item</option>
-                <option value="change_request">Change request</option>
-                <option value="gate">Phase gate</option>
-              </select>
+              <div className="flex gap-2">
+                <select
+                  value={attachKind}
+                  onChange={(e) => { setAttachKind(e.target.value); setAttachRef(""); }}
+                  className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm"
+                >
+                  <option value="none">None</option>
+                  <option value="document">Document</option>
+                  <option value="status_report">Status report</option>
+                  <option value="raid">RAID item</option>
+                  <option value="change_request">Change request</option>
+                  <option value="gate">Phase gate</option>
+                </select>
+                <input ref={fileInput} type="file" onChange={onPickFile} className="hidden" />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInput.current?.click()}
+                  disabled={uploading}
+                  title="Upload a new document"
+                >
+                  {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  <span className="ml-1 hidden sm:inline">{uploading ? "Uploading…" : "Upload"}</span>
+                </Button>
+              </div>
             </div>
             {attachKind !== "none" && (
               <div>
