@@ -86,12 +86,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Atlas — Project Coordinator Simulator" },
-      { name: "description", content: "Run a fictional cross-functional project. Read stakeholder mail, file tasks, ship docs, and let an AI judge your coordination." },
-      { property: "og:title", content: "Atlas — Project Coordinator Simulator" },
-      { property: "og:description", content: "An AI-driven simulation of life as a project coordinator." },
+      { title: "Atlas —A Workplace Simulation for Career Growth" },
+      { name: "description", content: "Step into realistic workplace simulations. Manage projects, collaborate with stakeholders, complete real tasks, and build confidence before your next role." },
+      { property: "og:title", content: "Atlas —A Workplace Simulation for Career Growth" },
+      { property: "og:description", content: "Step into realistic workplace simulations. Manage projects, collaborate with stakeholders, complete real tasks, and build confidence before your next role." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "Atlas —A Workplace Simulation for Career Growth" },
+      { name: "twitter:description", content: "Step into realistic workplace simulations. Manage projects, collaborate with stakeholders, complete real tasks, and build confidence before your next role." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/f72ec06c-4ab5-43f6-8295-42283a60724e" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/f72ec06c-4ab5-43f6-8295-42283a60724e" },
     ],
     links: [
       {
