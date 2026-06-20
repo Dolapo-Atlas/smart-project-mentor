@@ -237,8 +237,30 @@ export const listInbox = createServerFn({ method: "GET" })
       .eq("user_id", context.userId)
       .order("created_at", { ascending: false });
     if (error) throw error;
-    return data ?? [];
+    const seen = new Set<string>();
+    return (data ?? [])
+      .map((message) => ({
+        ...message,
+        body: personalizePlaceholderReply(message.sender_name, message.body, message.subject),
+      }))
+      .filter((message) => {
+        const key = [message.sender_name, message.subject, message.body].join("\n").toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
   });
+
+function personalizePlaceholderReply(sender: string, body: string, subject: string): string {
+  if (!body.trim().startsWith("Thanks for the note — I'll come back to you shortly.")) return body;
+  if (sender === "Rachel Stone") {
+    return `I have picked up your update on "${subject.replace(/^Re:\s*/i, "")}". Before clinical governance can support it, I need the safety impact, approval route, and escalation triggers to be explicit.\n\nRachel Stone`;
+  }
+  if (sender === "Sarah Williams") {
+    return `I have reviewed your update on "${subject.replace(/^Re:\s*/i, "")}". Please turn the key points into dated actions and flag anything that needs sponsor or governance input before Friday.\n\nThanks,\nSarah`;
+  }
+  return body;
+}
 
 export const markRead = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
