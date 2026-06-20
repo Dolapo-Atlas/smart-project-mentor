@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
-import { generateText, Output } from "ai";
+import { generateText, generateObject, Output } from "ai";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
 
 const MODEL = "google/gemini-3-flash-preview";
@@ -298,11 +298,33 @@ Write ONE realistic, professional workplace email to ${firstName} (the project c
 
 Style: like a real workplace email. No game-y language. Reference the rollout, RAID items, status reports, governance, change requests, vendor delays, care-home readiness, or training — whatever fits. Ask a pointed question, request a deliverable, raise a risk, or escalate. 2–4 short paragraphs. Sign off with the sender's name and role.`;
 
-    const { output } = await generateText({
-      model: getModel(),
-      prompt,
-      output: Output.object({ schema: StakeholderSchema }),
-    });
+    let output: z.infer<typeof StakeholderSchema>;
+    try {
+      const res = await generateObject({
+        model: getModel(),
+        prompt,
+        schema: StakeholderSchema,
+      });
+      output = res.object;
+    } catch {
+      // Retry once with a stricter instruction; fall back to a safe default.
+      try {
+        const res = await generateObject({
+          model: getModel(),
+          prompt: prompt + "\n\nReturn ONLY valid JSON matching the schema. No prose.",
+          schema: StakeholderSchema,
+        });
+        output = res.object;
+      } catch {
+        output = {
+          sender_name: "Sarah Williams",
+          sender_role: "Project Manager, Northbridge Health Services",
+          subject: "Quick check-in on the rollout",
+          body: `Hi ${firstName},\n\nCan you send me a short status update on where we are with the rollout? Particularly the RAID log and any vendor blockers.\n\nThanks,\nSarah`,
+          tone: "neutral",
+        };
+      }
+    }
 
     const { data: msg, error } = await supabase
       .from("inbox_messages")
