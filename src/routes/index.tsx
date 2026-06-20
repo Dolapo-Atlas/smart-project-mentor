@@ -40,7 +40,7 @@ function Landing() {
         <section className="grid gap-10 lg:grid-cols-[1.4fr_1fr] lg:items-end">
           <div>
             <p className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs uppercase tracking-[0.18em] text-muted-foreground">
-              <Sparkles className="h-3.5 w-3.5 text-primary" /> Learn the job by doing the job
+              <Sparkles className="h-3.5 w-3.5 text-primary" /> A workplace, not a workbook — step into the role
             </p>
             <h1 className="font-display text-5xl font-medium leading-[1.05] tracking-tight md:text-7xl">
               The project is{" "}
