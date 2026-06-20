@@ -11,13 +11,14 @@ export const Route = createFileRoute("/_authenticated/app")({
   component: AppLayout,
 });
 
-const NAV = [
+type NavItem = { to: string; label: string; icon: typeof Mail; exact?: boolean };
+const NAV: NavItem[] = [
   { to: "/app", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/app/inbox", label: "Inbox", icon: Mail },
   { to: "/app/tasks", label: "Tasks", icon: ListChecks },
   { to: "/app/documents", label: "Documents", icon: FileText },
   { to: "/app/progress", label: "Progress", icon: Gauge },
-] as const;
+];
 
 function AppLayout() {
   const navigate = useNavigate();
