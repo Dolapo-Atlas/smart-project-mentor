@@ -847,20 +847,59 @@ ${excerpt || "(non-text document — judge based on the title; assume minimal co
       })
       .eq("user_id", userId);
 
-    // Trigger a follow-up stakeholder reply reacting to the review
-    const tone = output.score >= 75 ? "supportive" : output.score >= 50 ? "curious" : "frustrated";
-    const sender = output.score >= 75
-      ? { name: "Sarah Williams", role: "Project Manager, Northbridge Health Services" }
-      : output.score >= 50
-        ? { name: "Rachel Stone", role: "Clinical Governance Lead" }
-        : { name: "David Okafor", role: "Executive Sponsor, Director of Transformation" };
+    // Trigger a follow-up stakeholder reply reacting to this specific review, not a canned repeat.
+    let reaction: z.infer<typeof ReviewReactionSchema>;
+    try {
+      const res = await generateObject({
+        model: getModel(),
+        schema: ReviewReactionSchema,
+        prompt: `Write ONE short workplace email reacting to the latest document review.
+
+Document: ${doc.title}
+Latest score: ${output.score}/100
+Latest summary: ${output.summary}
+Strengths: ${JSON.stringify(output.strengths)}
+Weaknesses: ${JSON.stringify(output.weaknesses)}
+Recommendations: ${JSON.stringify(output.recommendations)}
+Detected current-document signals: ${JSON.stringify(signals)}
+Recent inbox messages to avoid repeating: ${JSON.stringify(recentInbox ?? [])}
+
+Choose the most plausible sender from Sarah Williams (Project Manager), Rachel Stone (Clinical Governance Lead), or David Okafor (Executive Sponsor). If Rachel writes, focus on clinical governance and safety assurance. If Sarah writes, focus on delivery process and next steps. If David writes, focus on sponsor confidence and decision readiness.
+
+Do not use the same wording as any recent inbox message. Do not write a generic "Thanks for the note" response. Mention at least one concrete thing that changed or still needs action. 2 short paragraphs plus sign-off.`,
+      });
+      reaction = res.object;
+    } catch {
+      reaction = output.score >= 75
+        ? {
+            sender_name: "Sarah Williams",
+            sender_role: "Project Manager, Northbridge Health Services",
+            subject: `Re: ${doc.title}`,
+            tone: "supportive",
+            body: `This is a stronger version of ${doc.title}. The added ownership and review detail gives us a better baseline for the next governance conversation, so please now turn the open recommendations into dated actions.\n\nThanks,\nSarah`,
+          }
+        : {
+            sender_name: "Rachel Stone",
+            sender_role: "Clinical Governance Lead",
+            subject: `Re: ${doc.title}`,
+            tone: output.score >= 50 ? "curious" : "frustrated",
+            body: `I can see the charter has moved on, but I still need the governance route to be unambiguous before this is treated as ready. Please tie the remaining recommendations to owners, dates, and escalation triggers.\n\nRachel Stone`,
+          };
+    }
+    const recentBodies = new Set((recentInbox ?? []).map((m) => m.body.trim().toLowerCase()));
+    if (recentBodies.has(reaction.body.trim().toLowerCase())) {
+      reaction = {
+        ...reaction,
+        body: `${reaction.body}\n\nPlease treat this as feedback on the latest review rather than a repeat of the earlier response.`,
+      };
+    }
     await supabase.from("inbox_messages").insert({
       user_id: userId,
-      sender_name: sender.name,
-      sender_role: sender.role,
-      subject: `Re: ${doc.title}`,
-      tone,
-      body: output.next_phase_message,
+      sender_name: reaction.sender_name,
+      sender_role: reaction.sender_role,
+      subject: reaction.subject || `Re: ${doc.title}`,
+      tone: reaction.tone,
+      body: reaction.body,
     });
 
     return fb;
