@@ -43,20 +43,16 @@ function Landing() {
               <Sparkles className="h-3.5 w-3.5 text-primary" /> Chapter One · Northbridge Health
             </p>
             <h1 className="font-display text-5xl font-medium leading-[1.05] tracking-tight md:text-7xl">
-              The project is{" "}
-              <span className="italic text-primary">3 weeks</span> behind schedule.
-              <br />
-              You just opened your inbox.
+              Experience the job{" "}
+              <span className="italic text-primary">before</span> you get hired.
             </h1>
             <p className="mt-4 max-w-xl font-display text-2xl text-muted-foreground">
-              Welcome to your first day.
+              A career simulator, not a course.
             </p>
             <p className="mt-6 max-w-xl text-lg text-muted-foreground">
-              Atlas is an immersive workplace simulation. Stakeholders write in. Tasks pile up.
-              Documents are reviewed. Every decision shapes the story. Today you join Northbridge
-              Health Services as Project Coordinator on the £500,000 Digital Care Records Rollout —
-              moving 12 care homes off paper. Sarah Williams is your line manager. The sponsor is
-              already asking questions.
+              Atlas drops you into a real workplace. Stakeholders write in. Tasks pile
+              up. Documents are reviewed. Every decision shapes the story — and your
+              first assignment begins the moment you sign in.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
