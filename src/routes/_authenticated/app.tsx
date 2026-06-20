@@ -49,7 +49,7 @@ function AppLayout() {
 
   return (
     <div className="min-h-screen bg-background text-foreground paper-texture">
-      <div className="mx-auto grid min-h-screen max-w-[1400px] grid-cols-1 md:grid-cols-[300px_1fr]">
+      <div className="mx-auto grid min-h-screen max-w-[1400px] grid-cols-1 md:grid-cols-[260px_1fr]">
         <aside className="border-b border-border bg-sidebar/60 px-5 py-6 md:border-b-0 md:border-r">
           <Link to="/app" className="font-display text-2xl font-semibold tracking-tight">
             Atlas <span className="text-primary">/</span>
@@ -58,7 +58,7 @@ function AppLayout() {
             {overview?.state?.project_name ?? "Loading…"}
           </div>
 
-          <nav className="mt-8 grid grid-cols-3 gap-2 md:flex md:flex-col md:gap-1">
+          <nav className="mt-8 grid grid-cols-3 gap-2">
             {NAV.map(({ to, label, icon: Icon, exact }) => {
               const active = isActive(to, exact);
               const badge =
@@ -73,17 +73,17 @@ function AppLayout() {
                 <Link
                   key={to}
                   to={to}
-                  className={`relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-md p-2 text-center text-[11px] leading-tight transition md:aspect-auto md:flex-row md:justify-start md:gap-3 md:p-0 md:px-3 md:py-2 md:text-sm ${
+                  className={`relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-md p-2 text-center text-[11px] leading-tight transition ${
                     active
                       ? "bg-foreground text-background"
                       : "text-foreground/80 hover:bg-accent hover:text-foreground"
                   }`}
                 >
-                  <Icon className="h-5 w-5 shrink-0 md:h-4 md:w-4" />
-                  <span className="line-clamp-2 md:flex-1 md:truncate md:line-clamp-none">{label}</span>
+                  <Icon className="h-5 w-5 shrink-0" />
+                  <span className="line-clamp-2">{label}</span>
                   {badge ? (
                     <span
-                      className={`absolute right-1 top-1 min-w-[18px] rounded-full px-1.5 py-0.5 text-center text-[10px] font-medium md:static md:right-auto md:top-auto md:min-w-[20px] ${
+                      className={`absolute right-1 top-1 min-w-[18px] rounded-full px-1.5 py-0.5 text-center text-[10px] font-medium ${
                         active ? "bg-background/20 text-background" : "bg-primary/15 text-primary"
                       }`}
                     >
