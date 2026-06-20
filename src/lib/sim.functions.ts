@@ -602,24 +602,61 @@ function uniqueStrings(items: unknown[] | undefined, fallback: string[]): string
   return cleaned.length > 0 ? cleaned : fallback;
 }
 
+function scoreSignals(excerpt: string) {
+  const text = excerpt.toLowerCase();
+  const has = (terms: string[]) => terms.some((term) => text.includes(term));
+  return {
+    length: excerpt.trim().length,
+    hasOwners: has(["owner", "accountable", "responsible", "raci"]),
+    hasDates: has(["date", "deadline", "timeline", "milestone", "week", "month"]),
+    hasGovernance: has(["governance", "approval", "decision", "steering", "board"]),
+    hasEscalation: has(["escalation", "escalate", "risk", "raid", "issue"]),
+    hasSuccess: has(["success criteria", "benefit", "objective", "scope", "deliverable"]),
+  };
+}
+
 function fallbackFeedback(title: string, excerpt: string): z.infer<typeof FeedbackSchema> {
-  const hasSubstance = excerpt.trim().length > 800;
-  const score = hasSubstance ? 64 : 38;
+  const signals = scoreSignals(excerpt);
+  const hasSubstance = signals.length > 800;
+  const signalCount = [signals.hasOwners, signals.hasDates, signals.hasGovernance, signals.hasEscalation, signals.hasSuccess].filter(Boolean).length;
+  const score = hasSubstance ? Math.min(82, 52 + signalCount * 6 + Math.min(8, Math.floor(signals.length / 1200))) : 38;
+  const missing = [
+    !signals.hasOwners && "named owners/accountability",
+    !signals.hasDates && "dates or milestones",
+    !signals.hasGovernance && "governance/approval route",
+    !signals.hasEscalation && "risk and escalation detail",
+    !signals.hasSuccess && "success criteria",
+  ].filter(Boolean) as string[];
   return normalizeFeedback({
     score,
     category_scores: {
-      clarity: hasSubstance ? 68 : 40,
-      completeness: hasSubstance ? 58 : 30,
-      professionalism: hasSubstance ? 66 : 45,
-      governance: hasSubstance ? 55 : 28,
+      clarity: hasSubstance ? Math.min(86, 62 + (signals.hasSuccess ? 8 : 0) + (signals.hasDates ? 5 : 0)) : 40,
+      completeness: hasSubstance ? Math.min(86, 48 + signalCount * 7) : 30,
+      professionalism: hasSubstance ? Math.min(88, 60 + (signals.hasOwners ? 6 : 0) + (signals.hasDates ? 5 : 0)) : 45,
+      governance: hasSubstance ? Math.min(84, 42 + (signals.hasGovernance ? 14 : 0) + (signals.hasEscalation ? 12 : 0) + (signals.hasOwners ? 6 : 0)) : 28,
     },
-    summary: `${title} has enough material for an initial review, but it still needs tighter governance detail before sponsor sign-off.`,
+    summary: missing.length === 0
+      ? `${title} now reads as a stronger working charter with clearer accountability, timing, governance, and success measures.`
+      : `${title} is moving in the right direction, but the remaining gap is ${missing.slice(0, 2).join(" and ")}.`,
     strengths: hasSubstance
-      ? ["The document gives the project enough context to understand the intended deliverable.", "It is suitable as a working draft for internal review."]
+      ? uniqueStrings([
+          signals.hasSuccess && "The document explains the intended scope, objectives, or success measures.",
+          signals.hasOwners && "Accountability is starting to be tied to named owners or responsible roles.",
+          signals.hasDates && "The charter now gives the team a clearer timing or milestone reference.",
+          signals.hasGovernance && "Governance and approval expectations are more visible than in a bare draft.",
+        ].filter(Boolean) as string[], ["The document gives the project enough context to understand the intended deliverable."])
       : ["The file was received and can be tracked against the project deliverables."],
-    weaknesses: ["Decision rights, owners, dates, and escalation routes need to be more explicit.", "The deliverable should link key risks, assumptions, and success criteria to named accountable people."],
-    recommendations: ["Add named owners and target dates for every major action or risk.", "Include a short governance section covering approvals, escalation path, and change control."],
-    next_phase_message: `Sarah can use ${title} as a draft baseline, but the governance panel will expect clearer ownership and escalation detail before treating it as final.`,
+    weaknesses: uniqueStrings(
+      missing.map((item) => `Further detail is still needed on ${item}.`),
+      ["The deliverable should connect risks, assumptions, owners, dates, and success criteria more explicitly."],
+    ),
+    recommendations: uniqueStrings(
+      missing.map((item) => `Add a concise section covering ${item}.`),
+      ["Prepare the charter for sponsor review by checking decision rights, approvals, risks, and change control are all explicit."],
+    ),
+    next_phase_message: missing.length === 0
+      ? `Sarah can take ${title} into the next review as a credible baseline, while Rachel will still want the team to test the governance route against live risks.`
+      : `Sarah can see progress in ${title}, but Rachel will keep pressing for ${missing.slice(0, 2).join(" and ")} before governance sign-off.`,
   });
 }
 
