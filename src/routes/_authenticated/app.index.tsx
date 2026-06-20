@@ -3,8 +3,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getOverview, generateStakeholderMessage, listInbox } from "@/lib/sim.functions";
 import { Button } from "@/components/ui/button";
-import { Mail, Sparkles, FileText, ListChecks } from "lucide-react";
+import { Mail, Sparkles, FileText, ListChecks, Activity, ClipboardCheck } from "lucide-react";
 import { toast } from "sonner";
+import { formatDistanceToNow } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/app/")({
   component: Dashboard,
@@ -24,7 +25,7 @@ function Dashboard() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["inbox"] });
       qc.invalidateQueries({ queryKey: ["overview"] });
-      toast.success("A new message arrived.");
+      toast.success("New email in your inbox.");
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
@@ -32,32 +33,48 @@ function Dashboard() {
   const recent = (inbox ?? []).slice(0, 3);
   const story = (overview?.state?.story_log as Array<{ at: string; beat: string }> | undefined) ?? [];
   const lastBeat = story[story.length - 1];
+  const state = overview?.state;
+  const health = (state?.health as "green" | "amber" | "red" | undefined) ?? "amber";
+  const healthStyle: Record<string, string> = {
+    green: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/40",
+    amber: "bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/40",
+    red: "bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/40",
+  };
+  const activity = overview?.activity ?? [];
 
   return (
     <div className="space-y-10">
       <header>
         <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-          Day {Math.max(1, story.length + 1)} · {overview?.state?.phase ?? "kickoff"}
+          {state?.chapter ?? "Chapter One"} · {state?.company ?? "Northbridge Health Services"}
         </div>
         <h1 className="mt-2 font-display text-4xl font-medium tracking-tight md:text-5xl">
           Good morning, coordinator.
         </h1>
         <p className="mt-2 max-w-2xl text-muted-foreground">
-          The project is breathing. {overview?.unread ?? 0} unread, {overview?.openTasks ?? 0} open
-          tasks, {overview?.docs ?? 0} documents on file.
+          {state?.project_name ?? "Digital Care Records Rollout"} · 12 care homes ·
+          £500,000 budget · 6-month timeline. You have {overview?.unread ?? 0} unread,{" "}
+          {overview?.openTasks ?? 0} open tasks, and {overview?.pendingReviews ?? 0} document(s)
+          awaiting review.
         </p>
       </header>
 
-      <section className="grid gap-4 md:grid-cols-3">
-        <Stat label="Reputation" value={`${overview?.state?.reputation ?? 50}/100`} hint="How stakeholders see you" />
-        <Stat label="Progress" value={`${overview?.state?.progress ?? 0}%`} hint="Toward launch" />
-        <Stat label="Phase" value={overview?.state?.phase ?? "—"} hint="Current chapter" capitalize />
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className={`rounded-lg border p-5 ${healthStyle[health]}`}>
+          <div className="text-xs uppercase tracking-[0.18em] opacity-80">Project Health</div>
+          <div className="mt-2 font-display text-3xl font-medium capitalize">{health}</div>
+          <div className="mt-1 text-xs opacity-80">Sponsor's current view</div>
+        </div>
+        <Stat label="Chapter" value={state?.chapter?.replace(/^Chapter\s+/i, "Ch. ") ?? "—"} hint="Current storyline" icon={Sparkles} />
+        <Stat label="Open tasks" value={overview?.openTasks ?? 0} hint="Not yet completed" icon={ListChecks} />
+        <Stat label="Pending reviews" value={overview?.pendingReviews ?? 0} hint="Awaiting AI panel" icon={ClipboardCheck} />
+        <Stat label="Reputation" value={`${state?.reputation ?? 50}/100`} hint="Across stakeholders" icon={Activity} />
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <div className="rounded-lg border border-border bg-card p-6">
           <div className="flex items-center justify-between">
-            <h2 className="font-display text-xl font-semibold">Latest in the inbox</h2>
+            <h2 className="font-display text-xl font-semibold">Inbox</h2>
             <Button
               size="sm"
               onClick={() => summon.mutate()}
@@ -65,13 +82,13 @@ function Dashboard() {
               variant="secondary"
             >
               <Sparkles className="mr-2 h-4 w-4" />
-              {summon.isPending ? "Summoning…" : "Summon a stakeholder"}
+              {summon.isPending ? "Drafting…" : "New stakeholder email"}
             </Button>
           </div>
           <ul className="mt-4 divide-y divide-border">
             {recent.length === 0 && (
               <li className="py-8 text-center text-sm text-muted-foreground">
-                Nothing yet — summon a stakeholder to kick things off.
+                Quiet inbox. Sarah will check in shortly.
               </li>
             )}
             {recent.map((m) => (
@@ -100,16 +117,28 @@ function Dashboard() {
         </div>
 
         <div className="rounded-lg border border-border bg-card p-6">
-          <h2 className="font-display text-xl font-semibold">Story so far</h2>
+          <h2 className="font-display text-xl font-semibold">Recent activity</h2>
+          <ul className="mt-4 space-y-3">
+            {activity.length === 0 && (
+              <li className="text-sm text-muted-foreground">No activity yet today.</li>
+            )}
+            {activity.slice(0, 6).map((a) => (
+              <li key={`${a.kind}-${a.id}`} className="flex items-start gap-2 text-sm">
+                <span className="mt-1 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate">{a.text}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {formatDistanceToNow(new Date(a.at), { addSuffix: true })}
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
           {lastBeat ? (
-            <blockquote className="mt-4 border-l-2 border-primary pl-4 font-display text-lg italic leading-snug">
+            <blockquote className="mt-6 border-l-2 border-primary pl-4 font-display text-base italic leading-snug text-muted-foreground">
               "{lastBeat.beat}"
             </blockquote>
-          ) : (
-            <p className="mt-4 text-sm text-muted-foreground">
-              No beats yet. Upload your first document to start writing the project's story.
-            </p>
-          )}
+          ) : null}
           <div className="mt-6 grid grid-cols-2 gap-2">
             <Link
               to="/app/tasks"
@@ -134,17 +163,20 @@ function Stat({
   label,
   value,
   hint,
-  capitalize,
+  icon: Icon,
 }: {
   label: string;
   value: string | number;
   hint: string;
-  capitalize?: boolean;
+  icon?: React.ComponentType<{ className?: string }>;
 }) {
   return (
     <div className="rounded-lg border border-border bg-card p-5">
-      <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{label}</div>
-      <div className={`mt-2 font-display text-3xl font-medium ${capitalize ? "capitalize" : ""}`}>{value}</div>
+      <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+        {Icon ? <Icon className="h-3.5 w-3.5" /> : null}
+        {label}
+      </div>
+      <div className="mt-2 font-display text-3xl font-medium">{value}</div>
       <div className="mt-1 text-xs text-muted-foreground">{hint}</div>
     </div>
   );
