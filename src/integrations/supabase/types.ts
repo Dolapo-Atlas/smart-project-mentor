@@ -14,7 +14,209 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      ai_feedback: {
+        Row: {
+          created_at: string
+          document_id: string | null
+          id: string
+          recommendations: Json
+          score: number | null
+          strengths: Json
+          summary: string
+          user_id: string
+          weaknesses: Json
+        }
+        Insert: {
+          created_at?: string
+          document_id?: string | null
+          id?: string
+          recommendations?: Json
+          score?: number | null
+          strengths?: Json
+          summary: string
+          user_id: string
+          weaknesses?: Json
+        }
+        Update: {
+          created_at?: string
+          document_id?: string | null
+          id?: string
+          recommendations?: Json
+          score?: number | null
+          strengths?: Json
+          summary?: string
+          user_id?: string
+          weaknesses?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_feedback_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documents: {
+        Row: {
+          content_excerpt: string | null
+          created_at: string
+          id: string
+          mime_type: string | null
+          quality_score: number | null
+          size_bytes: number | null
+          status: string
+          storage_path: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          content_excerpt?: string | null
+          created_at?: string
+          id?: string
+          mime_type?: string | null
+          quality_score?: number | null
+          size_bytes?: number | null
+          status?: string
+          storage_path: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          content_excerpt?: string | null
+          created_at?: string
+          id?: string
+          mime_type?: string | null
+          quality_score?: number | null
+          size_bytes?: number | null
+          status?: string
+          storage_path?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      inbox_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          read: boolean
+          sender_name: string
+          sender_role: string
+          subject: string
+          tone: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          read?: boolean
+          sender_name: string
+          sender_role: string
+          subject: string
+          tone?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          read?: boolean
+          sender_name?: string
+          sender_role?: string
+          subject?: string
+          tone?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      simulation_state: {
+        Row: {
+          phase: string
+          progress: number
+          project_name: string
+          reputation: number
+          story_log: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          phase?: string
+          progress?: number
+          project_name?: string
+          reputation?: number
+          story_log?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          phase?: string
+          progress?: number
+          project_name?: string
+          reputation?: number
+          story_log?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          due_at: string | null
+          id: string
+          priority: string
+          status: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_at?: string | null
+          id?: string
+          priority?: string
+          status?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_at?: string | null
+          id?: string
+          priority?: string
+          status?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
