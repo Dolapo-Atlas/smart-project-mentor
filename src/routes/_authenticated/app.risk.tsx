@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   listRaid, createRaid, updateRaidStatus, deleteRaid,
-  listRag, upsertRag,
+  listRag, upsertRag, submitRaidLog,
 } from "@/lib/raid.functions";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -55,6 +55,7 @@ function RiskPage() {
   const setStatusFn = useServerFn(updateRaidStatus);
   const delRaidFn = useServerFn(deleteRaid);
   const upsertRagFn = useServerFn(upsertRag);
+  const submitRaidFn = useServerFn(submitRaidLog);
 
   const { data: raid } = useQuery({ queryKey: ["raid"], queryFn: () => fetchRaid() });
   const { data: rag } = useQuery({ queryKey: ["rag"], queryFn: () => fetchRag() });
@@ -84,8 +85,24 @@ function RiskPage() {
     mutationFn: () => addRaid({ data: { ...form, description: form.description || undefined, owner: form.owner || undefined, mitigation: form.mitigation || undefined } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["raid"] });
+      qc.invalidateQueries({ queryKey: ["rag"] });
+      qc.invalidateQueries({ queryKey: ["inbox"] });
+      qc.invalidateQueries({ queryKey: ["tasks"] });
+      qc.invalidateQueries({ queryKey: ["overview"] });
       setForm({ ...form, title: "", description: "", owner: "", mitigation: "" });
-      toast.success("Logged.");
+      toast.success("RAID item logged. Stakeholders may respond.");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+
+  const submit = useMutation({
+    mutationFn: () => submitRaidFn(),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["raid"] });
+      qc.invalidateQueries({ queryKey: ["tasks"] });
+      qc.invalidateQueries({ queryKey: ["inbox"] });
+      qc.invalidateQueries({ queryKey: ["overview"] });
+      toast.success("Initial RAID Log submitted for review.");
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
@@ -165,6 +182,16 @@ function RiskPage() {
 
       <section className="space-y-4">
         <h2 className="font-display text-2xl">RAID log</h2>
+        {(raid ?? []).length >= 3 && (
+          <div className="flex items-center justify-between rounded-md border border-border bg-card p-4">
+            <div className="text-sm text-muted-foreground">
+              You have {(raid ?? []).length} RAID entries. Ready to send to Sarah for review?
+            </div>
+            <Button onClick={() => submit.mutate()} disabled={submit.isPending}>
+              Submit RAID Log for Review
+            </Button>
+          </div>
+        )}
 
         <div className="rounded-lg border border-border bg-card p-5">
           <div className="grid gap-3 sm:grid-cols-2">
