@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Check, Circle, CircleDot, Plus, Trash2 } from "lucide-react";
+import { Check, Circle, CircleDot, Plus, Trash2, Inbox } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/app/tasks")({
@@ -39,7 +39,7 @@ function Tasks() {
   });
 
   const update = useMutation({
-    mutationFn: (v: { id: string; status: "todo" | "in_progress" | "done" }) => updateFn({ data: v }),
+    mutationFn: (v: { id: string; status: "todo" | "in_progress" | "submitted" | "done" }) => updateFn({ data: v }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tasks"] });
       qc.invalidateQueries({ queryKey: ["overview"] });
@@ -54,14 +54,26 @@ function Tasks() {
   const grouped = {
     todo: tasks?.filter((t) => t.status === "todo") ?? [],
     in_progress: tasks?.filter((t) => t.status === "in_progress") ?? [],
+    submitted: tasks?.filter((t) => t.status === "submitted") ?? [],
     done: tasks?.filter((t) => t.status === "done") ?? [],
+  };
+
+  const columnLabels: Record<keyof typeof grouped, string> = {
+    todo: "To Do",
+    in_progress: "In Progress",
+    submitted: "Submitted",
+    done: "Completed",
   };
 
   return (
     <div className="space-y-8">
       <header>
         <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Coordination</div>
-        <h1 className="font-display text-4xl font-medium">Task list</h1>
+        <h1 className="font-display text-4xl font-medium">Task board</h1>
+        <p className="mt-2 max-w-xl text-sm text-muted-foreground">
+          Move work from To Do through In Progress, mark it Submitted when you upload to Documents,
+          and Completed when the AI panel signs it off.
+        </p>
       </header>
 
       <form
@@ -99,13 +111,11 @@ function Tasks() {
         />
       </form>
 
-      <div className="grid gap-6 md:grid-cols-3">
-        {(["todo", "in_progress", "done"] as const).map((status) => (
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+        {(["todo", "in_progress", "submitted", "done"] as const).map((status) => (
           <div key={status} className="rounded-lg border border-border bg-card p-4">
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="font-display text-lg font-semibold capitalize">
-                {status.replace("_", " ")}
-              </h3>
+              <h3 className="font-display text-lg font-semibold">{columnLabels[status]}</h3>
               <span className="text-xs text-muted-foreground">{grouped[status].length}</span>
             </div>
             <ul className="space-y-2">
@@ -119,8 +129,8 @@ function Tasks() {
                   <div className="flex items-start gap-2">
                     <button
                       onClick={() => {
-                        const next =
-                          t.status === "todo" ? "in_progress" : t.status === "in_progress" ? "done" : "todo";
+                        const cycle = { todo: "in_progress", in_progress: "submitted", submitted: "done", done: "todo" } as const;
+                        const next = cycle[t.status as keyof typeof cycle] ?? "todo";
                         update.mutate({ id: t.id, status: next });
                       }}
                       className="mt-0.5"
@@ -128,6 +138,7 @@ function Tasks() {
                     >
                       {t.status === "todo" && <Circle className="h-4 w-4 text-muted-foreground" />}
                       {t.status === "in_progress" && <CircleDot className="h-4 w-4 text-primary" />}
+                      {t.status === "submitted" && <Inbox className="h-4 w-4 text-amber-600" />}
                       {t.status === "done" && <Check className="h-4 w-4 text-emerald-600" />}
                     </button>
                     <div className="flex-1">

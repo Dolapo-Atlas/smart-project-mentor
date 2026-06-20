@@ -91,7 +91,18 @@ function Documents() {
     }
   }
 
-  const feedback = (selected as { ai_feedback?: Array<{ id: string; summary: string; score: number; strengths: string[]; weaknesses: string[]; recommendations: string[]; created_at: string }> } | undefined)?.ai_feedback?.[0];
+  const feedback = (selected as {
+    ai_feedback?: Array<{
+      id: string;
+      summary: string;
+      score: number;
+      strengths: string[];
+      weaknesses: string[];
+      recommendations: string[];
+      category_scores?: Record<string, number>;
+      created_at: string;
+    }>;
+  } | undefined)?.ai_feedback?.[0];
 
   return (
     <div className="space-y-8">
@@ -108,7 +119,7 @@ function Documents() {
           <input ref={fileInput} type="file" onChange={onPick} className="hidden" />
           <Button onClick={() => fileInput.current?.click()} disabled={uploading}>
             {uploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-            {uploading ? "Uploading…" : "Upload document"}
+            {uploading ? "Uploading…" : "Upload (PDF, DOCX, XLSX)"}
           </Button>
         </div>
       </header>
@@ -205,8 +216,22 @@ function Documents() {
 function FeedbackPanel({
   feedback,
 }: {
-  feedback: { summary: string; score: number; strengths: string[]; weaknesses: string[]; recommendations: string[] };
+  feedback: {
+    summary: string;
+    score: number;
+    strengths: string[];
+    weaknesses: string[];
+    recommendations: string[];
+    category_scores?: Record<string, number>;
+  };
 }) {
+  const cats = feedback.category_scores ?? {};
+  const catList: Array<[string, string]> = [
+    ["clarity", "Clarity"],
+    ["completeness", "Completeness"],
+    ["professionalism", "Professionalism"],
+    ["governance", "Governance"],
+  ];
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-4">
@@ -214,10 +239,23 @@ function FeedbackPanel({
           {feedback.score}
         </div>
         <div>
-          <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">AI panel verdict</div>
+          <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">AI review panel</div>
           <p className="mt-1 font-display text-lg leading-snug">{feedback.summary}</p>
         </div>
       </div>
+      {Object.keys(cats).length > 0 && (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {catList.map(([k, label]) => (
+            <div key={k} className="rounded-md border border-border bg-background p-3">
+              <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{label}</div>
+              <div className="mt-1 font-display text-xl font-semibold">{cats[k] ?? "—"}<span className="text-xs text-muted-foreground">/100</span></div>
+              <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                <div className="h-full bg-primary" style={{ width: `${cats[k] ?? 0}%` }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
       <div className="grid gap-4 md:grid-cols-3">
         <Block title="Strengths" items={feedback.strengths} tone="text-emerald-700 dark:text-emerald-400" />
         <Block title="Weaknesses" items={feedback.weaknesses} tone="text-orange-700 dark:text-orange-400" />

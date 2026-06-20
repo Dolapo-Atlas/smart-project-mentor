@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       ai_feedback: {
         Row: {
+          category_scores: Json
           created_at: string
           document_id: string | null
           id: string
@@ -27,6 +28,7 @@ export type Database = {
           weaknesses: Json
         }
         Insert: {
+          category_scores?: Json
           created_at?: string
           document_id?: string | null
           id?: string
@@ -38,6 +40,7 @@ export type Database = {
           weaknesses?: Json
         }
         Update: {
+          category_scores?: Json
           created_at?: string
           document_id?: string | null
           id?: string
@@ -153,6 +156,10 @@ export type Database = {
       }
       simulation_state: {
         Row: {
+          chapter: string
+          company: string
+          health: string
+          performance: Json
           phase: string
           progress: number
           project_name: string
@@ -162,6 +169,10 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          chapter?: string
+          company?: string
+          health?: string
+          performance?: Json
           phase?: string
           progress?: number
           project_name?: string
@@ -171,6 +182,10 @@ export type Database = {
           user_id: string
         }
         Update: {
+          chapter?: string
+          company?: string
+          health?: string
+          performance?: Json
           phase?: string
           progress?: number
           project_name?: string
