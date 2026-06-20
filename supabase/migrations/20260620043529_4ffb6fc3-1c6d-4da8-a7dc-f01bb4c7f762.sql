@@ -1,0 +1,1 @@
+ALTER TABLE public.inbox_messages ADD COLUMN IF NOT EXISTS escalated_at TIMESTAMPTZ; ALTER TABLE public.comms_messages ADD COLUMN IF NOT EXISTS escalated_at TIMESTAMPTZ;

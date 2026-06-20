@@ -156,6 +156,7 @@ export type Database = {
           body: string
           created_at: string
           direction: string
+          escalated_at: string | null
           from_role: string
           id: string
           msg_type: string
@@ -172,6 +173,7 @@ export type Database = {
           body: string
           created_at?: string
           direction: string
+          escalated_at?: string | null
           from_role: string
           id?: string
           msg_type: string
@@ -188,6 +190,7 @@ export type Database = {
           body?: string
           created_at?: string
           direction?: string
+          escalated_at?: string | null
           from_role?: string
           id?: string
           msg_type?: string
@@ -242,6 +245,7 @@ export type Database = {
         Row: {
           body: string
           created_at: string
+          escalated_at: string | null
           id: string
           read: boolean
           sender_name: string
@@ -253,6 +257,7 @@ export type Database = {
         Insert: {
           body: string
           created_at?: string
+          escalated_at?: string | null
           id?: string
           read?: boolean
           sender_name: string
@@ -264,6 +269,7 @@ export type Database = {
         Update: {
           body?: string
           created_at?: string
+          escalated_at?: string | null
           id?: string
           read?: boolean
           sender_name?: string

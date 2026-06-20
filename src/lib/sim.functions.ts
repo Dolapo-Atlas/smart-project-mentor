@@ -408,6 +408,104 @@ export const deleteTask = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/* ---------- AUTO-ESCALATION ---------- */
+
+const EscalationSchema = z.object({
+  subject: z.string(),
+  body: z.string(),
+  tone: z.enum(["urgent", "frustrated", "neutral"]),
+});
+
+export const runEscalations = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+
+    // Find unread inbound messages older than 2 days that have never been escalated.
+    const { data: stale } = await supabase
+      .from("inbox_messages")
+      .select("id,sender_name,sender_role,subject,body,created_at")
+      .eq("user_id", userId)
+      .eq("read", false)
+      .is("escalated_at", null)
+      .lt("created_at", twoDaysAgo)
+      .order("created_at", { ascending: true })
+      .limit(2);
+
+    if (!stale || stale.length === 0) return { escalated: 0 };
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("first_name, preferred_name")
+      .eq("id", userId)
+      .maybeSingle();
+    const firstName =
+      profile?.preferred_name?.trim() || profile?.first_name || "there";
+
+    let count = 0;
+    for (const orig of stale) {
+      const daysOld = Math.max(
+        2,
+        Math.floor((Date.now() - +new Date(orig.created_at)) / 86_400_000),
+      );
+      const prompt = `You are "${orig.sender_name}, ${orig.sender_role}". You emailed the project coordinator "${firstName}" ${daysOld} days ago about: "${orig.subject}". They have NOT replied. Write a SHORT follow-up email chasing for a response.
+
+Original message body:
+${orig.body}
+
+Style: a real chase email. Reference how long it's been. Be professional but show appropriate impatience — sponsors get blunt, finance/clinical sound concerned, vendors deflect, care home managers sound stressed about floor reality. 2-3 short paragraphs max. Sign off with name & role.`;
+
+      let out: z.infer<typeof EscalationSchema>;
+      try {
+        const res = await generateObject({
+          model: getModel(),
+          prompt,
+          schema: EscalationSchema,
+        });
+        out = res.object;
+      } catch {
+        out = {
+          subject: `Chasing: ${orig.subject}`,
+          body: `Hi ${firstName},\n\nI haven't heard back on the below from ${daysOld} days ago. Can you come back to me today please?\n\n${orig.sender_name}`,
+          tone: "urgent",
+        };
+      }
+
+      await supabase.from("inbox_messages").insert({
+        user_id: userId,
+        sender_name: orig.sender_name,
+        sender_role: orig.sender_role,
+        subject: out.subject,
+        body: out.body,
+        tone: out.tone,
+      });
+
+      await supabase
+        .from("inbox_messages")
+        .update({ escalated_at: new Date().toISOString() })
+        .eq("id", orig.id);
+
+      // small reputation hit for being ignored
+      const { data: s } = await supabase
+        .from("simulation_state")
+        .select("reputation")
+        .eq("user_id", userId)
+        .single();
+      await supabase
+        .from("simulation_state")
+        .update({
+          reputation: Math.max(0, (s?.reputation ?? 50) - 2),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("user_id", userId);
+
+      count++;
+    }
+
+    return { escalated: count };
+  });
+
 /* ---------- DOCUMENTS ---------- */
 
 export const listDocuments = createServerFn({ method: "GET" })
