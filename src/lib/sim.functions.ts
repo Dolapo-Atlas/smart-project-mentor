@@ -171,7 +171,7 @@ export const createTask = createServerFn({ method: "POST" })
 export const updateTaskStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    z.object({ id: z.string().uuid(), status: z.enum(["todo", "in_progress", "done"]) }).parse(d),
+    z.object({ id: z.string().uuid(), status: z.enum(["todo", "in_progress", "submitted", "done"]) }).parse(d),
   )
   .handler(async ({ data, context }) => {
     const patch: { status: string; completed_at?: string } = { status: data.status };
