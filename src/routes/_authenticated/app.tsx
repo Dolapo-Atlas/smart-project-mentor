@@ -58,7 +58,7 @@ function AppLayout() {
             {overview?.state?.project_name ?? "Loading…"}
           </div>
 
-          <nav className="mt-8 flex flex-col gap-1">
+          <nav className="mt-8 grid grid-cols-3 gap-2 md:flex md:flex-col md:gap-1">
             {NAV.map(({ to, label, icon: Icon, exact }) => {
               const active = isActive(to, exact);
               const badge =
@@ -73,17 +73,17 @@ function AppLayout() {
                 <Link
                   key={to}
                   to={to}
-                  className={`relative flex items-center gap-3 rounded-md px-3 py-2 text-sm transition ${
+                  className={`relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-md p-2 text-center text-[11px] leading-tight transition md:aspect-auto md:flex-row md:justify-start md:gap-3 md:p-0 md:px-3 md:py-2 md:text-sm ${
                     active
                       ? "bg-foreground text-background"
                       : "text-foreground/80 hover:bg-accent hover:text-foreground"
                   }`}
                 >
-                  <Icon className="h-4 w-4 shrink-0" />
-                  <span className="flex-1 truncate">{label}</span>
+                  <Icon className="h-5 w-5 shrink-0 md:h-4 md:w-4" />
+                  <span className="line-clamp-2 md:flex-1 md:truncate md:line-clamp-none">{label}</span>
                   {badge ? (
                     <span
-                      className={`min-w-[20px] rounded-full px-1.5 py-0.5 text-center text-[10px] font-medium ${
+                      className={`absolute right-1 top-1 min-w-[18px] rounded-full px-1.5 py-0.5 text-center text-[10px] font-medium md:static md:right-auto md:top-auto md:min-w-[20px] ${
                         active ? "bg-background/20 text-background" : "bg-primary/15 text-primary"
                       }`}
                     >
