@@ -22,6 +22,7 @@ import { Route as AuthenticatedAppReportsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAppProgressRouteImport } from './routes/_authenticated/app.progress'
 import { Route as AuthenticatedAppInboxRouteImport } from './routes/_authenticated/app.inbox'
 import { Route as AuthenticatedAppDocumentsRouteImport } from './routes/_authenticated/app.documents'
+import { Route as AuthenticatedAppChangesRouteImport } from './routes/_authenticated/app.changes'
 import { Route as AuthenticatedAppBudgetRouteImport } from './routes/_authenticated/app.budget'
 
 const AuthRoute = AuthRouteImport.update({
@@ -90,6 +91,11 @@ const AuthenticatedAppDocumentsRoute =
     path: '/documents',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppChangesRoute = AuthenticatedAppChangesRouteImport.update({
+  id: '/changes',
+  path: '/changes',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const AuthenticatedAppBudgetRoute = AuthenticatedAppBudgetRouteImport.update({
   id: '/budget',
   path: '/budget',
@@ -103,6 +109,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/welcome': typeof AuthenticatedWelcomeRoute
   '/app/budget': typeof AuthenticatedAppBudgetRoute
+  '/app/changes': typeof AuthenticatedAppChangesRoute
   '/app/documents': typeof AuthenticatedAppDocumentsRoute
   '/app/inbox': typeof AuthenticatedAppInboxRoute
   '/app/progress': typeof AuthenticatedAppProgressRoute
@@ -117,6 +124,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/welcome': typeof AuthenticatedWelcomeRoute
   '/app/budget': typeof AuthenticatedAppBudgetRoute
+  '/app/changes': typeof AuthenticatedAppChangesRoute
   '/app/documents': typeof AuthenticatedAppDocumentsRoute
   '/app/inbox': typeof AuthenticatedAppInboxRoute
   '/app/progress': typeof AuthenticatedAppProgressRoute
@@ -134,6 +142,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/welcome': typeof AuthenticatedWelcomeRoute
   '/_authenticated/app/budget': typeof AuthenticatedAppBudgetRoute
+  '/_authenticated/app/changes': typeof AuthenticatedAppChangesRoute
   '/_authenticated/app/documents': typeof AuthenticatedAppDocumentsRoute
   '/_authenticated/app/inbox': typeof AuthenticatedAppInboxRoute
   '/_authenticated/app/progress': typeof AuthenticatedAppProgressRoute
@@ -151,6 +160,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/welcome'
     | '/app/budget'
+    | '/app/changes'
     | '/app/documents'
     | '/app/inbox'
     | '/app/progress'
@@ -165,6 +175,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/welcome'
     | '/app/budget'
+    | '/app/changes'
     | '/app/documents'
     | '/app/inbox'
     | '/app/progress'
@@ -181,6 +192,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding'
     | '/_authenticated/welcome'
     | '/_authenticated/app/budget'
+    | '/_authenticated/app/changes'
     | '/_authenticated/app/documents'
     | '/_authenticated/app/inbox'
     | '/_authenticated/app/progress'
@@ -289,6 +301,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppDocumentsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/changes': {
+      id: '/_authenticated/app/changes'
+      path: '/changes'
+      fullPath: '/app/changes'
+      preLoaderRoute: typeof AuthenticatedAppChangesRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/budget': {
       id: '/_authenticated/app/budget'
       path: '/budget'
@@ -301,6 +320,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAppRouteChildren {
   AuthenticatedAppBudgetRoute: typeof AuthenticatedAppBudgetRoute
+  AuthenticatedAppChangesRoute: typeof AuthenticatedAppChangesRoute
   AuthenticatedAppDocumentsRoute: typeof AuthenticatedAppDocumentsRoute
   AuthenticatedAppInboxRoute: typeof AuthenticatedAppInboxRoute
   AuthenticatedAppProgressRoute: typeof AuthenticatedAppProgressRoute
@@ -312,6 +332,7 @@ interface AuthenticatedAppRouteChildren {
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppBudgetRoute: AuthenticatedAppBudgetRoute,
+  AuthenticatedAppChangesRoute: AuthenticatedAppChangesRoute,
   AuthenticatedAppDocumentsRoute: AuthenticatedAppDocumentsRoute,
   AuthenticatedAppInboxRoute: AuthenticatedAppInboxRoute,
   AuthenticatedAppProgressRoute: AuthenticatedAppProgressRoute,
