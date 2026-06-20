@@ -41,6 +41,15 @@ function Dashboard() {
     red: "bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/40",
   };
   const activity = overview?.activity ?? [];
+  const profile = overview?.profile;
+  const name =
+    profile?.preferred_name?.trim() ||
+    profile?.first_name?.trim() ||
+    profile?.display_name?.trim() ||
+    "there";
+  const hour = new Date().getHours();
+  const greeting =
+    hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 
   return (
     <div className="space-y-10">
@@ -49,7 +58,7 @@ function Dashboard() {
           {state?.chapter ?? "Chapter One"} · {state?.company ?? "Northbridge Health Services"}
         </div>
         <h1 className="mt-2 font-display text-4xl font-medium tracking-tight md:text-5xl">
-          Good morning, coordinator.
+          {greeting}, {name}.
         </h1>
         <p className="mt-2 max-w-2xl text-muted-foreground">
           {state?.project_name ?? "Digital Care Records Rollout"} · 12 care homes ·
