@@ -1010,6 +1010,13 @@ ${excerpt || "(non-text document — judge based on the title; assume minimal co
       })
       .eq("user_id", userId);
 
+    // Update Atlas Learning Journey competencies based on this review.
+    try {
+      await applyDocumentReview(supabase, userId, doc.title, output.score);
+    } catch (e) {
+      console.error("learning journey update failed", e);
+    }
+
     // Trigger a follow-up stakeholder reply reacting to this specific review, not a canned repeat.
     let reaction: z.infer<typeof ReviewReactionSchema>;
     try {
