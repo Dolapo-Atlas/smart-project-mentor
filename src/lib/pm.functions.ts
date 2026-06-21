@@ -760,6 +760,57 @@ ${data.minutes ?? "(none)"}`,
     return row;
   });
 
+export const autoMinutes = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const meeting = await loadMeeting(context.supabase, context.userId, data.id);
+    const transcript = transcriptOf(meeting);
+    if (transcript.length === 0) {
+      throw new Error("Nothing to capture yet — start the meeting first.");
+    }
+    const transcriptText = transcript
+      .map((t) =>
+        t.kind === "system"
+          ? `[Note] ${t.body}`
+          : `${t.speaker_name} (${t.speaker_role}): ${t.body}`,
+      )
+      .join("\n\n");
+
+    const prompt = `You are taking minutes for a ${meeting.kind} meeting titled "${meeting.title}" on the Digital Care Records Rollout.
+
+Transcript:
+${transcriptText}
+
+Return THREE labelled sections, plain text, no markdown headers, no preamble:
+
+DECISIONS:
+- bullet list of concrete decisions made (with owner if named). If none, write "None yet."
+
+MINUTES:
+- terse bullet minutes of what was discussed, in chronological order. Attribute points to speakers by first name.
+
+SUMMARY:
+2-3 sentence executive summary covering outcome, risks raised, and next steps.`;
+
+    const { text } = await generateText({ model: getModel(), prompt });
+
+    const grab = (label: string) => {
+      const re = new RegExp(`${label}:\\s*([\\s\\S]*?)(?=\\n[A-Z]{4,}:|$)`, "i");
+      return text.match(re)?.[1]?.trim() ?? "";
+    };
+    const decisions = grab("DECISIONS");
+    const minutes = grab("MINUTES");
+    const summary = grab("SUMMARY");
+
+    return {
+      decisions: decisions || null,
+      minutes: minutes || null,
+      summary: summary || null,
+      raw: text,
+    };
+  });
+
 /* ============= CONFLICTING STAKEHOLDER ============= */
 
 export const summonConflict = createServerFn({ method: "POST" })

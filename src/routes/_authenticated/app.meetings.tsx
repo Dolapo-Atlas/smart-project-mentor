@@ -12,12 +12,13 @@ import {
   listAttendeeRoster,
   addMeetingAttendee,
   removeMeetingAttendee,
+  autoMinutes,
 } from "@/lib/pm.functions";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Users, CheckCircle2, Sparkles, Mic, MessageSquare, NotebookPen, PlayCircle, UserPlus, X } from "lucide-react";
+import { Plus, Users, CheckCircle2, Sparkles, Mic, MessageSquare, NotebookPen, PlayCircle, UserPlus, X, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
@@ -62,6 +63,7 @@ function Meetings() {
   const rosterFn = useServerFn(listAttendeeRoster);
   const addAttFn = useServerFn(addMeetingAttendee);
   const removeAttFn = useServerFn(removeMeetingAttendee);
+  const autoMinutesFn = useServerFn(autoMinutes);
   const { data: meetings } = useQuery({ queryKey: ["meetings"], queryFn: () => fetchM() });
   const { data: roster } = useQuery({ queryKey: ["attendee-roster"], queryFn: () => rosterFn() });
 
@@ -71,6 +73,7 @@ function Meetings() {
 
   const [decisions, setDecisions] = useState("");
   const [minutes, setMinutes] = useState("");
+  const [autoSummary, setAutoSummary] = useState<string | null>(null);
   const [chatInput, setChatInput] = useState("");
   const [chatMode, setChatMode] = useState<"speak" | "note">("speak");
   const [showAdd, setShowAdd] = useState(false);
@@ -130,6 +133,16 @@ function Meetings() {
   const removeAtt = useMutation({
     mutationFn: (role_key: string) => removeAttFn({ data: { id: selected!.id, role_key } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["meetings"] }),
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+  const auto = useMutation({
+    mutationFn: () => autoMinutesFn({ data: { id: selected!.id } }),
+    onSuccess: (res) => {
+      if (res.decisions) setDecisions((prev) => (prev.trim() ? prev : res.decisions!));
+      if (res.minutes) setMinutes((prev) => (prev.trim() ? prev : res.minutes!));
+      setAutoSummary(res.summary ?? null);
+      toast.success("Minutes captured from the discussion.");
+    },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
 
@@ -412,7 +425,24 @@ function Meetings() {
                     <div className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Minutes / notes</div>
                     <Textarea value={minutes} onChange={(e) => setMinutes(e.target.value)} placeholder="Discussion notes." className="min-h-[120px]" />
                   </div>
-                  <div className="flex justify-end">
+                  {autoSummary && (
+                    <div className="rounded-md border border-primary/40 bg-primary/5 p-3 text-sm">
+                      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-primary">
+                        <Sparkles className="h-3.5 w-3.5" /> Auto summary
+                      </div>
+                      <p className="mt-1 whitespace-pre-wrap leading-relaxed">{autoSummary}</p>
+                    </div>
+                  )}
+                  <div className="flex flex-wrap justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => auto.mutate()}
+                      disabled={auto.isPending || transcript.length === 0}
+                      title={transcript.length === 0 ? "Start the meeting first" : "Capture minutes from the live discussion"}
+                    >
+                      <Wand2 className="mr-2 h-4 w-4" />
+                      {auto.isPending ? "Capturing…" : "Auto-capture minutes"}
+                    </Button>
                     <Button onClick={() => hold.mutate()} disabled={hold.isPending}>
                       <Sparkles className="mr-2 h-4 w-4" /> Close meeting & summarise
                     </Button>
