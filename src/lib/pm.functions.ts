@@ -4,6 +4,7 @@ import { applyCompetencyStatus } from "./learning.functions";
 import { z } from "zod";
 import { generateObject, generateText } from "ai";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
+import type { Json } from "@/integrations/supabase/types";
 
 const MODEL = "google/gemini-3-flash-preview";
 function getModel() {
