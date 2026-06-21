@@ -29,12 +29,19 @@ function computeNextAction(input: {
 }): { title: string; reason: string; cta: string; to: string } | null {
   const { inbox, tasks, pendingReviews, unread } = input;
 
-  const unreadFromBoss = inbox.find((m) => !m.read && /sarah/i.test(m.sender_name));
-  if (unreadFromBoss) {
+  // The freshest stakeholder email is almost always the next line of action.
+  // Inbox is sorted newest-first; surface the top message as "what's next"
+  // with a reason derived from its body.
+  const latest = inbox[0];
+  if (latest) {
+    const snippet = (latest.body || "").replace(/\s+/g, " ").trim().slice(0, 180);
+    const isUnread = !latest.read;
     return {
-      title: `Read Sarah's email — "${unreadFromBoss.subject}"`,
-      reason: "Your PM is waiting on you. In real projects, the boss's inbox is always the first checkpoint of the day.",
-      cta: "Open inbox",
+      title: `Reply to ${latest.sender_name} — "${latest.subject}"`,
+      reason: snippet
+        ? `${isUnread ? "New message. " : ""}They wrote: "${snippet}${snippet.length >= 180 ? "…" : ""}" Open the email and reply directly from your inbox.`
+        : `${isUnread ? "New message waiting. " : ""}Open the email and reply directly from your inbox to keep the conversation moving.`,
+      cta: isUnread ? "Read & reply" : "Open & reply",
       to: "/app/inbox",
     };
   }
