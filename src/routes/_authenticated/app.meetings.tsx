@@ -1,12 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { listMeetings, createMeeting, holdMeeting } from "@/lib/pm.functions";
-import { useState } from "react";
+import {
+  listMeetings,
+  createMeeting,
+  holdMeeting,
+  startMeeting,
+  speakInMeeting,
+  noteInMeeting,
+  advanceMeeting,
+} from "@/lib/pm.functions";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Users, CheckCircle2, Sparkles } from "lucide-react";
+import { Plus, Users, CheckCircle2, Sparkles, Mic, MessageSquare, NotebookPen, PlayCircle } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
@@ -29,11 +37,25 @@ const kindStyle: Record<Kind, string> = {
   retro: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
 };
 
+type Attendee = { role_key: string; name: string; role: string; persona?: string };
+type Turn = {
+  at: string;
+  kind: "speaker" | "user" | "system";
+  speaker_name: string;
+  speaker_role: string;
+  role_key: string;
+  body: string;
+};
+
 function Meetings() {
   const qc = useQueryClient();
   const fetchM = useServerFn(listMeetings);
   const createFn = useServerFn(createMeeting);
   const holdFn = useServerFn(holdMeeting);
+  const startFn = useServerFn(startMeeting);
+  const speakFn = useServerFn(speakInMeeting);
+  const noteFn = useServerFn(noteInMeeting);
+  const advanceFn = useServerFn(advanceMeeting);
   const { data: meetings } = useQuery({ queryKey: ["meetings"], queryFn: () => fetchM() });
 
   const [form, setForm] = useState({ kind: "standup" as Kind, title: "", agenda: "" });
@@ -42,6 +64,9 @@ function Meetings() {
 
   const [decisions, setDecisions] = useState("");
   const [minutes, setMinutes] = useState("");
+  const [chatInput, setChatInput] = useState("");
+  const [chatMode, setChatMode] = useState<"speak" | "note">("speak");
+  const transcriptEndRef = useRef<HTMLDivElement | null>(null);
 
   const add = useMutation({
     mutationFn: () => createFn({ data: { kind: form.kind, title: form.title, agenda: form.agenda || undefined } }),
@@ -62,6 +87,38 @@ function Meetings() {
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
+
+  const start = useMutation({
+    mutationFn: () => startFn({ data: { id: selected!.id } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["meetings"] }),
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+  const speak = useMutation({
+    mutationFn: (body: string) => speakFn({ data: { id: selected!.id, body } }),
+    onSuccess: () => { setChatInput(""); qc.invalidateQueries({ queryKey: ["meetings"] }); },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+  const note = useMutation({
+    mutationFn: (body: string) => noteFn({ data: { id: selected!.id, body } }),
+    onSuccess: () => { setChatInput(""); qc.invalidateQueries({ queryKey: ["meetings"] }); },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+  const advance = useMutation({
+    mutationFn: (role_key?: string) => advanceFn({ data: { id: selected!.id, role_key } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["meetings"] }),
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+
+  const transcript: Turn[] = Array.isArray((selected as any)?.transcript)
+    ? ((selected as any).transcript as Turn[])
+    : [];
+  const attendees: Attendee[] = Array.isArray((selected as any)?.attendees)
+    ? ((selected as any).attendees as Attendee[])
+    : [];
+
+  useEffect(() => {
+    transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [transcript.length, selected?.id]);
 
   return (
     <div className="space-y-8">
@@ -141,7 +198,117 @@ function Meetings() {
               )}
 
               {!selected.held ? (
-                <div className="mt-5 space-y-3">
+                <div className="mt-5 space-y-5">
+                  {/* Live discussion */}
+                  <div className="rounded-md border border-border">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3">
+                      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                        <Users className="h-3.5 w-3.5" /> In the room
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {attendees.map((a) => (
+                          <button
+                            key={a.role_key}
+                            onClick={() => advance.mutate(a.role_key)}
+                            disabled={advance.isPending}
+                            title={`Let ${a.name} speak`}
+                            className="rounded-full border border-border bg-background px-2 py-0.5 text-[11px] hover:bg-accent"
+                          >
+                            {a.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="max-h-[420px] space-y-3 overflow-y-auto p-4">
+                      {transcript.length === 0 ? (
+                        <div className="flex flex-col items-center gap-3 py-8 text-sm text-muted-foreground">
+                          <p>The room is gathered. Kick things off.</p>
+                          <Button onClick={() => start.mutate()} disabled={start.isPending}>
+                            <PlayCircle className="mr-2 h-4 w-4" />
+                            {start.isPending ? "Starting…" : "Start meeting"}
+                          </Button>
+                        </div>
+                      ) : (
+                        transcript.map((t, i) => {
+                          if (t.kind === "system") {
+                            return (
+                              <div key={i} className="rounded-md border border-dashed border-border bg-muted/30 px-3 py-2 text-xs italic text-muted-foreground">
+                                <span className="font-semibold">Minutes:</span> {t.body}
+                              </div>
+                            );
+                          }
+                          const mine = t.kind === "user";
+                          return (
+                            <div key={i} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+                              <div className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${mine ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+                                <div className={`mb-1 text-[11px] uppercase tracking-wider ${mine ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
+                                  {t.speaker_name} · {t.speaker_role}
+                                </div>
+                                <div className="whitespace-pre-wrap leading-relaxed">{t.body}</div>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                      <div ref={transcriptEndRef} />
+                    </div>
+
+                    {transcript.length > 0 && (
+                      <div className="border-t border-border p-3 space-y-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <div className="flex rounded-md border border-border p-0.5 text-xs">
+                            <button
+                              onClick={() => setChatMode("speak")}
+                              className={`flex items-center gap-1 rounded px-2 py-1 ${chatMode === "speak" ? "bg-foreground text-background" : "text-muted-foreground"}`}
+                            >
+                              <MessageSquare className="h-3 w-3" /> Speak
+                            </button>
+                            <button
+                              onClick={() => setChatMode("note")}
+                              className={`flex items-center gap-1 rounded px-2 py-1 ${chatMode === "note" ? "bg-foreground text-background" : "text-muted-foreground"}`}
+                            >
+                              <NotebookPen className="h-3 w-3" /> Take minutes
+                            </button>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => advance.mutate(undefined)}
+                            disabled={advance.isPending}
+                          >
+                            <Mic className="mr-1.5 h-3.5 w-3.5" />
+                            {advance.isPending ? "Listening…" : "Let them respond"}
+                          </Button>
+                        </div>
+                        <Textarea
+                          value={chatInput}
+                          onChange={(e) => setChatInput(e.target.value)}
+                          placeholder={
+                            chatMode === "speak"
+                              ? "Say something to the room as the coordinator…"
+                              : "Capture a minute / decision (won't be spoken aloud)…"
+                          }
+                          className="min-h-[70px]"
+                        />
+                        <div className="flex justify-end">
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              const body = chatInput.trim();
+                              if (!body) return;
+                              if (chatMode === "speak") speak.mutate(body);
+                              else note.mutate(body);
+                            }}
+                            disabled={speak.isPending || note.isPending || chatInput.trim().length < 1}
+                          >
+                            {chatMode === "speak" ? "Send" : "Add minute"}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   <div>
                     <div className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Decisions made</div>
                     <Textarea value={decisions} onChange={(e) => setDecisions(e.target.value)} placeholder="What was decided? Who owns what?" />
