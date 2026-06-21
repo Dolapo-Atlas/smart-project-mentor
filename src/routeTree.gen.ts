@@ -21,6 +21,7 @@ import { Route as AuthenticatedAppRiskRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedAppReportsRouteImport } from './routes/_authenticated/app.reports'
 import { Route as AuthenticatedAppProgressRouteImport } from './routes/_authenticated/app.progress'
 import { Route as AuthenticatedAppMeetingsRouteImport } from './routes/_authenticated/app.meetings'
+import { Route as AuthenticatedAppLearningRouteImport } from './routes/_authenticated/app.learning'
 import { Route as AuthenticatedAppInboxRouteImport } from './routes/_authenticated/app.inbox'
 import { Route as AuthenticatedAppGatesRouteImport } from './routes/_authenticated/app.gates'
 import { Route as AuthenticatedAppDocumentsRouteImport } from './routes/_authenticated/app.documents'
@@ -89,6 +90,12 @@ const AuthenticatedAppMeetingsRoute =
     path: '/meetings',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppLearningRoute =
+  AuthenticatedAppLearningRouteImport.update({
+    id: '/learning',
+    path: '/learning',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppInboxRoute = AuthenticatedAppInboxRouteImport.update({
   id: '/inbox',
   path: '/inbox',
@@ -133,6 +140,7 @@ export interface FileRoutesByFullPath {
   '/app/documents': typeof AuthenticatedAppDocumentsRoute
   '/app/gates': typeof AuthenticatedAppGatesRoute
   '/app/inbox': typeof AuthenticatedAppInboxRoute
+  '/app/learning': typeof AuthenticatedAppLearningRoute
   '/app/meetings': typeof AuthenticatedAppMeetingsRoute
   '/app/progress': typeof AuthenticatedAppProgressRoute
   '/app/reports': typeof AuthenticatedAppReportsRoute
@@ -151,6 +159,7 @@ export interface FileRoutesByTo {
   '/app/documents': typeof AuthenticatedAppDocumentsRoute
   '/app/gates': typeof AuthenticatedAppGatesRoute
   '/app/inbox': typeof AuthenticatedAppInboxRoute
+  '/app/learning': typeof AuthenticatedAppLearningRoute
   '/app/meetings': typeof AuthenticatedAppMeetingsRoute
   '/app/progress': typeof AuthenticatedAppProgressRoute
   '/app/reports': typeof AuthenticatedAppReportsRoute
@@ -172,6 +181,7 @@ export interface FileRoutesById {
   '/_authenticated/app/documents': typeof AuthenticatedAppDocumentsRoute
   '/_authenticated/app/gates': typeof AuthenticatedAppGatesRoute
   '/_authenticated/app/inbox': typeof AuthenticatedAppInboxRoute
+  '/_authenticated/app/learning': typeof AuthenticatedAppLearningRoute
   '/_authenticated/app/meetings': typeof AuthenticatedAppMeetingsRoute
   '/_authenticated/app/progress': typeof AuthenticatedAppProgressRoute
   '/_authenticated/app/reports': typeof AuthenticatedAppReportsRoute
@@ -193,6 +203,7 @@ export interface FileRouteTypes {
     | '/app/documents'
     | '/app/gates'
     | '/app/inbox'
+    | '/app/learning'
     | '/app/meetings'
     | '/app/progress'
     | '/app/reports'
@@ -211,6 +222,7 @@ export interface FileRouteTypes {
     | '/app/documents'
     | '/app/gates'
     | '/app/inbox'
+    | '/app/learning'
     | '/app/meetings'
     | '/app/progress'
     | '/app/reports'
@@ -231,6 +243,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/documents'
     | '/_authenticated/app/gates'
     | '/_authenticated/app/inbox'
+    | '/_authenticated/app/learning'
     | '/_authenticated/app/meetings'
     | '/_authenticated/app/progress'
     | '/_authenticated/app/reports'
@@ -331,6 +344,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppMeetingsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/learning': {
+      id: '/_authenticated/app/learning'
+      path: '/learning'
+      fullPath: '/app/learning'
+      preLoaderRoute: typeof AuthenticatedAppLearningRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/inbox': {
       id: '/_authenticated/app/inbox'
       path: '/inbox'
@@ -383,6 +403,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppDocumentsRoute: typeof AuthenticatedAppDocumentsRoute
   AuthenticatedAppGatesRoute: typeof AuthenticatedAppGatesRoute
   AuthenticatedAppInboxRoute: typeof AuthenticatedAppInboxRoute
+  AuthenticatedAppLearningRoute: typeof AuthenticatedAppLearningRoute
   AuthenticatedAppMeetingsRoute: typeof AuthenticatedAppMeetingsRoute
   AuthenticatedAppProgressRoute: typeof AuthenticatedAppProgressRoute
   AuthenticatedAppReportsRoute: typeof AuthenticatedAppReportsRoute
@@ -398,6 +419,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppDocumentsRoute: AuthenticatedAppDocumentsRoute,
   AuthenticatedAppGatesRoute: AuthenticatedAppGatesRoute,
   AuthenticatedAppInboxRoute: AuthenticatedAppInboxRoute,
+  AuthenticatedAppLearningRoute: AuthenticatedAppLearningRoute,
   AuthenticatedAppMeetingsRoute: AuthenticatedAppMeetingsRoute,
   AuthenticatedAppProgressRoute: AuthenticatedAppProgressRoute,
   AuthenticatedAppReportsRoute: AuthenticatedAppReportsRoute,
