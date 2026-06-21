@@ -18,6 +18,68 @@ export const Route = createFileRoute("/_authenticated/app/")({
   component: Dashboard,
 });
 
+type InboxItem = { id: string; subject: string; sender_name: string; sender_role: string; body: string; read: boolean };
+type TaskItem = { id: string; title: string; status: string };
+
+function computeNextAction(input: {
+  inbox: InboxItem[];
+  tasks: TaskItem[];
+  pendingReviews: number;
+  unread: number;
+}): { title: string; reason: string; cta: string; to: string } | null {
+  const { inbox, tasks, pendingReviews, unread } = input;
+
+  const unreadFromBoss = inbox.find((m) => !m.read && /sarah/i.test(m.sender_name));
+  if (unreadFromBoss) {
+    return {
+      title: `Read Sarah's email — "${unreadFromBoss.subject}"`,
+      reason: "Your PM is waiting on you. In real projects, the boss's inbox is always the first checkpoint of the day.",
+      cta: "Open inbox",
+      to: "/app/inbox",
+    };
+  }
+  if (unread > 0) {
+    return {
+      title: `${unread} unread stakeholder ${unread === 1 ? "email" : "emails"}`,
+      reason: "Stakeholders are waiting on a reply. Reading and acknowledging keeps trust intact.",
+      cta: "Open inbox",
+      to: "/app/inbox",
+    };
+  }
+  if (pendingReviews > 0) {
+    return {
+      title: `${pendingReviews} document(s) awaiting review`,
+      reason: "Check the AI panel feedback and address the gaps before resubmitting.",
+      cta: "Open documents",
+      to: "/app/documents",
+    };
+  }
+  const inProgress = tasks.find((t) => t.status === "in_progress");
+  if (inProgress) {
+    return {
+      title: `Finish: ${inProgress.title}`,
+      reason: "You have a task in progress. Submit the artefact for review when it's ready.",
+      cta: "Open tasks",
+      to: "/app/tasks",
+    };
+  }
+  const todo = tasks.find((t) => t.status === "todo");
+  if (todo) {
+    return {
+      title: `Start: ${todo.title}`,
+      reason: "This is the next deliverable on your plan. Begin drafting or upload supporting documents.",
+      cta: "Open tasks",
+      to: "/app/tasks",
+    };
+  }
+  return {
+    title: "Send a weekly status report",
+    reason: "Inbox is quiet and tasks are clear. Real PMs use this lull to brief the sponsor before they ask.",
+    cta: "Write report",
+    to: "/app/reports",
+  };
+}
+
 function Dashboard() {
   const qc = useQueryClient();
   const fetchOverview = useServerFn(getOverview);
