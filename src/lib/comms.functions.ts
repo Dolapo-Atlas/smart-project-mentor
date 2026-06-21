@@ -3,6 +3,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { generateObject } from "ai";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
+import { applyCompetencyStatus } from "./learning.functions";
 
 const MODEL = "google/gemini-3-flash-preview";
 function getModel() {
