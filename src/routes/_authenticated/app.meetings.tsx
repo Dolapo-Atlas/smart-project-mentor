@@ -9,12 +9,15 @@ import {
   speakInMeeting,
   noteInMeeting,
   advanceMeeting,
+  listAttendeeRoster,
+  addMeetingAttendee,
+  removeMeetingAttendee,
 } from "@/lib/pm.functions";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Users, CheckCircle2, Sparkles, Mic, MessageSquare, NotebookPen, PlayCircle } from "lucide-react";
+import { Plus, Users, CheckCircle2, Sparkles, Mic, MessageSquare, NotebookPen, PlayCircle, UserPlus, X } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
@@ -56,7 +59,11 @@ function Meetings() {
   const speakFn = useServerFn(speakInMeeting);
   const noteFn = useServerFn(noteInMeeting);
   const advanceFn = useServerFn(advanceMeeting);
+  const rosterFn = useServerFn(listAttendeeRoster);
+  const addAttFn = useServerFn(addMeetingAttendee);
+  const removeAttFn = useServerFn(removeMeetingAttendee);
   const { data: meetings } = useQuery({ queryKey: ["meetings"], queryFn: () => fetchM() });
+  const { data: roster } = useQuery({ queryKey: ["attendee-roster"], queryFn: () => rosterFn() });
 
   const [form, setForm] = useState({ kind: "standup" as Kind, title: "", agenda: "" });
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -66,6 +73,8 @@ function Meetings() {
   const [minutes, setMinutes] = useState("");
   const [chatInput, setChatInput] = useState("");
   const [chatMode, setChatMode] = useState<"speak" | "note">("speak");
+  const [showAdd, setShowAdd] = useState(false);
+  const [customAtt, setCustomAtt] = useState({ name: "", role: "", persona: "" });
   const transcriptEndRef = useRef<HTMLDivElement | null>(null);
 
   const add = useMutation({
@@ -105,6 +114,21 @@ function Meetings() {
   });
   const advance = useMutation({
     mutationFn: (role_key?: string) => advanceFn({ data: { id: selected!.id, role_key } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["meetings"] }),
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+  const addAtt = useMutation({
+    mutationFn: (vars: { role_key?: string; custom?: { name: string; role: string; persona?: string } }) =>
+      addAttFn({ data: { id: selected!.id, ...vars } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["meetings"] });
+      setCustomAtt({ name: "", role: "", persona: "" });
+      toast.success("Added to the room.");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+  const removeAtt = useMutation({
+    mutationFn: (role_key: string) => removeAttFn({ data: { id: selected!.id, role_key } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["meetings"] }),
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
@@ -207,18 +231,89 @@ function Meetings() {
                       </div>
                       <div className="flex flex-wrap gap-1.5">
                         {attendees.map((a) => (
-                          <button
-                            key={a.role_key}
-                            onClick={() => advance.mutate(a.role_key)}
-                            disabled={advance.isPending}
-                            title={`Let ${a.name} speak`}
-                            className="rounded-full border border-border bg-background px-2 py-0.5 text-[11px] hover:bg-accent"
-                          >
-                            {a.name}
-                          </button>
+                          <span key={a.role_key} className="group inline-flex items-center gap-1 rounded-full border border-border bg-background pl-2 pr-1 text-[11px]">
+                            <button
+                              onClick={() => advance.mutate(a.role_key)}
+                              disabled={advance.isPending}
+                              title={`Let ${a.name} speak`}
+                              className="py-0.5 hover:underline"
+                            >
+                              {a.name}
+                            </button>
+                            <button
+                              onClick={() => removeAtt.mutate(a.role_key)}
+                              disabled={removeAtt.isPending}
+                              title="Remove from room"
+                              className="rounded-full p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </span>
                         ))}
+                        <button
+                          onClick={() => setShowAdd((v) => !v)}
+                          className="inline-flex items-center gap-1 rounded-full border border-dashed border-border bg-background px-2 py-0.5 text-[11px] hover:bg-accent"
+                        >
+                          <UserPlus className="h-3 w-3" /> Add
+                        </button>
                       </div>
                     </div>
+
+                    {showAdd && (
+                      <div className="border-b border-border bg-muted/30 p-4 space-y-3">
+                        <div>
+                          <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">From the roster</div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {(roster ?? [])
+                              .filter((r) => !attendees.some((a) => a.role_key === r.role_key))
+                              .map((r) => (
+                                <button
+                                  key={r.role_key}
+                                  onClick={() => addAtt.mutate({ role_key: r.role_key })}
+                                  disabled={addAtt.isPending}
+                                  className="rounded-full border border-border bg-background px-2 py-0.5 text-[11px] hover:bg-accent"
+                                  title={r.role}
+                                >
+                                  + {r.name} <span className="text-muted-foreground">· {r.role}</span>
+                                </button>
+                              ))}
+                            {(roster ?? []).filter((r) => !attendees.some((a) => a.role_key === r.role_key)).length === 0 && (
+                              <span className="text-[11px] text-muted-foreground">Everyone from the roster is already in the room.</span>
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Or invite someone custom</div>
+                          <div className="grid gap-2 sm:grid-cols-2">
+                            <Input placeholder="Name" value={customAtt.name} onChange={(e) => setCustomAtt({ ...customAtt, name: e.target.value })} />
+                            <Input placeholder="Role / title" value={customAtt.role} onChange={(e) => setCustomAtt({ ...customAtt, role: e.target.value })} />
+                          </div>
+                          <Textarea
+                            placeholder="Persona (optional) — how they speak, what they care about, what they push back on"
+                            value={customAtt.persona}
+                            onChange={(e) => setCustomAtt({ ...customAtt, persona: e.target.value })}
+                            className="mt-2 min-h-[60px]"
+                          />
+                          <div className="mt-2 flex justify-end">
+                            <Button
+                              size="sm"
+                              onClick={() =>
+                                addAtt.mutate({
+                                  custom: {
+                                    name: customAtt.name.trim(),
+                                    role: customAtt.role.trim(),
+                                    persona: customAtt.persona.trim() || undefined,
+                                  },
+                                })
+                              }
+                              disabled={addAtt.isPending || !customAtt.name.trim() || !customAtt.role.trim()}
+                            >
+                              <UserPlus className="mr-1.5 h-3.5 w-3.5" /> Add to room
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                     <div className="max-h-[420px] space-y-3 overflow-y-auto p-4">
                       {transcript.length === 0 ? (
