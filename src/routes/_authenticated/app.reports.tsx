@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Send, Save } from "lucide-react";
+import { Send, Save, Download, FileText } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/app/reports")({
   component: Reports,
@@ -52,6 +52,7 @@ function Reports() {
   });
 
   const past = (reports ?? []).filter((r) => r.week_start !== thisWeek);
+  const submitted = (reports ?? []).filter((r) => r.submitted_at);
 
   return (
     <div className="space-y-10">
@@ -106,22 +107,36 @@ function Reports() {
 
       <section className="space-y-3">
         <h2 className="font-display text-2xl">Past reports</h2>
-        {past.length === 0 && (
+        <p className="text-sm text-muted-foreground">
+          Every submitted status report is archived here. Download as Word or PDF for your records.
+        </p>
+        {submitted.length === 0 && (
           <div className="rounded-md border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-            No past reports yet.
+            No submitted reports yet. Submit a report to the sponsor and it will be saved here.
           </div>
         )}
         <ul className="space-y-2">
-          {past.map((r) => (
+          {submitted.map((r) => (
             <li key={r.id} className="rounded-md border border-border bg-card p-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <span className={`h-2.5 w-2.5 rounded-full ${ragDot[r.rag_summary as Rag]}`} />
                   <span className="font-medium">Week of {r.week_start}</span>
+                  {r.week_start === thisWeek && (
+                    <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs text-primary">this week</span>
+                  )}
                 </div>
-                <span className="text-sm text-muted-foreground">
-                  {r.ai_score != null ? `${r.ai_score}/100` : "Not scored"}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">
+                    {r.ai_score != null ? `${r.ai_score}/100` : "Not scored"}
+                  </span>
+                  <Button size="sm" variant="outline" onClick={() => downloadReport(r, "doc")}>
+                    <FileText className="mr-1.5 h-3.5 w-3.5" /> Word
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => downloadReport(r, "pdf")}>
+                    <Download className="mr-1.5 h-3.5 w-3.5" /> PDF
+                  </Button>
+                </div>
               </div>
               {r.ai_feedback ? (
                 <div className="mt-2 text-xs text-muted-foreground">{(r.ai_feedback as FB).summary}</div>
