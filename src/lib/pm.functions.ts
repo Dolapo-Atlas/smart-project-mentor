@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { applyCompetencyStatus } from "./learning.functions";
 import { z } from "zod";
 import { generateObject, generateText } from "ai";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
@@ -108,6 +109,19 @@ Score 0-100. A good status report has: concrete achievements with evidence, name
           body: object.sponsor_reaction,
           tone: object.score >= 70 ? "supportive" : object.score >= 50 ? "curious" : "frustrated",
         });
+
+        // Submitting a credible status report ticks reporting competencies.
+        try {
+          const ticks = ["p5.status_reporting", "p5.project_updates", "p7.governance_reporting"];
+          await applyCompetencyStatus(
+            context.supabase,
+            context.userId,
+            ticks,
+            object.score >= 65 ? "mastered" : "drafting",
+          );
+        } catch (e) {
+          console.error("learning journey status-report tick failed", e);
+        }
       } catch (e) {
         console.error("status report scoring failed", e);
       }

@@ -463,6 +463,33 @@ export type Database = {
         }
         Relationships: []
       }
+      reflection_entries: {
+        Row: {
+          answer: string
+          created_at: string
+          id: string
+          phase: number | null
+          prompt: string
+          user_id: string
+        }
+        Insert: {
+          answer: string
+          created_at?: string
+          id?: string
+          phase?: number | null
+          prompt: string
+          user_id: string
+        }
+        Update: {
+          answer?: string
+          created_at?: string
+          id?: string
+          phase?: number | null
+          prompt?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       simulation_state: {
         Row: {
           chapter: string
@@ -582,6 +609,39 @@ export type Database = {
           priority?: string
           status?: string
           title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_competencies: {
+        Row: {
+          competency_id: string
+          created_at: string
+          id: string
+          mastered_at: string | null
+          status: string
+          unlocked_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          competency_id: string
+          created_at?: string
+          id?: string
+          mastered_at?: string | null
+          status?: string
+          unlocked_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          competency_id?: string
+          created_at?: string
+          id?: string
+          mastered_at?: string | null
+          status?: string
+          unlocked_at?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
