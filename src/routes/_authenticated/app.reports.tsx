@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Send, Save } from "lucide-react";
+import { Send, Save, Download, FileText } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/app/reports")({
   component: Reports,
@@ -24,6 +24,75 @@ function mondayOf(d = new Date()) {
   const day = date.getDay();
   date.setDate(date.getDate() + (day === 0 ? -6 : 1 - day));
   return date.toISOString().slice(0, 10);
+}
+
+type ReportRow = {
+  id: string;
+  week_start: string;
+  rag_summary: string;
+  achievements: string | null;
+  next_week: string | null;
+  risks_blockers: string | null;
+  ai_score: number | null;
+  ai_feedback: unknown;
+  submitted_at: string | null;
+};
+
+function reportToHtml(r: ReportRow): string {
+  const esc = (s: string | null | undefined) =>
+    (s ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c] as string));
+  const nl2br = (s: string | null | undefined) => esc(s).replace(/\n/g, "<br/>");
+  const fb = r.ai_feedback as FB | null;
+  const ragColor: Record<string, string> = { green: "#10b981", amber: "#f59e0b", red: "#ef4444" };
+  return `<!doctype html><html><head><meta charset="utf-8"/><title>Weekly Status Report — ${r.week_start}</title>
+<style>
+ body{font-family:Georgia,'Times New Roman',serif;color:#111;max-width:780px;margin:40px auto;padding:0 24px;line-height:1.5}
+ h1{font-size:24px;margin:0 0 4px}
+ h2{font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:#555;margin:24px 0 8px;border-bottom:1px solid #ddd;padding-bottom:4px}
+ .meta{color:#666;font-size:13px;margin-bottom:16px}
+ .rag{display:inline-block;padding:2px 10px;border-radius:999px;color:#fff;font-size:12px;text-transform:uppercase;letter-spacing:.1em;background:${ragColor[r.rag_summary] || "#666"}}
+ .score{display:inline-block;border:2px solid #b45309;color:#b45309;border-radius:999px;padding:4px 12px;font-weight:600;margin-left:8px}
+ p{white-space:pre-wrap}
+ ul{padding-left:20px}
+ .feedback{background:#f8f8f6;border:1px solid #e5e5e0;padding:12px 16px;border-radius:6px;margin-top:8px}
+</style></head><body>
+<h1>Weekly Status Report</h1>
+<div class="meta">Digital Care Records Rollout · Northbridge Health Services<br/>Week of <strong>${r.week_start}</strong> · <span class="rag">${r.rag_summary}</span>${r.ai_score != null ? `<span class="score">${r.ai_score}/100</span>` : ""}</div>
+<h2>Achievements this week</h2><p>${nl2br(r.achievements) || "<em>—</em>"}</p>
+<h2>Plan for next week</h2><p>${nl2br(r.next_week) || "<em>—</em>"}</p>
+<h2>Risks &amp; blockers</h2><p>${nl2br(r.risks_blockers) || "<em>—</em>"}</p>
+${fb ? `<h2>Sponsor feedback</h2><div class="feedback"><p><strong>${esc(fb.summary)}</strong></p>
+<p><strong>Strengths</strong></p><ul>${fb.strengths.map((s) => `<li>${esc(s)}</li>`).join("")}</ul>
+<p><strong>Weaknesses</strong></p><ul>${fb.weaknesses.map((s) => `<li>${esc(s)}</li>`).join("")}</ul>
+<p><em>${esc(fb.sponsor_reaction)}</em> — David Okafor, Executive Sponsor</p></div>` : ""}
+</body></html>`;
+}
+
+function downloadReport(r: ReportRow, format: "doc" | "pdf") {
+  const html = reportToHtml(r);
+  if (format === "doc") {
+    const blob = new Blob(
+      ["\ufeff", '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">', html, "</html>"],
+      { type: "application/msword" },
+    );
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `status-report-${r.week_start}.doc`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast.success("Word document downloaded.");
+  } else {
+    const w = window.open("", "_blank");
+    if (!w) {
+      toast.error("Popup blocked. Allow popups to export PDF.");
+      return;
+    }
+    w.document.write(html);
+    w.document.close();
+    w.focus();
+    setTimeout(() => w.print(), 300);
+  }
 }
 
 function Reports() {
@@ -52,6 +121,7 @@ function Reports() {
   });
 
   const past = (reports ?? []).filter((r) => r.week_start !== thisWeek);
+  const submitted = (reports ?? []).filter((r) => r.submitted_at);
 
   return (
     <div className="space-y-10">
@@ -106,22 +176,36 @@ function Reports() {
 
       <section className="space-y-3">
         <h2 className="font-display text-2xl">Past reports</h2>
-        {past.length === 0 && (
+        <p className="text-sm text-muted-foreground">
+          Every submitted status report is archived here. Download as Word or PDF for your records.
+        </p>
+        {submitted.length === 0 && (
           <div className="rounded-md border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-            No past reports yet.
+            No submitted reports yet. Submit a report to the sponsor and it will be saved here.
           </div>
         )}
         <ul className="space-y-2">
-          {past.map((r) => (
+          {submitted.map((r) => (
             <li key={r.id} className="rounded-md border border-border bg-card p-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <span className={`h-2.5 w-2.5 rounded-full ${ragDot[r.rag_summary as Rag]}`} />
                   <span className="font-medium">Week of {r.week_start}</span>
+                  {r.week_start === thisWeek && (
+                    <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs text-primary">this week</span>
+                  )}
                 </div>
-                <span className="text-sm text-muted-foreground">
-                  {r.ai_score != null ? `${r.ai_score}/100` : "Not scored"}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">
+                    {r.ai_score != null ? `${r.ai_score}/100` : "Not scored"}
+                  </span>
+                  <Button size="sm" variant="outline" onClick={() => downloadReport(r as unknown as ReportRow, "doc")}>
+                    <FileText className="mr-1.5 h-3.5 w-3.5" /> Word
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => downloadReport(r as unknown as ReportRow, "pdf")}>
+                    <Download className="mr-1.5 h-3.5 w-3.5" /> PDF
+                  </Button>
+                </div>
               </div>
               {r.ai_feedback ? (
                 <div className="mt-2 text-xs text-muted-foreground">{(r.ai_feedback as FB).summary}</div>
