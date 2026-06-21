@@ -469,8 +469,8 @@ export const createMeeting = createServerFn({ method: "POST" })
         user_id: context.userId,
         ...data,
         scheduled_at: data.scheduled_at ?? new Date().toISOString(),
-        attendees: attendees as unknown as object,
-        transcript: [] as unknown as object,
+        attendees: attendees as unknown as Json,
+        transcript: [] as unknown as Json,
       })
       .select()
       .single();
@@ -502,7 +502,7 @@ export const startMeeting = createServerFn({ method: "POST" })
     const attendees = attendeesOf(meeting);
     if (attendees.length === 0) {
       const fresh = (KIND_ATTENDEES[meeting.kind] ?? []).map((k) => ATTENDEE_BOOK[k]);
-      await context.supabase.from("meetings").update({ attendees: fresh as unknown as object }).eq("id", meeting.id);
+      await context.supabase.from("meetings").update({ attendees: fresh as unknown as Json }).eq("id", meeting.id);
     }
     // Opening turn: PM (or first attendee) frames the meeting.
     const list = attendees.length ? attendees : (KIND_ATTENDEES[meeting.kind] ?? []).map((k) => ATTENDEE_BOOK[k]);
@@ -527,7 +527,7 @@ Open the meeting in 1-2 sentences. Greet the room, name what we're here to resol
     };
     const { data: row } = await context.supabase
       .from("meetings")
-      .update({ transcript: [turn] as unknown as object, attendees: list as unknown as object })
+      .update({ transcript: [turn] as unknown as Json, attendees: list as unknown as Json })
       .eq("id", meeting.id)
       .select()
       .single();
@@ -552,7 +552,7 @@ export const speakInMeeting = createServerFn({ method: "POST" })
     };
     const next = [...transcript, turn];
     const { data: row } = await context.supabase
-      .from("meetings").update({ transcript: next as unknown as object }).eq("id", meeting.id).select().single();
+      .from("meetings").update({ transcript: next as unknown as Json }).eq("id", meeting.id).select().single();
     return row;
   });
 
@@ -573,7 +573,7 @@ export const noteInMeeting = createServerFn({ method: "POST" })
       body: data.body.trim(),
     };
     const { data: row } = await context.supabase
-      .from("meetings").update({ transcript: [...transcript, turn] as unknown as object }).eq("id", meeting.id).select().single();
+      .from("meetings").update({ transcript: [...transcript, turn] as unknown as Json }).eq("id", meeting.id).select().single();
     return row;
   });
 
@@ -634,7 +634,7 @@ Speak ONLY as ${speaker.name}. 1-3 sentences. Stay in character. React to what w
     };
     const { data: row } = await context.supabase
       .from("meetings")
-      .update({ transcript: [...transcript, turn] as unknown as object, attendees: attendees as unknown as object })
+      .update({ transcript: [...transcript, turn] as unknown as Json, attendees: attendees as unknown as Json })
       .eq("id", meeting.id)
       .select()
       .single();
