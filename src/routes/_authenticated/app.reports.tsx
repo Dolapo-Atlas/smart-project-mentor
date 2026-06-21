@@ -199,10 +199,10 @@ function Reports() {
                   <span className="text-sm text-muted-foreground">
                     {r.ai_score != null ? `${r.ai_score}/100` : "Not scored"}
                   </span>
-                  <Button size="sm" variant="outline" onClick={() => downloadReport(r, "doc")}>
+                  <Button size="sm" variant="outline" onClick={() => downloadReport(r as unknown as ReportRow, "doc")}>
                     <FileText className="mr-1.5 h-3.5 w-3.5" /> Word
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => downloadReport(r, "pdf")}>
+                  <Button size="sm" variant="outline" onClick={() => downloadReport(r as unknown as ReportRow, "pdf")}>
                     <Download className="mr-1.5 h-3.5 w-3.5" /> PDF
                   </Button>
                 </div>
