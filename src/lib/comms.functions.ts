@@ -199,3 +199,6 @@ Choose sentiment honestly: positive, neutral, pushback, concerned, or ignored (i
 
     return { ok: true, thread_id: threadId, replies: stakeholders.length };
   });
+
+// Action-based micro-ticks moved into sendComm: tick relevant competencies
+// based on recipient + message type. Mastered is sticky upstream.
