@@ -412,6 +412,58 @@ export const updateTaskStatus = createServerFn({ method: "POST" })
       .update(patch)
       .eq("id", data.id)
       .eq("user_id", context.userId);
+    // Stakeholder reacts when work is submitted for review
+    if (data.status === "submitted") {
+      const [{ data: task }, { data: profile }, { data: docs }] = await Promise.all([
+        context.supabase
+          .from("tasks")
+          .select("title")
+          .eq("id", data.id)
+          .eq("user_id", context.userId)
+          .maybeSingle(),
+        context.supabase
+          .from("profiles")
+          .select("first_name,preferred_name")
+          .eq("id", context.userId)
+          .maybeSingle(),
+        context.supabase
+          .from("documents")
+          .select("id,title")
+          .eq("user_id", context.userId)
+          .order("created_at", { ascending: false })
+          .limit(5),
+      ]);
+      const firstName =
+        profile?.preferred_name?.trim() || profile?.first_name || "there";
+      const title = task?.title ?? "the deliverable";
+      const titleLc = title.toLowerCase();
+      const matchedDoc = (docs ?? []).find((d) =>
+        titleLc.includes((d.title ?? "").toLowerCase().split(/[\s—-]/)[0] ?? "_"),
+      );
+      const askForArtefact = !matchedDoc;
+      const body = askForArtefact
+        ? `Hi ${firstName},
+
+Thanks for marking "${title}" as submitted. I can't see the artefact attached yet — please upload the document under Documents so the review panel and I can give you proper feedback.
+
+Once it's in, I'll come back with comments and route anything clinical through Rachel.
+
+Thanks,
+Sarah`
+        : `Hi ${firstName},
+
+Thanks — I can see "${title}" is in for review. I'll work through it today and come back with comments. If anything is governance-sensitive I'll loop in Rachel before we finalise.
+
+Sarah`;
+      await context.supabase.from("inbox_messages").insert({
+        user_id: context.userId,
+        sender_name: "Sarah Williams",
+        sender_role: "Project Manager, Northbridge Health Services",
+        subject: `Re: ${title} — submitted`,
+        tone: "neutral",
+        body,
+      });
+    }
     // small progress bump on completion
     if (data.status === "done") {
       const { data: s } = await context.supabase
