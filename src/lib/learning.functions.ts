@@ -187,7 +187,7 @@ export const backfillLearningJourney = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     const [docs, comms, reports, raid, changes, gates] = await Promise.all([
-      supabase.from("documents").select("title,score,status").eq("user_id", userId),
+      supabase.from("documents").select("title,quality_score,status").eq("user_id", userId),
       supabase.from("comms_messages").select("direction,from_role,to_roles,msg_type").eq("user_id", userId),
       supabase.from("status_reports").select("id").eq("user_id", userId),
       supabase.from("raid_items").select("kind").eq("user_id", userId),
@@ -199,12 +199,12 @@ export const backfillLearningJourney = createServerFn({ method: "POST" })
     const drafting = new Set<string>();
 
     // Documents → phase competencies via title + score
-    for (const d of docs.data ?? []) {
+    for (const d of (docs.data ?? []) as Array<{ title: string | null; quality_score: number | null; status: string | null }>) {
       const phase = phaseFromDocTitle(d.title ?? "");
       if (!phase) continue;
       const ids = competencyIdsForPhase(phase);
-      const score = typeof d.score === "number" ? d.score : null;
-      const passed = score !== null ? score >= 65 : d.status === "approved";
+      const score = typeof d.quality_score === "number" ? d.quality_score : null;
+      const passed = score !== null ? score >= 65 : d.status === "submitted";
       for (const id of ids) (passed ? mastered : drafting).add(id);
     }
 
@@ -251,7 +251,7 @@ export const backfillLearningJourney = createServerFn({ method: "POST" })
     if ((changes.data ?? []).length > 0) mastered.add("p6.change_requests");
 
     // Phase gates → governance
-    if ((gates.data ?? []).some((g) => g.status === "approved")) {
+    if ((gates.data ?? []).some((g) => g.status === "passed")) {
       mastered.add("p1.stage_gates");
       mastered.add("p4.governance_reviews");
     }
@@ -261,7 +261,7 @@ export const backfillLearningJourney = createServerFn({ method: "POST" })
     await applyCompetencyStatus(supabase, userId, draftingOnly, "drafting");
     await applyCompetencyStatus(supabase, userId, Array.from(mastered), "mastered");
 
-    return { ok: true, mastered: mastered.size, drafting: draftingOnly.size };
+    return { ok: true, mastered: mastered.size, drafting: draftingOnly.length };
   });
 
 // Re-export so callers in other server modules can compose.
