@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
-import { getLearningJourney, submitReflection } from "@/lib/learning.functions";
+import { getLearningJourney, submitReflection, backfillLearningJourney } from "@/lib/learning.functions";
 import { reflectionPromptFor } from "@/lib/learning";
 import {
   Collapsible,
@@ -94,10 +94,31 @@ function LearningJourneyPage() {
   const qc = useQueryClient();
   const fetchJourney = useServerFn(getLearningJourney);
   const submitFn = useServerFn(submitReflection);
+  const backfillFn = useServerFn(backfillLearningJourney);
   const { data } = useQuery<Journey>({
     queryKey: ["learning-journey"],
     queryFn: () => fetchJourney(),
   });
+
+  const backfill = useMutation({
+    mutationFn: () => backfillFn(),
+    onSuccess: (r: { mastered: number; drafting: number }) => {
+      toast.success(`Synced past work — ${r.mastered} mastered, ${r.drafting} in progress.`);
+      qc.invalidateQueries({ queryKey: ["learning-journey"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Sync failed"),
+  });
+
+  // Run backfill automatically once per browser, so existing users see their
+  // prior work reflected without having to click anything.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const key = "atlas.learning.backfilled.v1";
+    if (localStorage.getItem(key)) return;
+    localStorage.setItem(key, "1");
+    backfill.mutate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [reflectOpen, setReflectOpen] = useState(false);
   const [reflectPhase, setReflectPhase] = useState<number | null>(null);
@@ -146,9 +167,19 @@ function LearningJourneyPage() {
         <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
           Atlas / Learning Journey
         </div>
-        <h1 className="mt-2 font-display text-4xl font-medium tracking-tight md:text-5xl">
-          Your competencies
-        </h1>
+        <div className="mt-2 flex items-start justify-between gap-4">
+          <h1 className="font-display text-4xl font-medium tracking-tight md:text-5xl">
+            Your competencies
+          </h1>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => backfill.mutate()}
+            disabled={backfill.isPending}
+          >
+            {backfill.isPending ? "Syncing…" : "Sync past work"}
+          </Button>
+        </div>
         <p className="mt-2 max-w-2xl text-muted-foreground">
           Every artefact you submit, every email you send, every status report
           you file builds a competency. Mastered means the work passed sponsor
