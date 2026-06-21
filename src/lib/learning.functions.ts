@@ -176,5 +176,93 @@ export const submitReflection = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/**
+ * Retroactively tick competencies based on the user's existing work:
+ * approved/submitted documents, sent emails, status reports, RAID items,
+ * change requests, and phase gates. Mastered is sticky upstream so this is
+ * safe to run multiple times.
+ */
+export const backfillLearningJourney = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const [docs, comms, reports, raid, changes, gates] = await Promise.all([
+      supabase.from("documents").select("title,quality_score,status").eq("user_id", userId),
+      supabase.from("comms_messages").select("direction,from_role,to_roles,msg_type").eq("user_id", userId),
+      supabase.from("status_reports").select("id").eq("user_id", userId),
+      supabase.from("raid_items").select("kind").eq("user_id", userId),
+      supabase.from("change_requests").select("id,status").eq("user_id", userId),
+      supabase.from("phase_gates").select("phase,status").eq("user_id", userId),
+    ]);
+
+    const mastered = new Set<string>();
+    const drafting = new Set<string>();
+
+    // Documents → phase competencies via title + score
+    for (const d of (docs.data ?? []) as Array<{ title: string | null; quality_score: number | null; status: string | null }>) {
+      const phase = phaseFromDocTitle(d.title ?? "");
+      if (!phase) continue;
+      const ids = competencyIdsForPhase(phase);
+      const score = typeof d.quality_score === "number" ? d.quality_score : null;
+      const passed = score !== null ? score >= 65 : d.status === "submitted";
+      for (const id of ids) (passed ? mastered : drafting).add(id);
+    }
+
+    // Comms — soft skill micro-ticks based on outbound emails
+    const outbound = (comms.data ?? []).filter((m) => m.direction === "outbound");
+    if (outbound.length > 0) mastered.add("p5.stakeholder_emails");
+    for (const m of outbound) {
+      const to: string[] = Array.isArray(m.to_roles) ? m.to_roles : [];
+      if (m.msg_type === "Escalation" && to.includes("sponsor")) {
+        mastered.add("p2.escalation_routes");
+        mastered.add("p2.executive_sponsors");
+      }
+      if (to.includes("care_home")) mastered.add("p2.managing_difficult_stakeholders");
+      if (to.includes("vendor")) {
+        mastered.add("p2.vendor_management");
+        mastered.add("p6.vendor_coordination");
+      }
+      if (m.msg_type === "Update" && to.includes("sponsor")) mastered.add("p5.executive_briefings");
+    }
+
+    // Status reports → phase 5 + 7
+    if ((reports.data ?? []).length > 0) {
+      mastered.add("p5.status_reporting");
+      mastered.add("p5.project_updates");
+      mastered.add("p7.governance_reporting");
+      mastered.add("p7.kpi_tracking");
+    }
+
+    // RAID items → phase 4
+    const raidRows = raid.data ?? [];
+    if (raidRows.length > 0) {
+      mastered.add("p4.raid_log");
+      const kinds = new Set(raidRows.map((r) => (r.kind ?? "").toLowerCase()));
+      if (kinds.has("risk")) {
+        mastered.add("p4.risks");
+        mastered.add("p4.risk_management");
+      }
+      if (kinds.has("assumption")) mastered.add("p4.assumptions_tracking");
+      if (kinds.has("issue")) mastered.add("p4.issues");
+      if (kinds.has("dependency")) mastered.add("p4.dependencies_tracking");
+    }
+
+    // Change requests → phase 6
+    if ((changes.data ?? []).length > 0) mastered.add("p6.change_requests");
+
+    // Phase gates → governance
+    if ((gates.data ?? []).some((g) => g.status === "passed")) {
+      mastered.add("p1.stage_gates");
+      mastered.add("p4.governance_reviews");
+    }
+
+    // Apply: drafting first (won't overwrite mastered), then mastered.
+    const draftingOnly = Array.from(drafting).filter((id) => !mastered.has(id));
+    await applyCompetencyStatus(supabase, userId, draftingOnly, "drafting");
+    await applyCompetencyStatus(supabase, userId, Array.from(mastered), "mastered");
+
+    return { ok: true, mastered: mastered.size, drafting: draftingOnly.length };
+  });
+
 // Re-export so callers in other server modules can compose.
 export { phaseOf };
