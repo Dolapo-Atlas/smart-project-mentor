@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/app/")({
   component: Dashboard,
 });
 
-type InboxItem = { id: string; subject: string; sender_name: string; sender_role: string; body: string; read: boolean };
+type InboxItem = { id: string; subject: string; sender_name: string; sender_role: string; body: string; read: boolean; tone?: string; created_at?: string };
 type TaskItem = { id: string; title: string; status: string };
 
 function computeNextAction(input: {
@@ -36,12 +36,19 @@ function computeNextAction(input: {
   if (latest) {
     const snippet = (latest.body || "").replace(/\s+/g, " ").trim().slice(0, 180);
     const isUnread = !latest.read;
+    const tone = (latest.tone || "").toLowerCase();
+    const heated = tone === "urgent" || tone === "frustrated";
+    const verb = heated
+      ? `${latest.sender_name} is pushing back`
+      : isUnread
+        ? `${latest.sender_name} is waiting on you`
+        : `Follow up with ${latest.sender_name}`;
     return {
-      title: `Reply to ${latest.sender_name} — "${latest.subject}"`,
+      title: `${verb} — "${latest.subject}"`,
       reason: snippet
-        ? `${isUnread ? "New message. " : ""}They wrote: "${snippet}${snippet.length >= 180 ? "…" : ""}" Open the email and reply directly from your inbox.`
-        : `${isUnread ? "New message waiting. " : ""}Open the email and reply directly from your inbox to keep the conversation moving.`,
-      cta: isUnread ? "Read & reply" : "Open & reply",
+        ? `They wrote: "${snippet}${snippet.length >= 180 ? "…" : ""}" ${heated ? "Address their concerns directly in your reply." : "Reply from your inbox to keep things moving."}`
+        : `${heated ? "They're not satisfied yet. " : ""}Open the email and reply directly from your inbox.`,
+      cta: heated ? "Address it" : isUnread ? "Read & reply" : "Open & reply",
       to: "/app/inbox",
     };
   }
