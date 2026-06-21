@@ -495,6 +495,71 @@ function attendeesOf(meeting: any): Attendee[] {
   return Array.isArray(meeting.attendees) ? (meeting.attendees as Attendee[]) : [];
 }
 
+export const listAttendeeRoster = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async () => Object.values(ATTENDEE_BOOK));
+
+export const addMeetingAttendee = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      id: z.string().uuid(),
+      role_key: z.string().optional(),
+      custom: z
+        .object({
+          name: z.string().min(1),
+          role: z.string().min(1),
+          persona: z.string().optional(),
+        })
+        .optional(),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const meeting = await loadMeeting(context.supabase, context.userId, data.id);
+    const current = attendeesOf(meeting);
+    let toAdd: Attendee | undefined;
+    if (data.role_key && ATTENDEE_BOOK[data.role_key]) {
+      toAdd = ATTENDEE_BOOK[data.role_key];
+    } else if (data.custom) {
+      const slug = data.custom.name.toLowerCase().replace(/[^a-z0-9]+/g, "_").slice(0, 24) || `guest_${Date.now()}`;
+      toAdd = {
+        role_key: `custom_${slug}_${Math.random().toString(36).slice(2, 6)}`,
+        name: data.custom.name,
+        role: data.custom.role,
+        persona: data.custom.persona || `${data.custom.role}. Speaks from their domain expertise, asks pointed questions, and pushes back when something doesn't add up.`,
+      };
+    }
+    if (!toAdd) throw new Error("Nothing to add");
+    if (current.some((a) => a.role_key === toAdd!.role_key)) return meeting;
+    const next = [...current, toAdd];
+    const { data: row, error } = await context.supabase
+      .from("meetings")
+      .update({ attendees: next as unknown as Json })
+      .eq("id", data.id)
+      .select()
+      .single();
+    if (error) throw error;
+    return row;
+  });
+
+export const removeMeetingAttendee = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ id: z.string().uuid(), role_key: z.string() }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const meeting = await loadMeeting(context.supabase, context.userId, data.id);
+    const next = attendeesOf(meeting).filter((a) => a.role_key !== data.role_key);
+    const { data: row, error } = await context.supabase
+      .from("meetings")
+      .update({ attendees: next as unknown as Json })
+      .eq("id", data.id)
+      .select()
+      .single();
+    if (error) throw error;
+    return row;
+  });
+
 export const startMeeting = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
