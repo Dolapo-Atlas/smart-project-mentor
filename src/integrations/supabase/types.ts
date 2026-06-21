@@ -284,6 +284,7 @@ export type Database = {
         Row: {
           agenda: string | null
           ai_summary: string | null
+          attendees: Json
           created_at: string
           decisions: string | null
           held: boolean
@@ -292,12 +293,14 @@ export type Database = {
           minutes: string | null
           scheduled_at: string
           title: string
+          transcript: Json
           updated_at: string
           user_id: string
         }
         Insert: {
           agenda?: string | null
           ai_summary?: string | null
+          attendees?: Json
           created_at?: string
           decisions?: string | null
           held?: boolean
@@ -306,12 +309,14 @@ export type Database = {
           minutes?: string | null
           scheduled_at?: string
           title: string
+          transcript?: Json
           updated_at?: string
           user_id: string
         }
         Update: {
           agenda?: string | null
           ai_summary?: string | null
+          attendees?: Json
           created_at?: string
           decisions?: string | null
           held?: boolean
@@ -320,6 +325,7 @@ export type Database = {
           minutes?: string | null
           scheduled_at?: string
           title?: string
+          transcript?: Json
           updated_at?: string
           user_id?: string
         }
