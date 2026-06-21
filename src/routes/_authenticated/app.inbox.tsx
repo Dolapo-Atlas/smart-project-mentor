@@ -3,9 +3,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listInbox, markRead, generateStakeholderMessage } from "@/lib/sim.functions";
 import { summonConflict } from "@/lib/pm.functions";
+import { sendComm } from "@/lib/comms.functions";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Mail, Flame } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Sparkles, Mail, Flame, Reply, Send } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
@@ -19,6 +21,17 @@ const toneStyles: Record<string, string> = {
   supportive: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
   curious: "bg-blue-500/10 text-blue-700 dark:text-blue-400",
   neutral: "bg-muted text-muted-foreground",
+};
+
+// Map known sender names to stakeholder role keys used by sendComm.
+const SENDER_ROLE_MAP: Record<string, string> = {
+  "Sarah Williams": "pm",
+  "David Okafor": "sponsor",
+  "Priya Anand": "finance",
+  "James Lin": "tech",
+  "CareSoft Ltd": "vendor",
+  "Margaret Hollis": "care_home",
+  "Rachel Stone": "clinical",
 };
 
 function Inbox() {
@@ -55,6 +68,30 @@ function Inbox() {
       qc.invalidateQueries({ queryKey: ["inbox"] });
       qc.invalidateQueries({ queryKey: ["overview"] });
       toast.success("Someone is unhappy.");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+
+  const sendFn = useServerFn(sendComm);
+  const [replyOpen, setReplyOpen] = useState(false);
+  const [replyBody, setReplyBody] = useState("");
+  const reply = useMutation({
+    mutationFn: (input: { to_role: string; subject: string; body: string }) =>
+      sendFn({
+        data: {
+          to_roles: [input.to_role],
+          msg_type: "Update",
+          subject: input.subject,
+          body: input.body,
+        },
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["inbox"] });
+      qc.invalidateQueries({ queryKey: ["comms"] });
+      qc.invalidateQueries({ queryKey: ["overview"] });
+      toast.success("Reply sent. Watch your inbox for their response.");
+      setReplyOpen(false);
+      setReplyBody("");
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
@@ -126,6 +163,62 @@ function Inbox() {
               <h2 className="mt-2 font-display text-3xl font-medium">{selected.subject}</h2>
               <div className="mt-1 text-sm text-muted-foreground">From {selected.sender_name}</div>
               <div className="mt-6 whitespace-pre-wrap leading-relaxed">{selected.body}</div>
+              {(() => {
+                const role = SENDER_ROLE_MAP[selected.sender_name];
+                if (!role) return null;
+                const subject = selected.subject.startsWith("Re:")
+                  ? selected.subject
+                  : `Re: ${selected.subject}`;
+                if (!replyOpen) {
+                  return (
+                    <div className="mt-8 border-t border-border pt-6">
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setReplyOpen(true);
+                          setReplyBody("");
+                        }}
+                      >
+                        <Reply className="mr-2 h-4 w-4" /> Reply to {selected.sender_name}
+                      </Button>
+                    </div>
+                  );
+                }
+                return (
+                  <div className="mt-8 border-t border-border pt-6">
+                    <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                      Reply · To {selected.sender_name} · {subject}
+                    </div>
+                    <Textarea
+                      value={replyBody}
+                      onChange={(e) => setReplyBody(e.target.value)}
+                      placeholder={`Write your reply to ${selected.sender_name}…`}
+                      className="mt-2 min-h-[180px]"
+                    />
+                    <div className="mt-3 flex justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        onClick={() => {
+                          setReplyOpen(false);
+                          setReplyBody("");
+                        }}
+                        disabled={reply.isPending}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={() =>
+                          reply.mutate({ to_role: role, subject, body: replyBody.trim() })
+                        }
+                        disabled={reply.isPending || replyBody.trim().length < 5}
+                      >
+                        <Send className="mr-2 h-4 w-4" />
+                        {reply.isPending ? "Sending…" : "Send reply"}
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })()}
             </>
           ) : (
             <div className="flex h-full items-center justify-center text-muted-foreground">
