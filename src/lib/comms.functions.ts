@@ -197,6 +197,28 @@ Choose sentiment honestly: positive, neutral, pushback, concerned, or ignored (i
       });
     }
 
+    // Action-based micro-ticks: tick competencies for sending the right kind
+    // of email to the right stakeholder. Always counts as mastered — these
+    // are soft skills, demonstrated by doing.
+    const micro: string[] = ["p5.stakeholder_emails"];
+    if (data.msg_type === "Escalation" && data.to_roles.includes("sponsor")) {
+      micro.push("p2.escalation_routes", "p2.executive_sponsors");
+    }
+    if (data.to_roles.includes("care_home")) {
+      micro.push("p2.managing_difficult_stakeholders");
+    }
+    if (data.to_roles.includes("vendor")) {
+      micro.push("p2.vendor_management", "p6.vendor_coordination");
+    }
+    if (data.msg_type === "Update" && data.to_roles.includes("sponsor")) {
+      micro.push("p5.executive_briefings");
+    }
+    try {
+      await applyCompetencyStatus(supabase, uid, micro, "mastered");
+    } catch (e) {
+      console.error("learning journey micro-tick failed", e);
+    }
+
     return { ok: true, thread_id: threadId, replies: stakeholders.length };
   });
 
