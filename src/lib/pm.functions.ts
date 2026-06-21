@@ -412,6 +412,33 @@ Decide: pass or fail this gate. Score 0-100. Be tough but fair. Failed means the
 
 /* ============= MEETINGS ============= */
 
+type Attendee = { role_key: string; name: string; role: string; persona: string };
+type TranscriptTurn = {
+  at: string;
+  kind: "speaker" | "user" | "system";
+  speaker_name: string;
+  speaker_role: string;
+  role_key: string;
+  body: string;
+};
+
+const ATTENDEE_BOOK: Record<string, Attendee> = {
+  pm:        { role_key: "pm",        name: "Sarah Williams",  role: "Project Manager",                       persona: "Senior PM. Direct, pragmatic, slightly impatient with vague status. Pushes for owners and dates." },
+  sponsor:   { role_key: "sponsor",   name: "David Okafor",    role: "Executive Sponsor, Director of Transformation", persona: "Outcome-focused. Uses board language. Pushes back on cost and timeline. Will name names." },
+  finance:   { role_key: "finance",   name: "Priya Anand",     role: "Finance Lead, Northbridge Health Services", persona: "Spreadsheet-led, sceptical of vendor claims. Wants forecast vs actuals, not narrative." },
+  tech:      { role_key: "tech",      name: "James Lin",       role: "Technical Lead",                        persona: "Engineer. Surfaces integration risk and dependency chains. Resists optimistic dates." },
+  vendor:    { role_key: "vendor",    name: "CareSoft Ltd",    role: "Vendor — CareSoft (Account Director)",  persona: "Polished, defends vendor commercials. Will offer a workaround before owning a delay." },
+  care_home: { role_key: "care_home", name: "Margaret Hollis", role: "Care Home Manager (Willow Lodge)",       persona: "Operational, protective of staff. Speaks plainly. Raises readiness and training concerns." },
+  clinical:  { role_key: "clinical",  name: "Rachel Stone",    role: "Clinical Governance Lead",              persona: "Patient-safety first. Will halt go-lives over information governance gaps." },
+};
+
+const KIND_ATTENDEES: Record<string, string[]> = {
+  standup:  ["pm", "tech", "clinical"],
+  steering: ["sponsor", "pm", "finance", "clinical"],
+  vendor:   ["vendor", "tech", "pm"],
+  retro:    ["pm", "tech", "clinical", "care_home"],
+};
+
 export const listMeetings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -435,12 +462,182 @@ export const createMeeting = createServerFn({ method: "POST" })
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
+    const attendees = (KIND_ATTENDEES[data.kind] ?? []).map((k) => ATTENDEE_BOOK[k]);
     const { data: row, error } = await context.supabase
       .from("meetings")
-      .insert({ user_id: context.userId, ...data, scheduled_at: data.scheduled_at ?? new Date().toISOString() })
+      .insert({
+        user_id: context.userId,
+        ...data,
+        scheduled_at: data.scheduled_at ?? new Date().toISOString(),
+        attendees: attendees as unknown as object,
+        transcript: [] as unknown as object,
+      })
       .select()
       .single();
     if (error) throw error;
+    return row;
+  });
+
+/* Live, interactive meeting */
+
+async function loadMeeting(supabase: any, userId: string, id: string) {
+  const { data: meeting, error } = await supabase
+    .from("meetings").select("*").eq("id", id).eq("user_id", userId).single();
+  if (error || !meeting) throw new Error("Meeting not found");
+  return meeting;
+}
+
+function transcriptOf(meeting: any): TranscriptTurn[] {
+  return Array.isArray(meeting.transcript) ? (meeting.transcript as TranscriptTurn[]) : [];
+}
+function attendeesOf(meeting: any): Attendee[] {
+  return Array.isArray(meeting.attendees) ? (meeting.attendees as Attendee[]) : [];
+}
+
+export const startMeeting = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const meeting = await loadMeeting(context.supabase, context.userId, data.id);
+    const attendees = attendeesOf(meeting);
+    if (attendees.length === 0) {
+      const fresh = (KIND_ATTENDEES[meeting.kind] ?? []).map((k) => ATTENDEE_BOOK[k]);
+      await context.supabase.from("meetings").update({ attendees: fresh as unknown as object }).eq("id", meeting.id);
+    }
+    // Opening turn: PM (or first attendee) frames the meeting.
+    const list = attendees.length ? attendees : (KIND_ATTENDEES[meeting.kind] ?? []).map((k) => ATTENDEE_BOOK[k]);
+    const opener = list.find((a) => a.role_key === "pm") ?? list[0];
+    if (!opener) return meeting;
+    const transcript = transcriptOf(meeting);
+    if (transcript.length > 0) return meeting;
+
+    const prompt = `You are ${opener.name}, ${opener.role}. ${opener.persona}
+You are opening a ${meeting.kind} meeting titled "${meeting.title}" on the Digital Care Records Rollout (£500k, 6 months, behind schedule).
+Agenda: ${meeting.agenda || "(none — set the frame yourself in 1 sentence)"}
+
+Open the meeting in 1-2 sentences. Greet the room, name what we're here to resolve, and hand off to the next person with a specific question. Plain spoken, no fluff.`;
+    const { text } = await generateText({ model: getModel(), prompt });
+    const turn: TranscriptTurn = {
+      at: new Date().toISOString(),
+      kind: "speaker",
+      speaker_name: opener.name,
+      speaker_role: opener.role,
+      role_key: opener.role_key,
+      body: text.trim(),
+    };
+    const { data: row } = await context.supabase
+      .from("meetings")
+      .update({ transcript: [turn] as unknown as object, attendees: list as unknown as object })
+      .eq("id", meeting.id)
+      .select()
+      .single();
+    return row;
+  });
+
+export const speakInMeeting = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ id: z.string().uuid(), body: z.string().min(1) }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const meeting = await loadMeeting(context.supabase, context.userId, data.id);
+    const transcript = transcriptOf(meeting);
+    const turn: TranscriptTurn = {
+      at: new Date().toISOString(),
+      kind: "user",
+      speaker_name: "You (Coordinator)",
+      speaker_role: "Project Coordinator",
+      role_key: "user",
+      body: data.body.trim(),
+    };
+    const next = [...transcript, turn];
+    const { data: row } = await context.supabase
+      .from("meetings").update({ transcript: next as unknown as object }).eq("id", meeting.id).select().single();
+    return row;
+  });
+
+export const noteInMeeting = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ id: z.string().uuid(), body: z.string().min(1) }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const meeting = await loadMeeting(context.supabase, context.userId, data.id);
+    const transcript = transcriptOf(meeting);
+    const turn: TranscriptTurn = {
+      at: new Date().toISOString(),
+      kind: "system",
+      speaker_name: "Minutes",
+      speaker_role: "Coordinator notes",
+      role_key: "minutes",
+      body: data.body.trim(),
+    };
+    const { data: row } = await context.supabase
+      .from("meetings").update({ transcript: [...transcript, turn] as unknown as object }).eq("id", meeting.id).select().single();
+    return row;
+  });
+
+export const advanceMeeting = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      id: z.string().uuid(),
+      role_key: z.string().optional(),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const meeting = await loadMeeting(context.supabase, context.userId, data.id);
+    let attendees = attendeesOf(meeting);
+    if (attendees.length === 0) {
+      attendees = (KIND_ATTENDEES[meeting.kind] ?? []).map((k) => ATTENDEE_BOOK[k]);
+    }
+    const transcript = transcriptOf(meeting);
+
+    let speaker: Attendee | undefined;
+    if (data.role_key) {
+      speaker = attendees.find((a) => a.role_key === data.role_key);
+    }
+    if (!speaker) {
+      // Pick an attendee who hasn't spoken in the last 2 turns; otherwise random.
+      const recent = transcript.slice(-2).map((t) => t.role_key);
+      const eligible = attendees.filter((a) => !recent.includes(a.role_key));
+      const pool = eligible.length ? eligible : attendees;
+      speaker = pool[Math.floor(Math.random() * pool.length)];
+    }
+    if (!speaker) throw new Error("No attendees");
+
+    const transcriptText = transcript
+      .slice(-12)
+      .map((t) => `${t.speaker_name} (${t.speaker_role}): ${t.body}`)
+      .join("\n\n");
+
+    const prompt = `You are ${speaker.name}, ${speaker.role}, in a live ${meeting.kind} meeting on the Digital Care Records Rollout.
+Persona: ${speaker.persona}
+
+Meeting: "${meeting.title}"
+Agenda: ${meeting.agenda || "(none)"}
+Other people in the room: ${attendees.filter((a) => a.role_key !== speaker.role_key).map((a) => `${a.name} (${a.role})`).join(", ")}
+
+Transcript so far:
+${transcriptText || "(meeting just started)"}
+
+Speak ONLY as ${speaker.name}. 1-3 sentences. Stay in character. React to what was just said — agree, push back, raise a concern, or ask a sharp question. Reference specifics from the project where natural. Do not narrate, do not write stage directions, no quotes around your line. Just speak.`;
+
+    const { text } = await generateText({ model: getModel(), prompt });
+    const turn: TranscriptTurn = {
+      at: new Date().toISOString(),
+      kind: "speaker",
+      speaker_name: speaker.name,
+      speaker_role: speaker.role,
+      role_key: speaker.role_key,
+      body: text.trim(),
+    };
+    const { data: row } = await context.supabase
+      .from("meetings")
+      .update({ transcript: [...transcript, turn] as unknown as object, attendees: attendees as unknown as object })
+      .eq("id", meeting.id)
+      .select()
+      .single();
     return row;
   });
 
