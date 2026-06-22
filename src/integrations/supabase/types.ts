@@ -500,7 +500,12 @@ export type Database = {
         Row: {
           chapter: string
           company: string
+          current_day: number
+          current_sprint: number
+          current_week: number
           health: string
+          last_advanced_at: string | null
+          next_milestone: string
           performance: Json
           phase: string
           progress: number
@@ -513,7 +518,12 @@ export type Database = {
         Insert: {
           chapter?: string
           company?: string
+          current_day?: number
+          current_sprint?: number
+          current_week?: number
           health?: string
+          last_advanced_at?: string | null
+          next_milestone?: string
           performance?: Json
           phase?: string
           progress?: number
@@ -526,7 +536,12 @@ export type Database = {
         Update: {
           chapter?: string
           company?: string
+          current_day?: number
+          current_sprint?: number
+          current_week?: number
           health?: string
+          last_advanced_at?: string | null
+          next_milestone?: string
           performance?: Json
           phase?: string
           progress?: number
