@@ -241,6 +241,30 @@ export type Database = {
         }
         Relationships: []
       }
+      early_access_signups: {
+        Row: {
+          created_at: string
+          desired_role: string
+          email: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          desired_role: string
+          email: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          desired_role?: string
+          email?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       inbox_messages: {
         Row: {
           body: string
