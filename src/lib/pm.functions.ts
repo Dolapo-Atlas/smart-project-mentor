@@ -871,6 +871,18 @@ const STAKEHOLDER_BOOK: Array<{ name: string; role: string; type: string }> = [
   { name: "CareSoft Ltd", role: "Vendor – CareSoft Ltd", type: "vendor" },
 ];
 
+// Archetype starting sentiment — each stakeholder begins with a baseline
+// reflecting their disposition. The coordinator earns or loses ground from there.
+export const ARCHETYPE_SENTIMENT: Record<string, number> = {
+  "David Okafor": 0,        // sponsor — neutral, busy, expects clarity
+  "Sarah Williams": 10,     // PM peer/mentor — supportive
+  "Priya Anand": -10,       // finance — mildly skeptical until value is shown
+  "James Lin": -5,          // tech — cautious, integration-anxious
+  "Margaret Hollis": -5,    // care home manager — protective of staff
+  "Rachel Stone": -15,      // clinical governance — skeptical until safety proven
+  "CareSoft Ltd": 0,        // vendor — transactional
+};
+
 export const getStakeholders = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -886,7 +898,7 @@ export const getStakeholders = createServerFn({ method: "GET" })
         name: s.name,
         role: s.role,
         type: s.type,
-        sentiment: r?.sentiment ?? 0,
+        sentiment: r?.sentiment ?? ARCHETYPE_SENTIMENT[s.name] ?? 0,
         concerns: (r?.concerns ?? []) as string[],
         notes: r?.notes ?? "",
         interaction_count: r?.interaction_count ?? 0,
@@ -911,7 +923,7 @@ export const updateStakeholder = createServerFn({ method: "POST" })
       .maybeSingle();
 
     const current = existing ?? {
-      sentiment: 0,
+      sentiment: ARCHETYPE_SENTIMENT[data.name] ?? 0,
       concerns: [] as string[],
       notes: "",
       interaction_count: 0,
