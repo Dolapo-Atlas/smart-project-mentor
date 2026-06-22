@@ -74,6 +74,7 @@ function Tasks() {
           Move work from To Do through In Progress, mark it Submitted when you upload to Documents,
           and Completed when the AI panel signs it off.
         </p>
+        <div className="mt-4"><TimeControls compact /></div>
       </header>
 
       <form
