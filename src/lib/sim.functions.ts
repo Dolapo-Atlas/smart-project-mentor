@@ -1055,6 +1055,46 @@ Do not use the same wording as any recent inbox message. Do not write a generic 
       body: reaction.body,
     });
 
+    // Update stakeholder sentiment based on document quality. Each
+    // stakeholder reacts to the slice of the score that matters to them.
+    try {
+      const { ARCHETYPE_SENTIMENT } = await import("./pm.functions");
+      const cs = output.category_scores;
+      const perStakeholder: Array<{ name: string; role: string; signal: number }> = [
+        { name: "David Okafor", role: "Executive Sponsor", signal: output.score },
+        { name: "Sarah Williams", role: "Project Manager (peer / mentor)", signal: Math.round((cs.completeness + cs.professionalism) / 2) },
+        { name: "Priya Anand", role: "Finance Business Partner", signal: cs.completeness },
+        { name: "James Lin", role: "Technical Lead", signal: cs.completeness },
+        { name: "Margaret Hollis", role: "Care Home Manager", signal: cs.clarity },
+        { name: "Rachel Stone", role: "Clinical Governance Lead", signal: cs.governance },
+        { name: "CareSoft Ltd", role: "Vendor – CareSoft Ltd", signal: cs.professionalism },
+      ];
+      for (const s of perStakeholder) {
+        const delta = Math.max(-8, Math.min(8, Math.round((s.signal - 60) / 5)));
+        const { data: existing } = await supabase
+          .from("stakeholder_relationships")
+          .select("sentiment,interaction_count")
+          .eq("user_id", userId)
+          .eq("stakeholder_name", s.name)
+          .maybeSingle();
+        const baseline = ARCHETYPE_SENTIMENT[s.name] ?? 0;
+        const next = Math.max(-100, Math.min(100, (existing?.sentiment ?? baseline) + delta));
+        await supabase.from("stakeholder_relationships").upsert(
+          {
+            user_id: userId,
+            stakeholder_name: s.name,
+            role: s.role,
+            sentiment: next,
+            interaction_count: (existing?.interaction_count ?? 0) + 1,
+            last_interaction: new Date().toISOString(),
+          },
+          { onConflict: "user_id,stakeholder_name" },
+        );
+      }
+    } catch (e) {
+      console.error("stakeholder sentiment update on document review failed", e);
+    }
+
     return fb;
   });
 
