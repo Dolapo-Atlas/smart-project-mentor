@@ -538,6 +538,48 @@ export type Database = {
         }
         Relationships: []
       }
+      stakeholder_relationships: {
+        Row: {
+          concerns: string[]
+          created_at: string
+          id: string
+          interaction_count: number
+          last_interaction: string | null
+          notes: string
+          role: string
+          sentiment: number
+          stakeholder_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          concerns?: string[]
+          created_at?: string
+          id?: string
+          interaction_count?: number
+          last_interaction?: string | null
+          notes?: string
+          role?: string
+          sentiment?: number
+          stakeholder_name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          concerns?: string[]
+          created_at?: string
+          id?: string
+          interaction_count?: number
+          last_interaction?: string | null
+          notes?: string
+          role?: string
+          sentiment?: number
+          stakeholder_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       status_reports: {
         Row: {
           achievements: string | null

@@ -858,3 +858,88 @@ The email should put ${firstName} in the middle and force a judgement call. Addr
     if (error) throw error;
     return msg;
   });
+
+/* ============= STAKEHOLDER RELATIONSHIPS ============= */
+
+const STAKEHOLDER_BOOK: Array<{ name: string; role: string; type: string }> = [
+  { name: "David Okafor", role: "Executive Sponsor", type: "sponsor" },
+  { name: "Sarah Williams", role: "Project Manager (peer / mentor)", type: "pm" },
+  { name: "Priya Anand", role: "Finance Business Partner", type: "pmo" },
+  { name: "James Lin", role: "Technical Lead", type: "tech" },
+  { name: "Margaret Hollis", role: "Care Home Manager", type: "operations" },
+  { name: "Rachel Stone", role: "Clinical Governance Lead", type: "clinical" },
+  { name: "CareSoft Ltd", role: "Vendor – CareSoft Ltd", type: "vendor" },
+];
+
+export const getStakeholders = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data: rows } = await supabase
+      .from("stakeholder_relationships")
+      .select("*")
+      .eq("user_id", userId);
+    const byName = new Map((rows ?? []).map((r) => [r.stakeholder_name, r]));
+    return STAKEHOLDER_BOOK.map((s) => {
+      const r = byName.get(s.name);
+      return {
+        name: s.name,
+        role: s.role,
+        type: s.type,
+        sentiment: r?.sentiment ?? 0,
+        concerns: (r?.concerns ?? []) as string[],
+        notes: r?.notes ?? "",
+        interaction_count: r?.interaction_count ?? 0,
+        last_interaction: r?.last_interaction ?? null,
+      };
+    });
+  });
+
+export const updateStakeholder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { name: string; sentimentDelta?: number; addConcern?: string; removeConcern?: string; notes?: string; bumpInteraction?: boolean }) => d)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const book = STAKEHOLDER_BOOK.find((s) => s.name === data.name);
+    if (!book) throw new Error("Unknown stakeholder");
+
+    const { data: existing } = await supabase
+      .from("stakeholder_relationships")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("stakeholder_name", data.name)
+      .maybeSingle();
+
+    const current = existing ?? {
+      sentiment: 0,
+      concerns: [] as string[],
+      notes: "",
+      interaction_count: 0,
+    };
+
+    let sentiment = current.sentiment + (data.sentimentDelta ?? 0);
+    sentiment = Math.max(-100, Math.min(100, sentiment));
+
+    let concerns = [...(current.concerns ?? [])];
+    if (data.addConcern && !concerns.includes(data.addConcern)) concerns.push(data.addConcern);
+    if (data.removeConcern) concerns = concerns.filter((c) => c !== data.removeConcern);
+
+    const payload = {
+      user_id: userId,
+      stakeholder_name: data.name,
+      role: book.role,
+      sentiment,
+      concerns,
+      notes: data.notes ?? current.notes,
+      interaction_count: current.interaction_count + (data.bumpInteraction ? 1 : 0),
+      last_interaction: data.bumpInteraction ? new Date().toISOString() : (existing?.last_interaction ?? null),
+    };
+
+    const { data: row, error } = await supabase
+      .from("stakeholder_relationships")
+      .upsert(payload, { onConflict: "user_id,stakeholder_name" })
+      .select()
+      .single();
+    if (error) throw error;
+    return row;
+  });
