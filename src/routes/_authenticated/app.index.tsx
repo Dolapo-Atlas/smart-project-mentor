@@ -5,7 +5,6 @@ import {
   getOverview,
   generateStakeholderMessage,
   listInbox,
-  listTasks,
 } from "@/lib/sim.functions";
 import { Button } from "@/components/ui/button";
 import { Sparkles, FileText, ListChecks, Activity, ClipboardCheck } from "lucide-react";
@@ -19,8 +18,6 @@ export const Route = createFileRoute("/_authenticated/app/")({
   component: Dashboard,
 });
 
-type InboxItem = { id: string; subject: string; sender_name: string; sender_role: string; body: string; read: boolean; tone?: string; created_at?: string };
-type TaskItem = { id: string; title: string; status: string };
 
 function Dashboard() {
   const qc = useQueryClient();
