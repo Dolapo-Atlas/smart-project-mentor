@@ -162,13 +162,14 @@ function Comms() {
             <button
               key={s.role}
               onClick={() => toggleRole(s.role)}
-              className={`rounded-full border px-3 py-1.5 text-xs transition ${
+              className={`flex items-center gap-2 rounded-full border py-1 pl-1 pr-3 text-xs transition ${
                 toRoles.includes(s.role)
                   ? "border-foreground bg-foreground text-background"
                   : "border-border text-muted-foreground hover:text-foreground"
               }`}
             >
-              {s.name} <span className="opacity-60">· {s.title}</span>
+              <StakeholderAvatar name={s.name} size="xs" />
+              <span>{s.name} <span className="opacity-60">· {s.title}</span></span>
             </button>
           ))}
         </div>
