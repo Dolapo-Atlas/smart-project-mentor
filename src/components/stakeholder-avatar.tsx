@@ -5,17 +5,30 @@ type StakeholderMeta = {
   initial: string;
   bg: string; // tailwind bg class
   fg: string; // tailwind text class
+  ring: string; // tailwind ring color class for role
 };
+
+// Role-coloured rings by stakeholder type.
+// Sponsor=Purple, PM=Blue, Clinical=Red, Operations=Green, Tech=Teal, Vendor=Orange, PMO/Analyst=Grey
+const RING = {
+  sponsor: "ring-purple-500",
+  pm: "ring-blue-500",
+  clinical: "ring-red-500",
+  operations: "ring-emerald-500",
+  tech: "ring-teal-500",
+  vendor: "ring-orange-500",
+  pmo: "ring-slate-400",
+} as const;
 
 // Fixed mapping by display name. Unknown names get a deterministic fallback.
 const BOOK: Record<string, StakeholderMeta> = {
-  "Sarah Williams": { seed: "sarah-williams", initial: "S", bg: "bg-purple-500", fg: "text-white" },
-  "David Okafor": { seed: "david-okafor", initial: "D", bg: "bg-[#1e3a8a]", fg: "text-white" },
-  "Priya Anand": { seed: "priya-anand", initial: "P", bg: "bg-emerald-600", fg: "text-white" },
-  "James Lin": { seed: "james-lin", initial: "J", bg: "bg-blue-500", fg: "text-white" },
-  "Margaret Hollis": { seed: "margaret-hollis", initial: "M", bg: "bg-orange-500", fg: "text-white" },
-  "Rachel Stone": { seed: "rachel-stone", initial: "R", bg: "bg-teal-600", fg: "text-white" },
-  "CareSoft Ltd": { seed: "caresoft", initial: "C", bg: "bg-slate-500", fg: "text-white" },
+  "Sarah Williams": { seed: "sarah-williams-pm", initial: "S", bg: "bg-blue-500", fg: "text-white", ring: RING.pm },
+  "David Okafor": { seed: "david-okafor-exec", initial: "D", bg: "bg-purple-600", fg: "text-white", ring: RING.sponsor },
+  "Priya Anand": { seed: "priya-anand-finance", initial: "P", bg: "bg-slate-500", fg: "text-white", ring: RING.pmo },
+  "James Lin": { seed: "james-lin-tech", initial: "J", bg: "bg-teal-600", fg: "text-white", ring: RING.tech },
+  "Margaret Hollis": { seed: "margaret-hollis-ops", initial: "M", bg: "bg-emerald-600", fg: "text-white", ring: RING.operations },
+  "Rachel Stone": { seed: "rachel-stone-clinical", initial: "R", bg: "bg-red-500", fg: "text-white", ring: RING.clinical },
+  "CareSoft Ltd": { seed: "caresoft-vendor", initial: "C", bg: "bg-orange-500", fg: "text-white", ring: RING.vendor },
 };
 
 const PALETTE = [
@@ -35,7 +48,7 @@ function metaFor(name: string): StakeholderMeta {
   let h = 0;
   for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) | 0;
   const p = PALETTE[Math.abs(h) % PALETTE.length];
-  return { seed: slug, initial, bg: p.bg, fg: p.fg };
+  return { seed: slug, initial, bg: p.bg, fg: p.fg, ring: "ring-border" };
 }
 
 const SIZES: Record<string, { wh: string; text: string; px: number }> = {
@@ -56,15 +69,20 @@ export function StakeholderAvatar({
 }) {
   const m = metaFor(name);
   const s = SIZES[size];
-  const url = `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(m.seed)}&radius=50&backgroundType=gradientLinear`;
+  // Notionists: clean, professional Notion/Linear-style illustrated avatars.
+  // Muted neutral background palette so the role ring carries the colour signal.
+  const url = `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(
+    m.seed,
+  )}&radius=50&backgroundColor=eef2f7,e5e7eb,f1f5f9,e2e8f0,f3f4f6&backgroundType=solid`;
   return (
     <span
       className={cn(
-        "relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full font-semibold ring-1 ring-border",
+        "relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full font-semibold ring-2 ring-offset-2 ring-offset-background",
         s.wh,
         s.text,
         m.bg,
         m.fg,
+        m.ring,
         className,
       )}
       aria-label={name}
