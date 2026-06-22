@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Mail, Sparkles, FileText, ListChecks, Activity, ClipboardCheck, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
-import { StakeholderAvatar } from "@/components/stakeholder-avatar";
+import { StakeholderHoverAvatar as StakeholderAvatar } from "@/components/stakeholder-card";
 
 export const Route = createFileRoute("/_authenticated/app/")({
   component: Dashboard,

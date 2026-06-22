@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Send, Paperclip, ChevronRight, Upload, Loader2 } from "lucide-react";
-import { StakeholderAvatar } from "@/components/stakeholder-avatar";
+import { StakeholderHoverAvatar as StakeholderAvatar } from "@/components/stakeholder-card";
 
 export const Route = createFileRoute("/_authenticated/app/comms")({
   component: Comms,
