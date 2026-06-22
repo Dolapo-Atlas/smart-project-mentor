@@ -195,6 +195,32 @@ Choose sentiment honestly: positive, neutral, pushback, concerned, or ignored (i
         body: out.body,
         tone: out.sentiment === "pushback" || out.sentiment === "concerned" ? "frustrated" : out.sentiment === "positive" ? "supportive" : "neutral",
       });
+
+      // Track relationship: sentiment delta + interaction count
+      const delta =
+        out.sentiment === "positive" ? 4 :
+        out.sentiment === "neutral" ? 1 :
+        out.sentiment === "concerned" ? -3 :
+        out.sentiment === "pushback" ? -5 :
+        0; // ignored
+      const { data: existing } = await supabase
+        .from("stakeholder_relationships")
+        .select("sentiment,interaction_count,role")
+        .eq("user_id", uid)
+        .eq("stakeholder_name", sh.name)
+        .maybeSingle();
+      const nextSentiment = Math.max(-100, Math.min(100, (existing?.sentiment ?? 0) + delta));
+      await supabase.from("stakeholder_relationships").upsert(
+        {
+          user_id: uid,
+          stakeholder_name: sh.name,
+          role: existing?.role || sh.title,
+          sentiment: nextSentiment,
+          interaction_count: (existing?.interaction_count ?? 0) + 1,
+          last_interaction: new Date().toISOString(),
+        },
+        { onConflict: "user_id,stakeholder_name" },
+      );
     }
 
     // Action-based micro-ticks: tick competencies for sending the right kind
