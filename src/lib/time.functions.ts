@@ -51,7 +51,7 @@ export const getReadiness = createServerFn({ method: "GET" })
         .eq("severity", "high"),
       supabase
         .from("stakeholder_relationships")
-        .select("name,sentiment")
+        .select("stakeholder_name,sentiment")
         .eq("user_id", userId)
         .lt("sentiment", -20),
     ]);
@@ -63,7 +63,10 @@ export const getReadiness = createServerFn({ method: "GET" })
     const unread = inbox.data ?? [];
     const unsubmitted = docs.data ?? [];
     const highRisks = raids.data ?? [];
-    const frustrated = rels.data ?? [];
+    const frustrated = (rels.data ?? []).map((r) => ({
+      name: r.stakeholder_name,
+      sentiment: r.sentiment,
+    }));
 
     const blockerCount =
       openTasks.length +
@@ -79,7 +82,7 @@ export const getReadiness = createServerFn({ method: "GET" })
       unsubmittedDocs: unsubmitted.map((d) => ({ id: d.id, title: d.title })),
       meetingsMissingMinutes: meetingsMissingMinutes.map((m) => ({ id: m.id, title: m.title })),
       openHighRisks: highRisks.map((r) => ({ id: r.id, title: r.title, kind: r.kind })),
-      frustratedStakeholders: frustrated.map((s) => ({ name: s.name, sentiment: s.sentiment })),
+      frustratedStakeholders: frustrated,
       missingApprovals: meetingsMissingMinutes.length, // proxy
       blockerCount,
     };
@@ -219,7 +222,7 @@ export const advanceTime = createServerFn({ method: "POST" })
         .from("stakeholder_relationships")
         .select("sentiment,interaction_count")
         .eq("user_id", userId)
-        .eq("name", name)
+        .eq("stakeholder_name", name)
         .maybeSingle();
       const baseline = ARCHETYPE_SENTIMENT[name] ?? 0;
       const cur = existing?.sentiment ?? baseline;
@@ -227,11 +230,11 @@ export const advanceTime = createServerFn({ method: "POST" })
       await supabase.from("stakeholder_relationships").upsert(
         {
           user_id: userId,
-          name,
+          stakeholder_name: name,
           sentiment: next,
           interaction_count: (existing?.interaction_count ?? 0) + 1,
         },
-        { onConflict: "user_id,name" },
+        { onConflict: "user_id,stakeholder_name" },
       );
     }
 
