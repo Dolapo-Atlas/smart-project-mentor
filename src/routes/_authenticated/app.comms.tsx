@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Send, Paperclip, ChevronRight, Upload, Loader2 } from "lucide-react";
+import { StakeholderAvatar } from "@/components/stakeholder-avatar";
 
 export const Route = createFileRoute("/_authenticated/app/comms")({
   component: Comms,
@@ -285,12 +286,21 @@ function Comms() {
                   <div className="mt-4 space-y-2 border-l-2 border-border pl-4">
                     {replies.map((r) => (
                       <div key={r.id}>
-                        <div className="flex items-center gap-2 text-xs">
-                          <ChevronRight className="h-3 w-3" />
-                          <span className="font-medium">{STAKEHOLDERS.find((s) => s.role === r.from_role)?.name ?? r.from_role}</span>
-                          <span className={sentimentClass[r.sentiment ?? "neutral"]}>· {r.sentiment}</span>
-                        </div>
-                        <div className="mt-1 whitespace-pre-wrap text-sm">{r.body}</div>
+                        {(() => {
+                          const sName = STAKEHOLDERS.find((s) => s.role === r.from_role)?.name ?? r.from_role;
+                          return (
+                            <div className="flex items-start gap-2">
+                              <StakeholderAvatar name={sName} size="sm" />
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2 text-xs">
+                                  <span className="font-medium">{sName}</span>
+                                  <span className={sentimentClass[r.sentiment ?? "neutral"]}>· {r.sentiment}</span>
+                                </div>
+                                <div className="mt-1 whitespace-pre-wrap text-sm">{r.body}</div>
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
                     ))}
                   </div>
