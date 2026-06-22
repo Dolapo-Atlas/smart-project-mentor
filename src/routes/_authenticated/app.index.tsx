@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Mail, Sparkles, FileText, ListChecks, Activity, ClipboardCheck, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import { StakeholderAvatar } from "@/components/stakeholder-avatar";
 
 export const Route = createFileRoute("/_authenticated/app/")({
   component: Dashboard,
@@ -240,7 +241,7 @@ function Dashboard() {
             )}
             {recent.map((m) => (
               <li key={m.id} className="flex items-start gap-3 py-4">
-                <Mail className="mt-1 h-4 w-4 text-primary" />
+                <StakeholderAvatar name={m.sender_name} size="sm" />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
                     <div className="font-medium">{m.subject}</div>

@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Sparkles, Mail, Flame, Reply, Send } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import { StakeholderAvatar } from "@/components/stakeholder-avatar";
 
 export const Route = createFileRoute("/_authenticated/app/inbox")({
   component: Inbox,
@@ -137,16 +138,21 @@ function Inbox() {
                     if (!m.read) mark.mutate(m.id);
                   }}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold">{m.sender_name}</span>
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wider ${toneStyles[m.tone] ?? toneStyles.neutral}`}>
-                      {m.tone}
-                    </span>
-                  </div>
-                  <div className="text-xs text-muted-foreground">{m.sender_role}</div>
-                  <div className={`mt-2 truncate text-sm ${!m.read ? "font-semibold" : ""}`}>{m.subject}</div>
-                  <div className="mt-1 text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(m.created_at), { addSuffix: true })}
+                  <div className="flex items-start gap-3">
+                    <StakeholderAvatar name={m.sender_name} size="md" />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="truncate text-sm font-semibold">{m.sender_name}</span>
+                        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wider ${toneStyles[m.tone] ?? toneStyles.neutral}`}>
+                          {m.tone}
+                        </span>
+                      </div>
+                      <div className="text-xs text-muted-foreground">{m.sender_role}</div>
+                      <div className={`mt-2 truncate text-sm ${!m.read ? "font-semibold" : ""}`}>{m.subject}</div>
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        {formatDistanceToNow(new Date(m.created_at), { addSuffix: true })}
+                      </div>
+                    </div>
                   </div>
                 </button>
               </li>
@@ -157,11 +163,16 @@ function Inbox() {
         <article className="min-h-[400px] rounded-lg border border-border bg-card p-8">
           {selected ? (
             <>
-              <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                {selected.sender_role} · {formatDistanceToNow(new Date(selected.created_at), { addSuffix: true })}
+              <div className="flex items-center gap-4">
+                <StakeholderAvatar name={selected.sender_name} size="lg" />
+                <div>
+                  <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                    {selected.sender_role} · {formatDistanceToNow(new Date(selected.created_at), { addSuffix: true })}
+                  </div>
+                  <div className="mt-1 text-sm font-medium">{selected.sender_name}</div>
+                </div>
               </div>
-              <h2 className="mt-2 font-display text-3xl font-medium">{selected.subject}</h2>
-              <div className="mt-1 text-sm text-muted-foreground">From {selected.sender_name}</div>
+              <h2 className="mt-4 font-display text-3xl font-medium">{selected.subject}</h2>
               <div className="mt-6 whitespace-pre-wrap leading-relaxed">{selected.body}</div>
               {(() => {
                 const role = SENDER_ROLE_MAP[selected.sender_name];
