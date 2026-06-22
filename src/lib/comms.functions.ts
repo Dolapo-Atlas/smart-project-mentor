@@ -4,6 +4,7 @@ import { z } from "zod";
 import { generateObject } from "ai";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
 import { applyCompetencyStatus } from "./learning.functions";
+import { ARCHETYPE_SENTIMENT } from "./pm.functions";
 
 const MODEL = "google/gemini-3-flash-preview";
 function getModel() {
@@ -209,7 +210,8 @@ Choose sentiment honestly: positive, neutral, pushback, concerned, or ignored (i
         .eq("user_id", uid)
         .eq("stakeholder_name", sh.name)
         .maybeSingle();
-      const nextSentiment = Math.max(-100, Math.min(100, (existing?.sentiment ?? 0) + delta));
+      const baseline = ARCHETYPE_SENTIMENT[sh.name] ?? 0;
+      const nextSentiment = Math.max(-100, Math.min(100, (existing?.sentiment ?? baseline) + delta));
       await supabase.from("stakeholder_relationships").upsert(
         {
           user_id: uid,
