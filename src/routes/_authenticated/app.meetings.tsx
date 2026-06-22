@@ -21,6 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Users, CheckCircle2, Sparkles, Mic, MessageSquare, NotebookPen, PlayCircle, UserPlus, X, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import { TimeControls } from "@/components/time-controls";
 
 export const Route = createFileRoute("/_authenticated/app/meetings")({
   component: Meetings,
@@ -469,6 +470,12 @@ function Meetings() {
                       <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Minutes</div>
                       <p className="mt-1 whitespace-pre-wrap">{selected.minutes}</p>
                     </div>
+                  )}
+                  {selected.held && (
+                    <PostMeetingActions
+                      hasMinutes={!!selected.minutes}
+                      hasDecisions={!!selected.decisions}
+                    />
                   )}
                 </div>
               )}
