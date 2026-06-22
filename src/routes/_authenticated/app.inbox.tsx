@@ -11,6 +11,7 @@ import { Sparkles, Mail, Flame, Reply, Send } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { StakeholderHoverAvatar as StakeholderAvatar } from "@/components/stakeholder-card";
+import { TimeControls } from "@/components/time-controls";
 
 export const Route = createFileRoute("/_authenticated/app/inbox")({
   component: Inbox,
@@ -105,6 +106,7 @@ function Inbox() {
           <h1 className="font-display text-4xl font-medium">Inbox</h1>
         </div>
         <div className="flex flex-wrap gap-2">
+          <TimeControls compact />
           <Button variant="outline" onClick={() => stir.mutate()} disabled={stir.isPending}>
             <Flame className="mr-2 h-4 w-4" />
             {stir.isPending ? "Stirring…" : "Stir the pot"}

@@ -21,10 +21,50 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Users, CheckCircle2, Sparkles, Mic, MessageSquare, NotebookPen, PlayCircle, UserPlus, X, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import { TimeControls } from "@/components/time-controls";
 
 export const Route = createFileRoute("/_authenticated/app/meetings")({
   component: Meetings,
 });
+
+function PostMeetingActions({
+  hasMinutes,
+  hasDecisions,
+}: {
+  hasMinutes: boolean;
+  hasDecisions: boolean;
+}) {
+  const items = [
+    { label: "Capture minutes", done: hasMinutes },
+    { label: "Record decisions", done: hasDecisions },
+    { label: "Assign actions", done: hasDecisions },
+    { label: "Update RAID log", done: false },
+  ];
+  return (
+    <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
+      <div className="text-xs font-semibold uppercase tracking-widest text-primary">
+        Wrap up & advance
+      </div>
+      <ul className="mt-3 space-y-1 text-sm">
+        {items.map((i) => (
+          <li key={i.label} className="flex items-center gap-2">
+            <span
+              className={`inline-block h-2 w-2 rounded-full ${
+                i.done ? "bg-emerald-500" : "bg-muted-foreground/40"
+              }`}
+            />
+            <span className={i.done ? "text-foreground" : "text-muted-foreground"}>
+              {i.label}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <div className="mt-4">
+        <TimeControls compact />
+      </div>
+    </div>
+  );
+}
 
 type Kind = "standup" | "steering" | "vendor" | "retro";
 
@@ -469,6 +509,12 @@ function Meetings() {
                       <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Minutes</div>
                       <p className="mt-1 whitespace-pre-wrap">{selected.minutes}</p>
                     </div>
+                  )}
+                  {selected.held && (
+                    <PostMeetingActions
+                      hasMinutes={!!selected.minutes}
+                      hasDecisions={!!selected.decisions}
+                    />
                   )}
                 </div>
               )}

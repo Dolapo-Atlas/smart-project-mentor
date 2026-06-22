@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Check, Circle, CircleDot, Plus, Trash2, Inbox } from "lucide-react";
 import { toast } from "sonner";
+import { TimeControls } from "@/components/time-controls";
 
 export const Route = createFileRoute("/_authenticated/app/tasks")({
   component: Tasks,
@@ -74,6 +75,7 @@ function Tasks() {
           Move work from To Do through In Progress, mark it Submitted when you upload to Documents,
           and Completed when the AI panel signs it off.
         </p>
+        <div className="mt-4"><TimeControls compact /></div>
       </header>
 
       <form
