@@ -380,7 +380,7 @@ Return strict JSON. Be specific and tied to the submission. Skill = the project-
       await supabase.from("reflection_entries").insert({
         user_id: userId,
         prompt: `What did you take away from "${task.title}"?`,
-        response: `${feedback.did_well}\n\nTo improve: ${feedback.improve}\n\nReal-world: ${feedback.real_world}`,
+        answer: `${feedback.did_well}\n\nTo improve: ${feedback.improve}\n\nReal-world: ${feedback.real_world}`,
       });
     } catch {
       // table may have different shape — non-fatal
