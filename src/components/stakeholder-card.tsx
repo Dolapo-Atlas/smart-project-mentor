@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getStakeholders, updateStakeholder } from "@/lib/pm.functions";
+import { getStakeholders, repairStakeholderRelationship, updateStakeholder } from "@/lib/pm.functions";
 import { StakeholderAvatar } from "@/components/stakeholder-avatar";
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { ThumbsUp, ThumbsDown, Plus, X } from "lucide-react";
+import { MailCheck, ThumbsUp, ThumbsDown, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 
 type Stakeholder = {
@@ -28,6 +28,22 @@ function sentimentLabel(s: number) {
   if (s >= -19) return { label: "Neutral", color: "text-muted-foreground" };
   if (s >= -59) return { label: "Frustrated", color: "text-orange-500" };
   return { label: "Hostile", color: "text-red-600" };
+}
+
+function recoveryPlaybook(name: string) {
+  if (name === "Priya Anand") {
+    return {
+      title: "Priya needs numbers, not another generic email",
+      body: "Acknowledge that finance is protecting the budget. Reply with forecast vs actuals, vendor cost exposure, approval route, and the specific decision you need from her.",
+      action: "Send Priya the finance recovery note",
+    };
+  }
+
+  return {
+    title: "Reset the relationship",
+    body: "Stop sending repeated updates. Acknowledge the concern, name the decision needed, and ask what evidence would rebuild confidence.",
+    action: `Send ${name} a recovery note`,
+  };
 }
 
 function SentimentBar({ value }: { value: number }) {
@@ -139,6 +155,7 @@ export function StakeholderProfileDialog({
   const s = data?.find((x) => x.name === name);
   const qc = useQueryClient();
   const updateFn = useServerFn(updateStakeholder);
+  const repairFn = useServerFn(repairStakeholderRelationship);
   type UpdateInput = {
     name: string;
     sentimentDelta?: number;
@@ -152,12 +169,25 @@ export function StakeholderProfileDialog({
     onSuccess: () => qc.invalidateQueries({ queryKey: ["stakeholders"] }),
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Update failed"),
   });
+  const repair = useMutation({
+    mutationFn: () => repairFn({ data: { name } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["stakeholders"] });
+      qc.invalidateQueries({ queryKey: ["comms"] });
+      qc.invalidateQueries({ queryKey: ["inbox"] });
+      qc.invalidateQueries({ queryKey: ["overview"] });
+      qc.invalidateQueries({ queryKey: ["next-action"] });
+      toast.success(`${name} has a clear recovery note to respond to.`);
+    },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Recovery note failed"),
+  });
 
   const [newConcern, setNewConcern] = useState("");
   const [notesDraft, setNotesDraft] = useState<string | null>(null);
 
   const sentiment = s?.sentiment ?? 0;
   const sl = sentimentLabel(sentiment);
+  const playbook = recoveryPlaybook(name);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -201,6 +231,29 @@ export function StakeholderProfileDialog({
               </div>
             </div>
           </div>
+
+          {sentiment < -20 && (
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
+              <div className="flex items-start gap-3">
+                <div className="rounded-md bg-primary/10 p-2 text-primary">
+                  <MailCheck className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-semibold">{playbook.title}</div>
+                  <p className="mt-1 text-sm text-muted-foreground">{playbook.body}</p>
+                  <Button
+                    size="sm"
+                    className="mt-3"
+                    onClick={() => repair.mutate()}
+                    disabled={repair.isPending}
+                  >
+                    <MailCheck className="h-3.5 w-3.5" />
+                    {repair.isPending ? "Sending recovery note…" : playbook.action}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div>
             <div className="mb-2 text-sm font-medium">Concerns</div>

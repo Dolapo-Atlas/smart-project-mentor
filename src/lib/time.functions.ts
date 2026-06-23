@@ -40,7 +40,7 @@ export const getReadiness = createServerFn({ method: "GET" })
         .eq("status", "pending"),
       supabase
         .from("meetings")
-        .select("id,title,held,minutes")
+        .select("id,title,held,minutes,ai_summary,decisions,minutes_sent_at")
         .eq("user_id", userId)
         .eq("held", true),
       supabase
@@ -56,8 +56,7 @@ export const getReadiness = createServerFn({ method: "GET" })
         .lt("sentiment", -20),
     ]);
 
-    const meetingsMissingMinutes =
-      (meetings.data ?? []).filter((m) => !m.minutes || m.minutes.trim().length < 10);
+    const meetingsMissingMinutes = (meetings.data ?? []).filter((m) => !m.minutes_sent_at);
 
     const openTasks = tasks.data ?? [];
     const unread = inbox.data ?? [];
@@ -320,8 +319,8 @@ export const getNextAction = createServerFn({ method: "GET" })
       cta = "Open RAID log";
       to = "/app/risk";
     } else if (readiness.meetingsMissingMinutes.length > 0) {
-      title = `Submit minutes for "${readiness.meetingsMissingMinutes[0].title}"`;
-      reason = "Decisions and actions need to be on record before the next steering committee.";
+      title = `Send minutes for "${readiness.meetingsMissingMinutes[0].title}"`;
+      reason = "Minutes need to be captured and sent to attendees before this stops showing as open.";
       cta = "Open meeting";
       to = "/app/meetings";
     } else if (readiness.unsubmittedDocs.length > 0) {
