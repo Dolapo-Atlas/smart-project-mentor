@@ -1,89 +1,60 @@
-# Manual Time Progression System
+## Delegation & Escalation System
 
-Atlas currently advances implicitly. This plan introduces explicit, user-driven time progression with consequence generation, a "What's Next?" recommendation panel, and a phase-gating model — like Football Manager for project managers.
+Add a "Delegate or escalate" flow to the Inbox so the user isn't forced to personally answer every specialist question. They pick who handles it; that person replies in-thread, sentiment shifts realistically, and a system note appears in the inbox.
 
-## 1. Data model
+### UX
 
-Add to `simulation_state` (migration):
-- `current_day` int (default 1)
-- `current_week` int (default 1)
-- `current_sprint` int (default 1)
-- `phase` text (default `'Initiation'`) — Initiation | Planning | Execution | Monitoring | Go-Live | Closure
-- `last_advanced_at` timestamptz
-- `next_milestone` text (e.g. `'Steering Committee'`, `'Go-Live'`)
+On any open inbox message, alongside the existing **Reply** button, add a **Delegate / Escalate** button that opens a panel with 4 options:
 
-No other tables changed; we reuse `inbox_messages`, `tasks`, `raid_items`, `meetings`, `documents`, `stakeholder_relationships`.
+- **A. Reply personally** — existing flow (unchanged).
+- **B. Ask Sarah Williams (PM) to respond** — available for any message.
+- **C. Schedule a review meeting** — creates a draft meeting pre-filled with the sender + topic, jumps to `/app/meetings`.
+- **D. Escalate to David Okafor (Sponsor)** — available for any message; intended for budget/scope/governance.
+- **E. Assign to functional lead** — auto-routed by sender role:
+  - finance (Priya) → Priya Anand herself responds with a Finance Lead artefact
+  - tech (James) → James Lin
+  - clinical (Rachel) → Rachel Stone
+  - vendor (CareSoft) → CareSoft Account Director
+  
+  When the sender *is* the matching lead, "Assign to lead" is hidden and replaced with "Ask Sarah to coordinate".
 
-## 2. Server functions (`src/lib/time.functions.ts` — new)
+Each choice shows a one-line preview of the likely outcome ("Sarah will take ownership but the sponsor will notice if you escalate too often").
 
-All authenticated.
+### Behaviour per choice
 
-- `getReadiness()` — returns pre-advance check:
-  - `openTasks`, `unreadInbox`, `unsubmittedDocs`, `meetingsMissingMinutes`, `openHighRisks`, `frustratedStakeholders` (sentiment < -20), `missingApprovals`
-- `advanceTime({ mode: 'day' | 'week' | 'sprint' | 'steerco' | 'golive', force: boolean })`:
-  1. Read readiness; if not `force` and any blocker, return `{ blocked: true, readiness }`.
-  2. Compute days to skip (1 / 7 / 14 / until next steerco / until go-live milestone).
-  3. Generate consequences based on current state:
-     - High open risks → health degrade (green→amber→red), sponsor (-3..-8) sentiment, escalation email from Sarah/David.
-     - Governance task done & Rachel concerns cleared → Rachel +5, new approval task.
-     - CareSoft sentiment < -10 → +tech risk RAID, schedule slip note, vendor email.
-     - Training tasks complete → Margaret +5.
-     - Quiet inbox → stakeholder check-in email via existing `generateStakeholderMessage`.
-  4. Update phase if deliverables met (see §4).
-  5. Append story_log beat ("Day 12 → Day 19. Sponsor noted lack of update.").
-  6. Bump `current_day/week/sprint`, set `last_advanced_at`.
-  7. Return `{ ok: true, summary: { healthChange, newEmails, sentimentDeltas, beats } }`.
+A new server fn `delegateInboxMessage({ inbox_id, mode })` does the work:
 
-- `getNextAction()` — server-side recommendation (replaces client `computeNextAction` for richer logic). Considers phase, blockers, oldest unread, frustrated stakeholders, missing minutes, pending approvals.
+1. Loads the original inbox message + simulation state + relationship with sender and with the delegate.
+2. Generates an AI reply *from the delegate* to the original sender (in-thread style), grounded in project health, reputation, and what info the user has actually produced (latest status report RAG, open RAID, budget lines). Falls back to a deterministic template per (delegate, sender_role) pair if the model fails.
+3. Inserts two `comms_messages` rows:
+   - outbound from "coordinator" with body "Handing this to {Delegate} — please pick up.", `msg_type: "Request"`
+   - inbound from delegate with the generated reply
+4. Inserts an inbox message from the delegate so it shows up in the user's inbox.
+5. Inserts a short **system note** inbox row (tone `neutral`, sender role `system`) like:
+   - "Sarah Williams has taken ownership of this discussion."
+   - "James Lin will provide a technical assessment by end of day."
+   - "David Okafor has approved escalation to the Project Board."
+6. Adjusts sentiment:
+   - **Ask Sarah**: +2 sender, -1 Sarah per use, hard cap — third delegation in the same week to Sarah drops her sentiment by -8 ("you keep dumping things on me").
+   - **Escalate to Sponsor**: +5 sender if the issue is genuinely budget/scope/governance (`msg_type === "Escalation"` or keywords match), otherwise -6 sponsor ("don't escalate trivia"). Always +3 reputation when justified, -5 when not.
+   - **Assign to functional lead**: +4 sender (their concern went to the right specialist), neutral for delegate.
+   - **Schedule meeting**: +3 sender, no sentiment change for others; user must actually run + send minutes for full credit (already wired).
+7. Marks original inbox message read + records a `delegation_count` competency tick on `p2.escalation_routes` / `p2.managing_difficult_stakeholders`.
 
-## 3. UI components
+### Frontend changes
 
-- `src/components/time-controls.tsx`:
-  - Row of buttons: Next Day · Next Week · Begin Sprint · → Steering Committee · → Go-Live.
-  - Click → calls `getReadiness`, opens `AdvanceTimeDialog`.
+- `src/routes/_authenticated/app.inbox.tsx`:
+  - Add `<DelegatePanel />` next to the existing reply UI.
+  - Use `useMutation` calling the new `delegateInboxMessage` server fn; on success invalidate `inbox`, `comms`, `stakeholders`, `overview`, `next-action`, toast "Sarah Williams has taken ownership."
+- New component `src/components/delegate-panel.tsx` rendering the 4-5 option cards with the preview hint and a confirm button per option.
+- For **Schedule meeting**, call existing `createMeeting` server fn (already in `pm.functions.ts`) with prefilled attendees + topic, then `navigate({ to: "/app/meetings" })`.
 
-- `src/components/advance-time-dialog.tsx`:
-  - Lists every blocker category with counts and links.
-  - Buttons: **Review Issues** (closes, navigates to first blocker) · **Continue Anyway** (calls `advanceTime` with `force:true`).
-  - On success → toast summary + `queryClient.invalidateQueries()` everything.
+### Backend changes
 
-- `src/components/whats-next-panel.tsx`:
-  - Replaces the existing "What's next" section on the dashboard with server-driven recommendation from `getNextAction`.
-  - Shows phase chip, current day/week, recommended action, CTA link.
+- `src/lib/pm.functions.ts`: add `delegateInboxMessage` server fn with the logic above. Reuses `ARCHETYPE_SENTIMENT`, `STAKEHOLDERS` (import from comms), and the same Lovable AI gateway model used elsewhere. Track per-week Sarah-delegation count by reading recent system notes (no schema change needed).
+- `src/lib/sim.functions.ts`: extend the inbox type to include a `system_note` flag; existing schema already has `tone` — use a new tone literal `"system"` (purely a UI hint, no migration required since `tone` is text).
 
-## 4. Phase gating
+### Out of scope
 
-Phase advances inside `advanceTime` when deliverables met:
-- Initiation → Planning: project charter doc approved
-- Planning → Execution: schedule + RAID baseline tasks complete
-- Execution → Monitoring: ≥1 steering committee meeting with minutes
-- Monitoring → Go-Live: governance + training + vendor risks all not "High open"
-- Go-Live → Closure: go-live milestone meeting complete
-
-Phase change emits a story beat + sponsor email.
-
-## 5. Integration points
-
-- **Dashboard (`app.index.tsx`)**: add `<TimeControls />` near header; swap "What's next" for `<WhatsNextPanel />`; show phase + day in subheader.
-- **Meetings (`app.meetings.tsx`)**: after a meeting is marked complete, show inline checklist (minutes / decisions / actions / RAID) + "Continue to Next Day" button that opens the same dialog scoped to `mode:'day'`.
-- **Tasks / Documents / Inbox**: small "Advance time" button in header so users can progress from anywhere.
-
-## 6. What we are NOT changing
-
-- Existing sentiment, AI, RAID, inbox, meetings logic stays intact — `advanceTime` calls into them rather than replacing them.
-- No automatic background ticking. The dashboard `runEscalations` auto-call is removed; escalations now happen only on advance.
-
-## Files
-
-New:
-- `supabase/migrations/<ts>_time_progression.sql`
-- `src/lib/time.functions.ts`
-- `src/components/time-controls.tsx`
-- `src/components/advance-time-dialog.tsx`
-- `src/components/whats-next-panel.tsx`
-
-Edited:
-- `src/routes/_authenticated/app.index.tsx` (controls + panel + phase chip, drop auto-escalation)
-- `src/routes/_authenticated/app.meetings.tsx` (post-meeting checklist + advance CTA)
-- `src/routes/_authenticated/app.tasks.tsx`, `app.inbox.tsx`, `app.documents.tsx` (header advance button)
-- `src/lib/sim.functions.ts` (expose helpers reused by `time.functions.ts`)
+- No new tables; everything fits into existing `inbox_messages`, `comms_messages`, `stakeholder_relationships`. No migration needed.
+- No changes to landing page, RAID, learning, or auth.
