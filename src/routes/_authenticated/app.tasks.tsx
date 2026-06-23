@@ -153,6 +153,22 @@ function Tasks() {
                       <div className="mt-1 text-[10px] uppercase tracking-widest text-muted-foreground">
                         {t.priority}
                       </div>
+                      {t.status === "submitted" && (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          <button
+                            onClick={() => update.mutate({ id: t.id, status: "done" })}
+                            className="rounded-md bg-emerald-600 px-2 py-1 text-[11px] font-medium text-white hover:bg-emerald-700"
+                          >
+                            Mark complete
+                          </button>
+                          <button
+                            onClick={() => update.mutate({ id: t.id, status: "in_progress" })}
+                            className="rounded-md border border-border px-2 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground"
+                          >
+                            Send back
+                          </button>
+                        </div>
+                      )}
                     </div>
                     <button
                       onClick={() => del.mutate(t.id)}
