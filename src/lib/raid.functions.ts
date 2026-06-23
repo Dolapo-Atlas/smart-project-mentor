@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { STAKEHOLDERS } from "./comms.functions";
 
 const Kind = z.enum(["risk", "assumption", "issue", "dependency"]);
 const Sev = z.enum(["low", "medium", "high", "critical"]);
@@ -30,6 +31,71 @@ function isScheduleRelated(text: string): boolean {
 }
 function isClinicalRelated(text: string): boolean {
   return /\b(clinical|clinician|nurse|care staff|adoption|governance|safety)\b/i.test(text);
+}
+
+function findStakeholder(owner: string | null | undefined) {
+  if (!owner) return null;
+  const q = owner.trim().toLowerCase();
+  if (!q) return null;
+  return (
+    STAKEHOLDERS.find((s) => s.name.toLowerCase() === q) ||
+    STAKEHOLDERS.find((s) => s.role.toLowerCase() === q) ||
+    STAKEHOLDERS.find((s) => s.name.toLowerCase().includes(q) || q.includes(s.name.toLowerCase())) ||
+    null
+  );
+}
+
+async function notifyOwnerAssigned(
+  supabase: any,
+  userId: string,
+  item: { id: string; kind: string; title: string; description: string | null; severity: string; likelihood: string; mitigation: string | null; owner: string | null },
+  firstName: string,
+) {
+  const sh = findStakeholder(item.owner);
+  if (!sh) return false;
+  const body =
+`Hi ${sh.name.split(" ")[0]},
+
+${firstName} has assigned you as owner of a ${item.kind} on the RAID log:
+
+"${item.title}"
+Severity: ${item.severity} · Likelihood: ${item.likelihood}
+${item.description ? `\nContext: ${item.description}` : ""}
+${item.mitigation ? `\nProposed mitigation: ${item.mitigation}` : ""}
+
+Please confirm the mitigation plan and the escalation trigger so I can reflect it in the next status report.
+
+Thanks,
+${firstName}`;
+  await supabase.from("inbox_messages").insert({
+    user_id: userId,
+    sender_name: sh.name,
+    sender_role: sh.title,
+    subject: `Assigned as owner: ${item.title}`,
+    tone: "neutral",
+    body:
+`Hi ${firstName},
+
+Thanks — I've received the assignment as owner of the ${item.kind} "${item.title}". I'll come back with an updated mitigation and escalation trigger shortly.
+
+${sh.name}
+${sh.title}`,
+  });
+  // Also log the outbound notification as a comms message so it appears in the email trail
+  await supabase.from("comms_messages").insert({
+    user_id: userId,
+    thread_id: crypto.randomUUID(),
+    direction: "outbound",
+    from_role: "coordinator",
+    to_roles: [sh.role],
+    msg_type: "Request",
+    subject: `RAID assignment: ${item.title}`,
+    body,
+    attachment_kind: "raid",
+    attachment_ref: item.id,
+    attachment_label: `${item.kind}: ${item.title}`,
+  });
+  return true;
 }
 
 function buildStakeholderReaction(item: RaidRow, firstName: string) {
@@ -220,6 +286,8 @@ export const createRaid = createServerFn({ method: "POST" })
       });
       emailed = true;
     }
+
+    await notifyOwnerAssigned(context.supabase, context.userId, row as any, firstName);
 
     await recomputeRiskRag(context.supabase, context.userId);
     await maybeAutoSubmitRaidTask(context.supabase, context.userId);
