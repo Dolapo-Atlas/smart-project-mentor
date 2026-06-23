@@ -315,6 +315,7 @@ export type Database = {
           id: string
           kind: Database["public"]["Enums"]["meeting_kind"]
           minutes: string | null
+          minutes_sent_at: string | null
           scheduled_at: string
           title: string
           transcript: Json
@@ -331,6 +332,7 @@ export type Database = {
           id?: string
           kind: Database["public"]["Enums"]["meeting_kind"]
           minutes?: string | null
+          minutes_sent_at?: string | null
           scheduled_at?: string
           title: string
           transcript?: Json
@@ -347,6 +349,7 @@ export type Database = {
           id?: string
           kind?: Database["public"]["Enums"]["meeting_kind"]
           minutes?: string | null
+          minutes_sent_at?: string | null
           scheduled_at?: string
           title?: string
           transcript?: Json
