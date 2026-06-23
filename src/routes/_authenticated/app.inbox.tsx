@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { StakeholderHoverAvatar as StakeholderAvatar } from "@/components/stakeholder-card";
 import { TimeControls } from "@/components/time-controls";
+import { DelegatePanel } from "@/components/delegate-panel";
 
 export const Route = createFileRoute("/_authenticated/app/inbox")({
   component: Inbox,
@@ -181,22 +182,30 @@ function Inbox() {
               <div className="mt-6 whitespace-pre-wrap leading-relaxed">{selected.body}</div>
               {(() => {
                 const role = SENDER_ROLE_MAP[selected.sender_name];
-                if (!role) return null;
+                const isSystem = selected.sender_name === "Project Update";
+                if (isSystem) return null;
                 const subject = selected.subject.startsWith("Re:")
                   ? selected.subject
                   : `Re: ${selected.subject}`;
                 if (!replyOpen) {
                   return (
                     <div className="mt-8 border-t border-border pt-6">
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setReplyOpen(true);
-                          setReplyBody("");
-                        }}
-                      >
-                        <Reply className="mr-2 h-4 w-4" /> Reply to {selected.sender_name}
-                      </Button>
+                      {role && (
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setReplyOpen(true);
+                            setReplyBody("");
+                          }}
+                        >
+                          <Reply className="mr-2 h-4 w-4" /> Reply to {selected.sender_name}
+                        </Button>
+                      )}
+                      <DelegatePanel
+                        inboxId={selected.id}
+                        senderName={selected.sender_name}
+                        subject={selected.subject}
+                      />
                     </div>
                   );
                 }
@@ -224,9 +233,9 @@ function Inbox() {
                       </Button>
                       <Button
                         onClick={() =>
-                          reply.mutate({ to_role: role, subject, body: replyBody.trim() })
+                          role && reply.mutate({ to_role: role, subject, body: replyBody.trim() })
                         }
-                        disabled={reply.isPending || replyBody.trim().length < 5}
+                        disabled={!role || reply.isPending || replyBody.trim().length < 5}
                       >
                         <Send className="mr-2 h-4 w-4" />
                         {reply.isPending ? "Sending…" : "Send reply"}
