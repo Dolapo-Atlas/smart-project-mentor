@@ -13,12 +13,13 @@ import {
   addMeetingAttendee,
   removeMeetingAttendee,
   autoMinutes,
+  sendMinutesToAttendees,
 } from "@/lib/pm.functions";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Users, CheckCircle2, Sparkles, Mic, MessageSquare, NotebookPen, PlayCircle, UserPlus, X, Wand2 } from "lucide-react";
+import { Plus, Users, CheckCircle2, Sparkles, Mic, MessageSquare, NotebookPen, PlayCircle, UserPlus, X, Wand2, Send } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { TimeControls } from "@/components/time-controls";
@@ -104,6 +105,7 @@ function Meetings() {
   const addAttFn = useServerFn(addMeetingAttendee);
   const removeAttFn = useServerFn(removeMeetingAttendee);
   const autoMinutesFn = useServerFn(autoMinutes);
+  const sendMinutesFn = useServerFn(sendMinutesToAttendees);
   const { data: meetings } = useQuery({ queryKey: ["meetings"], queryFn: () => fetchM() });
   const { data: roster } = useQuery({ queryKey: ["attendee-roster"], queryFn: () => rosterFn() });
 
@@ -182,6 +184,20 @@ function Meetings() {
       if (res.minutes) setMinutes((prev) => (prev.trim() ? prev : res.minutes!));
       setAutoSummary(res.summary ?? null);
       toast.success("Minutes captured from the discussion.");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+
+  const sendMinutes = useMutation({
+    mutationFn: () => sendMinutesFn({ data: { id: selected!.id } }),
+    onSuccess: (res) => {
+      qc.invalidateQueries({ queryKey: ["meetings"] });
+      qc.invalidateQueries({ queryKey: ["tasks"] });
+      qc.invalidateQueries({ queryKey: ["inbox"] });
+      toast.success(
+        `Minutes sent to ${res.recipients} attendee${res.recipients === 1 ? "" : "s"}.` +
+          (res.closed_tasks ? ` ${res.closed_tasks} task closed.` : ""),
+      );
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
@@ -510,6 +526,41 @@ function Meetings() {
                       <p className="mt-1 whitespace-pre-wrap">{selected.minutes}</p>
                     </div>
                   )}
+                  <div className="rounded-md border border-border bg-muted/30 p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                          Distribute minutes
+                        </div>
+                        <p className="mt-1 text-sm">
+                          {(selected as any).minutes_sent_at ? (
+                            <span className="text-emerald-700 dark:text-emerald-400">
+                              Sent {formatDistanceToNow(new Date((selected as any).minutes_sent_at), { addSuffix: true })}
+                              {" "}to {attendees.length} attendee{attendees.length === 1 ? "" : "s"}.
+                            </span>
+                          ) : (
+                            <>Email the minutes to everyone who attended. This closes off any pending “send minutes” task.</>
+                          )}
+                        </p>
+                        {attendees.length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            {attendees.map((a) => (
+                              <span key={a.role_key} className="rounded-full border border-border bg-background px-2 py-0.5 text-[11px]">
+                                {a.name} <span className="text-muted-foreground">· {a.role}</span>
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <Button
+                        onClick={() => sendMinutes.mutate()}
+                        disabled={sendMinutes.isPending || attendees.length === 0 || (!selected.minutes && !selected.ai_summary && !selected.decisions)}
+                      >
+                        <Send className="mr-2 h-4 w-4" />
+                        {(selected as any).minutes_sent_at ? "Resend minutes" : sendMinutes.isPending ? "Sending…" : "Send minutes to attendees"}
+                      </Button>
+                    </div>
+                  </div>
                   {selected.held && (
                     <PostMeetingActions
                       hasMinutes={!!selected.minutes}
