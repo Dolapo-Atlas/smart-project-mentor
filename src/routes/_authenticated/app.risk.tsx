@@ -9,8 +9,10 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Trash2, Plus } from "lucide-react";
+import { Trash2, Plus, Mail } from "lucide-react";
 import { toast } from "sonner";
+import { STAKEHOLDERS } from "@/lib/stakeholders";
+import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_authenticated/app/risk")({
   component: RiskPage,
@@ -230,11 +232,16 @@ function RiskPage() {
               <option value="high">Likelihood: High</option>
               <option value="critical">Likelihood: Critical</option>
             </select>
-            <Input
-              placeholder="Owner (optional)"
+            <select
               value={form.owner}
               onChange={(e) => setForm({ ...form, owner: e.target.value })}
-            />
+              className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+            >
+              <option value="">Owner (unassigned)</option>
+              {STAKEHOLDERS.map((s) => (
+                <option key={s.role} value={s.name}>{s.name} — {s.title}</option>
+              ))}
+            </select>
           </div>
           <Textarea
             placeholder="Description / context…"
@@ -293,8 +300,15 @@ function RiskPage() {
                             </div>
                           )}
                           {r.owner && (
-                            <div className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">
-                              Owner · {r.owner}
+                            <div className="mt-2">
+                              <Link
+                                to="/app/inbox"
+                                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-medium hover:bg-muted hover:text-foreground"
+                                title={`${r.owner} was emailed about this assignment`}
+                              >
+                                <Mail className="h-3 w-3" />
+                                Owner · {r.owner}
+                              </Link>
                             </div>
                           )}
                         </div>
