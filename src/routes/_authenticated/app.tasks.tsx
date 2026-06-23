@@ -1,40 +1,107 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { listTasks, createTask, updateTaskStatus, deleteTask } from "@/lib/sim.functions";
+import { updateTaskStatus, deleteTask } from "@/lib/sim.functions";
+import {
+  listTasksRich,
+  createRichTask,
+  submitTaskWithWork,
+  closeTaskWithReview,
+  escalateTask,
+  TASK_CATEGORIES,
+} from "@/lib/tasks.functions";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Check, Circle, CircleDot, Plus, Trash2, Inbox } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Check,
+  Circle,
+  CircleDot,
+  Plus,
+  Trash2,
+  Inbox,
+  Lock,
+  ArrowUpRight,
+  ShieldAlert,
+  Send,
+  Sparkles,
+  Ban,
+} from "lucide-react";
 import { toast } from "sonner";
 import { TimeControls } from "@/components/time-controls";
+import { StakeholderHoverAvatar as StakeholderAvatar } from "@/components/stakeholder-card";
 
 export const Route = createFileRoute("/_authenticated/app/tasks")({
   component: Tasks,
 });
 
+type RichTask = {
+  id: string;
+  title: string;
+  description: string | null;
+  status: string;
+  priority: string;
+  category: string | null;
+  linked_area: string | null;
+  linked_stakeholder: string | null;
+  linked_module_route: string | null;
+  completion_action: string | null;
+  due_at: string | null;
+  source: string;
+  feedback: any;
+  submission: string | null;
+  blocked_by: { id: string; title: string }[];
+};
+
 function Tasks() {
   const qc = useQueryClient();
-  const fetchTasks = useServerFn(listTasks);
-  const createFn = useServerFn(createTask);
+  const fetchTasks = useServerFn(listTasksRich);
+  const createFn = useServerFn(createRichTask);
   const updateFn = useServerFn(updateTaskStatus);
   const deleteFn = useServerFn(deleteTask);
-  const { data: tasks } = useQuery({ queryKey: ["tasks"], queryFn: () => fetchTasks() });
+  const submitFn = useServerFn(submitTaskWithWork);
+  const closeFn = useServerFn(closeTaskWithReview);
+  const escalateFn = useServerFn(escalateTask);
+  const { data: tasks } = useQuery<RichTask[]>({
+    queryKey: ["tasks"],
+    queryFn: () => fetchTasks() as Promise<RichTask[]>,
+  });
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [priority, setPriority] = useState<"low" | "medium" | "high">("medium");
+  const [priority, setPriority] = useState<"low" | "medium" | "high" | "critical">("medium");
+  const [category, setCategory] = useState<string>("");
+  const [submitTaskId, setSubmitTaskId] = useState<string | null>(null);
+  const [submission, setSubmission] = useState("");
 
   const create = useMutation({
-    mutationFn: () => createFn({ data: { title, description: description || undefined, priority } }),
+    mutationFn: () =>
+      createFn({
+        data: {
+          title,
+          description: description || undefined,
+          priority,
+          category: category || undefined,
+        },
+      }),
     onSuccess: () => {
       setTitle("");
       setDescription("");
       setPriority("medium");
+      setCategory("");
       qc.invalidateQueries({ queryKey: ["tasks"] });
       qc.invalidateQueries({ queryKey: ["overview"] });
+      qc.invalidateQueries({ queryKey: ["whats-next"] });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
@@ -44,6 +111,7 @@ function Tasks() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tasks"] });
       qc.invalidateQueries({ queryKey: ["overview"] });
+      qc.invalidateQueries({ queryKey: ["whats-next"] });
     },
   });
 
@@ -52,30 +120,82 @@ function Tasks() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tasks"] }),
   });
 
+  const submit = useMutation({
+    mutationFn: (v: { id: string; submission: string }) => submitFn({ data: v }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tasks"] });
+      qc.invalidateQueries({ queryKey: ["overview"] });
+      qc.invalidateQueries({ queryKey: ["whats-next"] });
+      toast.success("Submitted for review");
+      setSubmitTaskId(null);
+      setSubmission("");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+
+  const close = useMutation({
+    mutationFn: (v: { id: string; decision: "approved" | "rework" }) => closeFn({ data: v }),
+    onSuccess: (res: any) => {
+      qc.invalidateQueries({ queryKey: ["tasks"] });
+      qc.invalidateQueries({ queryKey: ["overview"] });
+      qc.invalidateQueries({ queryKey: ["whats-next"] });
+      qc.invalidateQueries({ queryKey: ["stakeholders"] });
+      if (res?.decision === "approved") {
+        toast.success(
+          res?.impact_summary?.length ? `Closed. ${res.impact_summary.join(" · ")}` : "Closed",
+        );
+      } else {
+        toast.message("Sent back for rework");
+      }
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+
+  const escalate = useMutation({
+    mutationFn: (v: { id: string; mode: "assign_lead" | "ask_pm" | "escalate_sponsor" | "add_to_raid" }) =>
+      escalateFn({ data: v }),
+    onSuccess: (res: any) => {
+      qc.invalidateQueries({ queryKey: ["tasks"] });
+      qc.invalidateQueries({ queryKey: ["overview"] });
+      toast.success(`${res?.owner} has taken ownership`);
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+
   const grouped = {
     todo: tasks?.filter((t) => t.status === "todo") ?? [],
     in_progress: tasks?.filter((t) => t.status === "in_progress") ?? [],
+    blocked: tasks?.filter((t) => t.status === "blocked") ?? [],
     submitted: tasks?.filter((t) => t.status === "submitted") ?? [],
-    done: tasks?.filter((t) => t.status === "done") ?? [],
+    done: tasks?.filter((t) => t.status === "done" || t.status === "approved") ?? [],
   };
 
   const columnLabels: Record<keyof typeof grouped, string> = {
     todo: "To Do",
     in_progress: "In Progress",
+    blocked: "Blocked",
     submitted: "Submitted",
     done: "Completed",
   };
+
+  const submitTask = tasks?.find((t) => t.id === submitTaskId) ?? null;
 
   return (
     <div className="space-y-8">
       <header>
         <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Coordination</div>
         <h1 className="font-display text-4xl font-medium">Task board</h1>
-        <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-          Move work from To Do through In Progress, mark it Submitted when you upload to Documents,
-          and Completed when the AI panel signs it off.
+        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+          Tasks are how the project moves. Emails raise concerns — completing the linked tasks
+          here is what actually resolves them, improves health, and shifts stakeholder sentiment.
+          Submit your work, then close the task once the review accepts it.
         </p>
         <div className="mt-4"><TimeControls compact /></div>
+        <div className="mt-2">
+          <Link to="/app/completed" className="text-xs text-primary hover:underline">
+            View completed work log →
+          </Link>
+        </div>
       </header>
 
       <form
@@ -93,12 +213,21 @@ function Tasks() {
             onChange={(e) => setTitle(e.target.value)}
             className="flex-1 min-w-[200px]"
           />
+          <Select value={category} onValueChange={setCategory}>
+            <SelectTrigger className="w-[180px]"><SelectValue placeholder="Category" /></SelectTrigger>
+            <SelectContent>
+              {TASK_CATEGORIES.map((c) => (
+                <SelectItem key={c} value={c}>{c}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Select value={priority} onValueChange={(v) => setPriority(v as typeof priority)}>
             <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="low">Low</SelectItem>
               <SelectItem value="medium">Medium</SelectItem>
               <SelectItem value="high">High</SelectItem>
+              <SelectItem value="critical">Critical</SelectItem>
             </SelectContent>
           </Select>
           <Button type="submit" disabled={create.isPending}>
@@ -113,8 +242,8 @@ function Tasks() {
         />
       </form>
 
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-        {(["todo", "in_progress", "submitted", "done"] as const).map((status) => (
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-5">
+        {(["todo", "in_progress", "blocked", "submitted", "done"] as const).map((status) => (
           <div key={status} className="rounded-lg border border-border bg-card p-4">
             <div className="mb-3 flex items-center justify-between">
               <h3 className="font-display text-lg font-semibold">{columnLabels[status]}</h3>
@@ -127,63 +256,230 @@ function Tasks() {
                 </li>
               )}
               {grouped[status].map((t) => (
-                <li key={t.id} className="rounded-md border border-border bg-background p-3">
-                  <div className="flex items-start gap-2">
-                    <button
-                      onClick={() => {
-                        const cycle = { todo: "in_progress", in_progress: "submitted", submitted: "done", done: "todo" } as const;
-                        const next = cycle[t.status as keyof typeof cycle] ?? "todo";
-                        update.mutate({ id: t.id, status: next });
-                      }}
-                      className="mt-0.5"
-                      aria-label="Cycle status"
-                    >
-                      {t.status === "todo" && <Circle className="h-4 w-4 text-muted-foreground" />}
-                      {t.status === "in_progress" && <CircleDot className="h-4 w-4 text-primary" />}
-                      {t.status === "submitted" && <Inbox className="h-4 w-4 text-amber-600" />}
-                      {t.status === "done" && <Check className="h-4 w-4 text-emerald-600" />}
-                    </button>
-                    <div className="flex-1">
-                      <div className={`text-sm font-medium ${t.status === "done" ? "line-through text-muted-foreground" : ""}`}>
-                        {t.title}
-                      </div>
-                      {t.description && (
-                        <div className="mt-1 text-xs text-muted-foreground">{t.description}</div>
-                      )}
-                      <div className="mt-1 text-[10px] uppercase tracking-widest text-muted-foreground">
-                        {t.priority}
-                      </div>
-                      {t.status === "submitted" && (
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          <button
-                            onClick={() => update.mutate({ id: t.id, status: "done" })}
-                            className="rounded-md bg-emerald-600 px-2 py-1 text-[11px] font-medium text-white hover:bg-emerald-700"
-                          >
-                            Mark complete
-                          </button>
-                          <button
-                            onClick={() => update.mutate({ id: t.id, status: "in_progress" })}
-                            className="rounded-md border border-border px-2 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground"
-                          >
-                            Send back
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => del.mutate(t.id)}
-                      className="text-muted-foreground hover:text-destructive"
-                      aria-label="Delete"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                </li>
+                <TaskCard
+                  key={t.id}
+                  t={t}
+                  onStart={() => update.mutate({ id: t.id, status: "in_progress" })}
+                  onSubmitClick={() => {
+                    setSubmitTaskId(t.id);
+                    setSubmission("");
+                  }}
+                  onApprove={() => close.mutate({ id: t.id, decision: "approved" })}
+                  onRework={() => close.mutate({ id: t.id, decision: "rework" })}
+                  onEscalate={(mode) => escalate.mutate({ id: t.id, mode })}
+                  onDelete={() => del.mutate(t.id)}
+                  busy={close.isPending || submit.isPending || escalate.isPending}
+                />
               ))}
             </ul>
           </div>
         ))}
       </div>
+
+      <Dialog open={!!submitTaskId} onOpenChange={(o) => !o && setSubmitTaskId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Submit "{submitTask?.title}"</DialogTitle>
+            <DialogDescription>
+              {submitTask?.completion_action ??
+                "Describe what you produced and where it lives (e.g. RAID log updated with 4 risks, document uploaded as PDF)."}
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            placeholder="What did you do? Paste a summary, link, or excerpt of your work…"
+            value={submission}
+            onChange={(e) => setSubmission(e.target.value)}
+            rows={7}
+          />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setSubmitTaskId(null)}>Cancel</Button>
+            <Button
+              onClick={() =>
+                submitTask && submit.mutate({ id: submitTask.id, submission: submission.trim() })
+              }
+              disabled={submission.trim().length < 5 || submit.isPending}
+            >
+              <Send className="mr-2 h-4 w-4" />
+              {submit.isPending ? "Submitting…" : "Submit for review"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+  );
+}
+
+const PRIORITY_STYLE: Record<string, string> = {
+  critical: "bg-red-500/15 text-red-700 dark:text-red-400",
+  high: "bg-orange-500/15 text-orange-700 dark:text-orange-400",
+  medium: "bg-blue-500/15 text-blue-700 dark:text-blue-400",
+  low: "bg-muted text-muted-foreground",
+};
+
+function TaskCard({
+  t,
+  onStart,
+  onSubmitClick,
+  onApprove,
+  onRework,
+  onEscalate,
+  onDelete,
+  busy,
+}: {
+  t: RichTask;
+  onStart: () => void;
+  onSubmitClick: () => void;
+  onApprove: () => void;
+  onRework: () => void;
+  onEscalate: (mode: "assign_lead" | "ask_pm" | "escalate_sponsor" | "add_to_raid") => void;
+  onDelete: () => void;
+  busy: boolean;
+}) {
+  const isBlocked = t.blocked_by.length > 0 && !["done", "approved"].includes(t.status);
+  const overdue = t.due_at && +new Date(t.due_at) < Date.now() && !["done", "approved"].includes(t.status);
+  return (
+    <li className="rounded-md border border-border bg-background p-3">
+      <div className="flex items-start gap-2">
+        <div className="mt-0.5">
+          {t.status === "todo" && <Circle className="h-4 w-4 text-muted-foreground" />}
+          {t.status === "in_progress" && <CircleDot className="h-4 w-4 text-primary" />}
+          {t.status === "blocked" && <Ban className="h-4 w-4 text-amber-700" />}
+          {t.status === "submitted" && <Inbox className="h-4 w-4 text-amber-600" />}
+          {(t.status === "done" || t.status === "approved") && <Check className="h-4 w-4 text-emerald-600" />}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-1.5">
+            {t.category && (
+              <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+                {t.category}
+              </span>
+            )}
+            <span className={`rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wider ${PRIORITY_STYLE[t.priority] ?? PRIORITY_STYLE.medium}`}>
+              {t.priority}
+            </span>
+            {overdue && (
+              <span className="rounded-full bg-red-500/15 px-2 py-0.5 text-[10px] uppercase tracking-wider text-red-700 dark:text-red-400">
+                overdue
+              </span>
+            )}
+            {t.source === "email" && (
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">from email</span>
+            )}
+          </div>
+          <div className={`mt-1 text-sm font-medium ${t.status === "approved" || t.status === "done" ? "text-muted-foreground line-through" : ""}`}>
+            {t.title}
+          </div>
+          {t.completion_action && (
+            <div className="mt-1 text-xs text-muted-foreground">→ {t.completion_action}</div>
+          )}
+          {t.description && (
+            <div className="mt-1 text-xs text-muted-foreground whitespace-pre-wrap line-clamp-3">{t.description}</div>
+          )}
+          {t.linked_stakeholder && (
+            <div className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <StakeholderAvatar name={t.linked_stakeholder} size="sm" />
+              {t.linked_stakeholder}
+            </div>
+          )}
+          {isBlocked && (
+            <div className="mt-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-2 text-[11px] text-amber-800 dark:text-amber-300">
+              <div className="flex items-center gap-1 font-medium"><Lock className="h-3 w-3" /> Blocked by</div>
+              <ul className="mt-1 list-disc pl-4">
+                {t.blocked_by.map((d) => <li key={d.id}>{d.title}</li>)}
+              </ul>
+            </div>
+          )}
+
+          {t.feedback && (
+            <div className="mt-2 rounded-md border border-emerald-500/30 bg-emerald-500/5 p-2 text-[11px]">
+              <div className="font-semibold text-emerald-700 dark:text-emerald-400">
+                <Sparkles className="mr-1 inline h-3 w-3" />
+                {t.feedback.skill} · {t.feedback.score}/5
+              </div>
+              <div className="mt-1"><span className="font-medium">Did well:</span> {t.feedback.did_well}</div>
+              <div className="mt-1"><span className="font-medium">Improve:</span> {t.feedback.improve}</div>
+              <div className="mt-1 text-muted-foreground italic">{t.feedback.real_world}</div>
+            </div>
+          )}
+
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {t.linked_module_route && (
+              <Link
+                to={t.linked_module_route}
+                className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] hover:bg-accent"
+              >
+                Open module <ArrowUpRight className="h-3 w-3" />
+              </Link>
+            )}
+            {t.status === "todo" && (
+              <button
+                onClick={onStart}
+                disabled={isBlocked}
+                className="rounded-md border border-border px-2 py-1 text-[11px] hover:bg-accent disabled:opacity-40"
+              >
+                Start
+              </button>
+            )}
+            {(t.status === "todo" || t.status === "in_progress") && (
+              <button
+                onClick={onSubmitClick}
+                disabled={isBlocked || busy}
+                className="rounded-md bg-primary px-2 py-1 text-[11px] font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-40"
+              >
+                Submit
+              </button>
+            )}
+            {t.status === "submitted" && (
+              <>
+                <button
+                  onClick={onApprove}
+                  disabled={busy}
+                  className="rounded-md bg-emerald-600 px-2 py-1 text-[11px] font-medium text-white hover:bg-emerald-700 disabled:opacity-40"
+                >
+                  {busy ? "Reviewing…" : "Close & review"}
+                </button>
+                <button
+                  onClick={onRework}
+                  disabled={busy}
+                  className="rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground disabled:opacity-40"
+                >
+                  Send back
+                </button>
+              </>
+            )}
+            {!["done", "approved", "submitted"].includes(t.status) && (
+              <details className="relative">
+                <summary className="cursor-pointer list-none rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground">
+                  <ShieldAlert className="mr-1 inline h-3 w-3" /> Escalate
+                </summary>
+                <div className="absolute z-10 mt-1 w-56 rounded-md border border-border bg-popover p-1 shadow-md">
+                  {([
+                    ["assign_lead", "Assign to functional lead"],
+                    ["ask_pm", "Hand to Project Manager"],
+                    ["escalate_sponsor", "Escalate to Sponsor"],
+                    ["add_to_raid", "Add to RAID log"],
+                  ] as const).map(([mode, label]) => (
+                    <button
+                      key={mode}
+                      onClick={() => onEscalate(mode)}
+                      className="block w-full rounded px-2 py-1 text-left text-[11px] hover:bg-accent"
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </details>
+            )}
+            <button
+              onClick={onDelete}
+              className="ml-auto text-muted-foreground hover:text-destructive"
+              aria-label="Delete"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </li>
   );
 }

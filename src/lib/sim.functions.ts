@@ -5,6 +5,7 @@ import { generateObject } from "ai";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
 import { unzipSync, strFromU8 } from "fflate";
 import { applyDocumentReview } from "./learning.functions";
+import { generateTasksFromEmail } from "./tasks.functions";
 
 const MODEL = "google/gemini-3-flash-preview";
 
@@ -461,6 +462,12 @@ About half the time, this email should put the coordinator in an awkward positio
       .select()
       .single();
     if (error) throw error;
+    // Auto-generate linked tasks from the email (best-effort, non-fatal).
+    try {
+      await generateTasksFromEmail(supabase, userId, msg);
+    } catch (e) {
+      console.error("generateTasksFromEmail failed", e);
+    }
     return msg;
   });
 

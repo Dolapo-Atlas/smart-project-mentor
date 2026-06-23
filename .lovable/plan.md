@@ -1,60 +1,91 @@
-## Delegation & Escalation System
+# Make Atlas Task-Led, Not Inbox-Led
 
-Add a "Delegate or escalate" flow to the Inbox so the user isn't forced to personally answer every specialist question. They pick who handles it; that person replies in-thread, sentiment shifts realistically, and a system note appears in the inbox.
+Shift the simulation so emails trigger tasks, and completing tasks (not replying) is what moves the project forward.
 
-### UX
+## 1. Extend the `tasks` schema
 
-On any open inbox message, alongside the existing **Reply** button, add a **Delegate / Escalate** button that opens a panel with 4 options:
+Add columns (single migration):
+- `category` (text) — Documentation, RAID, Budget, Stakeholder, Meetings, Governance, Vendor, Reporting, Comms, Decision
+- `linked_stakeholder` (text) — e.g. "Priya Patel"
+- `linked_area` (text) — budget | risk | documents | meetings | gates | comms | charter | vendors | stakeholders
+- `linked_module_route` (text) — e.g. `/app/budget` so the task card deep-links into the right module
+- `completion_action` (text) — short instruction: "Upload revised forecast", "Add 3 mitigations to RAID"
+- `source` (text) — email | day_event | health_change | risk_change | meeting | deadline | review | steering | manual
+- `source_ref` (uuid) — id of triggering inbox message / meeting / raid item
+- `impact` (jsonb) — `{ health: +1, sentiment: { "Priya Patel": +15 }, reputation: +3, budget_confidence: +5, timeline_risk: -1 }`
+- `depends_on` (uuid[]) — task IDs that must be `done` first
+- `feedback` (jsonb) — populated on close: `{ score, did_well, improve, real_world, skill }`
+- Widen `status` check to: `todo | in_progress | blocked | submitted | approved | done`
+- Widen `priority` to: `low | medium | high | critical`
 
-- **A. Reply personally** — existing flow (unchanged).
-- **B. Ask Sarah Williams (PM) to respond** — available for any message.
-- **C. Schedule a review meeting** — creates a draft meeting pre-filled with the sender + topic, jumps to `/app/meetings`.
-- **D. Escalate to David Okafor (Sponsor)** — available for any message; intended for budget/scope/governance.
-- **E. Assign to functional lead** — auto-routed by sender role:
-  - finance (Priya) → Priya Anand herself responds with a Finance Lead artefact
-  - tech (James) → James Lin
-  - clinical (Rachel) → Rachel Stone
-  - vendor (CareSoft) → CareSoft Account Director
-  
-  When the sender *is* the matching lead, "Assign to lead" is hidden and replaced with "Ask Sarah to coordinate".
+Migration also re-grants and keeps existing RLS.
 
-Each choice shows a one-line preview of the likely outcome ("Sarah will take ownership but the sponsor will notice if you escalate too often").
+## 2. Auto-generate tasks from events
 
-### Behaviour per choice
+New helper `generateTasksForEvent(kind, payload)` in `src/lib/tasks.functions.ts`:
 
-A new server fn `delegateInboxMessage({ inbox_id, mode })` does the work:
+- **Email arrival** (`generateStakeholderMessage` in `sim.functions.ts`): after inserting the inbox message, ask Lovable AI to return 2–4 task specs based on the email subject/body/sender, each with category, linked_area, completion_action, priority and impact. Insert with `source = 'email'`, `source_ref = message.id`.
+- **Day advance** (`advanceDay` in `time.functions.ts`): add deadline-driven tasks ("Prepare Status Report", "Review Phase Gate Checklist") when week boundaries hit.
+- **Health change** / **risk added** / **meeting created**: small synchronous generators (no AI) that append a templated task.
+- **Missed deadline**: nightly check in `advanceDay` flips overdue task to `blocked` and creates a "Chase Overdue Action" task.
 
-1. Loads the original inbox message + simulation state + relationship with sender and with the delegate.
-2. Generates an AI reply *from the delegate* to the original sender (in-thread style), grounded in project health, reputation, and what info the user has actually produced (latest status report RAG, open RAID, budget lines). Falls back to a deterministic template per (delegate, sender_role) pair if the model fails.
-3. Inserts two `comms_messages` rows:
-   - outbound from "coordinator" with body "Handing this to {Delegate} — please pick up.", `msg_type: "Request"`
-   - inbound from delegate with the generated reply
-4. Inserts an inbox message from the delegate so it shows up in the user's inbox.
-5. Inserts a short **system note** inbox row (tone `neutral`, sender role `system`) like:
-   - "Sarah Williams has taken ownership of this discussion."
-   - "James Lin will provide a technical assessment by end of day."
-   - "David Okafor has approved escalation to the Project Board."
-6. Adjusts sentiment:
-   - **Ask Sarah**: +2 sender, -1 Sarah per use, hard cap — third delegation in the same week to Sarah drops her sentiment by -8 ("you keep dumping things on me").
-   - **Escalate to Sponsor**: +5 sender if the issue is genuinely budget/scope/governance (`msg_type === "Escalation"` or keywords match), otherwise -6 sponsor ("don't escalate trivia"). Always +3 reputation when justified, -5 when not.
-   - **Assign to functional lead**: +4 sender (their concern went to the right specialist), neutral for delegate.
-   - **Schedule meeting**: +3 sender, no sentiment change for others; user must actually run + send minutes for full credit (already wired).
-7. Marks original inbox message read + records a `delegation_count` competency tick on `p2.escalation_routes` / `p2.managing_difficult_stakeholders`.
+All generators run server-side; reuse `requireSupabaseAuth`.
 
-### Frontend changes
+## 3. Tasks gate progress (not email replies)
 
-- `src/routes/_authenticated/app.inbox.tsx`:
-  - Add `<DelegatePanel />` next to the existing reply UI.
-  - Use `useMutation` calling the new `delegateInboxMessage` server fn; on success invalidate `inbox`, `comms`, `stakeholders`, `overview`, `next-action`, toast "Sarah Williams has taken ownership."
-- New component `src/components/delegate-panel.tsx` rendering the 4-5 option cards with the preview hint and a confirm button per option.
-- For **Schedule meeting**, call existing `createMeeting` server fn (already in `pm.functions.ts`) with prefilled attendees + topic, then `navigate({ to: "/app/meetings" })`.
+Update `replyToMessage` in `comms.functions.ts`:
+- Reply now only nudges sentiment by ±2 (acknowledgement) and sets `acknowledged_at` on linked tasks.
+- The full sentiment / health / reputation / budget_confidence impact moves into `closeTask` (see §4) using the task's `impact` jsonb.
+- Stakeholder follow-up replies generated by AI must reference whether the linked tasks are `done` — if not, keep tone "still waiting / appreciate the note".
 
-### Backend changes
+## 4. Task lifecycle & completion
 
-- `src/lib/pm.functions.ts`: add `delegateInboxMessage` server fn with the logic above. Reuses `ARCHETYPE_SENTIMENT`, `STAKEHOLDERS` (import from comms), and the same Lovable AI gateway model used elsewhere. Track per-week Sarah-delegation count by reading recent system notes (no schema change needed).
-- `src/lib/sim.functions.ts`: extend the inbox type to include a `system_note` flag; existing schema already has `tone` — use a new tone literal `"system"` (purely a UI hint, no migration required since `tone` is text).
+New server fns in `tasks.functions.ts`:
+- `listTasks({ filter })` — includes computed `blocked_by` (unmet deps).
+- `submitTask(id, submission)` — moves to `submitted`, stores `submission` text/doc id.
+- `closeTask(id, decision)` — `approved | rework`. On approve:
+  1. Apply `impact` jsonb to `simulation_state` and `stakeholder_relationships`.
+  2. Ask Lovable AI for `feedback` (did_well, improve, real_world, skill, score 1–5) using the submission.
+  3. Append to `story_log`.
+- Dependency check: cannot `submit` while any `depends_on` task is not `done/approved`. UI shows "Blocked by: …".
+- Escalation: new `escalateTask(id, mode)` reusing existing `delegate.functions.ts` modes (`assign_to_lead | escalate_sponsor | ask_pm | schedule_meeting | add_to_raid`). Escalation either reassigns the task (changes `linked_stakeholder`, lowers user impact) or spawns a follow-up task.
 
-### Out of scope
+## 5. UI changes
 
-- No new tables; everything fits into existing `inbox_messages`, `comms_messages`, `stakeholder_relationships`. No migration needed.
-- No changes to landing page, RAID, learning, or auth.
+**Tasks board (`app.tasks.tsx`)**
+- Add `Blocked` column. Show category chip, linked stakeholder avatar, linked-area badge, due date, dependency lock icon.
+- Card actions: "Open module" (deep link to `linked_module_route`), "Submit", "Escalate", "Mark blocked".
+- Submit dialog: free-text + optional document picker.
+- On approve, show feedback card inline.
+
+**Dashboard (`app.index.tsx`)**
+- Replace the inbox-first hero with a **What's Next** panel:
+  - Top 3 tasks ordered by `priority desc, due_at asc`, filtered to ready (no unmet deps).
+  - "Advance day" is disabled with tooltip when any `critical` task is overdue.
+- Inbox preview demoted to a side card; each inbox row shows "→ 2 linked tasks" badge that jumps to the filtered tasks view.
+
+**Inbox (`app.inbox.tsx`)**
+- After reading a message, show "Linked tasks" section with checkboxes deep-linking to each task.
+- Reply panel adds a subtle hint: "Replying acknowledges Priya — completing the linked tasks resolves it."
+
+**New: Completed Work log (`app.completed.tsx` route + sidebar entry)**
+- Lists closed tasks grouped by week. Each row: title, category/skill, submission excerpt, feedback (did_well/improve/real_world), impact summary ("Sponsor confidence +5").
+
+## 6. Learning feedback loop
+
+`closeTask` writes a `reflection_entries` row per closed task so the existing Learning page surfaces them too. Feedback prompt template lives in `src/lib/learning.ts`.
+
+## 7. Out of scope (intentional)
+
+- No new auth, no schema changes to inbox.
+- Existing delegate panel stays; it's reused for task escalation.
+- No drag-and-drop on the board (status cycle button stays).
+
+## Technical details
+
+- Files added: `src/lib/tasks.functions.ts`, `src/components/task-card.tsx`, `src/components/task-submit-dialog.tsx`, `src/components/whats-next-panel.tsx` (replace existing simple one), `src/routes/_authenticated/app.completed.tsx`, `supabase/migrations/<ts>_tasks_taskled.sql`.
+- Files edited: `src/lib/sim.functions.ts`, `src/lib/comms.functions.ts`, `src/lib/time.functions.ts`, `src/lib/delegate.functions.ts`, `src/routes/_authenticated/app.tasks.tsx`, `src/routes/_authenticated/app.index.tsx`, `src/routes/_authenticated/app.inbox.tsx`, `src/routes/_authenticated/app.tsx` (sidebar nav).
+- AI calls use existing `ai-gateway.server.ts` helper with `google/gemini-3-flash-preview`.
+- All impact math lives in one `applyTaskImpact(state, impact)` util to keep balance tunable.
+
+After approval I'll ship in this order: migration → `tasks.functions.ts` + impact util → task generators wired into email/day events → tasks UI → dashboard What's Next + Completed log → soften email-reply impact.
