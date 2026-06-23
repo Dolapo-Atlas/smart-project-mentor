@@ -332,7 +332,7 @@ export const submitRaidLog = createServerFn({ method: "POST" })
 
     const { data: items } = await supabase
       .from("raid_items")
-      .select("id")
+      .select("id,kind,title,description,severity,likelihood,mitigation,owner")
       .eq("user_id", userId);
     if ((items ?? []).length < 3) {
       throw new Error("Add at least 3 RAID entries before submitting.");
@@ -353,6 +353,15 @@ export const submitRaidLog = createServerFn({ method: "POST" })
       .maybeSingle();
     if (task && task.status !== "done") {
       await supabase.from("tasks").update({ status: "submitted" }).eq("id", task.id);
+    }
+
+    // Notify every assigned owner that the RAID log has been sent for review
+    const seen = new Set<string>();
+    for (const it of items ?? []) {
+      const key = (it.owner ?? "").trim().toLowerCase();
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      await notifyOwnerAssigned(supabase, userId, it as any, firstName);
     }
 
     await supabase.from("inbox_messages").insert({
