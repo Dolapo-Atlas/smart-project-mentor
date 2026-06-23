@@ -1,0 +1,1 @@
+REVOKE SELECT ON public.early_access_signups FROM anon, authenticated;
