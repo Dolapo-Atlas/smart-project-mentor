@@ -811,6 +811,89 @@ SUMMARY:
     };
   });
 
+export const sendMinutesToAttendees = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const supabase = context.supabase;
+    const uid = context.userId;
+    const meeting = await loadMeeting(supabase, uid, data.id);
+    if (!meeting.held) throw new Error("Close the meeting first.");
+    if (!meeting.minutes && !meeting.ai_summary && !meeting.decisions) {
+      throw new Error("Capture minutes before sending.");
+    }
+    const attendees = attendeesOf(meeting);
+    if (attendees.length === 0) throw new Error("No attendees to send minutes to.");
+
+    const subject = `Minutes — ${meeting.title}`;
+    const body =
+      `Hi team,\n\nThanks for joining the ${meeting.kind} on "${meeting.title}". ` +
+      `Minutes are below for your records.\n\n` +
+      (meeting.decisions ? `DECISIONS\n${meeting.decisions}\n\n` : "") +
+      (meeting.minutes ? `MINUTES\n${meeting.minutes}\n\n` : "") +
+      (meeting.ai_summary ? `SUMMARY\n${meeting.ai_summary}\n\n` : "") +
+      `Please flag corrections by reply.\n\nCoordinator`;
+
+    const threadId = crypto.randomUUID();
+    const toRoles = attendees.map((a) => a.role_key);
+
+    // One outbound comms record covering all recipients
+    await supabase.from("comms_messages").insert({
+      user_id: uid,
+      thread_id: threadId,
+      direction: "outbound",
+      from_role: "coordinator",
+      to_roles: toRoles,
+      msg_type: "Update",
+      subject,
+      body,
+      attachment_kind: null,
+      attachment_ref: meeting.id,
+      attachment_label: `Meeting minutes · ${meeting.title}`,
+    });
+
+    // Drop a delivery confirmation into the user's inbox per attendee so it's
+    // visible that the minutes were actually sent out.
+    for (const a of attendees) {
+      await supabase.from("inbox_messages").insert({
+        user_id: uid,
+        sender_name: a.name,
+        sender_role: a.role,
+        subject: `Re: ${subject}`,
+        body: `Got the minutes — thanks. I'll come back if anything looks off.\n\n${a.name}`,
+        tone: "supportive",
+      });
+    }
+
+    const sentAt = new Date().toISOString();
+    const { data: row, error } = await supabase
+      .from("meetings")
+      .update({ minutes_sent_at: sentAt })
+      .eq("id", meeting.id)
+      .select()
+      .single();
+    if (error) throw error;
+
+    // Auto-close any task that looks like a "send minutes" follow-up for
+    // this meeting so the user doesn't have to tick it off manually.
+    const titleFrag = meeting.title.split(/\s+/).slice(0, 3).join(" ").toLowerCase();
+    const { data: openTasks } = await supabase
+      .from("tasks")
+      .select("id,title,status")
+      .eq("user_id", uid)
+      .neq("status", "done");
+    const closed: string[] = [];
+    for (const t of openTasks ?? []) {
+      const tt = (t.title ?? "").toLowerCase();
+      if (tt.includes("minute") && (tt.includes(titleFrag) || tt.includes(meeting.kind))) {
+        await supabase.from("tasks").update({ status: "done" }).eq("id", t.id);
+        closed.push(t.id);
+      }
+    }
+
+    return { ok: true, recipients: attendees.length, sent_at: sentAt, closed_tasks: closed.length, meeting: row };
+  });
+
 /* ============= CONFLICTING STAKEHOLDER ============= */
 
 export const summonConflict = createServerFn({ method: "POST" })
