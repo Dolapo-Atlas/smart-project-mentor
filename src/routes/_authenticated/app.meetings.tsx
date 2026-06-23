@@ -562,7 +562,7 @@ function Meetings() {
                         disabled={sendMinutes.isPending || attendees.length === 0 || (!selected.minutes && !selected.ai_summary && !selected.decisions)}
                       >
                         <Send className="mr-2 h-4 w-4" />
-                        {(selected as any).minutes_sent_at ? "Resend minutes" : sendMinutes.isPending ? "Sending…" : "Send minutes to attendees"}
+                        {sendMinutes.isPending ? "Sending…" : (selected as any).minutes_sent_at ? "Resend minutes" : "Send minutes to attendees"}
                       </Button>
                     </div>
                   </div>
