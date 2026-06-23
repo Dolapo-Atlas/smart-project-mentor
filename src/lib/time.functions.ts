@@ -56,13 +56,7 @@ export const getReadiness = createServerFn({ method: "GET" })
         .lt("sentiment", -20),
     ]);
 
-    const meetingsMissingMinutes = (meetings.data ?? []).filter((m) => {
-      if (m.minutes_sent_at) return false;
-      const hasMinutes = !!m.minutes && m.minutes.trim().length >= 10;
-      const hasSummary = !!m.ai_summary && m.ai_summary.trim().length >= 10;
-      const hasDecisions = !!m.decisions && m.decisions.trim().length >= 10;
-      return !hasMinutes && !hasSummary && !hasDecisions;
-    });
+    const meetingsMissingMinutes = (meetings.data ?? []).filter((m) => !m.minutes_sent_at);
 
     const openTasks = tasks.data ?? [];
     const unread = inbox.data ?? [];

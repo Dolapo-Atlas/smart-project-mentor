@@ -885,8 +885,14 @@ export const sendMinutesToAttendees = createServerFn({ method: "POST" })
     const closed: string[] = [];
     for (const t of openTasks ?? []) {
       const tt = (t.title ?? "").toLowerCase();
-      if (tt.includes("minute") && (tt.includes(titleFrag) || tt.includes(meeting.kind))) {
-        await supabase.from("tasks").update({ status: "done" }).eq("id", t.id);
+      const isMinutesTask = tt.includes("minute") || tt.includes("minutes");
+      const isSendTask = ["send", "circulate", "distribute", "share", "email", "attendee"].some((word) => tt.includes(word));
+      if (isMinutesTask && (isSendTask || tt.includes(titleFrag) || tt.includes(meeting.kind))) {
+        await supabase
+          .from("tasks")
+          .update({ status: "done", completed_at: new Date().toISOString() })
+          .eq("id", t.id)
+          .eq("user_id", uid);
         closed.push(t.id);
       }
     }
@@ -1109,9 +1115,7 @@ export const repairStakeholderRelationship = createServerFn({ method: "POST" })
       .maybeSingle();
 
     const currentSentiment = existing?.sentiment ?? ARCHETYPE_SENTIMENT[data.name] ?? 0;
-    const nextSentiment = currentSentiment <= -60
-      ? Math.min(100, currentSentiment + 25)
-      : Math.max(-10, Math.min(100, currentSentiment + 25));
+    const nextSentiment = Math.max(-10, Math.min(100, currentSentiment + 30));
     const template = recoveryTemplate(data.name);
     const threadId = crypto.randomUUID();
     const roleKey = STAKEHOLDER_ROLE_KEY_BY_NAME[data.name] ?? book.type;
