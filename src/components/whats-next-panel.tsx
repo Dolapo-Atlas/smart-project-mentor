@@ -1,62 +1,86 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
-import { getNextAction } from "@/lib/time.functions";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { listWhatsNext } from "@/lib/tasks.functions";
+import { ArrowRight, Sparkles, AlertTriangle } from "lucide-react";
 
-const PHASE_LABEL: Record<string, string> = {
-  initiation: "Initiation",
-  planning: "Planning",
-  execution: "Execution",
-  monitoring: "Monitoring & Control",
-  "go-live": "Go-Live",
-  closure: "Closure",
+const PRIORITY_STYLE: Record<string, string> = {
+  critical: "bg-red-500/15 text-red-700 dark:text-red-400",
+  high: "bg-orange-500/15 text-orange-700 dark:text-orange-400",
+  medium: "bg-blue-500/15 text-blue-700 dark:text-blue-400",
+  low: "bg-muted text-muted-foreground",
 };
 
 export function WhatsNextPanel() {
-  const fetchNext = useServerFn(getNextAction);
-  const { data } = useQuery({ queryKey: ["next-action"], queryFn: () => fetchNext() });
+  const fetchNext = useServerFn(listWhatsNext);
+  const { data } = useQuery({ queryKey: ["whats-next"], queryFn: () => fetchNext() });
 
   if (!data) {
     return (
       <section className="rounded-lg border border-border bg-card p-5">
-        <div className="text-sm text-muted-foreground">Loading recommendation…</div>
+        <div className="text-sm text-muted-foreground">Loading priorities…</div>
       </section>
     );
   }
 
   return (
     <section className="rounded-lg border border-primary/40 bg-primary/5 p-5">
-      <div className="flex items-start gap-4">
-        <div className="rounded-md bg-primary/15 p-2 text-primary">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-primary/80">
           <Sparkles className="h-4 w-4" />
+          What's next
         </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.18em] text-primary/80">
-            <span>What's next</span>
-            <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] normal-case tracking-normal text-primary">
-              {PHASE_LABEL[data.phase] ?? data.phase}
-            </span>
-            <span className="text-muted-foreground/80">
-              Day {data.day} · Week {data.week}
-            </span>
-            {data.blockerCount > 0 ? (
-              <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] normal-case tracking-normal text-amber-700 dark:text-amber-400">
-                {data.blockerCount} open
-              </span>
-            ) : null}
-          </div>
-          <div className="mt-1 font-display text-lg font-medium">{data.action.title}</div>
-          <p className="mt-1 text-sm text-muted-foreground">{data.action.reason}</p>
-        </div>
-        <Link
-          to={data.action.to}
-          className="shrink-0 inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
-        >
-          {data.action.cta}
-          <ArrowRight className="h-3.5 w-3.5" />
+        <Link to="/app/tasks" className="text-xs text-primary hover:underline">
+          All tasks →
         </Link>
       </div>
+      {data.criticalOverdue && (
+        <div className="mt-3 flex items-center gap-2 rounded-md border border-red-500/30 bg-red-500/10 p-2 text-xs text-red-700 dark:text-red-400">
+          <AlertTriangle className="h-3.5 w-3.5" />
+          A critical task is overdue. Resolve it before advancing time.
+        </div>
+      )}
+      <ul className="mt-3 space-y-2">
+        {data.tasks.length === 0 && (
+          <li className="rounded-md border border-dashed border-border bg-background p-4 text-center text-sm text-muted-foreground">
+            No ready tasks. Summon a stakeholder email or advance time to generate work.
+          </li>
+        )}
+        {data.tasks.map((t: any) => (
+          <li
+            key={t.id}
+            className="flex items-start gap-3 rounded-md border border-border bg-background p-3"
+          >
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-1.5">
+                {t.category && (
+                  <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+                    {t.category}
+                  </span>
+                )}
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wider ${PRIORITY_STYLE[t.priority] ?? PRIORITY_STYLE.medium}`}
+                >
+                  {t.priority}
+                </span>
+                {t.linked_stakeholder && (
+                  <span className="text-[11px] text-muted-foreground">for {t.linked_stakeholder}</span>
+                )}
+              </div>
+              <div className="mt-1 text-sm font-medium">{t.title}</div>
+              {t.completion_action && (
+                <div className="text-xs text-muted-foreground">→ {t.completion_action}</div>
+              )}
+            </div>
+            <Link
+              to={t.linked_module_route ?? "/app/tasks"}
+              className="shrink-0 inline-flex items-center gap-1 rounded-md bg-primary px-2.5 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90"
+            >
+              Do it <ArrowRight className="h-3 w-3" />
+            </Link>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }
