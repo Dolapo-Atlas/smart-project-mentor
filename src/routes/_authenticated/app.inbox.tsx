@@ -13,6 +13,9 @@ import { formatDistanceToNow } from "date-fns";
 import { StakeholderHoverAvatar as StakeholderAvatar } from "@/components/stakeholder-card";
 import { TimeControls } from "@/components/time-controls";
 import { DelegatePanel } from "@/components/delegate-panel";
+import { Link } from "@tanstack/react-router";
+import { useServerFn as useServerFn2 } from "@tanstack/react-start";
+import { listTasksRich } from "@/lib/tasks.functions";
 
 export const Route = createFileRoute("/_authenticated/app/inbox")({
   component: Inbox,
@@ -44,8 +47,13 @@ function Inbox() {
   const genFn = useServerFn(generateStakeholderMessage);
   const stirFn = useServerFn(summonConflict);
   const { data: messages } = useQuery({ queryKey: ["inbox"], queryFn: () => fetchInbox() });
+  const fetchTasks = useServerFn2(listTasksRich);
+  const { data: allTasks } = useQuery({ queryKey: ["tasks"], queryFn: () => fetchTasks() });
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected = messages?.find((m) => m.id === selectedId) ?? messages?.[0];
+  const linkedTasks = (allTasks ?? []).filter(
+    (t: any) => selected && t.source_ref === selected.id,
+  );
 
   const mark = useMutation({
     mutationFn: (id: string) => markFn({ data: { id } }),
@@ -180,6 +188,35 @@ function Inbox() {
               </div>
               <h2 className="mt-4 font-display text-3xl font-medium">{selected.subject}</h2>
               <div className="mt-6 whitespace-pre-wrap leading-relaxed">{selected.body}</div>
+              {linkedTasks.length > 0 && (
+                <div className="mt-6 rounded-md border border-primary/40 bg-primary/5 p-4">
+                  <div className="text-xs uppercase tracking-[0.18em] text-primary/80">
+                    Linked work · {linkedTasks.length} task{linkedTasks.length === 1 ? "" : "s"}
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Replying acknowledges {selected.sender_name}. Completing these tasks is what
+                    actually resolves the issue.
+                  </p>
+                  <ul className="mt-2 space-y-1">
+                    {linkedTasks.map((t: any) => (
+                      <li key={t.id} className="flex items-center justify-between gap-2 text-sm">
+                        <span className={t.status === "approved" || t.status === "done" ? "line-through text-muted-foreground" : ""}>
+                          {t.title}
+                          <span className="ml-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+                            {t.status.replace("_", " ")}
+                          </span>
+                        </span>
+                        <Link
+                          to="/app/tasks"
+                          className="text-xs text-primary hover:underline"
+                        >
+                          Open
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               {(() => {
                 const role = SENDER_ROLE_MAP[selected.sender_name];
                 const isSystem = selected.sender_name === "Project Update";
