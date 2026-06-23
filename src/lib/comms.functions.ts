@@ -391,13 +391,15 @@ Choose sentiment honestly: positive, neutral, pushback, concerned, or ignored (i
         tone: out.sentiment === "pushback" ? "frustrated" : out.sentiment === "concerned" ? "curious" : out.sentiment === "positive" ? "supportive" : "neutral",
       });
 
-      // Track relationship: sentiment delta + interaction count
+      // Replies are acknowledgements only — the real shift in stakeholder
+      // sentiment, health and reputation comes from completing the linked
+      // tasks (see closeTaskWithReview in tasks.functions.ts).
       const delta =
-        out.sentiment === "positive" ? 4 :
+        out.sentiment === "positive" ? 2 :
         out.sentiment === "neutral" ? 1 :
         out.sentiment === "concerned" ? -1 :
-        out.sentiment === "pushback" ? -5 :
-        0; // ignored
+        out.sentiment === "pushback" ? -2 :
+        0;
       const { data: existing } = await supabase
         .from("stakeholder_relationships")
         .select("sentiment,interaction_count,role")
