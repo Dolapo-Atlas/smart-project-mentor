@@ -65,11 +65,134 @@ const ReplySchema = z.object({
   sentiment: z.enum(["positive", "neutral", "pushback", "concerned", "ignored"]),
 });
 
+type Reply = z.infer<typeof ReplySchema>;
+
+type RaidItemSummary = {
+  title: string;
+  kind: string;
+  severity: string;
+  likelihood?: string | null;
+  status: string;
+  owner?: string | null;
+  mitigation?: string | null;
+};
+
+type ProjectEvidence = {
+  firstName: string;
+  raidItems: RaidItemSummary[];
+  openTasks: Array<{ title: string; status: string }>;
+  pendingDocs: Array<{ title: string; status: string }>;
+  attachmentDetail: string;
+  evidenceSummary: string;
+};
+
+function isRaidMessage(subject: string, body: string, attachmentKind?: string | null, attachmentLabel?: string | null) {
+  const text = `${subject} ${body} ${attachmentKind ?? ""} ${attachmentLabel ?? ""}`.toLowerCase();
+  return /\braid\b|risk log|risk register|assumption|dependency|dependencies|issue log/.test(text);
+}
+
+function isCompletionClaim(subject: string, body: string) {
+  const text = `${subject} ${body}`.toLowerCase();
+  return /\b(updated|uploaded|attached|completed|done|closed|resolved|no pending|nothing pending|all clear)\b/.test(text);
+}
+
+function missingRaidControlItems(items: RaidItemSummary[]) {
+  return items.filter((item) => {
+    if (item.status === "closed") return false;
+    return !item.owner?.trim() || !item.mitigation?.trim();
+  });
+}
+
+function openHighRaidItems(items: RaidItemSummary[]) {
+  return items.filter((item) => item.status !== "closed" && ["high", "critical"].includes(item.severity));
+}
+
+function buildEvidenceSummary(evidence: ProjectEvidence) {
+  const total = evidence.raidItems.length;
+  const open = evidence.raidItems.filter((item) => item.status !== "closed").length;
+  const highOpen = openHighRaidItems(evidence.raidItems).length;
+  const missingControls = missingRaidControlItems(evidence.raidItems).length;
+  return [
+    `RAID log: ${total} item(s), ${open} open/mitigating, ${highOpen} open high/critical, ${missingControls} open item(s) missing owner or mitigation.`,
+    `Open tasks: ${evidence.openTasks.length ? evidence.openTasks.map((task) => `${task.title} (${task.status})`).join("; ") : "none"}.`,
+    `Pending document reviews: ${evidence.pendingDocs.length ? evidence.pendingDocs.map((doc) => doc.title).join("; ") : "none"}.`,
+    evidence.attachmentDetail ? `Attachment selected: ${evidence.attachmentDetail}.` : "No attachment selected.",
+  ].join("\n");
+}
+
+function evidenceAwareReply(
+  stakeholder: { role: string; name: string; title: string },
+  subject: string,
+  body: string,
+  attachmentKind: string | undefined,
+  attachmentLabel: string | undefined,
+  evidence: ProjectEvidence,
+): Reply | null {
+  const raidEmail = isRaidMessage(subject, body, attachmentKind, attachmentLabel);
+  if (!raidEmail || stakeholder.role !== "pm") return null;
+
+  const subjectLine = subject.startsWith("Re:") ? subject : `Re: ${subject}`;
+  const missingControls = missingRaidControlItems(evidence.raidItems);
+  const highOpen = openHighRaidItems(evidence.raidItems);
+  const saysComplete = isCompletionClaim(subject, body);
+  const hasUsefulRaid = evidence.raidItems.length >= 3;
+
+  if (hasUsefulRaid && missingControls.length === 0 && highOpen.length === 0) {
+    return {
+      sender_role: stakeholder.title,
+      subject: subjectLine,
+      sentiment: "positive",
+      body: `Hi ${evidence.firstName},
+
+Thanks — I can see the updated RAID log now. The items have owners/mitigations recorded and there are no open high or critical RAID items blocking this from my side.
+
+Please keep it current as decisions change, but you don't need to re-upload or chase me on this thread. This clears the RAID follow-up for governance.
+
+Sarah Williams
+Project Manager`,
+    };
+  }
+
+  if (hasUsefulRaid && missingControls.length === 0) {
+    return {
+      sender_role: stakeholder.title,
+      subject: subjectLine,
+      sentiment: "neutral",
+      body: `Hi ${evidence.firstName},
+
+Thanks — I can see the updated RAID log. The entries are controlled with owners and mitigations; the only thing I need is for the ${highOpen.length} remaining high/critical item(s) to stay visible in the next status report until they are closed.
+
+No re-upload needed. Keep the escalation triggers clear and we'll use this version for governance.
+
+Sarah Williams
+Project Manager`,
+    };
+  }
+
+  if (hasUsefulRaid && missingControls.length > 0) {
+    return {
+      sender_role: stakeholder.title,
+      subject: subjectLine,
+      sentiment: saysComplete ? "concerned" : "neutral",
+      body: `Hi ${evidence.firstName},
+
+Thanks — I can see the RAID update. It is in the right place, so no need to re-upload it.
+
+Before I can treat it as complete for governance, please add the missing owner or mitigation details for: ${missingControls.slice(0, 3).map((item) => item.title).join("; ")}${missingControls.length > 3 ? ` and ${missingControls.length - 3} more` : ""}.
+
+Sarah Williams
+Project Manager`,
+    };
+  }
+
+  return null;
+}
+
 function fallbackReply(
   stakeholder: { role: string; name: string; title: string },
   subject: string,
   attachmentLabel?: string,
-): z.infer<typeof ReplySchema> {
+): Reply {
   const topic = attachmentLabel ? ` and the attached ${attachmentLabel}` : "";
   const bodyByRole: Record<string, string> = {
     pm: `I have reviewed your note${topic}. Please convert the key points into dated actions, then show me which items need sponsor or governance input before Friday.\n\nThanks,\nSarah`,
@@ -126,11 +249,72 @@ export const sendComm = createServerFn({ method: "POST" })
     });
     if (insErr) throw insErr;
 
-    const { data: state } = await supabase
-      .from("simulation_state")
-      .select("project_name,phase,health,reputation,progress")
-      .eq("user_id", uid)
-      .maybeSingle();
+    const [
+      { data: state },
+      { data: profile },
+      { data: raidItems },
+      { data: openTasks },
+      { data: pendingDocs },
+      { data: attachedDoc },
+      { data: attachedRaid },
+    ] = await Promise.all([
+      supabase
+        .from("simulation_state")
+        .select("project_name,phase,health,reputation,progress")
+        .eq("user_id", uid)
+        .maybeSingle(),
+      supabase
+        .from("profiles")
+        .select("first_name,preferred_name")
+        .eq("id", uid)
+        .maybeSingle(),
+      supabase
+        .from("raid_items")
+        .select("title,kind,severity,likelihood,status,owner,mitigation")
+        .eq("user_id", uid),
+      supabase
+        .from("tasks")
+        .select("title,status")
+        .eq("user_id", uid)
+        .neq("status", "done"),
+      supabase
+        .from("documents")
+        .select("title,status")
+        .eq("user_id", uid)
+        .eq("status", "pending"),
+      data.attachment_kind === "document" && data.attachment_ref
+        ? supabase
+            .from("documents")
+            .select("title,status,quality_score")
+            .eq("user_id", uid)
+            .eq("id", data.attachment_ref)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+      data.attachment_kind === "raid" && data.attachment_ref
+        ? supabase
+            .from("raid_items")
+            .select("title,kind,severity,likelihood,status,owner,mitigation")
+            .eq("user_id", uid)
+            .eq("id", data.attachment_ref)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+    ]);
+
+    const firstName = profile?.preferred_name?.trim() || profile?.first_name || "there";
+    const attachmentDetail = attachedDoc
+      ? `${attachedDoc.title} (${attachedDoc.status}${typeof attachedDoc.quality_score === "number" ? `, score ${attachedDoc.quality_score}` : ""})`
+      : attachedRaid
+        ? `${attachedRaid.kind}: ${attachedRaid.title} (${attachedRaid.status}, ${attachedRaid.severity})`
+        : data.attachment_label ?? "";
+    const evidence: ProjectEvidence = {
+      firstName,
+      raidItems: (raidItems ?? []) as RaidItemSummary[],
+      openTasks: (openTasks ?? []) as Array<{ title: string; status: string }>,
+      pendingDocs: (pendingDocs ?? []) as Array<{ title: string; status: string }>,
+      attachmentDetail,
+      evidenceSummary: "",
+    };
+    evidence.evidenceSummary = buildEvidenceSummary(evidence);
 
     const stakeholders = STAKEHOLDERS.filter((s) => data.to_roles.includes(s.role));
     const { data: recentReplies } = await supabase
@@ -143,6 +327,9 @@ export const sendComm = createServerFn({ method: "POST" })
     for (const sh of stakeholders) {
       const prompt = `You are simulating "${sh.name}, ${sh.title}" on the "${state?.project_name ?? "Digital Care Records Rollout"}" project.
 Project state: phase=${state?.phase}, health=${state?.health}, reputation=${state?.reputation}/100, progress=${state?.progress}/100.
+
+Current workspace evidence you can see:
+${evidence.evidenceSummary}
 
 The project coordinator just sent you this ${data.msg_type.toLowerCase()} email:
 Subject: ${data.subject}
@@ -160,14 +347,21 @@ Write a realistic reply FROM ${sh.name} (${sh.title}) to the coordinator. Stay i
 - PM checks process, RAID, deadlines.
 - Tech lead talks integrations, data migration, downtime.
 
-About 40% of the time the reply should DISAGREE, push back, ask hard questions, or escalate. Don't make everyone helpful.
+Use the workspace evidence above. If the coordinator says something is updated, attached, completed, or has no pending items and the evidence supports that, acknowledge it and do not claim you cannot see the file, central folder, RAID log, or pending action. Do not invent missing artefacts.
+Only disagree, push back, ask hard questions, or escalate when there is a specific unresolved gap in the evidence (for example missing owner, missing mitigation, open high/critical RAID item, pending document review, or open task). If the evidence resolves the issue, be positive or neutral.
 2-4 short paragraphs. Sign off with name & role. Do not use generic placeholder wording like "Thanks for the note — I'll come back to you shortly".
 Choose sentiment honestly: positive, neutral, pushback, concerned, or ignored (if ignored, body is a short auto-reply / out of office).`;
 
-      let out: z.infer<typeof ReplySchema>;
+      let out: Reply;
       try {
-        const res = await generateObject({ model: getModel(), prompt, schema: ReplySchema });
-        out = res.object;
+        out = evidenceAwareReply(
+          sh,
+          data.subject,
+          data.body,
+          data.attachment_kind,
+          data.attachment_label,
+          evidence,
+        ) ?? (await generateObject({ model: getModel(), prompt, schema: ReplySchema })).object;
       } catch {
         out = fallbackReply(sh, data.subject, data.attachment_label);
       }
@@ -194,14 +388,14 @@ Choose sentiment honestly: positive, neutral, pushback, concerned, or ignored (i
         sender_role: sh.title,
         subject: out.subject,
         body: out.body,
-        tone: out.sentiment === "pushback" || out.sentiment === "concerned" ? "frustrated" : out.sentiment === "positive" ? "supportive" : "neutral",
+        tone: out.sentiment === "pushback" ? "frustrated" : out.sentiment === "concerned" ? "curious" : out.sentiment === "positive" ? "supportive" : "neutral",
       });
 
       // Track relationship: sentiment delta + interaction count
       const delta =
         out.sentiment === "positive" ? 4 :
         out.sentiment === "neutral" ? 1 :
-        out.sentiment === "concerned" ? -3 :
+        out.sentiment === "concerned" ? -1 :
         out.sentiment === "pushback" ? -5 :
         0; // ignored
       const { data: existing } = await supabase

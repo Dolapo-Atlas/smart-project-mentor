@@ -232,17 +232,36 @@ export const getOverview = createServerFn({ method: "GET" })
 export const listInbox = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data, error } = await context.supabase
-      .from("inbox_messages")
-      .select("*")
-      .eq("user_id", context.userId)
-      .order("created_at", { ascending: false });
+    const [{ data, error }, { data: raidItems }, { data: profile }] = await Promise.all([
+      context.supabase
+        .from("inbox_messages")
+        .select("*")
+        .eq("user_id", context.userId)
+        .order("created_at", { ascending: false }),
+      context.supabase
+        .from("raid_items")
+        .select("title,kind,severity,status,owner,mitigation")
+        .eq("user_id", context.userId),
+      context.supabase
+        .from("profiles")
+        .select("first_name,preferred_name")
+        .eq("id", context.userId)
+        .maybeSingle(),
+    ]);
     if (error) throw error;
+    const firstName = profile?.preferred_name?.trim() || profile?.first_name || "there";
     const seen = new Set<string>();
     return (data ?? [])
       .map((message) => ({
         ...message,
-        body: personalizePlaceholderReply(message.sender_name, message.body, message.subject),
+        ...repairStaleRaidComplaint(
+          message.sender_name,
+          message.subject,
+          personalizePlaceholderReply(message.sender_name, message.body, message.subject),
+          message.tone,
+          (raidItems ?? []) as RaidEvidenceItem[],
+          firstName,
+        ),
       }))
       .filter((message) => {
         const key = [message.sender_name, message.subject, message.body].join("\n").toLowerCase();
@@ -251,6 +270,84 @@ export const listInbox = createServerFn({ method: "GET" })
         return true;
       });
   });
+
+type RaidEvidenceItem = {
+  title: string;
+  kind: string;
+  severity: string;
+  status: string;
+  owner?: string | null;
+  mitigation?: string | null;
+};
+
+function isRaidInboxMessage(sender: string, subject: string, body: string) {
+  if (sender !== "Sarah Williams") return false;
+  return /\braid\b|risk log|risk register/i.test(`${subject}\n${body}`);
+}
+
+function isStaleRaidComplaint(body: string) {
+  return /(can'?t see|cannot see|do not see|don'?t see|re-upload|central folder|updated version|doesn'?t reflect|does not reflect|missing from the folder)/i.test(body);
+}
+
+function repairStaleRaidComplaint(
+  sender: string,
+  subject: string,
+  body: string,
+  tone: string,
+  raidItems: RaidEvidenceItem[],
+  firstName: string,
+) {
+  if (!isRaidInboxMessage(sender, subject, body) || !isStaleRaidComplaint(body)) {
+    return { body, tone };
+  }
+
+  const enoughRaid = raidItems.length >= 3;
+  if (!enoughRaid) return { body, tone };
+
+  const open = raidItems.filter((item) => item.status !== "closed");
+  const openHigh = open.filter((item) => ["high", "critical"].includes(item.severity));
+  const missingControls = open.filter((item) => !item.owner?.trim() || !item.mitigation?.trim());
+
+  if (openHigh.length === 0 && missingControls.length === 0) {
+    return {
+      tone: "supportive",
+      body: `Hi ${firstName},
+
+Thanks — I can see the updated RAID log now. The current items have owners and mitigations recorded, and I don't see any open high or critical RAID items blocking governance.
+
+Please keep it current as decisions change, but you don't need to re-upload it or chase this thread again. This clears the RAID follow-up from my side.
+
+Sarah Williams
+Project Manager`,
+    };
+  }
+
+  if (missingControls.length === 0) {
+    return {
+      tone: "neutral",
+      body: `Hi ${firstName},
+
+Thanks — I can see the updated RAID log now. No re-upload needed.
+
+Keep the ${openHigh.length} remaining high/critical item(s) visible in the next status report until they are closed, with clear escalation triggers.
+
+Sarah Williams
+Project Manager`,
+    };
+  }
+
+  return {
+    tone: "curious",
+    body: `Hi ${firstName},
+
+Thanks — I can see the RAID update now, so no re-upload is needed.
+
+Before I treat it as complete for governance, please add the missing owner or mitigation details for: ${missingControls.slice(0, 3).map((item) => item.title).join("; ")}${missingControls.length > 3 ? ` and ${missingControls.length - 3} more` : ""}.
+
+Sarah Williams
+Project Manager`,
+  };
+}
 
 function personalizePlaceholderReply(sender: string, body: string, subject: string): string {
   if (!body.trim().startsWith("Thanks for the note — I'll come back to you shortly.")) return body;
