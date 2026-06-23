@@ -83,7 +83,7 @@ async function bumpSentiment(
   name: string,
   delta: number,
   fallbackRole: string,
-) {
+): Promise<number> {
   const { data: existing } = await supabase
     .from("stakeholder_relationships")
     .select("sentiment,interaction_count,role")
@@ -91,7 +91,8 @@ async function bumpSentiment(
     .eq("stakeholder_name", name)
     .maybeSingle();
   const baseline = ARCHETYPE_SENTIMENT[name] ?? 0;
-  const next = Math.max(-100, Math.min(100, (existing?.sentiment ?? baseline) + delta));
+  const current = existing?.sentiment ?? baseline;
+  const next = Math.max(-100, Math.min(100, current + delta));
   await supabase.from("stakeholder_relationships").upsert(
     {
       user_id: userId,
@@ -103,6 +104,7 @@ async function bumpSentiment(
     },
     { onConflict: "user_id,stakeholder_name" },
   );
+  return current;
 }
 
 export const delegateInboxMessage = createServerFn({ method: "POST" })
@@ -200,10 +202,21 @@ export const delegateInboxMessage = createServerFn({ method: "POST" })
       .eq("id", data.inbox_id)
       .eq("user_id", userId);
 
-    // Sentiment changes
+    // Sentiment changes — when the sender is already frustrated, a proper
+    // delegation is a real recovery action: someone senior or the right
+    // specialist has taken ownership.
+    const { data: senderRel } = await supabase
+      .from("stakeholder_relationships")
+      .select("sentiment")
+      .eq("user_id", userId)
+      .eq("stakeholder_name", orig.sender_name)
+      .maybeSingle();
+    const senderSentiment = senderRel?.sentiment ?? ARCHETYPE_SENTIMENT[orig.sender_name] ?? 0;
+    const frustrated = senderSentiment < -20;
+
     const justified = isStrategicEscalation(orig.subject ?? "", orig.body ?? "");
     if (data.mode === "ask_pm") {
-      await bumpSentiment(supabase, userId, orig.sender_name, +2, orig.sender_role);
+      await bumpSentiment(supabase, userId, orig.sender_name, frustrated ? +25 : +6, orig.sender_role);
       // Check recent Sarah delegations this week
       const since = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
       const { count } = await supabase
@@ -217,14 +230,14 @@ export const delegateInboxMessage = createServerFn({ method: "POST" })
       await bumpSentiment(supabase, userId, "Sarah Williams", overload ? -8 : -1, "Project Manager");
     } else if (data.mode === "escalate_sponsor") {
       if (justified) {
-        await bumpSentiment(supabase, userId, orig.sender_name, +5, orig.sender_role);
+        await bumpSentiment(supabase, userId, orig.sender_name, frustrated ? +20 : +6, orig.sender_role);
         await bumpSentiment(supabase, userId, "David Okafor", +1, "Executive Sponsor");
       } else {
         await bumpSentiment(supabase, userId, "David Okafor", -6, "Executive Sponsor");
         await bumpSentiment(supabase, userId, orig.sender_name, -2, orig.sender_role);
       }
     } else {
-      await bumpSentiment(supabase, userId, orig.sender_name, +4, orig.sender_role);
+      await bumpSentiment(supabase, userId, orig.sender_name, frustrated ? +30 : +10, orig.sender_role);
     }
 
     // Competency micro-tick
