@@ -669,35 +669,71 @@ export type Database = {
       }
       tasks: {
         Row: {
+          category: string | null
           completed_at: string | null
+          completion_action: string | null
           created_at: string
+          depends_on: string[]
           description: string | null
           due_at: string | null
+          feedback: Json | null
           id: string
+          impact: Json
+          linked_area: string | null
+          linked_module_route: string | null
+          linked_stakeholder: string | null
           priority: string
+          source: string
+          source_ref: string | null
           status: string
+          submission: string | null
+          submitted_at: string | null
           title: string
           user_id: string
         }
         Insert: {
+          category?: string | null
           completed_at?: string | null
+          completion_action?: string | null
           created_at?: string
+          depends_on?: string[]
           description?: string | null
           due_at?: string | null
+          feedback?: Json | null
           id?: string
+          impact?: Json
+          linked_area?: string | null
+          linked_module_route?: string | null
+          linked_stakeholder?: string | null
           priority?: string
+          source?: string
+          source_ref?: string | null
           status?: string
+          submission?: string | null
+          submitted_at?: string | null
           title: string
           user_id: string
         }
         Update: {
+          category?: string | null
           completed_at?: string | null
+          completion_action?: string | null
           created_at?: string
+          depends_on?: string[]
           description?: string | null
           due_at?: string | null
+          feedback?: Json | null
           id?: string
+          impact?: Json
+          linked_area?: string | null
+          linked_module_route?: string | null
+          linked_stakeholder?: string | null
           priority?: string
+          source?: string
+          source_ref?: string | null
           status?: string
+          submission?: string | null
+          submitted_at?: string | null
           title?: string
           user_id?: string
         }
