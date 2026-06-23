@@ -1038,3 +1038,140 @@ export const updateStakeholder = createServerFn({ method: "POST" })
     if (error) throw error;
     return row;
   });
+
+const STAKEHOLDER_ROLE_KEY_BY_NAME: Record<string, string> = {
+  "David Okafor": "sponsor",
+  "Sarah Williams": "pm",
+  "Priya Anand": "finance",
+  "James Lin": "tech",
+  "Margaret Hollis": "care_home",
+  "Rachel Stone": "clinical",
+  "CareSoft Ltd": "vendor",
+};
+
+function recoveryTemplate(name: string) {
+  if (name === "Priya Anand") {
+    return {
+      subject: "Forecast controls and approval route — follow-up",
+      body:
+`Priya,
+
+You're right to keep challenging the numbers. I don't want to send another narrative update without giving you the finance control view you need.
+
+I'll separate forecast vs actuals, identify any vendor claims that are outside approved scope, and flag the approval route before any additional spend is treated as agreed. If there is a change request, I'll show cost impact, schedule impact, owner, and the decision needed.
+
+Can you confirm the specific evidence you need before finance will support the next governance update?
+
+Coordinator`,
+      reply:
+`This is closer to what I need.
+
+Please send the forecast vs actuals and the approval route before the governance pack is finalised. I’m not trying to block the project — I need assurance that cost exposure is visible before decisions are made.
+
+Priya`,
+      concern: "Needs forecast vs actuals, cost exposure, and approval route before supporting decisions.",
+    };
+  }
+
+  return {
+    subject: `Relationship reset — ${name}`,
+    body:
+`Hi ${name},
+
+I can see my previous updates have not fully addressed your concern. I want to reset this properly rather than keep sending more generic replies.
+
+I'll summarise the issue as I understand it, name the owner and next decision, and confirm what evidence you need from me before we move forward.
+
+Coordinator`,
+    reply:
+`Thanks — that is a better way to handle it.
+
+Please send the clear owner, decision needed, and evidence next. If that is specific enough, I can engage constructively.
+
+${name}`,
+    concern: "Needs a specific owner, decision, evidence, and acknowledgement before confidence improves.",
+  };
+}
+
+export const repairStakeholderRelationship = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ name: z.string().min(1) }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const book = STAKEHOLDER_BOOK.find((s) => s.name === data.name);
+    if (!book) throw new Error("Unknown stakeholder");
+
+    const { data: existing } = await supabase
+      .from("stakeholder_relationships")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("stakeholder_name", data.name)
+      .maybeSingle();
+
+    const currentSentiment = existing?.sentiment ?? ARCHETYPE_SENTIMENT[data.name] ?? 0;
+    const nextSentiment = currentSentiment <= -60
+      ? Math.min(100, currentSentiment + 25)
+      : Math.max(-10, Math.min(100, currentSentiment + 25));
+    const template = recoveryTemplate(data.name);
+    const threadId = crypto.randomUUID();
+    const roleKey = STAKEHOLDER_ROLE_KEY_BY_NAME[data.name] ?? book.type;
+
+    await supabase.from("comms_messages").insert({
+      user_id: userId,
+      thread_id: threadId,
+      direction: "outbound",
+      from_role: "coordinator",
+      to_roles: [roleKey],
+      msg_type: "Request",
+      subject: template.subject,
+      body: template.body,
+      attachment_kind: null,
+      attachment_ref: null,
+      attachment_label: null,
+    });
+
+    await supabase.from("comms_messages").insert({
+      user_id: userId,
+      thread_id: threadId,
+      direction: "inbound",
+      from_role: roleKey,
+      to_roles: ["coordinator"],
+      msg_type: "Update",
+      subject: `Re: ${template.subject}`,
+      body: template.reply,
+      sentiment: "neutral",
+    });
+
+    await supabase.from("inbox_messages").insert({
+      user_id: userId,
+      sender_name: data.name,
+      sender_role: book.role,
+      subject: `Re: ${template.subject}`,
+      body: template.reply,
+      tone: nextSentiment >= -19 ? "neutral" : "frustrated",
+    });
+
+    const concerns = [...((existing?.concerns ?? []) as string[])];
+    if (!concerns.includes(template.concern)) concerns.push(template.concern);
+
+    const { data: row, error } = await supabase
+      .from("stakeholder_relationships")
+      .upsert(
+        {
+          user_id: userId,
+          stakeholder_name: data.name,
+          role: book.role,
+          sentiment: nextSentiment,
+          concerns,
+          notes: existing?.notes ?? "",
+          interaction_count: (existing?.interaction_count ?? 0) + 1,
+          last_interaction: new Date().toISOString(),
+        },
+        { onConflict: "user_id,stakeholder_name" },
+      )
+      .select()
+      .single();
+    if (error) throw error;
+
+    return { ok: true, stakeholder: row, subject: template.subject };
+  });

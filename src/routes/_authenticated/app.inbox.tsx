@@ -51,6 +51,7 @@ function Inbox() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["inbox"] });
       qc.invalidateQueries({ queryKey: ["overview"] });
+      qc.invalidateQueries({ queryKey: ["next-action"] });
     },
   });
 
@@ -91,6 +92,8 @@ function Inbox() {
       qc.invalidateQueries({ queryKey: ["inbox"] });
       qc.invalidateQueries({ queryKey: ["comms"] });
       qc.invalidateQueries({ queryKey: ["overview"] });
+      qc.invalidateQueries({ queryKey: ["stakeholders"] });
+      qc.invalidateQueries({ queryKey: ["next-action"] });
       toast.success("Reply sent. Watch your inbox for their response.");
       setReplyOpen(false);
       setReplyBody("");

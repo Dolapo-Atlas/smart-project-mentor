@@ -31,14 +31,17 @@ export const Route = createFileRoute("/_authenticated/app/meetings")({
 function PostMeetingActions({
   hasMinutes,
   hasDecisions,
+  minutesSent,
 }: {
   hasMinutes: boolean;
   hasDecisions: boolean;
+  minutesSent: boolean;
 }) {
   const items = [
     { label: "Capture minutes", done: hasMinutes },
     { label: "Record decisions", done: hasDecisions },
     { label: "Assign actions", done: hasDecisions },
+    { label: "Send minutes to attendees", done: minutesSent },
     { label: "Update RAID log", done: false },
   ];
   return (
@@ -194,6 +197,8 @@ function Meetings() {
       qc.invalidateQueries({ queryKey: ["meetings"] });
       qc.invalidateQueries({ queryKey: ["tasks"] });
       qc.invalidateQueries({ queryKey: ["inbox"] });
+      qc.invalidateQueries({ queryKey: ["overview"] });
+      qc.invalidateQueries({ queryKey: ["next-action"] });
       toast.success(
         `Minutes sent to ${res.recipients} attendee${res.recipients === 1 ? "" : "s"}.` +
           (res.closed_tasks ? ` ${res.closed_tasks} task closed.` : ""),
@@ -563,8 +568,9 @@ function Meetings() {
                   </div>
                   {selected.held && (
                     <PostMeetingActions
-                      hasMinutes={!!selected.minutes}
+                      hasMinutes={!!selected.minutes || !!selected.ai_summary || !!selected.decisions}
                       hasDecisions={!!selected.decisions}
+                      minutesSent={!!(selected as any).minutes_sent_at}
                     />
                   )}
                 </div>

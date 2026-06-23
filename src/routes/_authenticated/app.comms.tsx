@@ -124,6 +124,8 @@ function Comms() {
       qc.invalidateQueries({ queryKey: ["comms"] });
       qc.invalidateQueries({ queryKey: ["inbox"] });
       qc.invalidateQueries({ queryKey: ["overview"] });
+      qc.invalidateQueries({ queryKey: ["stakeholders"] });
+      qc.invalidateQueries({ queryKey: ["next-action"] });
       setSubject(""); setBody(""); setAttachKind("none"); setAttachRef("");
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to send"),

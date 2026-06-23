@@ -100,7 +100,7 @@ export function AdvanceTimeDialog({
             <BlockerRow icon={Mail} label="Unread stakeholder messages" count={data.unreadInbox.length} to="/app/inbox" onClose={() => onOpenChange(false)} />
             <BlockerRow icon={ListChecks} label="Open tasks" count={data.openTasks.length} to="/app/tasks" onClose={() => onOpenChange(false)} />
             <BlockerRow icon={FileText} label="Unsubmitted documents" count={data.unsubmittedDocs.length} to="/app/documents" onClose={() => onOpenChange(false)} />
-            <BlockerRow icon={ClipboardList} label="Meetings without minutes" count={data.meetingsMissingMinutes.length} to="/app/meetings" onClose={() => onOpenChange(false)} />
+            <BlockerRow icon={ClipboardList} label="Meeting minutes not sent" count={data.meetingsMissingMinutes.length} to="/app/meetings" onClose={() => onOpenChange(false)} />
             <BlockerRow icon={ShieldAlert} label="Open high-severity risks" count={data.openHighRisks.length} to="/app/risk" onClose={() => onOpenChange(false)} />
             <BlockerRow icon={Frown} label="Frustrated stakeholders" count={data.frustratedStakeholders.length} to="/app/stakeholders" onClose={() => onOpenChange(false)} />
           </ul>
