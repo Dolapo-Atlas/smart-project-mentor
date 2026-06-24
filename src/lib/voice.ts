@@ -61,8 +61,8 @@ const VOICE_MAP: Record<string, string> = {
   "James Lin": "verse",
   "CareSoft Ltd": "ash",
   "Margaret Hollis": "ballad",
-  "Rachel Stone": "coral",
-  "Project Update": "alloy",
+  "Rachel Stone": "ballad",
+  "Project Update": "coral",
 };
 
 export function voiceForStakeholder(name: string | null | undefined): string {
