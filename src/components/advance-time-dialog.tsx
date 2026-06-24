@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
@@ -15,7 +15,7 @@ import { advanceTime, getReadiness } from "@/lib/time.functions";
 import { AlertTriangle, Mail, FileText, ListChecks, ClipboardList, ShieldAlert, Frown } from "lucide-react";
 import { toast } from "sonner";
 import { ReadAloudButton } from "@/components/read-aloud-button";
-import { useVoiceSettings, useSpeech } from "@/lib/voice";
+import { useVoiceSettings, useSpeech, voiceForStakeholder } from "@/lib/voice";
 import { useEffect, useMemo } from "react";
 
 type Mode = "day" | "week" | "sprint" | "steerco" | "golive";
