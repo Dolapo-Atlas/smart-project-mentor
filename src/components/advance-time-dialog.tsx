@@ -45,6 +45,7 @@ export function AdvanceTimeDialog({
   const [advancing, setAdvancing] = useState(false);
   const { settings } = useVoiceSettings();
   const { play, stop } = useSpeech();
+  const playedRef = useRef(false);
 
   // Lazy load readiness when opening
   if (open && data === null && !loading) {
@@ -78,13 +79,27 @@ export function AdvanceTimeDialog({
     return `Before we continue to ${MODE_LABEL[mode]}, you still have ${list}. What would you like to do — resolve these actions, or continue anyway?`;
   }, [data, mode]);
 
-  // Auto-play briefing when enabled and blockers exist.
+  // Reset the "already played" guard whenever the dialog closes.
+  useEffect(() => {
+    if (!open) {
+      playedRef.current = false;
+      stop();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  // Auto-play briefing once per open, when enabled and blockers exist.
   useEffect(() => {
     if (!open || !data || !briefingText) return;
     if (!settings.enabled || !settings.readBriefings) return;
     if (blockerCount === 0) return;
-    play(briefingText, { voice: "sage", volume: settings.volume, speed: settings.speed });
-    return () => stop();
+    if (playedRef.current) return;
+    playedRef.current = true;
+    play(briefingText, {
+      voice: voiceForStakeholder("Project Update"),
+      volume: settings.volume,
+      speed: settings.speed,
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, data, briefingText, settings.enabled, settings.readBriefings]);
 
