@@ -13,6 +13,8 @@ import { formatDistanceToNow } from "date-fns";
 import { StakeholderHoverAvatar as StakeholderAvatar } from "@/components/stakeholder-card";
 import { TimeControls } from "@/components/time-controls";
 import { DelegatePanel } from "@/components/delegate-panel";
+import { ReadAloudButton } from "@/components/read-aloud-button";
+import { useVoiceSettings } from "@/lib/voice";
 import { Link } from "@tanstack/react-router";
 import { useServerFn as useServerFn2 } from "@tanstack/react-start";
 import { listTasksRich } from "@/lib/tasks.functions";
@@ -42,6 +44,7 @@ const SENDER_ROLE_MAP: Record<string, string> = {
 
 function Inbox() {
   const qc = useQueryClient();
+  const { settings: voice } = useVoiceSettings();
   const fetchInbox = useServerFn(listInbox);
   const markFn = useServerFn(markRead);
   const genFn = useServerFn(generateStakeholderMessage);
@@ -187,6 +190,14 @@ function Inbox() {
                 </div>
               </div>
               <h2 className="mt-4 font-display text-3xl font-medium">{selected.subject}</h2>
+              {voice.enabled && voice.readEmails ? (
+                <div className="mt-3">
+                  <ReadAloudButton
+                    text={`${selected.subject}. ${selected.body}`}
+                    stakeholder={selected.sender_name}
+                  />
+                </div>
+              ) : null}
               <div className="mt-6 whitespace-pre-wrap leading-relaxed">{selected.body}</div>
               {linkedTasks.length > 0 && (
                 <div className="mt-6 rounded-md border border-primary/40 bg-primary/5 p-4">
