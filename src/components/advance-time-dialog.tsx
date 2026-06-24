@@ -14,6 +14,9 @@ import { Button } from "@/components/ui/button";
 import { advanceTime, getReadiness } from "@/lib/time.functions";
 import { AlertTriangle, Mail, FileText, ListChecks, ClipboardList, ShieldAlert, Frown } from "lucide-react";
 import { toast } from "sonner";
+import { ReadAloudButton } from "@/components/read-aloud-button";
+import { useVoiceSettings, useSpeech } from "@/lib/voice";
+import { useEffect, useMemo } from "react";
 
 type Mode = "day" | "week" | "sprint" | "steerco" | "golive";
 
@@ -40,6 +43,8 @@ export function AdvanceTimeDialog({
   const [data, setData] = useState<Awaited<ReturnType<typeof getReadiness>> | null>(null);
   const [loading, setLoading] = useState(false);
   const [advancing, setAdvancing] = useState(false);
+  const { settings } = useVoiceSettings();
+  const { play, stop } = useSpeech();
 
   // Lazy load readiness when opening
   if (open && data === null && !loading) {
@@ -54,6 +59,34 @@ export function AdvanceTimeDialog({
   }
 
   const blockerCount = data?.blockerCount ?? 0;
+
+  const briefingText = useMemo(() => {
+    if (!data) return "";
+    const items: string[] = [];
+    if (data.unreadInbox.length) items.push(`${data.unreadInbox.length} unread stakeholder messages`);
+    if (data.openTasks.length) items.push(`${data.openTasks.length} open tasks`);
+    if (data.unsubmittedDocs.length) items.push(`${data.unsubmittedDocs.length} unsubmitted documents`);
+    if (data.meetingsMissingMinutes.length) items.push(`${data.meetingsMissingMinutes.length} meetings missing minutes`);
+    if (data.openHighRisks.length) items.push(`${data.openHighRisks.length} open high-severity risks`);
+    if (data.frustratedStakeholders.length) items.push(`${data.frustratedStakeholders.length} frustrated stakeholders`);
+    if (items.length === 0) {
+      return `All clear. No unresolved items before moving to ${MODE_LABEL[mode]}.`;
+    }
+    const list = items.length === 1
+      ? items[0]
+      : items.slice(0, -1).join(", ") + ", and " + items[items.length - 1];
+    return `Before we continue to ${MODE_LABEL[mode]}, you still have ${list}. What would you like to do — resolve these actions, or continue anyway?`;
+  }, [data, mode]);
+
+  // Auto-play briefing when enabled and blockers exist.
+  useEffect(() => {
+    if (!open || !data || !briefingText) return;
+    if (!settings.enabled || !settings.readBriefings) return;
+    if (blockerCount === 0) return;
+    play(briefingText, { voice: "sage", volume: settings.volume, speed: settings.speed });
+    return () => stop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, data, briefingText, settings.enabled, settings.readBriefings]);
 
   async function doAdvance(force: boolean) {
     setAdvancing(true);
@@ -107,6 +140,14 @@ export function AdvanceTimeDialog({
         ) : null}
 
         <DialogFooter className="gap-2">
+          {briefingText && blockerCount > 0 ? (
+            <ReadAloudButton
+              text={briefingText}
+              stakeholder="Project Update"
+              label="Read briefing"
+              variant="ghost"
+            />
+          ) : null}
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={advancing}>
             Review Issues
           </Button>
