@@ -104,8 +104,7 @@ function ProjectsPicker() {
   const start = useMutation({
     mutationFn: (templateId: string) => startFn({ data: { templateId } }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["my-project-instances"] });
-      qc.invalidateQueries({ queryKey: ["overview"] });
+      qc.invalidateQueries();
       toast.success("Simulation loaded. Welcome to your sim room.");
       navigate({ to: "/app" });
     },
