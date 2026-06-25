@@ -377,36 +377,90 @@ function HeroInbox() {
 /* ------------------------------------------------------------------ */
 
 function SocialProof() {
-  const logos = ["PMI", "APM", "Scrum.org", "Microsoft", "Google", "Atlassian"];
   return (
     <section className="border-y border-border/60 bg-card/40 py-14">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
         <Reveal>
-          <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/60 px-2.5 py-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-[oklch(0.55_0.12_160)]" />
-              Project: Digital Care Records · Wk 3
-            </span>
-            <span className="hidden h-3 w-px bg-border sm:inline-block" />
-            <span className="uppercase tracking-[0.22em]">
-              Preparing the next generation of project professionals
-            </span>
-          </div>
+          <p className="text-center text-[11px] font-medium uppercase tracking-[0.28em] text-muted-foreground/80">
+            Preparing the next generation of project professionals
+          </p>
         </Reveal>
         <Reveal delay={120}>
-          <ul className="mt-7 grid grid-cols-2 items-center gap-x-8 gap-y-5 sm:grid-cols-3 md:grid-cols-6">
-            {logos.map((l) => (
-              <li
-                key={l}
-                className="text-center font-display text-base font-medium tracking-tight text-muted-foreground/70 transition-colors hover:text-foreground"
-              >
-                {l}
-              </li>
-            ))}
+          <ul className="mt-10 grid grid-cols-2 items-center justify-items-center gap-x-10 gap-y-8 sm:grid-cols-3 md:grid-cols-6 [&>li]:opacity-80 [&>li]:transition-opacity hover:[&>li]:opacity-100">
+            <li><LogoPMI /></li>
+            <li><LogoAPM /></li>
+            <li><LogoScrum /></li>
+            <li><LogoMicrosoft /></li>
+            <li><LogoGoogle /></li>
+            <li><LogoAtlassian /></li>
           </ul>
         </Reveal>
       </div>
     </section>
+  );
+}
+
+/* Brand-styled logo lockups (stylized, non-trademark) */
+function LogoPMI() {
+  return (
+    <div className="flex items-center gap-2 text-foreground">
+      <span className="flex h-7 w-7 items-center justify-center rounded-[4px] bg-foreground font-display text-[11px] font-bold tracking-tight text-background">
+        PM
+      </span>
+      <span className="text-left font-display text-[10px] leading-tight">
+        <span className="block font-semibold">Project</span>
+        <span className="block font-semibold">Management</span>
+        <span className="block font-semibold">Institute.</span>
+      </span>
+    </div>
+  );
+}
+function LogoAPM() {
+  return <span className="font-display text-3xl font-light tracking-tight text-foreground/85">apm</span>;
+}
+function LogoScrum() {
+  return (
+    <div className="flex items-center gap-1.5 text-foreground">
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2">
+        <path d="M20 12a8 8 0 1 1-3-6.2" />
+        <path d="M20 4v4h-4" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+      <span className="font-display text-lg font-medium tracking-tight">Scrum<span className="align-super text-[9px]">.org</span></span>
+    </div>
+  );
+}
+function LogoMicrosoft() {
+  return (
+    <div className="flex items-center gap-2 text-foreground">
+      <div className="grid h-5 w-5 grid-cols-2 grid-rows-2 gap-[2px]">
+        <span className="bg-[#F25022]" />
+        <span className="bg-[#7FBA00]" />
+        <span className="bg-[#00A4EF]" />
+        <span className="bg-[#FFB900]" />
+      </div>
+      <span className="font-display text-lg font-normal tracking-tight">Microsoft</span>
+    </div>
+  );
+}
+function LogoGoogle() {
+  const colors = ["#4285F4", "#EA4335", "#FBBC05", "#4285F4", "#34A853", "#EA4335"];
+  return (
+    <span className="font-display text-2xl font-medium tracking-tight">
+      {"Google".split("").map((c, i) => (
+        <span key={i} style={{ color: colors[i] }}>{c}</span>
+      ))}
+    </span>
+  );
+}
+function LogoAtlassian() {
+  return (
+    <div className="flex items-center gap-1.5 text-foreground">
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
+        <path d="M7.5 11.2L2 21h9.2c.3 0 .6-.2.7-.5L7.5 11.2z" opacity="0.85" />
+        <path d="M11.4 3.2c-.2-.3-.6-.3-.8 0L5.8 13.4c2.7-1 5.8.2 7 2.9l2 4.2c.1.3.4.5.7.5H22L11.4 3.2z" />
+      </svg>
+      <span className="font-display text-lg font-semibold uppercase tracking-[0.04em]">Atlassian</span>
+    </div>
   );
 }
 
