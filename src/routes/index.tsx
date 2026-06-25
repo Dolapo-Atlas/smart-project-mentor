@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/carousel";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import atlasLogo from "@/assets/atlas-logo.png.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -203,14 +204,12 @@ function Nav({ scrolled }: { scrolled: boolean }) {
 
 function AtlasMark({ className = "" }: { className?: string }) {
   return (
-    <span
-      className={[
-        "grid place-items-center rounded-[8px] bg-primary text-primary-foreground font-display text-[13px] font-semibold",
-        className,
-      ].join(" ")}
-    >
-      A
-    </span>
+    <img
+      src={atlasLogo.url}
+      alt="Atlas"
+      className={["object-contain", className].join(" ")}
+      draggable={false}
+    />
   );
 }
 
