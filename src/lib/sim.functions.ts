@@ -185,16 +185,9 @@ export const getOverview = createServerFn({ method: "GET" })
           .order("created_at", { ascending: false })
           .limit(5),
       ]);
-    // Ensure state exists (in case trigger didn't run for some reason)
-    let s = state;
-    if (!s) {
-      const ins = await supabase
-        .from("simulation_state")
-        .insert({ user_id: userId })
-        .select()
-        .single();
-      s = ins.data;
-    }
+    // simulation_state is per-active-project; if none, the layout sends the user
+    // to the project picker. Don't auto-seed here.
+    const s = state;
     const activity = [
       ...(recentDocs ?? []).map((d) => ({
         kind: "document" as const,
