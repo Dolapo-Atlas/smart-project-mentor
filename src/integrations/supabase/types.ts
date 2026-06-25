@@ -496,6 +496,7 @@ export type Database = {
           company: string
           country: string | null
           created_at: string
+          current_project_instance_id: string | null
           display_name: string | null
           first_name: string | null
           id: string
@@ -512,6 +513,7 @@ export type Database = {
           company?: string
           country?: string | null
           created_at?: string
+          current_project_instance_id?: string | null
           display_name?: string | null
           first_name?: string | null
           id: string
@@ -528,6 +530,7 @@ export type Database = {
           company?: string
           country?: string | null
           created_at?: string
+          current_project_instance_id?: string | null
           display_name?: string | null
           first_name?: string | null
           id?: string
@@ -539,7 +542,15 @@ export type Database = {
           role?: string
           start_date?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_current_project_instance_id_fkey"
+            columns: ["current_project_instance_id"]
+            isOneToOne: false
+            referencedRelation: "project_instances"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       project_instances: {
         Row: {
