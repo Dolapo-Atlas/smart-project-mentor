@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getOverview } from "@/lib/sim.functions";
+import { getActiveProject } from "@/lib/projects.functions";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -41,6 +43,19 @@ function AppLayout() {
     queryFn: () => fetchOverview(),
     refetchInterval: 15000,
   });
+  const fetchActive = useServerFn(getActiveProject);
+  const { data: active, isLoading: activeLoading } = useQuery({
+    queryKey: ["active-project"],
+    queryFn: () => fetchActive(),
+  });
+
+  useEffect(() => {
+    if (activeLoading) return;
+    if (active) return;
+    if (pathname === "/app/projects" || pathname.startsWith("/app/projects/")) return;
+    navigate({ to: "/app/projects" });
+  }, [active, activeLoading, pathname, navigate]);
+
 
   async function signOut() {
     await supabase.auth.signOut();
