@@ -381,7 +381,7 @@ function SocialProof() {
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
         <Reveal>
           <p className="text-center text-[11px] font-medium uppercase tracking-[0.28em] text-muted-foreground/80">
-            Preparing the next generation of project professionals
+            Built around the frameworks and tools the industry already uses
           </p>
         </Reveal>
         <Reveal delay={120}>
@@ -393,6 +393,11 @@ function SocialProof() {
             <li><LogoGoogle /></li>
             <li><LogoAtlassian /></li>
           </ul>
+        </Reveal>
+        <Reveal delay={200}>
+          <p className="mx-auto mt-6 max-w-2xl text-center text-[11px] leading-relaxed text-muted-foreground/70">
+            Atlas references the methodologies of PMI, APM and Scrum.org, and mirrors workflows familiar to teams using Microsoft, Google and Atlassian tooling. Atlas is not affiliated with, endorsed by, or certified by any of these organisations.
+          </p>
         </Reveal>
       </div>
     </section>
