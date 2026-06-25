@@ -243,23 +243,29 @@ export type Database = {
       }
       early_access_signups: {
         Row: {
+          country: string | null
           created_at: string
           desired_role: string
           email: string
+          experience_level: string | null
           id: string
           name: string
         }
         Insert: {
+          country?: string | null
           created_at?: string
           desired_role: string
           email: string
+          experience_level?: string | null
           id?: string
           name: string
         }
         Update: {
+          country?: string | null
           created_at?: string
           desired_role?: string
           email?: string
+          experience_level?: string | null
           id?: string
           name?: string
         }
