@@ -96,6 +96,19 @@ export const startProject = createServerFn({ method: "POST" })
       .update({ current_project_instance_id: instanceId })
       .eq("id", userId);
 
+    // Seed a simulation_state row for this instance if it doesn't have one yet.
+    // Profile is now set to the new instance, so RLS will accept the insert; the
+    // trigger fills project_instance_id automatically.
+    const { data: existingState } = await supabase
+      .from("simulation_state")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("project_instance_id", instanceId)
+      .maybeSingle();
+    if (!existingState) {
+      await supabase.from("simulation_state").insert({ user_id: userId });
+    }
+
     return { instanceId };
   });
 
