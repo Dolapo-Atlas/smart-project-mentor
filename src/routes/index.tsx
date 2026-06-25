@@ -35,6 +35,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import atlasLogo from "@/assets/atlas-logo.png.asset.json";
+import { AutoDemo } from "@/components/auto-demo";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -90,6 +91,7 @@ function Landing() {
       <main>
         <Hero />
         <SocialProof />
+        <AutoDemo />
         <Features />
         <HowItWorks />
         <Experience />
@@ -262,7 +264,7 @@ function Hero() {
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </a>
               <a
-                href="#experience"
+                href="#demo"
                 className="group inline-flex items-center gap-2 rounded-full border border-border bg-card/70 px-6 py-3 text-sm font-medium text-foreground backdrop-blur transition-all hover:-translate-y-0.5 hover:bg-card"
               >
                 <PlayCircle className="h-4 w-4 text-primary" />
