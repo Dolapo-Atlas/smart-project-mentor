@@ -187,13 +187,13 @@ function Nav({ scrolled }: { scrolled: boolean }) {
         <div className="flex items-center gap-2">
           <Link
             to="/auth"
-            className="hidden rounded-full px-4 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
+            className="inline-flex rounded-full px-4 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             Sign in
           </Link>
           <a
             href="#early-access"
-            className="group inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-[0_1px_0_rgba(255,255,255,0.25)_inset,0_8px_24px_-12px_rgba(217,119,6,0.6)] transition-all hover:-translate-y-0.5 hover:shadow-[0_1px_0_rgba(255,255,255,0.3)_inset,0_12px_28px_-12px_rgba(217,119,6,0.7)]"
+            className="group hidden items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-[0_1px_0_rgba(255,255,255,0.25)_inset,0_8px_24px_-12px_rgba(217,119,6,0.6)] transition-all hover:-translate-y-0.5 hover:shadow-[0_1px_0_rgba(255,255,255,0.3)_inset,0_12px_28px_-12px_rgba(217,119,6,0.7)] sm:inline-flex"
           >
             Request Early Access
             <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
