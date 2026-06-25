@@ -1106,7 +1106,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      active_project_instance_id: { Args: { uid: string }; Returns: string }
     }
     Enums: {
       budget_kind: "planned" | "actual" | "invoice" | "forecast"
