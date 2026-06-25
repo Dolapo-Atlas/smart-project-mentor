@@ -35,6 +35,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import atlasLogo from "@/assets/atlas-logo.png.asset.json";
+import { AutoDemo } from "@/components/auto-demo";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -90,6 +91,7 @@ function Landing() {
       <main>
         <Hero />
         <SocialProof />
+        <AutoDemo />
         <Features />
         <HowItWorks />
         <Experience />
