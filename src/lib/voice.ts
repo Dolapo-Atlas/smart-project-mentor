@@ -60,8 +60,8 @@ const VOICE_MAP: Record<string, string> = {
   "Priya Anand": "sage",
   "James Lin": "verse",
   "CareSoft Ltd": "ash",
-  "Margaret Hollis": "ballad",
-  "Rachel Stone": "ballad",
+  "Margaret Hollis": "nova",
+  "Rachel Stone": "shimmer",
   "Project Update": "coral",
 };
 
