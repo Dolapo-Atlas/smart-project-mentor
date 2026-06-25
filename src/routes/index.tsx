@@ -380,18 +380,25 @@ function SocialProof() {
   const logos = ["PMI", "APM", "Scrum.org", "Microsoft", "Google", "Atlassian"];
   return (
     <section className="border-y border-border/60 bg-card/40 py-14">
-      <div className="mx-auto max-w-7xl px-6 text-center lg:px-10">
+      <div className="mx-auto max-w-7xl px-6 lg:px-10">
         <Reveal>
-          <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">
-            Preparing the next generation of Project Professionals
-          </p>
+          <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/60 px-2.5 py-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-[oklch(0.55_0.12_160)]" />
+              Project: Digital Care Records · Wk 3
+            </span>
+            <span className="hidden h-3 w-px bg-border sm:inline-block" />
+            <span className="uppercase tracking-[0.22em]">
+              Preparing the next generation of project professionals
+            </span>
+          </div>
         </Reveal>
         <Reveal delay={120}>
-          <ul className="mt-8 grid grid-cols-2 items-center gap-x-8 gap-y-6 sm:grid-cols-3 md:grid-cols-6">
+          <ul className="mt-7 grid grid-cols-2 items-center gap-x-8 gap-y-5 sm:grid-cols-3 md:grid-cols-6">
             {logos.map((l) => (
               <li
                 key={l}
-                className="font-display text-lg font-medium tracking-tight text-muted-foreground/70 transition-colors hover:text-foreground"
+                className="text-center font-display text-base font-medium tracking-tight text-muted-foreground/70 transition-colors hover:text-foreground"
               >
                 {l}
               </li>
@@ -712,6 +719,11 @@ function Experience() {
       body: <InboxSlide />,
     },
     {
+      tag: "Team Chat",
+      title: "Sponsors and vendors message you, in real time.",
+      body: <ChatSlide />,
+    },
+    {
       tag: "RAID Log",
       title: "Risks, assumptions, issues, dependencies.",
       body: <RaidSlide />,
@@ -720,6 +732,16 @@ function Experience() {
       tag: "Status Report",
       title: "Weekly status, reviewed like the real thing.",
       body: <StatusSlide />,
+    },
+    {
+      tag: "Gantt",
+      title: "A timeline that slips when you do.",
+      body: <GanttSlide />,
+    },
+    {
+      tag: "Approvals",
+      title: "Phase gates and change control.",
+      body: <ApprovalSlide />,
     },
     {
       tag: "Stakeholder Register",
