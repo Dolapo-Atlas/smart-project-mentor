@@ -12,18 +12,18 @@ import { Mail, Sparkles, CheckCircle2, ArrowUpRight, ArrowDownRight, Pause, Play
 
 // Total beats (in ms from loop start)
 const BEATS = {
-  emailArrive: 600,
-  emailOpen: 2400,
-  tasksAppear: 5600,
-  taskFocus: 7800,
-  submit: 9800,
-  scorecard: 11600,
-  sentiment: 14200,
-  dayAdvance: 17800,
-  reset: 21000,
+  emailArrive: 900,
+  emailOpen: 3400,
+  tasksAppear: 7800,
+  taskFocus: 10800,
+  submit: 13800,
+  scorecard: 16400,
+  sentiment: 20000,
+  dayAdvance: 25000,
+  reset: 29500,
 } as const;
 
-const LOOP_MS = 22000;
+const LOOP_MS = 31000;
 
 export function AutoDemo() {
   const [t, setT] = useState(0);
@@ -76,7 +76,7 @@ export function AutoDemo() {
               Live demo · plays in your browser
             </div>
             <h2 className="mt-3 font-display text-3xl tracking-tight md:text-4xl">
-              A Monday morning at Atlas, in 22 seconds.
+              A Monday morning at Atlas, in 30 seconds.
             </h2>
             <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
               One stakeholder email. Three tasks generated. One submission. The simulation reacts.
@@ -278,6 +278,7 @@ export function AutoDemo() {
                     <SentimentRow name="Margaret Chen" role="Sponsor" delta={+8} initials="MC" tone="up" />
                     <SentimentRow name="Priya Patel" role="Finance" delta={+3} initials="PP" tone="up" />
                     <SentimentRow name="David Okafor" role="Operations" delta={-2} initials="DO" tone="down" />
+                    <SentimentRow name="Rachel Stone" role="Clinical Governance" delta={+5} initials="RS" tone="up" />
                   </div>
                 </div>
               )}
