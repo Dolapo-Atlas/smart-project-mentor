@@ -266,7 +266,7 @@ function Hero() {
                 className="group inline-flex items-center gap-2 rounded-full border border-border bg-card/70 px-6 py-3 text-sm font-medium text-foreground backdrop-blur transition-all hover:-translate-y-0.5 hover:bg-card"
               >
                 <PlayCircle className="h-4 w-4 text-primary" />
-                Watch 90-second Demo
+                See inside the simulation
               </a>
             </div>
           </Reveal>
