@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
-import { Mail, ListChecks, FileText, Gauge, LayoutDashboard, LogOut, ArrowLeft, ShieldAlert, FileBarChart2, Wallet, GitPullRequest, Gavel, Users, Send, Compass, Contact, CheckCircle2, Settings } from "lucide-react";
+import { Mail, ListChecks, FileText, Gauge, LayoutDashboard, LogOut, ArrowLeft, ShieldAlert, FileBarChart2, Wallet, GitPullRequest, Gavel, Users, Send, Compass, Contact, CheckCircle2, Settings, FolderKanban } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -61,6 +61,16 @@ function AppLayout() {
           <div className="mt-1 text-xs uppercase tracking-[0.18em] text-muted-foreground">
             {overview?.state?.project_name ?? "Loading…"}
           </div>
+
+          <Link
+            to="/app/projects"
+            className="mt-3 flex items-center justify-between gap-2 rounded-md border border-dashed border-border bg-card/60 px-3 py-2 text-xs text-foreground/80 transition hover:border-primary hover:text-foreground"
+          >
+            <span className="flex items-center gap-1.5">
+              <FolderKanban className="h-3.5 w-3.5" /> Switch project
+            </span>
+            <ArrowLeft className="h-3 w-3 rotate-180 opacity-50" />
+          </Link>
 
           <nav className="mt-8 grid grid-cols-3 gap-2">
             {NAV.map(({ to, label, icon: Icon, exact }) => {

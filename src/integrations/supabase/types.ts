@@ -20,6 +20,7 @@ export type Database = {
           created_at: string
           document_id: string | null
           id: string
+          project_instance_id: string | null
           recommendations: Json
           score: number | null
           strengths: Json
@@ -32,6 +33,7 @@ export type Database = {
           created_at?: string
           document_id?: string | null
           id?: string
+          project_instance_id?: string | null
           recommendations?: Json
           score?: number | null
           strengths?: Json
@@ -44,6 +46,7 @@ export type Database = {
           created_at?: string
           document_id?: string | null
           id?: string
+          project_instance_id?: string | null
           recommendations?: Json
           score?: number | null
           strengths?: Json
@@ -59,6 +62,13 @@ export type Database = {
             referencedRelation: "documents"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "ai_feedback_project_instance_id_fkey"
+            columns: ["project_instance_id"]
+            isOneToOne: false
+            referencedRelation: "project_instances"
+            referencedColumns: ["id"]
+          },
         ]
       }
       budget_lines: {
@@ -70,6 +80,7 @@ export type Database = {
           id: string
           kind: Database["public"]["Enums"]["budget_kind"]
           line_date: string
+          project_instance_id: string | null
           user_id: string
           vendor: string | null
         }
@@ -81,6 +92,7 @@ export type Database = {
           id?: string
           kind: Database["public"]["Enums"]["budget_kind"]
           line_date?: string
+          project_instance_id?: string | null
           user_id: string
           vendor?: string | null
         }
@@ -92,10 +104,19 @@ export type Database = {
           id?: string
           kind?: Database["public"]["Enums"]["budget_kind"]
           line_date?: string
+          project_instance_id?: string | null
           user_id?: string
           vendor?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "budget_lines_project_instance_id_fkey"
+            columns: ["project_instance_id"]
+            isOneToOne: false
+            referencedRelation: "project_instances"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       change_requests: {
         Row: {
@@ -106,6 +127,7 @@ export type Database = {
           description: string
           id: string
           impact_assessment: string | null
+          project_instance_id: string | null
           requested_by: string
           risk_impact: Database["public"]["Enums"]["cr_risk"]
           schedule_impact_days: number
@@ -122,6 +144,7 @@ export type Database = {
           description: string
           id?: string
           impact_assessment?: string | null
+          project_instance_id?: string | null
           requested_by: string
           risk_impact?: Database["public"]["Enums"]["cr_risk"]
           schedule_impact_days?: number
@@ -138,6 +161,7 @@ export type Database = {
           description?: string
           id?: string
           impact_assessment?: string | null
+          project_instance_id?: string | null
           requested_by?: string
           risk_impact?: Database["public"]["Enums"]["cr_risk"]
           schedule_impact_days?: number
@@ -146,7 +170,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "change_requests_project_instance_id_fkey"
+            columns: ["project_instance_id"]
+            isOneToOne: false
+            referencedRelation: "project_instances"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       comms_messages: {
         Row: {
@@ -160,6 +192,7 @@ export type Database = {
           from_role: string
           id: string
           msg_type: string
+          project_instance_id: string | null
           sentiment: string | null
           subject: string
           thread_id: string
@@ -177,6 +210,7 @@ export type Database = {
           from_role: string
           id?: string
           msg_type: string
+          project_instance_id?: string | null
           sentiment?: string | null
           subject: string
           thread_id?: string
@@ -194,13 +228,22 @@ export type Database = {
           from_role?: string
           id?: string
           msg_type?: string
+          project_instance_id?: string | null
           sentiment?: string | null
           subject?: string
           thread_id?: string
           to_roles?: string[]
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "comms_messages_project_instance_id_fkey"
+            columns: ["project_instance_id"]
+            isOneToOne: false
+            referencedRelation: "project_instances"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       documents: {
         Row: {
@@ -208,6 +251,7 @@ export type Database = {
           created_at: string
           id: string
           mime_type: string | null
+          project_instance_id: string | null
           quality_score: number | null
           size_bytes: number | null
           status: string
@@ -220,6 +264,7 @@ export type Database = {
           created_at?: string
           id?: string
           mime_type?: string | null
+          project_instance_id?: string | null
           quality_score?: number | null
           size_bytes?: number | null
           status?: string
@@ -232,6 +277,7 @@ export type Database = {
           created_at?: string
           id?: string
           mime_type?: string | null
+          project_instance_id?: string | null
           quality_score?: number | null
           size_bytes?: number | null
           status?: string
@@ -239,7 +285,15 @@ export type Database = {
           title?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "documents_project_instance_id_fkey"
+            columns: ["project_instance_id"]
+            isOneToOne: false
+            referencedRelation: "project_instances"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       early_access_signups: {
         Row: {
@@ -277,6 +331,7 @@ export type Database = {
           created_at: string
           escalated_at: string | null
           id: string
+          project_instance_id: string | null
           read: boolean
           sender_name: string
           sender_role: string
@@ -289,6 +344,7 @@ export type Database = {
           created_at?: string
           escalated_at?: string | null
           id?: string
+          project_instance_id?: string | null
           read?: boolean
           sender_name: string
           sender_role: string
@@ -301,6 +357,7 @@ export type Database = {
           created_at?: string
           escalated_at?: string | null
           id?: string
+          project_instance_id?: string | null
           read?: boolean
           sender_name?: string
           sender_role?: string
@@ -308,7 +365,15 @@ export type Database = {
           tone?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "inbox_messages_project_instance_id_fkey"
+            columns: ["project_instance_id"]
+            isOneToOne: false
+            referencedRelation: "project_instances"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       meetings: {
         Row: {
@@ -322,6 +387,7 @@ export type Database = {
           kind: Database["public"]["Enums"]["meeting_kind"]
           minutes: string | null
           minutes_sent_at: string | null
+          project_instance_id: string | null
           scheduled_at: string
           title: string
           transcript: Json
@@ -339,6 +405,7 @@ export type Database = {
           kind: Database["public"]["Enums"]["meeting_kind"]
           minutes?: string | null
           minutes_sent_at?: string | null
+          project_instance_id?: string | null
           scheduled_at?: string
           title: string
           transcript?: Json
@@ -356,13 +423,22 @@ export type Database = {
           kind?: Database["public"]["Enums"]["meeting_kind"]
           minutes?: string | null
           minutes_sent_at?: string | null
+          project_instance_id?: string | null
           scheduled_at?: string
           title?: string
           transcript?: Json
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "meetings_project_instance_id_fkey"
+            columns: ["project_instance_id"]
+            isOneToOne: false
+            referencedRelation: "project_instances"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       phase_gates: {
         Row: {
@@ -372,6 +448,7 @@ export type Database = {
           id: string
           opened_at: string | null
           phase: Database["public"]["Enums"]["gate_phase"]
+          project_instance_id: string | null
           score: number | null
           status: Database["public"]["Enums"]["gate_status"]
           updated_at: string
@@ -384,6 +461,7 @@ export type Database = {
           id?: string
           opened_at?: string | null
           phase: Database["public"]["Enums"]["gate_phase"]
+          project_instance_id?: string | null
           score?: number | null
           status?: Database["public"]["Enums"]["gate_status"]
           updated_at?: string
@@ -396,12 +474,21 @@ export type Database = {
           id?: string
           opened_at?: string | null
           phase?: Database["public"]["Enums"]["gate_phase"]
+          project_instance_id?: string | null
           score?: number | null
           status?: Database["public"]["Enums"]["gate_status"]
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "phase_gates_project_instance_id_fkey"
+            columns: ["project_instance_id"]
+            isOneToOne: false
+            referencedRelation: "project_instances"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -409,6 +496,7 @@ export type Database = {
           company: string
           country: string | null
           created_at: string
+          current_project_instance_id: string | null
           display_name: string | null
           first_name: string | null
           id: string
@@ -425,6 +513,7 @@ export type Database = {
           company?: string
           country?: string | null
           created_at?: string
+          current_project_instance_id?: string | null
           display_name?: string | null
           first_name?: string | null
           id: string
@@ -441,6 +530,7 @@ export type Database = {
           company?: string
           country?: string | null
           created_at?: string
+          current_project_instance_id?: string | null
           display_name?: string | null
           first_name?: string | null
           id?: string
@@ -451,6 +541,124 @@ export type Database = {
           project_name?: string
           role?: string
           start_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_current_project_instance_id_fkey"
+            columns: ["current_project_instance_id"]
+            isOneToOne: false
+            referencedRelation: "project_instances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_instances: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          current_phase: string
+          display_name: string | null
+          id: string
+          last_active_at: string
+          progress_pct: number
+          seeded: boolean
+          started_at: string
+          status: string
+          template_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          current_phase?: string
+          display_name?: string | null
+          id?: string
+          last_active_at?: string
+          progress_pct?: number
+          seeded?: boolean
+          started_at?: string
+          status?: string
+          template_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          current_phase?: string
+          display_name?: string | null
+          id?: string
+          last_active_at?: string
+          progress_pct?: number
+          seeded?: boolean
+          started_at?: string
+          status?: string
+          template_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_instances_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "project_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_templates: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          difficulty: string
+          duration_days: number
+          icon: string
+          id: string
+          is_playable: boolean
+          is_recommended: boolean
+          key_skills: string[]
+          slug: string
+          sort_order: number
+          stakeholder_count: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description: string
+          difficulty: string
+          duration_days: number
+          icon?: string
+          id?: string
+          is_playable?: boolean
+          is_recommended?: boolean
+          key_skills?: string[]
+          slug: string
+          sort_order?: number
+          stakeholder_count: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          difficulty?: string
+          duration_days?: number
+          icon?: string
+          id?: string
+          is_playable?: boolean
+          is_recommended?: boolean
+          key_skills?: string[]
+          slug?: string
+          sort_order?: number
+          stakeholder_count?: number
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -464,6 +672,7 @@ export type Database = {
           likelihood: Database["public"]["Enums"]["raid_severity"]
           mitigation: string | null
           owner: string | null
+          project_instance_id: string | null
           severity: Database["public"]["Enums"]["raid_severity"]
           status: Database["public"]["Enums"]["raid_status"]
           title: string
@@ -479,6 +688,7 @@ export type Database = {
           likelihood?: Database["public"]["Enums"]["raid_severity"]
           mitigation?: string | null
           owner?: string | null
+          project_instance_id?: string | null
           severity?: Database["public"]["Enums"]["raid_severity"]
           status?: Database["public"]["Enums"]["raid_status"]
           title: string
@@ -494,13 +704,22 @@ export type Database = {
           likelihood?: Database["public"]["Enums"]["raid_severity"]
           mitigation?: string | null
           owner?: string | null
+          project_instance_id?: string | null
           severity?: Database["public"]["Enums"]["raid_severity"]
           status?: Database["public"]["Enums"]["raid_status"]
           title?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "raid_items_project_instance_id_fkey"
+            columns: ["project_instance_id"]
+            isOneToOne: false
+            referencedRelation: "project_instances"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reflection_entries: {
         Row: {
@@ -508,6 +727,7 @@ export type Database = {
           created_at: string
           id: string
           phase: number | null
+          project_instance_id: string | null
           prompt: string
           user_id: string
         }
@@ -516,6 +736,7 @@ export type Database = {
           created_at?: string
           id?: string
           phase?: number | null
+          project_instance_id?: string | null
           prompt: string
           user_id: string
         }
@@ -524,10 +745,19 @@ export type Database = {
           created_at?: string
           id?: string
           phase?: number | null
+          project_instance_id?: string | null
           prompt?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "reflection_entries_project_instance_id_fkey"
+            columns: ["project_instance_id"]
+            isOneToOne: false
+            referencedRelation: "project_instances"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       simulation_state: {
         Row: {
@@ -542,6 +772,7 @@ export type Database = {
           performance: Json
           phase: string
           progress: number
+          project_instance_id: string | null
           project_name: string
           reputation: number
           story_log: Json
@@ -560,6 +791,7 @@ export type Database = {
           performance?: Json
           phase?: string
           progress?: number
+          project_instance_id?: string | null
           project_name?: string
           reputation?: number
           story_log?: Json
@@ -578,13 +810,22 @@ export type Database = {
           performance?: Json
           phase?: string
           progress?: number
+          project_instance_id?: string | null
           project_name?: string
           reputation?: number
           story_log?: Json
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "simulation_state_project_instance_id_fkey"
+            columns: ["project_instance_id"]
+            isOneToOne: false
+            referencedRelation: "project_instances"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       stakeholder_relationships: {
         Row: {
@@ -594,6 +835,7 @@ export type Database = {
           interaction_count: number
           last_interaction: string | null
           notes: string
+          project_instance_id: string | null
           role: string
           sentiment: number
           stakeholder_name: string
@@ -607,6 +849,7 @@ export type Database = {
           interaction_count?: number
           last_interaction?: string | null
           notes?: string
+          project_instance_id?: string | null
           role?: string
           sentiment?: number
           stakeholder_name: string
@@ -620,13 +863,22 @@ export type Database = {
           interaction_count?: number
           last_interaction?: string | null
           notes?: string
+          project_instance_id?: string | null
           role?: string
           sentiment?: number
           stakeholder_name?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "stakeholder_relationships_project_instance_id_fkey"
+            columns: ["project_instance_id"]
+            isOneToOne: false
+            referencedRelation: "project_instances"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       status_reports: {
         Row: {
@@ -636,6 +888,7 @@ export type Database = {
           created_at: string
           id: string
           next_week: string | null
+          project_instance_id: string | null
           rag_summary: Database["public"]["Enums"]["rag_status"]
           risks_blockers: string | null
           submitted_at: string | null
@@ -650,6 +903,7 @@ export type Database = {
           created_at?: string
           id?: string
           next_week?: string | null
+          project_instance_id?: string | null
           rag_summary?: Database["public"]["Enums"]["rag_status"]
           risks_blockers?: string | null
           submitted_at?: string | null
@@ -664,6 +918,7 @@ export type Database = {
           created_at?: string
           id?: string
           next_week?: string | null
+          project_instance_id?: string | null
           rag_summary?: Database["public"]["Enums"]["rag_status"]
           risks_blockers?: string | null
           submitted_at?: string | null
@@ -671,7 +926,15 @@ export type Database = {
           user_id?: string
           week_start?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "status_reports_project_instance_id_fkey"
+            columns: ["project_instance_id"]
+            isOneToOne: false
+            referencedRelation: "project_instances"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tasks: {
         Row: {
@@ -689,6 +952,7 @@ export type Database = {
           linked_module_route: string | null
           linked_stakeholder: string | null
           priority: string
+          project_instance_id: string | null
           source: string
           source_ref: string | null
           status: string
@@ -712,6 +976,7 @@ export type Database = {
           linked_module_route?: string | null
           linked_stakeholder?: string | null
           priority?: string
+          project_instance_id?: string | null
           source?: string
           source_ref?: string | null
           status?: string
@@ -735,6 +1000,7 @@ export type Database = {
           linked_module_route?: string | null
           linked_stakeholder?: string | null
           priority?: string
+          project_instance_id?: string | null
           source?: string
           source_ref?: string | null
           status?: string
@@ -743,7 +1009,15 @@ export type Database = {
           title?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tasks_project_instance_id_fkey"
+            columns: ["project_instance_id"]
+            isOneToOne: false
+            referencedRelation: "project_instances"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_competencies: {
         Row: {
@@ -751,6 +1025,7 @@ export type Database = {
           created_at: string
           id: string
           mastered_at: string | null
+          project_instance_id: string | null
           status: string
           unlocked_at: string | null
           updated_at: string
@@ -761,6 +1036,7 @@ export type Database = {
           created_at?: string
           id?: string
           mastered_at?: string | null
+          project_instance_id?: string | null
           status?: string
           unlocked_at?: string | null
           updated_at?: string
@@ -771,18 +1047,28 @@ export type Database = {
           created_at?: string
           id?: string
           mastered_at?: string | null
+          project_instance_id?: string | null
           status?: string
           unlocked_at?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_competencies_project_instance_id_fkey"
+            columns: ["project_instance_id"]
+            isOneToOne: false
+            referencedRelation: "project_instances"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       workstream_rag: {
         Row: {
           area: Database["public"]["Enums"]["workstream_area"]
           id: string
           note: string | null
+          project_instance_id: string | null
           rag: Database["public"]["Enums"]["rag_status"]
           updated_at: string
           user_id: string
@@ -791,6 +1077,7 @@ export type Database = {
           area: Database["public"]["Enums"]["workstream_area"]
           id?: string
           note?: string | null
+          project_instance_id?: string | null
           rag?: Database["public"]["Enums"]["rag_status"]
           updated_at?: string
           user_id: string
@@ -799,11 +1086,20 @@ export type Database = {
           area?: Database["public"]["Enums"]["workstream_area"]
           id?: string
           note?: string | null
+          project_instance_id?: string | null
           rag?: Database["public"]["Enums"]["rag_status"]
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "workstream_rag_project_instance_id_fkey"
+            columns: ["project_instance_id"]
+            isOneToOne: false
+            referencedRelation: "project_instances"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
