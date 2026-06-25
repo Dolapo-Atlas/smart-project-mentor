@@ -1126,10 +1126,11 @@ function ApprovalSlide() {
 
 function WhyAtlas() {
   const rows = [
-    { bad: "Memorise theory", good: "Make real decisions" },
-    { bad: "Read templates", good: "Build actual documents" },
-    { bad: "Multiple choice", good: "Workplace simulation" },
-    { bad: "Generic feedback", good: "Stakeholder consequences" },
+    { bad: "Read about projects", good: "Run projects" },
+    { bad: "Watch videos", good: "Make decisions" },
+    { bad: "Take quizzes", good: "Handle stakeholders" },
+    { bad: "Study templates", good: "Build real documents" },
+    { bad: "Earn certificates", good: "Gain experience" },
   ];
   return (
     <section className="py-28 sm:py-36">
