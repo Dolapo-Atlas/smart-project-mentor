@@ -1022,6 +1022,104 @@ function CharterSlide() {
   );
 }
 
+function ChatSlide() {
+  const msgs = [
+    { who: "Margaret Chen", role: "Sponsor", side: "left", text: "Are we still tracking green for Friday?", time: "09:14" },
+    { who: "You", role: "Coordinator", side: "right", text: "Amber. RAID refresh slipped — owner reassigned, mitigations in by 4pm.", time: "09:16" },
+    { who: "Raj Patel", role: "PMO", side: "left", text: "Need the status pack 24h before the board call please.", time: "09:18" },
+  ];
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between rounded-lg border border-border/60 bg-background/60 px-3 py-1.5 text-[11px] text-muted-foreground">
+        <span># project-care-records</span>
+        <span>3 online</span>
+      </div>
+      {msgs.map((m, i) => (
+        <div key={i} className={`flex ${m.side === "right" ? "justify-end" : "justify-start"}`}>
+          <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${m.side === "right" ? "rounded-br-sm bg-primary text-primary-foreground" : "rounded-bl-sm border border-border/60 bg-background/70"}`}>
+            <div className={`mb-0.5 text-[10px] uppercase tracking-wider ${m.side === "right" ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
+              {m.who} · {m.role} · {m.time}
+            </div>
+            <p className="leading-snug">{m.text}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function GanttSlide() {
+  const rows = [
+    { k: "Initiation", start: 0, len: 18, state: "done" },
+    { k: "Planning", start: 14, len: 26, state: "done" },
+    { k: "Pilot rollout", start: 36, len: 30, state: "now" },
+    { k: "Full rollout", start: 62, len: 26, state: "next" },
+    { k: "Closure", start: 84, len: 14, state: "next" },
+  ];
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between rounded-lg border border-border/60 bg-background/60 px-3 py-1.5 text-[11px] text-muted-foreground">
+        <span>Timeline · 6 months</span>
+        <span>Today · Wk 12</span>
+      </div>
+      <div className="space-y-1.5">
+        {rows.map((r) => {
+          const color =
+            r.state === "done"
+              ? "bg-[oklch(0.55_0.12_160)]/70"
+              : r.state === "now"
+                ? "bg-primary"
+                : "bg-border";
+          return (
+            <div key={r.k} className="grid grid-cols-[110px_1fr] items-center gap-2">
+              <span className="truncate text-[11px] text-muted-foreground">{r.k}</span>
+              <div className="relative h-3 rounded-full bg-background/60 ring-1 ring-border/60">
+                <div
+                  className={`absolute top-0 h-3 rounded-full ${color}`}
+                  style={{ left: `${r.start}%`, width: `${r.len}%` }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ApprovalSlide() {
+  const steps = [
+    { who: "Coordinator", state: "done", note: "Submitted" },
+    { who: "PMO · Raj Patel", state: "done", note: "Reviewed" },
+    { who: "Sponsor · Margaret Chen", state: "now", note: "Pending sign-off" },
+    { who: "Governance Board", state: "next", note: "Queued" },
+  ];
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between rounded-lg border border-border/60 bg-background/60 px-3 py-1.5 text-[11px]">
+        <span className="text-muted-foreground">Change Request · CR-014</span>
+        <span className="rounded-full bg-primary/15 px-2 py-0.5 text-primary">In review</span>
+      </div>
+      <ol className="space-y-1.5">
+        {steps.map((s, i) => {
+          const cls =
+            s.state === "done"
+              ? "border-[oklch(0.55_0.12_160)]/30 bg-[oklch(0.55_0.12_160)]/10 text-[oklch(0.4_0.12_160)]"
+              : s.state === "now"
+                ? "border-primary/30 bg-primary/10 text-primary"
+                : "border-border/60 bg-background/60 text-muted-foreground";
+          return (
+            <li key={i} className={`flex items-center justify-between rounded-lg border px-3 py-2 text-[12px] ${cls}`}>
+              <span className="font-display">{s.who}</span>
+              <span className="text-[10px] uppercase tracking-wider opacity-80">{s.note}</span>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /*  Why Atlas                                                          */
 /* ------------------------------------------------------------------ */
