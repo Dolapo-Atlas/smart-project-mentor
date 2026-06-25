@@ -380,18 +380,25 @@ function SocialProof() {
   const logos = ["PMI", "APM", "Scrum.org", "Microsoft", "Google", "Atlassian"];
   return (
     <section className="border-y border-border/60 bg-card/40 py-14">
-      <div className="mx-auto max-w-7xl px-6 text-center lg:px-10">
+      <div className="mx-auto max-w-7xl px-6 lg:px-10">
         <Reveal>
-          <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">
-            Preparing the next generation of Project Professionals
-          </p>
+          <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/60 px-2.5 py-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-[oklch(0.55_0.12_160)]" />
+              Project: Digital Care Records · Wk 3
+            </span>
+            <span className="hidden h-3 w-px bg-border sm:inline-block" />
+            <span className="uppercase tracking-[0.22em]">
+              Preparing the next generation of project professionals
+            </span>
+          </div>
         </Reveal>
         <Reveal delay={120}>
-          <ul className="mt-8 grid grid-cols-2 items-center gap-x-8 gap-y-6 sm:grid-cols-3 md:grid-cols-6">
+          <ul className="mt-7 grid grid-cols-2 items-center gap-x-8 gap-y-5 sm:grid-cols-3 md:grid-cols-6">
             {logos.map((l) => (
               <li
                 key={l}
-                className="font-display text-lg font-medium tracking-tight text-muted-foreground/70 transition-colors hover:text-foreground"
+                className="text-center font-display text-base font-medium tracking-tight text-muted-foreground/70 transition-colors hover:text-foreground"
               >
                 {l}
               </li>
@@ -404,16 +411,58 @@ function SocialProof() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Features                                                           */
+/*  Features — every card is a real product surface                    */
 /* ------------------------------------------------------------------ */
 
-const FEATURES = [
-  { icon: Mail, title: "Real stakeholder inbox", body: "Sponsors, finance, vendors, governance — each writes in character. They remember what you ignore." },
-  { icon: FileText, title: "Real project documentation", body: "Draft Charters, RAID Logs, Status Reports and Stakeholder Registers as actual deliverables." },
-  { icon: Sparkles, title: "AI workplace review", body: "Workplace-grade AI scores your work on clarity, completeness, professionalism and governance." },
-  { icon: GitBranch, title: "Decision consequences", body: "Every reply, every late deliverable shapes the project. The story bends to your choices." },
-  { icon: Users, title: "Stakeholder management", body: "Track sentiment, manage expectations and recover relationships when things go sideways." },
-  { icon: ShieldCheck, title: "Project governance", body: "Phase gates, change control, status reporting — the rituals real PMOs actually run." },
+const FEATURES: Array<{
+  icon: React.ComponentType<{ className?: string }>;
+  tag: string;
+  title: string;
+  body: string;
+  preview: React.ReactNode;
+}> = [
+  {
+    icon: Mail,
+    tag: "Inbox",
+    title: "A live stakeholder inbox.",
+    body: "Sponsors, finance, vendors, governance — each writes in character. They remember what you ignore.",
+    preview: <PreviewInbox />,
+  },
+  {
+    icon: FileText,
+    tag: "Charter",
+    title: "Real project documentation.",
+    body: "Charters, RAID logs, status reports, stakeholder registers — drafted as actual deliverables.",
+    preview: <PreviewCharter />,
+  },
+  {
+    icon: Sparkles,
+    tag: "AI Review",
+    title: "Workplace-grade AI panel.",
+    body: "Every artefact gets a structured review across clarity, completeness, governance and professionalism.",
+    preview: <PreviewAiReview />,
+  },
+  {
+    icon: GitBranch,
+    tag: "Decisions",
+    title: "Decisions with consequences.",
+    body: "Every reply, every late deliverable shapes the project. The story — and your reputation — bends with you.",
+    preview: <PreviewDecision />,
+  },
+  {
+    icon: Users,
+    tag: "Stakeholders",
+    title: "Stakeholder management.",
+    body: "Track sentiment and influence. Recover relationships before the Friday call.",
+    preview: <PreviewStakeholders />,
+  },
+  {
+    icon: ShieldCheck,
+    tag: "Governance",
+    title: "Project governance & gates.",
+    body: "Phase gates, change control, weekly reporting — the rituals real PMOs actually run.",
+    preview: <PreviewGate />,
+  },
 ];
 
 function Features() {
@@ -421,28 +470,30 @@ function Features() {
     <section id="features" className="py-28 sm:py-36">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
         <SectionHeader
-          eyebrow="Features"
-          title="Built to feel like the job, not a course."
-          subtitle="Every surface in Atlas is a workplace surface. No multiple choice. No scripts. Just the work."
+          eyebrow="The product"
+          title="You're not reading about project management. You're already doing it."
+          subtitle="Every surface in Atlas is a workplace surface. No quizzes, no theory cards — just the tools your first PM job will hand you on day one."
         />
         <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {FEATURES.map(({ icon: Icon, title, body }, i) => (
+          {FEATURES.map(({ icon: Icon, tag, title, body, preview }, i) => (
             <Reveal key={title} delay={i * 60}>
-              <article className="group relative h-full overflow-hidden rounded-2xl border border-border bg-card/70 p-7 backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:bg-card hover:shadow-[0_24px_60px_-30px_rgba(40,30,15,0.25)]">
-                <div
-                  aria-hidden
-                  className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-                  style={{
-                    background:
-                      "radial-gradient(60% 50% at 50% 0%, color-mix(in oklab, var(--primary) 10%, transparent), transparent 70%)",
-                  }}
-                />
-                <div className="relative">
-                  <div className="inline-grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20">
-                    <Icon className="h-5 w-5" />
+              <article className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card/70 backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-[0_28px_70px_-30px_rgba(40,30,15,0.3)]">
+                <div className="border-b border-border/60 bg-background/40 px-4 py-2.5">
+                  <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[oklch(0.65_0.18_25)]/70" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-[oklch(0.78_0.14_85)]/80" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-[oklch(0.7_0.14_160)]/70" />
+                    <span className="ml-2">atlas · {tag.toLowerCase()}</span>
                   </div>
-                  <h3 className="mt-5 font-display text-xl font-medium tracking-tight">{title}</h3>
-                  <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">{body}</p>
+                </div>
+                <div className="relative px-5 pt-5 pb-1">{preview}</div>
+                <div className="mt-auto px-6 pb-6 pt-5">
+                  <div className="flex items-center gap-2 text-primary">
+                    <Icon className="h-4 w-4" />
+                    <span className="text-xs uppercase tracking-[0.16em]">{tag}</span>
+                  </div>
+                  <h3 className="mt-2 font-display text-lg font-medium tracking-tight">{title}</h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{body}</p>
                 </div>
               </article>
             </Reveal>
@@ -450,6 +501,159 @@ function Features() {
         </div>
       </div>
     </section>
+  );
+}
+
+/* --- mini product previews ----------------------------------------- */
+
+function PreviewInbox() {
+  const items = [
+    { who: "MC", from: "Margaret Chen", sub: "Friday Status Report", tone: "Urgent", color: "bg-[oklch(0.62_0.18_25)]/15 text-[oklch(0.45_0.18_25)]" },
+    { who: "RP", from: "Raj Patel", sub: "RAID log overdue", tone: "Action", color: "bg-primary/15 text-primary" },
+    { who: "PA", from: "Priya Anand", sub: "Budget variance", tone: "FYI", color: "bg-[oklch(0.55_0.12_160)]/15 text-[oklch(0.4_0.12_160)]" },
+  ];
+  return (
+    <ul className="space-y-1.5">
+      {items.map((m) => (
+        <li key={m.sub} className="flex items-center gap-3 rounded-lg border border-border/60 bg-background/60 px-2.5 py-2">
+          <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-secondary text-[10px] font-semibold">{m.who}</span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[11px] text-muted-foreground">{m.from}</p>
+            <p className="truncate font-display text-[13px]">{m.sub}</p>
+          </div>
+          <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wider ${m.color}`}>{m.tone}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function PreviewCharter() {
+  const rows = [
+    { k: "Project", v: "Digital Care Records" },
+    { k: "Sponsor", v: "Margaret Chen" },
+    { k: "Budget", v: "£500,000" },
+    { k: "Timeline", v: "6 months · 12 sites" },
+  ];
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between rounded-lg border border-border/60 bg-background/60 px-3 py-1.5 text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+        <span>Charter · v0.4</span>
+        <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] text-primary">in review</span>
+      </div>
+      {rows.map((r) => (
+        <div key={r.k} className="flex items-baseline justify-between rounded-lg border border-border/60 bg-background/60 px-3 py-1.5">
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{r.k}</span>
+          <span className="font-display text-[12px]">{r.v}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function PreviewAiReview() {
+  const scores = [
+    { k: "Clarity", v: 82 },
+    { k: "Completeness", v: 68 },
+    { k: "Governance", v: 57 },
+  ];
+  return (
+    <div className="space-y-2.5">
+      {scores.map((s) => (
+        <div key={s.k}>
+          <div className="mb-0.5 flex justify-between text-[11px] text-muted-foreground">
+            <span>{s.k}</span>
+            <span className="tabular-nums text-foreground">{s.v}</span>
+          </div>
+          <div className="h-1 w-full overflow-hidden rounded-full bg-border/60">
+            <div className="h-full bg-primary" style={{ width: `${s.v}%` }} />
+          </div>
+        </div>
+      ))}
+      <p className="rounded-lg border border-border/60 bg-background/60 p-2 text-[11px] italic leading-snug text-muted-foreground">
+        "Risk section omits mitigation owners. Sponsor will press on this Friday."
+      </p>
+    </div>
+  );
+}
+
+function PreviewDecision() {
+  return (
+    <div className="space-y-2">
+      <div className="rounded-lg border border-border/60 bg-background/60 px-3 py-2 text-[12px]">
+        <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
+          <span>Decision</span>
+          <span>2 outcomes</span>
+        </div>
+        <p className="mt-1 font-display">Delay sprint 4 by 1 week?</p>
+      </div>
+      <div className="flex items-center justify-between rounded-lg border border-[oklch(0.62_0.18_25)]/30 bg-[oklch(0.62_0.18_25)]/10 px-3 py-1.5 text-[11px] text-[oklch(0.45_0.18_25)]">
+        <span>Sponsor confidence</span>
+        <span className="tabular-nums">−12</span>
+      </div>
+      <div className="flex items-center justify-between rounded-lg border border-[oklch(0.55_0.12_160)]/30 bg-[oklch(0.55_0.12_160)]/10 px-3 py-1.5 text-[11px] text-[oklch(0.4_0.12_160)]">
+        <span>Vendor relationship</span>
+        <span className="tabular-nums">+8</span>
+      </div>
+    </div>
+  );
+}
+
+function PreviewStakeholders() {
+  const ppl = [
+    { n: "Margaret Chen", r: "Sponsor", s: 72 },
+    { n: "Raj Patel", r: "PMO", s: 54 },
+    { n: "Priya Anand", r: "Finance", s: 38 },
+  ];
+  return (
+    <ul className="space-y-2">
+      {ppl.map((p) => (
+        <li key={p.n} className="rounded-lg border border-border/60 bg-background/60 px-2.5 py-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[12px] font-medium">{p.n}</p>
+              <p className="text-[10px] text-muted-foreground">{p.r}</p>
+            </div>
+            <span className="tabular-nums text-[10px] text-muted-foreground">{p.s}/100</span>
+          </div>
+          <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-border/60">
+            <div className="h-full bg-primary" style={{ width: `${p.s}%` }} />
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function PreviewGate() {
+  const gates = [
+    { k: "Initiation", state: "done" },
+    { k: "Planning", state: "done" },
+    { k: "Execution", state: "now" },
+    { k: "Go-Live", state: "next" },
+  ];
+  return (
+    <ol className="space-y-1.5">
+      {gates.map((g) => {
+        const cls =
+          g.state === "done"
+            ? "bg-[oklch(0.55_0.12_160)]/12 text-[oklch(0.4_0.12_160)] border-[oklch(0.55_0.12_160)]/30"
+            : g.state === "now"
+              ? "bg-primary/15 text-primary border-primary/30"
+              : "bg-background/60 text-muted-foreground border-border/60";
+        const dot =
+          g.state === "done" ? "bg-[oklch(0.55_0.12_160)]" : g.state === "now" ? "bg-primary animate-pulse" : "bg-border";
+        return (
+          <li key={g.k} className={`flex items-center gap-3 rounded-lg border px-3 py-1.5 text-[12px] ${cls}`}>
+            <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
+            <span className="font-display">{g.k}</span>
+            <span className="ml-auto text-[10px] uppercase tracking-wider opacity-75">
+              {g.state === "done" ? "passed" : g.state === "now" ? "in gate" : "queued"}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
   );
 }
 
@@ -515,6 +719,11 @@ function Experience() {
       body: <InboxSlide />,
     },
     {
+      tag: "Team Chat",
+      title: "Sponsors and vendors message you, in real time.",
+      body: <ChatSlide />,
+    },
+    {
       tag: "RAID Log",
       title: "Risks, assumptions, issues, dependencies.",
       body: <RaidSlide />,
@@ -523,6 +732,16 @@ function Experience() {
       tag: "Status Report",
       title: "Weekly status, reviewed like the real thing.",
       body: <StatusSlide />,
+    },
+    {
+      tag: "Gantt",
+      title: "A timeline that slips when you do.",
+      body: <GanttSlide />,
+    },
+    {
+      tag: "Approvals",
+      title: "Phase gates and change control.",
+      body: <ApprovalSlide />,
     },
     {
       tag: "Stakeholder Register",
@@ -799,6 +1018,104 @@ function CharterSlide() {
           <span className="font-display text-sm">{r.v}</span>
         </div>
       ))}
+    </div>
+  );
+}
+
+function ChatSlide() {
+  const msgs = [
+    { who: "Margaret Chen", role: "Sponsor", side: "left", text: "Are we still tracking green for Friday?", time: "09:14" },
+    { who: "You", role: "Coordinator", side: "right", text: "Amber. RAID refresh slipped — owner reassigned, mitigations in by 4pm.", time: "09:16" },
+    { who: "Raj Patel", role: "PMO", side: "left", text: "Need the status pack 24h before the board call please.", time: "09:18" },
+  ];
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between rounded-lg border border-border/60 bg-background/60 px-3 py-1.5 text-[11px] text-muted-foreground">
+        <span># project-care-records</span>
+        <span>3 online</span>
+      </div>
+      {msgs.map((m, i) => (
+        <div key={i} className={`flex ${m.side === "right" ? "justify-end" : "justify-start"}`}>
+          <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${m.side === "right" ? "rounded-br-sm bg-primary text-primary-foreground" : "rounded-bl-sm border border-border/60 bg-background/70"}`}>
+            <div className={`mb-0.5 text-[10px] uppercase tracking-wider ${m.side === "right" ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
+              {m.who} · {m.role} · {m.time}
+            </div>
+            <p className="leading-snug">{m.text}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function GanttSlide() {
+  const rows = [
+    { k: "Initiation", start: 0, len: 18, state: "done" },
+    { k: "Planning", start: 14, len: 26, state: "done" },
+    { k: "Pilot rollout", start: 36, len: 30, state: "now" },
+    { k: "Full rollout", start: 62, len: 26, state: "next" },
+    { k: "Closure", start: 84, len: 14, state: "next" },
+  ];
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between rounded-lg border border-border/60 bg-background/60 px-3 py-1.5 text-[11px] text-muted-foreground">
+        <span>Timeline · 6 months</span>
+        <span>Today · Wk 12</span>
+      </div>
+      <div className="space-y-1.5">
+        {rows.map((r) => {
+          const color =
+            r.state === "done"
+              ? "bg-[oklch(0.55_0.12_160)]/70"
+              : r.state === "now"
+                ? "bg-primary"
+                : "bg-border";
+          return (
+            <div key={r.k} className="grid grid-cols-[110px_1fr] items-center gap-2">
+              <span className="truncate text-[11px] text-muted-foreground">{r.k}</span>
+              <div className="relative h-3 rounded-full bg-background/60 ring-1 ring-border/60">
+                <div
+                  className={`absolute top-0 h-3 rounded-full ${color}`}
+                  style={{ left: `${r.start}%`, width: `${r.len}%` }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ApprovalSlide() {
+  const steps = [
+    { who: "Coordinator", state: "done", note: "Submitted" },
+    { who: "PMO · Raj Patel", state: "done", note: "Reviewed" },
+    { who: "Sponsor · Margaret Chen", state: "now", note: "Pending sign-off" },
+    { who: "Governance Board", state: "next", note: "Queued" },
+  ];
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between rounded-lg border border-border/60 bg-background/60 px-3 py-1.5 text-[11px]">
+        <span className="text-muted-foreground">Change Request · CR-014</span>
+        <span className="rounded-full bg-primary/15 px-2 py-0.5 text-primary">In review</span>
+      </div>
+      <ol className="space-y-1.5">
+        {steps.map((s, i) => {
+          const cls =
+            s.state === "done"
+              ? "border-[oklch(0.55_0.12_160)]/30 bg-[oklch(0.55_0.12_160)]/10 text-[oklch(0.4_0.12_160)]"
+              : s.state === "now"
+                ? "border-primary/30 bg-primary/10 text-primary"
+                : "border-border/60 bg-background/60 text-muted-foreground";
+          return (
+            <li key={i} className={`flex items-center justify-between rounded-lg border px-3 py-2 text-[12px] ${cls}`}>
+              <span className="font-display">{s.who}</span>
+              <span className="text-[10px] uppercase tracking-wider opacity-80">{s.note}</span>
+            </li>
+          );
+        })}
+      </ol>
     </div>
   );
 }
