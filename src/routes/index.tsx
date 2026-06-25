@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/carousel";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import atlasLogo from "@/assets/atlas-logo.png.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
