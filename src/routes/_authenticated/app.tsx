@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { GuidedTour } from "@/components/guided-tour";
+import { LearningDrawer } from "@/components/learning-drawer";
 
 export const Route = createFileRoute("/_authenticated/app")({
   component: AppLayout,
@@ -180,6 +181,7 @@ function AppLayout() {
           onDone={() => setTourDismissed(true)}
         />
       )}
+      {active && <LearningDrawer />}
     </div>
   );
 }
