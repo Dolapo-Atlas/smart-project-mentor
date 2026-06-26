@@ -35,6 +35,7 @@ import { Route as AuthenticatedAppCompletedRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppCommsRouteImport } from './routes/_authenticated/app.comms'
 import { Route as AuthenticatedAppChangesRouteImport } from './routes/_authenticated/app.changes'
 import { Route as AuthenticatedAppBudgetRouteImport } from './routes/_authenticated/app.budget'
+import { Route as AuthenticatedAdminSignupsRouteImport } from './routes/_authenticated/admin.signups'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -174,6 +175,12 @@ const AuthenticatedAppBudgetRoute = AuthenticatedAppBudgetRouteImport.update({
   path: '/budget',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAdminSignupsRoute =
+  AuthenticatedAdminSignupsRouteImport.update({
+    id: '/admin/signups',
+    path: '/admin/signups',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -181,6 +188,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/welcome': typeof AuthenticatedWelcomeRoute
+  '/admin/signups': typeof AuthenticatedAdminSignupsRoute
   '/app/budget': typeof AuthenticatedAppBudgetRoute
   '/app/changes': typeof AuthenticatedAppChangesRoute
   '/app/comms': typeof AuthenticatedAppCommsRoute
@@ -207,6 +215,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/welcome': typeof AuthenticatedWelcomeRoute
+  '/admin/signups': typeof AuthenticatedAdminSignupsRoute
   '/app/budget': typeof AuthenticatedAppBudgetRoute
   '/app/changes': typeof AuthenticatedAppChangesRoute
   '/app/comms': typeof AuthenticatedAppCommsRoute
@@ -236,6 +245,7 @@ export interface FileRoutesById {
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/welcome': typeof AuthenticatedWelcomeRoute
+  '/_authenticated/admin/signups': typeof AuthenticatedAdminSignupsRoute
   '/_authenticated/app/budget': typeof AuthenticatedAppBudgetRoute
   '/_authenticated/app/changes': typeof AuthenticatedAppChangesRoute
   '/_authenticated/app/comms': typeof AuthenticatedAppCommsRoute
@@ -265,6 +275,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/onboarding'
     | '/welcome'
+    | '/admin/signups'
     | '/app/budget'
     | '/app/changes'
     | '/app/comms'
@@ -291,6 +302,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/onboarding'
     | '/welcome'
+    | '/admin/signups'
     | '/app/budget'
     | '/app/changes'
     | '/app/comms'
@@ -319,6 +331,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app'
     | '/_authenticated/onboarding'
     | '/_authenticated/welcome'
+    | '/_authenticated/admin/signups'
     | '/_authenticated/app/budget'
     | '/_authenticated/app/changes'
     | '/_authenticated/app/comms'
@@ -532,6 +545,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppBudgetRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/admin/signups': {
+      id: '/_authenticated/admin/signups'
+      path: '/admin/signups'
+      fullPath: '/admin/signups'
+      preLoaderRoute: typeof AuthenticatedAdminSignupsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -584,6 +604,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppRoute: typeof AuthenticatedAppRouteWithChildren
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedWelcomeRoute: typeof AuthenticatedWelcomeRoute
+  AuthenticatedAdminSignupsRoute: typeof AuthenticatedAdminSignupsRoute
   AuthenticatedProjectIntroTemplateIdRoute: typeof AuthenticatedProjectIntroTemplateIdRoute
 }
 
@@ -591,6 +612,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppRoute: AuthenticatedAppRouteWithChildren,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedWelcomeRoute: AuthenticatedWelcomeRoute,
+  AuthenticatedAdminSignupsRoute: AuthenticatedAdminSignupsRoute,
   AuthenticatedProjectIntroTemplateIdRoute:
     AuthenticatedProjectIntroTemplateIdRoute,
 }
