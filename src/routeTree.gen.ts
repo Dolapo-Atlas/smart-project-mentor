@@ -26,14 +26,15 @@ import { Route as AuthenticatedProjectIntroTemplateIdRouteImport } from './route
 import { Route as AuthenticatedAppTasksRouteImport } from './routes/_authenticated/app.tasks'
 import { Route as AuthenticatedAppStakeholdersRouteImport } from './routes/_authenticated/app.stakeholders'
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
-import { Route as AuthenticatedAppRiskRouteImport } from './routes/_authenticated/app.risk'
 import { Route as AuthenticatedAppReviewsRouteImport } from './routes/_authenticated/app.reviews'
 import { Route as AuthenticatedAppReportsRouteImport } from './routes/_authenticated/app.reports'
+import { Route as AuthenticatedAppRaidRouteImport } from './routes/_authenticated/app.raid'
 import { Route as AuthenticatedAppProjectsRouteImport } from './routes/_authenticated/app.projects'
 import { Route as AuthenticatedAppProgressRouteImport } from './routes/_authenticated/app.progress'
 import { Route as AuthenticatedAppMeetingsRouteImport } from './routes/_authenticated/app.meetings'
 import { Route as AuthenticatedAppLearningRouteImport } from './routes/_authenticated/app.learning'
 import { Route as AuthenticatedAppInboxRouteImport } from './routes/_authenticated/app.inbox'
+import { Route as AuthenticatedAppHealthRouteImport } from './routes/_authenticated/app.health'
 import { Route as AuthenticatedAppGatesRouteImport } from './routes/_authenticated/app.gates'
 import { Route as AuthenticatedAppDocumentsRouteImport } from './routes/_authenticated/app.documents'
 import { Route as AuthenticatedAppCompletedRouteImport } from './routes/_authenticated/app.completed'
@@ -132,11 +133,6 @@ const AuthenticatedAppSettingsRoute =
     path: '/settings',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
-const AuthenticatedAppRiskRoute = AuthenticatedAppRiskRouteImport.update({
-  id: '/risk',
-  path: '/risk',
-  getParentRoute: () => AuthenticatedAppRoute,
-} as any)
 const AuthenticatedAppReviewsRoute = AuthenticatedAppReviewsRouteImport.update({
   id: '/reviews',
   path: '/reviews',
@@ -145,6 +141,11 @@ const AuthenticatedAppReviewsRoute = AuthenticatedAppReviewsRouteImport.update({
 const AuthenticatedAppReportsRoute = AuthenticatedAppReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppRaidRoute = AuthenticatedAppRaidRouteImport.update({
+  id: '/raid',
+  path: '/raid',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
 const AuthenticatedAppProjectsRoute =
@@ -174,6 +175,11 @@ const AuthenticatedAppLearningRoute =
 const AuthenticatedAppInboxRoute = AuthenticatedAppInboxRouteImport.update({
   id: '/inbox',
   path: '/inbox',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppHealthRoute = AuthenticatedAppHealthRouteImport.update({
+  id: '/health',
+  path: '/health',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
 const AuthenticatedAppGatesRoute = AuthenticatedAppGatesRouteImport.update({
@@ -249,14 +255,15 @@ export interface FileRoutesByFullPath {
   '/app/completed': typeof AuthenticatedAppCompletedRoute
   '/app/documents': typeof AuthenticatedAppDocumentsRoute
   '/app/gates': typeof AuthenticatedAppGatesRoute
+  '/app/health': typeof AuthenticatedAppHealthRoute
   '/app/inbox': typeof AuthenticatedAppInboxRoute
   '/app/learning': typeof AuthenticatedAppLearningRoute
   '/app/meetings': typeof AuthenticatedAppMeetingsRoute
   '/app/progress': typeof AuthenticatedAppProgressRoute
   '/app/projects': typeof AuthenticatedAppProjectsRoute
+  '/app/raid': typeof AuthenticatedAppRaidRoute
   '/app/reports': typeof AuthenticatedAppReportsRoute
   '/app/reviews': typeof AuthenticatedAppReviewsRoute
-  '/app/risk': typeof AuthenticatedAppRiskRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/stakeholders': typeof AuthenticatedAppStakeholdersRoute
   '/app/tasks': typeof AuthenticatedAppTasksRoute
@@ -284,14 +291,15 @@ export interface FileRoutesByTo {
   '/app/completed': typeof AuthenticatedAppCompletedRoute
   '/app/documents': typeof AuthenticatedAppDocumentsRoute
   '/app/gates': typeof AuthenticatedAppGatesRoute
+  '/app/health': typeof AuthenticatedAppHealthRoute
   '/app/inbox': typeof AuthenticatedAppInboxRoute
   '/app/learning': typeof AuthenticatedAppLearningRoute
   '/app/meetings': typeof AuthenticatedAppMeetingsRoute
   '/app/progress': typeof AuthenticatedAppProgressRoute
   '/app/projects': typeof AuthenticatedAppProjectsRoute
+  '/app/raid': typeof AuthenticatedAppRaidRoute
   '/app/reports': typeof AuthenticatedAppReportsRoute
   '/app/reviews': typeof AuthenticatedAppReviewsRoute
-  '/app/risk': typeof AuthenticatedAppRiskRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/stakeholders': typeof AuthenticatedAppStakeholdersRoute
   '/app/tasks': typeof AuthenticatedAppTasksRoute
@@ -322,14 +330,15 @@ export interface FileRoutesById {
   '/_authenticated/app/completed': typeof AuthenticatedAppCompletedRoute
   '/_authenticated/app/documents': typeof AuthenticatedAppDocumentsRoute
   '/_authenticated/app/gates': typeof AuthenticatedAppGatesRoute
+  '/_authenticated/app/health': typeof AuthenticatedAppHealthRoute
   '/_authenticated/app/inbox': typeof AuthenticatedAppInboxRoute
   '/_authenticated/app/learning': typeof AuthenticatedAppLearningRoute
   '/_authenticated/app/meetings': typeof AuthenticatedAppMeetingsRoute
   '/_authenticated/app/progress': typeof AuthenticatedAppProgressRoute
   '/_authenticated/app/projects': typeof AuthenticatedAppProjectsRoute
+  '/_authenticated/app/raid': typeof AuthenticatedAppRaidRoute
   '/_authenticated/app/reports': typeof AuthenticatedAppReportsRoute
   '/_authenticated/app/reviews': typeof AuthenticatedAppReviewsRoute
-  '/_authenticated/app/risk': typeof AuthenticatedAppRiskRoute
   '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
   '/_authenticated/app/stakeholders': typeof AuthenticatedAppStakeholdersRoute
   '/_authenticated/app/tasks': typeof AuthenticatedAppTasksRoute
@@ -360,14 +369,15 @@ export interface FileRouteTypes {
     | '/app/completed'
     | '/app/documents'
     | '/app/gates'
+    | '/app/health'
     | '/app/inbox'
     | '/app/learning'
     | '/app/meetings'
     | '/app/progress'
     | '/app/projects'
+    | '/app/raid'
     | '/app/reports'
     | '/app/reviews'
-    | '/app/risk'
     | '/app/settings'
     | '/app/stakeholders'
     | '/app/tasks'
@@ -395,14 +405,15 @@ export interface FileRouteTypes {
     | '/app/completed'
     | '/app/documents'
     | '/app/gates'
+    | '/app/health'
     | '/app/inbox'
     | '/app/learning'
     | '/app/meetings'
     | '/app/progress'
     | '/app/projects'
+    | '/app/raid'
     | '/app/reports'
     | '/app/reviews'
-    | '/app/risk'
     | '/app/settings'
     | '/app/stakeholders'
     | '/app/tasks'
@@ -432,14 +443,15 @@ export interface FileRouteTypes {
     | '/_authenticated/app/completed'
     | '/_authenticated/app/documents'
     | '/_authenticated/app/gates'
+    | '/_authenticated/app/health'
     | '/_authenticated/app/inbox'
     | '/_authenticated/app/learning'
     | '/_authenticated/app/meetings'
     | '/_authenticated/app/progress'
     | '/_authenticated/app/projects'
+    | '/_authenticated/app/raid'
     | '/_authenticated/app/reports'
     | '/_authenticated/app/reviews'
-    | '/_authenticated/app/risk'
     | '/_authenticated/app/settings'
     | '/_authenticated/app/stakeholders'
     | '/_authenticated/app/tasks'
@@ -589,13 +601,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppSettingsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
-    '/_authenticated/app/risk': {
-      id: '/_authenticated/app/risk'
-      path: '/risk'
-      fullPath: '/app/risk'
-      preLoaderRoute: typeof AuthenticatedAppRiskRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
     '/_authenticated/app/reviews': {
       id: '/_authenticated/app/reviews'
       path: '/reviews'
@@ -608,6 +613,13 @@ declare module '@tanstack/react-router' {
       path: '/reports'
       fullPath: '/app/reports'
       preLoaderRoute: typeof AuthenticatedAppReportsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/raid': {
+      id: '/_authenticated/app/raid'
+      path: '/raid'
+      fullPath: '/app/raid'
+      preLoaderRoute: typeof AuthenticatedAppRaidRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/projects': {
@@ -643,6 +655,13 @@ declare module '@tanstack/react-router' {
       path: '/inbox'
       fullPath: '/app/inbox'
       preLoaderRoute: typeof AuthenticatedAppInboxRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/health': {
+      id: '/_authenticated/app/health'
+      path: '/health'
+      fullPath: '/app/health'
+      preLoaderRoute: typeof AuthenticatedAppHealthRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/gates': {
@@ -725,14 +744,15 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppCompletedRoute: typeof AuthenticatedAppCompletedRoute
   AuthenticatedAppDocumentsRoute: typeof AuthenticatedAppDocumentsRoute
   AuthenticatedAppGatesRoute: typeof AuthenticatedAppGatesRoute
+  AuthenticatedAppHealthRoute: typeof AuthenticatedAppHealthRoute
   AuthenticatedAppInboxRoute: typeof AuthenticatedAppInboxRoute
   AuthenticatedAppLearningRoute: typeof AuthenticatedAppLearningRoute
   AuthenticatedAppMeetingsRoute: typeof AuthenticatedAppMeetingsRoute
   AuthenticatedAppProgressRoute: typeof AuthenticatedAppProgressRoute
   AuthenticatedAppProjectsRoute: typeof AuthenticatedAppProjectsRoute
+  AuthenticatedAppRaidRoute: typeof AuthenticatedAppRaidRoute
   AuthenticatedAppReportsRoute: typeof AuthenticatedAppReportsRoute
   AuthenticatedAppReviewsRoute: typeof AuthenticatedAppReviewsRoute
-  AuthenticatedAppRiskRoute: typeof AuthenticatedAppRiskRoute
   AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
   AuthenticatedAppStakeholdersRoute: typeof AuthenticatedAppStakeholdersRoute
   AuthenticatedAppTasksRoute: typeof AuthenticatedAppTasksRoute
@@ -746,14 +766,15 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppCompletedRoute: AuthenticatedAppCompletedRoute,
   AuthenticatedAppDocumentsRoute: AuthenticatedAppDocumentsRoute,
   AuthenticatedAppGatesRoute: AuthenticatedAppGatesRoute,
+  AuthenticatedAppHealthRoute: AuthenticatedAppHealthRoute,
   AuthenticatedAppInboxRoute: AuthenticatedAppInboxRoute,
   AuthenticatedAppLearningRoute: AuthenticatedAppLearningRoute,
   AuthenticatedAppMeetingsRoute: AuthenticatedAppMeetingsRoute,
   AuthenticatedAppProgressRoute: AuthenticatedAppProgressRoute,
   AuthenticatedAppProjectsRoute: AuthenticatedAppProjectsRoute,
+  AuthenticatedAppRaidRoute: AuthenticatedAppRaidRoute,
   AuthenticatedAppReportsRoute: AuthenticatedAppReportsRoute,
   AuthenticatedAppReviewsRoute: AuthenticatedAppReviewsRoute,
-  AuthenticatedAppRiskRoute: AuthenticatedAppRiskRoute,
   AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
   AuthenticatedAppStakeholdersRoute: AuthenticatedAppStakeholdersRoute,
   AuthenticatedAppTasksRoute: AuthenticatedAppTasksRoute,

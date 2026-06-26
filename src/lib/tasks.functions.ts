@@ -41,7 +41,7 @@ const LINKED_AREAS = [
 
 const AREA_TO_ROUTE: Record<string, string> = {
   budget: "/app/budget",
-  risk: "/app/risk",
+  risk: "/app/raid",
   documents: "/app/documents",
   meetings: "/app/meetings",
   gates: "/app/gates",

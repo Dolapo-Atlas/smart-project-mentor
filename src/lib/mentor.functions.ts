@@ -79,10 +79,15 @@ const ROUTE_CONTEXT: Record<
     what: "Check readiness and move the project to the next phase.",
     concept: "Stage gates — go/no-go decisions on evidence, not optimism.",
   },
-  "/app/risk": {
-    area: "Risk & RAG",
-    what: "Log risks, assumptions, issues and dependencies; set workstream RAG.",
-    concept: "RAID & RAG — making the invisible visible before it bites.",
+  "/app/raid": {
+    area: "RAID Log",
+    what: "Maintain the project's RAID register — Risks, Assumptions, Issues and Dependencies.",
+    concept: "RAID — surface the invisible before it bites, with owners and target dates.",
+  },
+  "/app/health": {
+    area: "Project Health (RAG)",
+    what: "Set the Overall, Scope, Schedule, Budget, Resources, Quality and Benefits RAG status with rationale and trend.",
+    concept: "RAG reporting — a Sponsor/Steering view of where the project stands and where it's heading.",
   },
   "/app/progress": {
     area: "Progress",

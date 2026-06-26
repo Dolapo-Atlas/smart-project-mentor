@@ -384,7 +384,7 @@ export const getNextAction = createServerFn({ method: "GET" })
       title = `Mitigate ${readiness.openHighRisks.length} high-severity risk${readiness.openHighRisks.length === 1 ? "" : "s"}`;
       reason = "Open high-severity RAID items will degrade project health on next time advance.";
       cta = "Open RAID log";
-      to = "/app/risk";
+      to = "/app/raid";
     } else if (readiness.meetingsMissingMinutes.length > 0) {
       title = `Send minutes for "${readiness.meetingsMissingMinutes[0].title}"`;
       reason = "Minutes need to be captured and sent to attendees before this stops showing as open.";
