@@ -17,6 +17,7 @@ import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as ApiPublicTtsRouteImport } from './routes/api/public/tts'
+import { Route as AuthenticatedProjectIntroTemplateIdRouteImport } from './routes/_authenticated/project-intro.$templateId'
 import { Route as AuthenticatedAppTasksRouteImport } from './routes/_authenticated/app.tasks'
 import { Route as AuthenticatedAppStakeholdersRouteImport } from './routes/_authenticated/app.stakeholders'
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
@@ -73,6 +74,12 @@ const ApiPublicTtsRoute = ApiPublicTtsRouteImport.update({
   path: '/api/public/tts',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedProjectIntroTemplateIdRoute =
+  AuthenticatedProjectIntroTemplateIdRouteImport.update({
+    id: '/project-intro/$templateId',
+    path: '/project-intro/$templateId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAppTasksRoute = AuthenticatedAppTasksRouteImport.update({
   id: '/tasks',
   path: '/tasks',
@@ -184,6 +191,7 @@ export interface FileRoutesByFullPath {
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/stakeholders': typeof AuthenticatedAppStakeholdersRoute
   '/app/tasks': typeof AuthenticatedAppTasksRoute
+  '/project-intro/$templateId': typeof AuthenticatedProjectIntroTemplateIdRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
   '/app/': typeof AuthenticatedAppIndexRoute
 }
@@ -208,6 +216,7 @@ export interface FileRoutesByTo {
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/stakeholders': typeof AuthenticatedAppStakeholdersRoute
   '/app/tasks': typeof AuthenticatedAppTasksRoute
+  '/project-intro/$templateId': typeof AuthenticatedProjectIntroTemplateIdRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
   '/app': typeof AuthenticatedAppIndexRoute
 }
@@ -235,6 +244,7 @@ export interface FileRoutesById {
   '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
   '/_authenticated/app/stakeholders': typeof AuthenticatedAppStakeholdersRoute
   '/_authenticated/app/tasks': typeof AuthenticatedAppTasksRoute
+  '/_authenticated/project-intro/$templateId': typeof AuthenticatedProjectIntroTemplateIdRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
 }
@@ -262,6 +272,7 @@ export interface FileRouteTypes {
     | '/app/settings'
     | '/app/stakeholders'
     | '/app/tasks'
+    | '/project-intro/$templateId'
     | '/api/public/tts'
     | '/app/'
   fileRoutesByTo: FileRoutesByTo
@@ -286,6 +297,7 @@ export interface FileRouteTypes {
     | '/app/settings'
     | '/app/stakeholders'
     | '/app/tasks'
+    | '/project-intro/$templateId'
     | '/api/public/tts'
     | '/app'
   id:
@@ -312,6 +324,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/settings'
     | '/_authenticated/app/stakeholders'
     | '/_authenticated/app/tasks'
+    | '/_authenticated/project-intro/$templateId'
     | '/api/public/tts'
     | '/_authenticated/app/'
   fileRoutesById: FileRoutesById
@@ -380,6 +393,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/public/tts'
       preLoaderRoute: typeof ApiPublicTtsRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/project-intro/$templateId': {
+      id: '/_authenticated/project-intro/$templateId'
+      path: '/project-intro/$templateId'
+      fullPath: '/project-intro/$templateId'
+      preLoaderRoute: typeof AuthenticatedProjectIntroTemplateIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/app/tasks': {
       id: '/_authenticated/app/tasks'
@@ -543,12 +563,15 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppRoute: typeof AuthenticatedAppRouteWithChildren
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedWelcomeRoute: typeof AuthenticatedWelcomeRoute
+  AuthenticatedProjectIntroTemplateIdRoute: typeof AuthenticatedProjectIntroTemplateIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppRoute: AuthenticatedAppRouteWithChildren,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedWelcomeRoute: AuthenticatedWelcomeRoute,
+  AuthenticatedProjectIntroTemplateIdRoute:
+    AuthenticatedProjectIntroTemplateIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
