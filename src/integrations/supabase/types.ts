@@ -855,7 +855,7 @@ export type Database = {
           performance: Json
           phase: string
           progress: number
-          project_instance_id: string | null
+          project_instance_id: string
           project_name: string
           reputation: number
           story_log: Json
@@ -874,7 +874,7 @@ export type Database = {
           performance?: Json
           phase?: string
           progress?: number
-          project_instance_id?: string | null
+          project_instance_id: string
           project_name?: string
           reputation?: number
           story_log?: Json
@@ -893,7 +893,7 @@ export type Database = {
           performance?: Json
           phase?: string
           progress?: number
-          project_instance_id?: string | null
+          project_instance_id?: string
           project_name?: string
           reputation?: number
           story_log?: Json
