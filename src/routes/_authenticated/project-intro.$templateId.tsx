@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { getTemplateById, getActiveProject, markIntroSeen } from "@/lib/projects.functions";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Calendar, Clock, Gauge, Sparkles } from "lucide-react";
+import { ArrowRight, Calendar, Clock, Gauge, Sparkles, Coffee } from "lucide-react";
 import { StakeholderHoverAvatar as StakeholderAvatar } from "@/components/stakeholder-card";
 
 export const Route = createFileRoute("/_authenticated/project-intro/$templateId")({
@@ -29,6 +29,7 @@ function ProjectIntro() {
 
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
+  const [coffeeBreak, setCoffeeBreak] = useState(false);
   const loadingLines = [
     "Connecting to Oakwood Health Programme…",
     "Loading Project Workspace…",
@@ -48,7 +49,8 @@ function ProjectIntro() {
 
   useEffect(() => {
     if (loading && loadingStep >= loadingLines.length) {
-      navigate({ to: "/app/inbox" });
+      setLoading(false);
+      setCoffeeBreak(true);
     }
   }, [loading, loadingStep, navigate]);
 
@@ -96,6 +98,37 @@ function ProjectIntro() {
                 </li>
               ))}
             </ul>
+          </div>
+        </div>
+      )}
+
+      {/* Grab a coffee intermission */}
+      {coffeeBreak && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm animate-in fade-in duration-500">
+          <div className="w-full max-w-lg px-8 text-center">
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-border bg-card">
+              <Coffee className="h-9 w-9 text-primary animate-pulse" />
+            </div>
+            <div className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
+              Before you begin
+            </div>
+            <h2 className="mt-3 font-display text-3xl font-medium tracking-tight md:text-4xl">
+              Grab a coffee ☕
+            </h2>
+            <p className="mt-4 text-base leading-relaxed text-muted-foreground">
+              Take a breath. Your first day at <span className="text-foreground">{projectCodeName((tpl as any).title)}</span> is about to start.
+              <br className="hidden sm:block" />
+              Emma will drop a welcome note in your inbox the moment you sit down.
+            </p>
+            <div className="mt-8 flex justify-center">
+              <Button size="lg" onClick={() => navigate({ to: "/app/inbox" })}>
+                I'm ready — let's go
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+            <div className="mt-4 text-xs text-muted-foreground">
+              Tip: This sim runs at your pace. Nothing happens until you act.
+            </div>
           </div>
         </div>
       )}
