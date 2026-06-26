@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { GuidedTour } from "@/components/guided-tour";
 import { LearningDrawer } from "@/components/learning-drawer";
+import { NotificationsBell } from "@/components/notifications-bell";
 
 export const Route = createFileRoute("/_authenticated/app")({
   component: AppLayout,
@@ -87,15 +88,18 @@ function AppLayout() {
             {overview?.state?.project_name ?? "Loading…"}
           </div>
 
-          <Link
-            to="/app/projects"
-            className="mt-3 flex items-center justify-between gap-2 rounded-md border border-dashed border-border bg-card/60 px-3 py-2 text-xs text-foreground/80 transition hover:border-primary hover:text-foreground"
-          >
-            <span className="flex items-center gap-1.5">
-              <FolderKanban className="h-3.5 w-3.5" /> Switch project
-            </span>
-            <ArrowLeft className="h-3 w-3 rotate-180 opacity-50" />
-          </Link>
+          <div className="mt-3 flex items-center gap-2">
+            <Link
+              to="/app/projects"
+              className="flex flex-1 items-center justify-between gap-2 rounded-md border border-dashed border-border bg-card/60 px-3 py-2 text-xs text-foreground/80 transition hover:border-primary hover:text-foreground"
+            >
+              <span className="flex items-center gap-1.5">
+                <FolderKanban className="h-3.5 w-3.5" /> Switch project
+              </span>
+              <ArrowLeft className="h-3 w-3 rotate-180 opacity-50" />
+            </Link>
+            <NotificationsBell />
+          </div>
 
           <nav className="mt-8 grid grid-cols-3 gap-2">
             {NAV.map(({ to, label, icon: Icon, exact }) => {
