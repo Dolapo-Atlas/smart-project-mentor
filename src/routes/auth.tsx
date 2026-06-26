@@ -25,8 +25,21 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (data.user) navigate({ to: "/app" });
+    supabase.auth.getUser().then(async ({ data }) => {
+      if (!data.user) return;
+      const intent = sessionStorage.getItem("oauth_intent");
+      if (intent === "signup") {
+        sessionStorage.removeItem("oauth_intent");
+        const createdAt = new Date(data.user.created_at ?? 0).getTime();
+        const isNew = Date.now() - createdAt < 60_000;
+        if (!isNew) {
+          await supabase.auth.signOut();
+          toast.error("That Google account is already registered. Sign in instead.");
+          setMode("signin");
+          return;
+        }
+      }
+      navigate({ to: "/app" });
     });
   }, [navigate]);
 
@@ -64,8 +77,13 @@ function AuthPage() {
 
   async function handleGoogle() {
     setLoading(true);
+    if (mode === "signup") {
+      sessionStorage.setItem("oauth_intent", "signup");
+    } else {
+      sessionStorage.removeItem("oauth_intent");
+    }
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin + "/app",
+      redirect_uri: window.location.origin + "/auth",
     });
     if (result.error) {
       toast.error(result.error.message ?? "Google sign-in failed");
