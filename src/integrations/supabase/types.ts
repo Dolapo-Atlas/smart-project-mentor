@@ -840,7 +840,9 @@ export type Database = {
       }
       raid_items: {
         Row: {
+          comments: string | null
           created_at: string
+          date_raised: string
           description: string | null
           due_date: string | null
           id: string
@@ -848,15 +850,19 @@ export type Database = {
           likelihood: Database["public"]["Enums"]["raid_severity"]
           mitigation: string | null
           owner: string | null
+          priority: string
           project_instance_id: string | null
           severity: Database["public"]["Enums"]["raid_severity"]
           status: Database["public"]["Enums"]["raid_status"]
+          target_date: string | null
           title: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          comments?: string | null
           created_at?: string
+          date_raised?: string
           description?: string | null
           due_date?: string | null
           id?: string
@@ -864,15 +870,19 @@ export type Database = {
           likelihood?: Database["public"]["Enums"]["raid_severity"]
           mitigation?: string | null
           owner?: string | null
+          priority?: string
           project_instance_id?: string | null
           severity?: Database["public"]["Enums"]["raid_severity"]
           status?: Database["public"]["Enums"]["raid_status"]
+          target_date?: string | null
           title: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          comments?: string | null
           created_at?: string
+          date_raised?: string
           description?: string | null
           due_date?: string | null
           id?: string
@@ -880,9 +890,11 @@ export type Database = {
           likelihood?: Database["public"]["Enums"]["raid_severity"]
           mitigation?: string | null
           owner?: string | null
+          priority?: string
           project_instance_id?: string | null
           severity?: Database["public"]["Enums"]["raid_severity"]
           status?: Database["public"]["Enums"]["raid_status"]
+          target_date?: string | null
           title?: string
           updated_at?: string
           user_id?: string
@@ -1314,7 +1326,9 @@ export type Database = {
           note: string | null
           project_instance_id: string | null
           rag: Database["public"]["Enums"]["rag_status"]
+          trend: string
           updated_at: string
+          updated_by: string | null
           user_id: string
         }
         Insert: {
@@ -1323,7 +1337,9 @@ export type Database = {
           note?: string | null
           project_instance_id?: string | null
           rag?: Database["public"]["Enums"]["rag_status"]
+          trend?: string
           updated_at?: string
+          updated_by?: string | null
           user_id: string
         }
         Update: {
@@ -1332,7 +1348,9 @@ export type Database = {
           note?: string | null
           project_instance_id?: string | null
           rag?: Database["public"]["Enums"]["rag_status"]
+          trend?: string
           updated_at?: string
+          updated_by?: string | null
           user_id?: string
         }
         Relationships: [
@@ -1398,6 +1416,8 @@ export type Database = {
         | "resources"
         | "stakeholders"
         | "risks"
+        | "benefits"
+        | "overall"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1543,6 +1563,8 @@ export const Constants = {
         "resources",
         "stakeholders",
         "risks",
+        "benefits",
+        "overall",
       ],
     },
   },
