@@ -6,7 +6,6 @@ import {
   FileText,
   Sparkles,
   Loader2,
-  CheckCircle2,
   Inbox,
   ShieldCheck,
   Users,
@@ -1345,12 +1344,35 @@ function EarlyAccess() {
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [referralCount, setReferralCount] = useState<number | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const inviteUrl = referralCode ? `https://atlassim.co/invite/${referralCode}` : "";
+
+  useEffect(() => {
+    if (!referralCode) return;
+    let active = true;
+    (async () => {
+      try {
+        const { data } = await supabase.rpc("referral_stats", { code: referralCode });
+        if (active && typeof data === "number") setReferralCount(data);
+      } catch {
+        // ignore
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [referralCode]);
 
   async function onShare() {
+    const url = inviteUrl || "https://atlassim.co";
     const shareData = {
-      title: "Atlas — Experience the workplace before day one",
-      text: "I just joined the Atlas waitlist. It's a workplace simulation for aspiring PMs. Check it out:",
-      url: "https://atlassim.co",
+      title: "Atlas — Founder Cohort",
+      text:
+        "I'm one of the first members of the Atlas Founder Cohort.\n\nAtlas is building a realistic workplace simulation where aspiring Project Coordinators, PMOs, Business Analysts and Project Managers gain practical experience before their first role.\n\nThought you might like it too.\n\nJoin the Founder Cohort:",
+      url,
     };
     if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
       try {
@@ -1361,11 +1383,22 @@ function EarlyAccess() {
       }
     }
     try {
-      await navigator.clipboard.writeText(shareData.url);
+      await navigator.clipboard.writeText(`${shareData.text}\n${shareData.url}`);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error("Couldn't copy link. Please copy manually: https://atlassim.co");
+      toast.error(`Couldn't copy link. Please copy manually: ${url}`);
+    }
+  }
+
+  async function copyInviteLink() {
+    if (!inviteUrl) return;
+    try {
+      await navigator.clipboard.writeText(inviteUrl);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      toast.error("Couldn't copy link.");
     }
   }
 
@@ -1388,13 +1421,28 @@ function EarlyAccess() {
     }
     setSubmitting(true);
     let ok = false;
+    let returnedCode: string | null = null;
     try {
+      let referredBy: string | null = null;
+      try {
+        referredBy = window.localStorage.getItem("atlas_ref");
+      } catch {
+        // ignore
+      }
       const res = await fetch("/api/public/early-access", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(parsed.data),
+        body: JSON.stringify({ ...parsed.data, referred_by_code: referredBy || undefined }),
       });
       ok = res.ok;
+      if (ok) {
+        try {
+          const j = await res.json();
+          returnedCode = j?.referral_code ?? null;
+        } catch {
+          // ignore
+        }
+      }
     } catch {
       ok = false;
     }
@@ -1403,6 +1451,7 @@ function EarlyAccess() {
       toast.error("Something went wrong. Please try again.");
       return;
     }
+    setReferralCode(returnedCode);
     setDone(true);
     setForm({ name: "", email: "", role: "", country: "", level: "" });
   }
@@ -1435,41 +1484,26 @@ function EarlyAccess() {
                 </p>
                 <p className="mt-5 inline-flex items-center gap-2 text-xs font-medium text-primary">
                   <ShieldCheck className="h-3.5 w-3.5" />
-                  Only the first 100 users will receive Founder Access.
+                  Join the Atlas Founder Cohort — the first 100 professionals shaping Atlas.
                 </p>
               </div>
 
               <div>
                 {done ? (
-                  <div className="flex flex-col items-start gap-4 rounded-2xl border border-border bg-background/60 p-8">
-                    <CheckCircle2 className="h-8 w-8 text-primary" />
-                    <h3 className="font-display text-2xl">You're in. 🎉</h3>
-                    <p className="text-sm text-muted-foreground">
-                      We'll send you early access details soon. Get ready to experience the workplace before day one.
-                    </p>
-
-                    <div className="mt-4 w-full border-t border-border pt-5">
-                      <h4 className="font-display text-lg">Know someone breaking into PM?</h4>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        Send them this — they'll thank you later.
-                      </p>
-                      <Button
-                        type="button"
-                        onClick={onShare}
-                        className="mt-4 rounded-full bg-primary px-5 py-5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-                      >
-                        {copied ? "Link copied!" : (<>Share Atlas with a friend <ArrowRight className="ml-1 h-4 w-4" /></>)}
-                      </Button>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => setDone(false)}
-                      className="mt-2 text-sm text-primary underline-offset-4 hover:underline"
-                    >
-                      Submit another
-                    </button>
-                  </div>
+                  <WelcomeCard
+                    referralCode={referralCode}
+                    referralCount={referralCount}
+                    inviteUrl={inviteUrl}
+                    onShare={onShare}
+                    copied={copied}
+                    onCopyLink={copyInviteLink}
+                    linkCopied={linkCopied}
+                    onReset={() => {
+                      setDone(false);
+                      setReferralCode(null);
+                      setReferralCount(null);
+                    }}
+                  />
                 ) : (
                   <form onSubmit={onSubmit} className="space-y-4 rounded-2xl border border-border bg-background/70 p-6 backdrop-blur sm:p-7">
                     <div className="grid gap-4 sm:grid-cols-2">
@@ -1527,6 +1561,168 @@ function Field({ label, children, className = "" }: { label: string; children: R
     <div className={`space-y-1.5 ${className}`}>
       <Label className="text-xs uppercase tracking-[0.14em] text-muted-foreground">{label}</Label>
       {children}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Welcome card (post-signup)                                         */
+/* ------------------------------------------------------------------ */
+
+function WelcomeCard({
+  referralCode,
+  referralCount,
+  inviteUrl,
+  onShare,
+  copied,
+  onCopyLink,
+  linkCopied,
+  onReset,
+}: {
+  referralCode: string | null;
+  referralCount: number | null;
+  inviteUrl: string;
+  onShare: () => void;
+  copied: boolean;
+  onCopyLink: () => void;
+  linkCopied: boolean;
+  onReset: () => void;
+}) {
+  const firstWeek = [
+    "Meet your Project Lead",
+    "Receive your first stakeholder email",
+    "Handle your first project issue",
+    "Attend your first steering committee",
+    "Deliver your first status report",
+  ];
+  return (
+    <div className="flex flex-col gap-6 rounded-2xl border border-border bg-background/70 p-7 sm:p-8">
+      {/* Welcome */}
+      <div>
+        <p className="text-xs font-medium uppercase tracking-[0.22em] text-primary">
+          🎉 Congratulations
+        </p>
+        <h3 className="mt-3 font-display text-[clamp(1.6rem,3vw,2rem)] font-medium leading-[1.1] tracking-[-0.01em]">
+          Welcome aboard.
+        </h3>
+        <div className="mt-4 space-y-3 text-[15px] leading-relaxed text-muted-foreground">
+          <p>You're officially on the Atlas Founder Access list.</p>
+          <p>Your first day at Atlas is getting closer.</p>
+          <p>
+            We'll invite you to your first day at Atlas as soon as your workspace is ready.
+          </p>
+          <p>
+            Before launch, we'll send your onboarding pack, project invitation
+            and everything you need to begin your journey.
+          </p>
+        </div>
+      </div>
+
+      {/* First week preview */}
+      <div className="rounded-xl border border-border/70 bg-card/60 p-5">
+        <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+          Here's what your first week at Atlas will look like
+        </p>
+        <ul className="mt-4 space-y-2.5">
+          {firstWeek.map((item) => (
+            <li key={item} className="flex items-start gap-3 text-sm text-foreground">
+              <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
+                <Check className="h-3 w-3" />
+              </span>
+              {item}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* Founder Cohort badge */}
+      <div
+        className="relative overflow-hidden rounded-xl border border-primary/30 bg-card p-5 shadow-[0_20px_60px_-30px_rgba(217,119,6,0.45)]"
+      >
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(70% 70% at 0% 0%, color-mix(in oklab, var(--primary) 14%, transparent), transparent 70%)",
+          }}
+        />
+        <div className="relative flex items-start gap-4">
+          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground text-xl shadow-[0_8px_20px_-8px_rgba(217,119,6,0.6)]">
+            🏅
+          </div>
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">
+              Founder Cohort
+            </p>
+            <p className="mt-1.5 text-sm leading-relaxed text-foreground">
+              You're one of the first 100 professionals helping shape Atlas
+              from the very beginning.
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              As a Founder Cohort member, you'll receive early access,
+              exclusive updates and the opportunity to influence the future
+              of Atlas.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Invitation */}
+      <div className="rounded-xl border border-border/70 bg-card/60 p-5">
+        <h4 className="font-display text-lg">
+          Know someone breaking into Project Management?
+        </h4>
+        <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+          Atlas was built for people starting their project careers. Invite
+          someone who would genuinely benefit from experiencing the workplace
+          before day one.
+        </p>
+
+        {referralCode ? (
+          <div className="mt-4 flex items-center gap-2 rounded-lg border border-border bg-background/80 px-3 py-2">
+            <span className="truncate font-mono text-xs text-foreground">
+              {inviteUrl}
+            </span>
+            <button
+              type="button"
+              onClick={onCopyLink}
+              className="ml-auto shrink-0 rounded-full border border-border bg-card px-2.5 py-1 text-[11px] font-medium text-foreground transition hover:bg-accent"
+            >
+              {linkCopied ? "Copied" : "Copy"}
+            </button>
+          </div>
+        ) : null}
+
+        <Button
+          type="button"
+          onClick={onShare}
+          className="mt-4 w-full rounded-full bg-primary px-5 py-5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+        >
+          {copied ? (
+            "Link copied!"
+          ) : (
+            <>
+              Invite a Future PM <ArrowRight className="ml-1 h-4 w-4" />
+            </>
+          )}
+        </Button>
+
+        <p className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+          <Users className="h-3.5 w-3.5 text-primary" />
+          {referralCount && referralCount > 0
+            ? `${referralCount} professional${referralCount === 1 ? "" : "s"} joined through your invitation.`
+            : "You're helping build the first Atlas community."}
+        </p>
+      </div>
+
+      <button
+        type="button"
+        onClick={onReset}
+        className="self-start text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+      >
+        Submit another
+      </button>
     </div>
   );
 }

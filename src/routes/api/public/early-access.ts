@@ -15,6 +15,7 @@ const schema = z.object({
   desired_role: z.string().min(1).max(120),
   country: z.string().min(1).max(120),
   experience_level: z.string().min(1).max(60),
+  referred_by_code: z.string().min(1).max(32).optional().nullable(),
 })
 
 function generateToken(): string {
@@ -49,7 +50,7 @@ export const Route = createFileRoute('/api/public/early-access')({
         const { data: inserted, error: insertError } = await supabase
           .from('early_access_signups')
           .insert(parsed)
-          .select('id, created_at')
+          .select('id, created_at, referral_code')
           .single()
 
         if (insertError) {
@@ -57,89 +58,112 @@ export const Route = createFileRoute('/api/public/early-access')({
           return Response.json({ error: 'Failed to save signup' }, { status: 500 })
         }
 
-        // 2. Fire admin notification email (best-effort — don't fail the signup)
-        try {
-          const tpl = TEMPLATES['early-access-signup']
-          if (!tpl || !tpl.to) throw new Error('Template missing')
+        const userReferralCode: string | null = inserted?.referral_code ?? null
 
-          const templateData = {
-            ...parsed,
-            submitted_at: inserted?.created_at ?? new Date().toISOString(),
-          }
+        // Helper: render + enqueue a template (best-effort)
+        async function sendTemplate(
+          templateName: string,
+          recipient: string,
+          templateData: Record<string, any>,
+          idempotencyKey: string,
+        ) {
+          const tpl = TEMPLATES[templateName]
+          if (!tpl) throw new Error(`Template missing: ${templateName}`)
           const element = React.createElement(tpl.component, templateData)
           const html = await render(element)
           const text = await render(element, { plainText: true })
           const subject =
             typeof tpl.subject === 'function' ? tpl.subject(templateData) : tpl.subject
-
-          const recipient = tpl.to.toLowerCase()
           const messageId = crypto.randomUUID()
+          const recipientLc = recipient.toLowerCase()
 
           // Suppression check
           const { data: suppressed } = await supabase
             .from('suppressed_emails')
             .select('id')
-            .eq('email', recipient)
+            .eq('email', recipientLc)
+            .maybeSingle()
+          if (suppressed) return
+
+          // Ensure unsubscribe token exists
+          const { data: existing } = await supabase
+            .from('email_unsubscribe_tokens')
+            .select('token, used_at')
+            .eq('email', recipientLc)
             .maybeSingle()
 
-          if (!suppressed) {
-            // Ensure unsubscribe token exists
-            const { data: existing } = await supabase
+          let unsubscribeToken = existing?.token
+          if (!existing) {
+            unsubscribeToken = generateToken()
+            await supabase
               .from('email_unsubscribe_tokens')
-              .select('token, used_at')
-              .eq('email', recipient)
+              .upsert(
+                { token: unsubscribeToken, email: recipientLc },
+                { onConflict: 'email', ignoreDuplicates: true },
+              )
+            const { data: stored } = await supabase
+              .from('email_unsubscribe_tokens')
+              .select('token')
+              .eq('email', recipientLc)
               .maybeSingle()
+            unsubscribeToken = stored?.token ?? unsubscribeToken
+          }
 
-            let unsubscribeToken = existing?.token
-            if (!existing) {
-              unsubscribeToken = generateToken()
-              await supabase
-                .from('email_unsubscribe_tokens')
-                .upsert(
-                  { token: unsubscribeToken, email: recipient },
-                  { onConflict: 'email', ignoreDuplicates: true },
-                )
-              const { data: stored } = await supabase
-                .from('email_unsubscribe_tokens')
-                .select('token')
-                .eq('email', recipient)
-                .maybeSingle()
-              unsubscribeToken = stored?.token ?? unsubscribeToken
-            }
+          await supabase.from('email_send_log').insert({
+            message_id: messageId,
+            template_name: templateName,
+            recipient_email: recipientLc,
+            status: 'pending',
+          })
 
-            await supabase.from('email_send_log').insert({
+          const { error: enqueueError } = await supabase.rpc('enqueue_email', {
+            queue_name: 'transactional_emails',
+            payload: {
               message_id: messageId,
-              template_name: 'early-access-signup',
-              recipient_email: recipient,
-              status: 'pending',
-            })
+              to: recipientLc,
+              from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+              sender_domain: SENDER_DOMAIN,
+              subject,
+              html,
+              text,
+              purpose: 'transactional',
+              label: templateName,
+              idempotency_key: idempotencyKey,
+              unsubscribe_token: unsubscribeToken,
+              queued_at: new Date().toISOString(),
+            },
+          })
+          if (enqueueError) console.error('enqueue_email failed', enqueueError)
+        }
 
-            const { error: enqueueError } = await supabase.rpc('enqueue_email', {
-              queue_name: 'transactional_emails',
-              payload: {
-                message_id: messageId,
-                to: recipient,
-                from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
-                sender_domain: SENDER_DOMAIN,
-                subject,
-                html,
-                text,
-                purpose: 'transactional',
-                label: 'early-access-signup',
-                idempotency_key: `early-access-${inserted?.id ?? messageId}`,
-                unsubscribe_token: unsubscribeToken,
-                queued_at: new Date().toISOString(),
-              },
-            })
-            if (enqueueError) {
-              console.error('enqueue_email failed', enqueueError)
-            }
+        // 2. Admin notification (best-effort)
+        try {
+          const adminTpl = TEMPLATES['early-access-signup']
+          if (adminTpl?.to) {
+            await sendTemplate(
+              'early-access-signup',
+              adminTpl.to,
+              { ...parsed, submitted_at: inserted?.created_at ?? new Date().toISOString() },
+              `early-access-${inserted?.id}`,
+            )
           }
         } catch (err) {
           console.error('early-access notify failed', err)
         }
 
-        return Response.json({ success: true })
+        // 3. Welcome email to the user (best-effort)
+        try {
+          await sendTemplate(
+            'early-access-welcome',
+            parsed.email,
+            { name: parsed.name, referral_code: userReferralCode },
+            `early-access-welcome-${inserted?.id}`,
+          )
+        } catch (err) {
+          console.error('early-access welcome failed', err)
+        }
+
+        return Response.json({ success: true, referral_code: userReferralCode })
       },
     },
   },
