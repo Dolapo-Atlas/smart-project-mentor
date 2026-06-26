@@ -1358,9 +1358,19 @@ function EarlyAccess() {
       return;
     }
     setSubmitting(true);
-    const { error } = await supabase.from("early_access_signups").insert(parsed.data);
+    let ok = false;
+    try {
+      const res = await fetch("/api/public/early-access", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(parsed.data),
+      });
+      ok = res.ok;
+    } catch {
+      ok = false;
+    }
     setSubmitting(false);
-    if (error) {
+    if (!ok) {
       toast.error("Something went wrong. Please try again.");
       return;
     }
