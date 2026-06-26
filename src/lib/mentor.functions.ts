@@ -79,7 +79,7 @@ const ROUTE_CONTEXT: Record<
     what: "Check readiness and move the project to the next phase.",
     concept: "Stage gates — go/no-go decisions on evidence, not optimism.",
   },
-  "/app/risk": {
+  "/app/raid": {
     area: "Risk & RAG",
     what: "Log risks, assumptions, issues and dependencies; set workstream RAG.",
     concept: "RAID & RAG — making the invisible visible before it bites.",
