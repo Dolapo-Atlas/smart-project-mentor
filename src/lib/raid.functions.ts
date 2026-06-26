@@ -261,6 +261,9 @@ export const createRaid = createServerFn({ method: "POST" })
       owner: z.string().optional(),
       due_date: z.string().optional(),
       mitigation: z.string().optional(),
+      priority: z.enum(["low", "medium", "high", "critical"]).optional(),
+      target_date: z.string().optional(),
+      comments: z.string().optional(),
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
