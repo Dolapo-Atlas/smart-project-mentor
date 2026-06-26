@@ -72,7 +72,7 @@ export function MentorDrawer({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="flex w-full flex-col gap-0 border-l border-orange-500/15 bg-[hsl(36,33%,97%)] p-0 sm:max-w-[420px] dark:bg-card"
+        className="flex w-full flex-col gap-0 border-l border-orange-500/15 bg-[hsl(36,33%,97%)] p-0 sm:max-w-[420px] dark:bg-card [&>button.absolute]:hidden"
       >
         <header className="flex items-start justify-between border-b border-border/60 px-5 py-4">
           <div className="min-w-0">
