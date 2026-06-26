@@ -26,7 +26,6 @@ import { Route as AuthenticatedProjectIntroTemplateIdRouteImport } from './route
 import { Route as AuthenticatedAppTasksRouteImport } from './routes/_authenticated/app.tasks'
 import { Route as AuthenticatedAppStakeholdersRouteImport } from './routes/_authenticated/app.stakeholders'
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
-import { Route as AuthenticatedAppRiskRouteImport } from './routes/_authenticated/app.risk'
 import { Route as AuthenticatedAppReviewsRouteImport } from './routes/_authenticated/app.reviews'
 import { Route as AuthenticatedAppReportsRouteImport } from './routes/_authenticated/app.reports'
 import { Route as AuthenticatedAppRaidRouteImport } from './routes/_authenticated/app.raid'
@@ -134,11 +133,6 @@ const AuthenticatedAppSettingsRoute =
     path: '/settings',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
-const AuthenticatedAppRiskRoute = AuthenticatedAppRiskRouteImport.update({
-  id: '/risk',
-  path: '/risk',
-  getParentRoute: () => AuthenticatedAppRoute,
-} as any)
 const AuthenticatedAppReviewsRoute = AuthenticatedAppReviewsRouteImport.update({
   id: '/reviews',
   path: '/reviews',
@@ -270,7 +264,6 @@ export interface FileRoutesByFullPath {
   '/app/raid': typeof AuthenticatedAppRaidRoute
   '/app/reports': typeof AuthenticatedAppReportsRoute
   '/app/reviews': typeof AuthenticatedAppReviewsRoute
-  '/app/risk': typeof AuthenticatedAppRiskRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/stakeholders': typeof AuthenticatedAppStakeholdersRoute
   '/app/tasks': typeof AuthenticatedAppTasksRoute
@@ -307,7 +300,6 @@ export interface FileRoutesByTo {
   '/app/raid': typeof AuthenticatedAppRaidRoute
   '/app/reports': typeof AuthenticatedAppReportsRoute
   '/app/reviews': typeof AuthenticatedAppReviewsRoute
-  '/app/risk': typeof AuthenticatedAppRiskRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/stakeholders': typeof AuthenticatedAppStakeholdersRoute
   '/app/tasks': typeof AuthenticatedAppTasksRoute
@@ -347,7 +339,6 @@ export interface FileRoutesById {
   '/_authenticated/app/raid': typeof AuthenticatedAppRaidRoute
   '/_authenticated/app/reports': typeof AuthenticatedAppReportsRoute
   '/_authenticated/app/reviews': typeof AuthenticatedAppReviewsRoute
-  '/_authenticated/app/risk': typeof AuthenticatedAppRiskRoute
   '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
   '/_authenticated/app/stakeholders': typeof AuthenticatedAppStakeholdersRoute
   '/_authenticated/app/tasks': typeof AuthenticatedAppTasksRoute
@@ -387,7 +378,6 @@ export interface FileRouteTypes {
     | '/app/raid'
     | '/app/reports'
     | '/app/reviews'
-    | '/app/risk'
     | '/app/settings'
     | '/app/stakeholders'
     | '/app/tasks'
@@ -424,7 +414,6 @@ export interface FileRouteTypes {
     | '/app/raid'
     | '/app/reports'
     | '/app/reviews'
-    | '/app/risk'
     | '/app/settings'
     | '/app/stakeholders'
     | '/app/tasks'
@@ -463,7 +452,6 @@ export interface FileRouteTypes {
     | '/_authenticated/app/raid'
     | '/_authenticated/app/reports'
     | '/_authenticated/app/reviews'
-    | '/_authenticated/app/risk'
     | '/_authenticated/app/settings'
     | '/_authenticated/app/stakeholders'
     | '/_authenticated/app/tasks'
@@ -611,13 +599,6 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/app/settings'
       preLoaderRoute: typeof AuthenticatedAppSettingsRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/app/risk': {
-      id: '/_authenticated/app/risk'
-      path: '/risk'
-      fullPath: '/app/risk'
-      preLoaderRoute: typeof AuthenticatedAppRiskRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/reviews': {
@@ -772,7 +753,6 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppRaidRoute: typeof AuthenticatedAppRaidRoute
   AuthenticatedAppReportsRoute: typeof AuthenticatedAppReportsRoute
   AuthenticatedAppReviewsRoute: typeof AuthenticatedAppReviewsRoute
-  AuthenticatedAppRiskRoute: typeof AuthenticatedAppRiskRoute
   AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
   AuthenticatedAppStakeholdersRoute: typeof AuthenticatedAppStakeholdersRoute
   AuthenticatedAppTasksRoute: typeof AuthenticatedAppTasksRoute
@@ -795,7 +775,6 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppRaidRoute: AuthenticatedAppRaidRoute,
   AuthenticatedAppReportsRoute: AuthenticatedAppReportsRoute,
   AuthenticatedAppReviewsRoute: AuthenticatedAppReviewsRoute,
-  AuthenticatedAppRiskRoute: AuthenticatedAppRiskRoute,
   AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
   AuthenticatedAppStakeholdersRoute: AuthenticatedAppStakeholdersRoute,
   AuthenticatedAppTasksRoute: AuthenticatedAppTasksRoute,
