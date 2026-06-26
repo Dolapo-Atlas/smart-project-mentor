@@ -6,6 +6,7 @@ import { getTemplateById, getActiveProject, markIntroSeen } from "@/lib/projects
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Calendar, Clock, Gauge, Sparkles, Coffee } from "lucide-react";
 import { StakeholderHoverAvatar as StakeholderAvatar } from "@/components/stakeholder-card";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/project-intro/$templateId")({
   component: ProjectIntro,
@@ -37,7 +38,7 @@ function ProjectIntro() {
   ];
 
   const seenMut = useMutation({
-    mutationFn: () => markSeen({ data: { instanceId: (active as any).id } }),
+    mutationFn: () => markSeen({ data: { instanceId: (active as any).id, templateId } }),
   });
 
   useEffect(() => {
@@ -59,8 +60,9 @@ function ProjectIntro() {
     setLoading(true);
     try {
       await seenMut.mutateAsync();
-    } catch {
-      /* non-blocking */
+    } catch (error) {
+      setLoading(false);
+      toast.error(error instanceof Error ? error.message : "Couldn't start your first day");
     }
   }
 
