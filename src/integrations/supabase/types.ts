@@ -304,6 +304,8 @@ export type Database = {
           experience_level: string | null
           id: string
           name: string
+          referral_code: string | null
+          referred_by_code: string | null
         }
         Insert: {
           country?: string | null
@@ -313,6 +315,8 @@ export type Database = {
           experience_level?: string | null
           id?: string
           name: string
+          referral_code?: string | null
+          referred_by_code?: string | null
         }
         Update: {
           country?: string | null
@@ -322,6 +326,8 @@ export type Database = {
           experience_level?: string | null
           id?: string
           name?: string
+          referral_code?: string | null
+          referred_by_code?: string | null
         }
         Relationships: []
       }
@@ -1353,6 +1359,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      gen_referral_code: { Args: never; Returns: string }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -1370,6 +1377,7 @@ export type Database = {
           read_ct: number
         }[]
       }
+      referral_stats: { Args: { code: string }; Returns: number }
     }
     Enums: {
       budget_kind: "planned" | "actual" | "invoice" | "forecast"
