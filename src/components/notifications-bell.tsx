@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { listNotifications, type Notification } from "@/lib/notifications.functions";
 import { Bell, Mail, CheckCircle2, Users, BookOpen } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -25,10 +26,21 @@ const ICON: Record<Notification["kind"], typeof Bell> = {
 
 export function NotificationsBell() {
   const fetchFn = useServerFn(listNotifications);
+  const [visible, setVisible] = useState(
+    typeof document === "undefined" ? true : !document.hidden,
+  );
+  useEffect(() => {
+    function onVis() {
+      setVisible(!document.hidden);
+    }
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
   const { data } = useQuery({
     queryKey: ["notifications"],
     queryFn: () => fetchFn(),
-    refetchInterval: 20000,
+    refetchInterval: visible ? 20000 : false,
+    refetchOnWindowFocus: true,
   });
   const unread = data?.unreadCount ?? 0;
   const items = data?.items ?? [];
