@@ -103,10 +103,14 @@ function ProjectsPicker() {
 
   const start = useMutation({
     mutationFn: (templateId: string) => startFn({ data: { templateId } }),
-    onSuccess: () => {
+    onSuccess: (res: any) => {
       qc.invalidateQueries();
-      toast.success("Simulation loaded. Welcome to your sim room.");
-      navigate({ to: "/app" });
+      if (res?.requiresIntro && res?.templateId) {
+        navigate({ to: "/app/projects/$templateId/intro", params: { templateId: res.templateId } });
+      } else {
+        toast.success("Simulation loaded. Welcome back.");
+        navigate({ to: "/app" });
+      }
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Couldn't start that simulation"),
   });
