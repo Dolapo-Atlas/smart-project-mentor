@@ -6,7 +6,6 @@ import {
   FileText,
   Sparkles,
   Loader2,
-  CheckCircle2,
   Inbox,
   ShieldCheck,
   Users,
