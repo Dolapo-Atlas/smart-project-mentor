@@ -94,6 +94,25 @@ function AuthPage() {
     navigate({ to: "/app" });
   }
 
+  async function handleApple() {
+    setLoading(true);
+    if (mode === "signup") {
+      sessionStorage.setItem("oauth_intent", "signup");
+    } else {
+      sessionStorage.removeItem("oauth_intent");
+    }
+    const result = await lovable.auth.signInWithOAuth("apple", {
+      redirect_uri: window.location.origin + "/auth",
+    });
+    if (result.error) {
+      toast.error(result.error.message ?? "Apple sign-in failed");
+      setLoading(false);
+      return;
+    }
+    if (result.redirected) return;
+    navigate({ to: "/app" });
+  }
+
   return (
     <div className="min-h-screen bg-background paper-texture">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
@@ -115,6 +134,9 @@ function AuthPage() {
 
         <Button onClick={handleGoogle} disabled={loading} variant="outline" className="w-full">
           Continue with Google
+        </Button>
+        <Button onClick={handleApple} disabled={loading} variant="outline" className="w-full">
+          Continue with Apple
         </Button>
 
         <div className="flex items-center gap-3 text-xs uppercase tracking-widest text-muted-foreground">
