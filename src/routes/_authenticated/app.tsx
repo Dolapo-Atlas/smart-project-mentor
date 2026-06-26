@@ -5,11 +5,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getOverview } from "@/lib/sim.functions";
 import { getActiveProject } from "@/lib/projects.functions";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { GuidedTour } from "@/components/guided-tour";
-import { useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/app")({
   component: AppLayout,
