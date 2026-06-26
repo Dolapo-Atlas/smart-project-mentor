@@ -106,7 +106,7 @@ function ProjectsPicker() {
     onSuccess: (res: any) => {
       qc.invalidateQueries();
       if (res?.requiresIntro && res?.templateId) {
-        navigate({ to: "/app/projects/$templateId/intro", params: { templateId: res.templateId } });
+        navigate({ to: "/project-intro/$templateId", params: { templateId: res.templateId } });
       } else {
         toast.success("Simulation loaded. Welcome back.");
         navigate({ to: "/app" });
