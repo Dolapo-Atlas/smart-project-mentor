@@ -440,6 +440,62 @@ export type Database = {
           },
         ]
       }
+      performance_reviews: {
+        Row: {
+          created_at: string
+          highlights: Json
+          id: string
+          improvements: Json
+          narrative: string
+          overall_score: number
+          project_instance_id: string | null
+          reviewer_name: string
+          score_decision: number
+          score_delivery: number
+          score_stakeholder: number
+          user_id: string
+          week_number: number
+        }
+        Insert: {
+          created_at?: string
+          highlights?: Json
+          id?: string
+          improvements?: Json
+          narrative: string
+          overall_score: number
+          project_instance_id?: string | null
+          reviewer_name?: string
+          score_decision: number
+          score_delivery: number
+          score_stakeholder: number
+          user_id: string
+          week_number: number
+        }
+        Update: {
+          created_at?: string
+          highlights?: Json
+          id?: string
+          improvements?: Json
+          narrative?: string
+          overall_score?: number
+          project_instance_id?: string | null
+          reviewer_name?: string
+          score_decision?: number
+          score_delivery?: number
+          score_stakeholder?: number
+          user_id?: string
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_reviews_project_instance_id_fkey"
+            columns: ["project_instance_id"]
+            isOneToOne: false
+            referencedRelation: "project_instances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       phase_gates: {
         Row: {
           created_at: string
@@ -1039,6 +1095,50 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "tasks_project_instance_id_fkey"
+            columns: ["project_instance_id"]
+            isOneToOne: false
+            referencedRelation: "project_instances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_dynamics: {
+        Row: {
+          created_at: string
+          id: string
+          last_event: string | null
+          project_instance_id: string | null
+          stakeholder_a: string
+          stakeholder_b: string
+          tension_score: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_event?: string | null
+          project_instance_id?: string | null
+          stakeholder_a: string
+          stakeholder_b: string
+          tension_score?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_event?: string | null
+          project_instance_id?: string | null
+          stakeholder_a?: string
+          stakeholder_b?: string
+          tension_score?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_dynamics_project_instance_id_fkey"
             columns: ["project_instance_id"]
             isOneToOne: false
             referencedRelation: "project_instances"
