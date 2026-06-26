@@ -210,7 +210,7 @@ You'll quickly realise that every decision has consequences. Some days will be c
 
 Your first objectives are waiting for you in the workspace:
 
-  ✓ Read the Project Charter
+  ✓ Draft the Project Charter
   ✓ Meet your key stakeholders
   ✓ Review the current project status
   ✓ Submit an initial status update
@@ -242,13 +242,13 @@ ${pmRole}`;
       if (!existingTasks || existingTasks === 0) {
         const objectives = [
           {
-            title: "Read the Project Charter",
-            description: "Open the charter in Documents and get familiar with scope, objectives and key constraints.",
+            title: "Draft the Project Charter",
+            description: "There isn't a charter on file yet — that's your first deliverable. Capture scope, objectives, success criteria, assumptions, constraints and governance, then upload it in Documents.",
             priority: "high" as const,
             category: "Documentation",
             linked_area: "charter",
             linked_module_route: "/app/documents",
-            completion_action: "Open Documents → Project Charter and review it end-to-end.",
+            completion_action: "Open Documents → New document → Project Charter, draft it and upload.",
           },
           {
             title: "Meet your key stakeholders",
