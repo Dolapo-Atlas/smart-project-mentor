@@ -257,6 +257,53 @@ export const advanceTime = createServerFn({ method: "POST" })
       })
       .eq("user_id", userId);
 
+    // ---- Evolving tasks: age overdue work, chase from linked stakeholders ----
+    try {
+      const nowIso = new Date().toISOString();
+      const { data: overdue } = await supabase
+        .from("tasks")
+        .select("id,title,priority,due_at,linked_stakeholder,status")
+        .eq("user_id", userId)
+        .in("status", ["todo", "in_progress"])
+        .lt("due_at", nowIso)
+        .limit(5);
+      const bump: Record<string, string> = {
+        low: "medium",
+        medium: "high",
+        high: "critical",
+        critical: "critical",
+      };
+      for (const t of overdue ?? []) {
+        const newPriority = bump[t.priority] ?? "high";
+        if (newPriority !== t.priority) {
+          await supabase
+            .from("tasks")
+            .update({ priority: newPriority })
+            .eq("id", t.id);
+        }
+        const sender = t.linked_stakeholder ?? "Emma Collins";
+        await supabase.from("inbox_messages").insert({
+          user_id: userId,
+          sender_name: sender,
+          sender_role: "Stakeholder",
+          subject: `Chasing: ${t.title}`,
+          tone: "urgent",
+          body: `Hi — circling back on "${t.title}". The deadline has passed and I haven't seen anything yet. Can you let me know where this is and when I can expect it? I've bumped the priority on my side.\n\n${sender}`,
+        });
+        newEmails.push(`${sender}: Chasing: ${t.title}`);
+        sentimentDeltas[sender] = (sentimentDeltas[sender] ?? 0) - 2;
+      }
+      if ((overdue?.length ?? 0) > 0) {
+        beats.push({
+          at: new Date().toISOString(),
+          beat: `${overdue!.length} overdue task${overdue!.length === 1 ? "" : "s"} aged: priority raised and stakeholders chased.`,
+        });
+        reputationDelta -= overdue!.length;
+      }
+    } catch {
+      // non-fatal
+    }
+
     // ---- Generate at least one stakeholder email per advance ----
     try {
       const emailCount = data.mode === "day" ? 1 : data.mode === "week" ? 2 : 3;
