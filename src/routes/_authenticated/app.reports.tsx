@@ -57,7 +57,7 @@ function reportToHtml(r: ReportRow): string {
  .feedback{background:#f8f8f6;border:1px solid #e5e5e0;padding:12px 16px;border-radius:6px;margin-top:8px}
 </style></head><body>
 <h1>Weekly Status Report</h1>
-<div class="meta">Digital Care Records Rollout · Northbridge Health Services<br/>Week of <strong>${r.week_start}</strong> · <span class="rag">${r.rag_summary}</span>${r.ai_score != null ? `<span class="score">${r.ai_score}/100</span>` : ""}</div>
+<div class="meta">Digital Care Records Rollout · Atlas Enterprise<br/>Week of <strong>${r.week_start}</strong> · <span class="rag">${r.rag_summary}</span>${r.ai_score != null ? `<span class="score">${r.ai_score}/100</span>` : ""}</div>
 <h2>Achievements this week</h2><p>${nl2br(r.achievements) || "<em>—</em>"}</p>
 <h2>Plan for next week</h2><p>${nl2br(r.next_week) || "<em>—</em>"}</p>
 <h2>Risks &amp; blockers</h2><p>${nl2br(r.risks_blockers) || "<em>—</em>"}</p>
