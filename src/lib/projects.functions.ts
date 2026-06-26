@@ -335,7 +335,7 @@ export const setActiveProject = createServerFn({ method: "POST" })
     // Verify ownership
     const { data: inst, error } = await supabase
       .from("project_instances")
-      .select("id")
+      .select("id, template_id, intro_seen_at")
       .eq("id", data.instanceId)
       .eq("user_id", userId)
       .maybeSingle();
@@ -352,7 +352,11 @@ export const setActiveProject = createServerFn({ method: "POST" })
       .update({ current_project_instance_id: data.instanceId })
       .eq("id", userId);
 
-    return { ok: true };
+    return {
+      ok: true,
+      templateId: inst.template_id,
+      requiresIntro: !inst.intro_seen_at,
+    };
   });
 
 export const archiveProject = createServerFn({ method: "POST" })
