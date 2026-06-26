@@ -1345,12 +1345,35 @@ function EarlyAccess() {
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [referralCount, setReferralCount] = useState<number | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const inviteUrl = referralCode ? `https://atlassim.co/invite/${referralCode}` : "";
+
+  useEffect(() => {
+    if (!referralCode) return;
+    let active = true;
+    (async () => {
+      try {
+        const { data } = await supabase.rpc("referral_stats", { code: referralCode });
+        if (active && typeof data === "number") setReferralCount(data);
+      } catch {
+        // ignore
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [referralCode]);
 
   async function onShare() {
+    const url = inviteUrl || "https://atlassim.co";
     const shareData = {
-      title: "Atlas — Experience the workplace before day one",
-      text: "I just joined the Atlas waitlist. It's a workplace simulation for aspiring PMs. Check it out:",
-      url: "https://atlassim.co",
+      title: "Atlas — Founder Cohort",
+      text:
+        "I'm one of the first members of the Atlas Founder Cohort.\n\nAtlas is building a realistic workplace simulation where aspiring Project Coordinators, PMOs, Business Analysts and Project Managers gain practical experience before their first role.\n\nThought you might like it too.\n\nJoin the Founder Cohort:",
+      url,
     };
     if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
       try {
@@ -1361,11 +1384,22 @@ function EarlyAccess() {
       }
     }
     try {
-      await navigator.clipboard.writeText(shareData.url);
+      await navigator.clipboard.writeText(`${shareData.text}\n${shareData.url}`);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error("Couldn't copy link. Please copy manually: https://atlassim.co");
+      toast.error(`Couldn't copy link. Please copy manually: ${url}`);
+    }
+  }
+
+  async function copyInviteLink() {
+    if (!inviteUrl) return;
+    try {
+      await navigator.clipboard.writeText(inviteUrl);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      toast.error("Couldn't copy link.");
     }
   }
 
@@ -1388,13 +1422,28 @@ function EarlyAccess() {
     }
     setSubmitting(true);
     let ok = false;
+    let returnedCode: string | null = null;
     try {
+      let referredBy: string | null = null;
+      try {
+        referredBy = window.localStorage.getItem("atlas_ref");
+      } catch {
+        // ignore
+      }
       const res = await fetch("/api/public/early-access", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(parsed.data),
+        body: JSON.stringify({ ...parsed.data, referred_by_code: referredBy || undefined }),
       });
       ok = res.ok;
+      if (ok) {
+        try {
+          const j = await res.json();
+          returnedCode = j?.referral_code ?? null;
+        } catch {
+          // ignore
+        }
+      }
     } catch {
       ok = false;
     }
@@ -1403,6 +1452,7 @@ function EarlyAccess() {
       toast.error("Something went wrong. Please try again.");
       return;
     }
+    setReferralCode(returnedCode);
     setDone(true);
     setForm({ name: "", email: "", role: "", country: "", level: "" });
   }
