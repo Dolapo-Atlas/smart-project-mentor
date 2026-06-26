@@ -158,6 +158,13 @@ export const markIntroSeen = createServerFn({ method: "POST" })
       .eq("user_id", userId);
     if (error) throw error;
 
+    // Seed the welcome email for this project instance (idempotent).
+    const { data: inst } = await supabase
+      .from("project_instances")
+      .select("id, display_name, project_templates(title, pm_name, pm_role, sponsor_name, sponsor_role, key_skills)")
+      .eq("id", data.instanceId)
+      .maybeSingle();
+
     const { error: stateErr } = await supabase
       .from("simulation_state")
       .upsert(
@@ -169,13 +176,6 @@ export const markIntroSeen = createServerFn({ method: "POST" })
         { onConflict: "user_id,project_instance_id" },
       );
     if (stateErr) throw stateErr;
-
-    // Seed the welcome email for this project instance (idempotent).
-    const { data: inst } = await supabase
-      .from("project_instances")
-      .select("id, display_name, project_templates(title, pm_name, pm_role, sponsor_name, sponsor_role, key_skills)")
-      .eq("id", data.instanceId)
-      .maybeSingle();
 
     const { count: existing } = await supabase
       .from("inbox_messages")
