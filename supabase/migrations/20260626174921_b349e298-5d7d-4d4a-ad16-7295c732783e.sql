@@ -1,0 +1,1 @@
+GRANT INSERT ON public.early_access_signups TO anon, authenticated; GRANT ALL ON public.early_access_signups TO service_role;
