@@ -197,7 +197,7 @@ function AppLayout() {
           <Outlet />
         </main>
       </div>
-      {showTour && (
+      {showTour && !showCoffee && (
         <GuidedTour
           instanceId={activeAny.id}
           onDone={() => setTourDismissed(true)}
