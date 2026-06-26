@@ -195,6 +195,19 @@ ${pmRole}`;
     return { ok: true };
   });
 
+export const markTourCompleted = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ instanceId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("project_instances")
+      .update({ tour_completed_at: new Date().toISOString() })
+      .eq("id", data.instanceId)
+      .eq("user_id", context.userId);
+    if (error) throw error;
+    return { ok: true };
+  });
+
 export const getTemplateById = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ templateId: z.string().uuid() }).parse(d))
