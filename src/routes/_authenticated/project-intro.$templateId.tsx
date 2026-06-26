@@ -31,11 +31,13 @@ function ProjectIntro() {
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
   const [coffeeBreak, setCoffeeBreak] = useState(false);
-  const loadingLines = [
-    "Connecting to Oakwood Health Programme…",
-    "Loading Project Workspace…",
-    "Preparing today's brief…",
-  ];
+  const loadingLines = tpl
+    ? [
+        `Connecting to ${tpl.title}…`,
+        "Loading Project Workspace…",
+        "Preparing today's brief…",
+      ]
+    : ["Loading Project Workspace…", "Preparing today's brief…"];
 
   const seenMut = useMutation({
     mutationFn: () => markSeen({ data: { instanceId: (active as any).id, templateId } }),
