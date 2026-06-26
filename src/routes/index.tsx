@@ -185,7 +185,12 @@ function Nav({ scrolled }: { scrolled: boolean }) {
           ))}
         </nav>
         <div className="flex items-center gap-2">
-          <OwnerOnlySignIn />
+          <Link
+            to="/auth"
+            className="inline-flex rounded-full px-4 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Sign in
+          </Link>
           <a
             href="#early-access"
             className="group inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-[0_1px_0_rgba(255,255,255,0.25)_inset,0_8px_24px_-12px_rgba(217,119,6,0.6)] transition-all hover:-translate-y-0.5 hover:shadow-[0_1px_0_rgba(255,255,255,0.3)_inset,0_12px_28px_-12px_rgba(217,119,6,0.7)]"
