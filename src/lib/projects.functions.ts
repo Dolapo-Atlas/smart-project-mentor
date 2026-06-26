@@ -105,16 +105,23 @@ export const startProject = createServerFn({ method: "POST" })
       .eq("id", userId);
 
     // Seed a simulation_state row for this instance if it doesn't have one yet.
-    // Profile is now set to the new instance, so RLS will accept the insert; the
-    // trigger fills project_instance_id automatically.
+    // Profile is now set to the new instance, so RLS will accept the insert.
+    // PK is (user_id, project_instance_id) — set both explicitly.
     const { data: existingState } = await supabase
       .from("simulation_state")
-      .select("id")
+      .select("user_id")
       .eq("user_id", userId)
       .eq("project_instance_id", instanceId)
       .maybeSingle();
     if (!existingState) {
-      await supabase.from("simulation_state").insert({ user_id: userId });
+      const { error: ssErr } = await supabase
+        .from("simulation_state")
+        .insert({
+          user_id: userId,
+          project_instance_id: instanceId,
+          project_name: template.title,
+        });
+      if (ssErr) console.error("simulation_state seed failed", ssErr);
     }
 
     return { instanceId, requiresIntro, templateId: template.id };
@@ -182,14 +189,16 @@ Welcome to the team.
 ${pmName}
 ${pmRole}`;
 
-      await supabase.from("inbox_messages").insert({
+      const { error: inboxErr } = await supabase.from("inbox_messages").insert({
         user_id: userId,
+        project_instance_id: data.instanceId,
         sender_name: pmName,
         sender_role: pmRole,
         subject: `Welcome to ${projectTitle}`,
         tone: "supportive",
         body,
       });
+      if (inboxErr) console.error("welcome email seed failed", inboxErr);
     }
 
     return { ok: true };
