@@ -120,7 +120,7 @@ function ProjectIntro() {
               Grab a coffee ☕
             </h2>
             <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-              Take a breath. Your first day at <span className="text-foreground">{projectCodeName((tpl as any).title)}</span> is about to start.
+              Take a breath. Your first day at <span className="text-foreground">{(tpl as any).title}</span> is about to start.
               <br className="hidden sm:block" />
               Emma will drop a welcome note in your inbox the moment you sit down.
             </p>
@@ -139,7 +139,7 @@ function ProjectIntro() {
 
       <main className="mx-auto flex min-h-screen max-w-3xl flex-col px-6 py-16 md:py-24">
         <div className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
-          Welcome to {projectCodeName(tpl.title)}
+          Welcome to {tpl.title}
         </div>
         <h1 className="mt-3 font-display text-4xl font-medium leading-tight tracking-tight md:text-5xl">
           {tpl.title}
