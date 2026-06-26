@@ -28,9 +28,10 @@ function ProjectIntro() {
     queryFn: () => fetchActive(),
   });
 
-  const [loading, setLoading] = useState(false);
+  type Stage = "loading" | "coffee" | "intro";
+  const [stage, setStage] = useState<Stage>("loading");
   const [loadingStep, setLoadingStep] = useState(0);
-  const [coffeeBreak, setCoffeeBreak] = useState(false);
+  const [starting, setStarting] = useState(false);
   const loadingLines = tpl
     ? [
         `Connecting to ${tpl.title}…`,
@@ -44,26 +45,26 @@ function ProjectIntro() {
   });
 
   useEffect(() => {
-    if (!loading) return;
+    if (stage !== "loading") return;
     if (loadingStep >= loadingLines.length) return;
     const t = setTimeout(() => setLoadingStep((s) => s + 1), 850);
     return () => clearTimeout(t);
-  }, [loading, loadingStep]);
+  }, [stage, loadingStep, loadingLines.length]);
 
   useEffect(() => {
-    if (loading && loadingStep >= loadingLines.length) {
-      setLoading(false);
-      setCoffeeBreak(true);
+    if (stage === "loading" && loadingStep >= loadingLines.length) {
+      setStage("coffee");
     }
-  }, [loading, loadingStep, navigate]);
+  }, [stage, loadingStep, loadingLines.length]);
 
   async function begin() {
     if (!(active as any)?.id) return;
-    setLoading(true);
+    setStarting(true);
     try {
       await seenMut.mutateAsync();
+      navigate({ to: "/app/inbox" });
     } catch (error) {
-      setLoading(false);
+      setStarting(false);
       toast.error(error instanceof Error ? error.message : "Couldn't start your first day");
     }
   }
@@ -81,7 +82,7 @@ function ProjectIntro() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-background paper-texture">
       {/* Loader overlay */}
-      {loading && (
+      {stage === "loading" && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm">
           <div className="w-full max-w-md px-8 text-center">
             <div className="mx-auto mb-6 h-10 w-10 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
@@ -107,7 +108,7 @@ function ProjectIntro() {
       )}
 
       {/* Grab a coffee intermission */}
-      {coffeeBreak && (
+      {stage === "coffee" && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm animate-in fade-in duration-500">
           <div className="w-full max-w-lg px-8 text-center">
             <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-border bg-card">
@@ -122,11 +123,11 @@ function ProjectIntro() {
             <p className="mt-4 text-base leading-relaxed text-muted-foreground">
               Take a breath. Your first day at <span className="text-foreground">{(tpl as any).title}</span> is about to start.
               <br className="hidden sm:block" />
-              Emma will drop a welcome note in your inbox the moment you sit down.
+              In a moment you'll see your project brief — then Emma drops a welcome note the moment you sit down.
             </p>
             <div className="mt-8 flex justify-center">
-              <Button size="lg" onClick={() => navigate({ to: "/app/inbox" })}>
-                I'm ready — let's go
+              <Button size="lg" onClick={() => setStage("intro")}>
+                I'm ready — show me the brief
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
@@ -137,7 +138,11 @@ function ProjectIntro() {
         </div>
       )}
 
-      <main className="mx-auto flex min-h-screen max-w-3xl flex-col px-6 py-16 md:py-24">
+      <main
+        className={`mx-auto flex min-h-screen max-w-3xl flex-col px-6 py-16 md:py-24 ${
+          stage === "intro" ? "" : "invisible"
+        }`}
+      >
         <div className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
           Welcome to {tpl.title}
         </div>
@@ -190,9 +195,9 @@ function ProjectIntro() {
         </div>
 
         <div className="mt-12 flex flex-wrap items-center gap-3">
-          <Button size="lg" onClick={begin} disabled={loading || !(active as any)?.id}>
+          <Button size="lg" onClick={begin} disabled={starting || !(active as any)?.id}>
             <Sparkles className="mr-2 h-4 w-4" />
-            Start First Day
+            {starting ? "Starting…" : "Start First Day"}
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
           <button
