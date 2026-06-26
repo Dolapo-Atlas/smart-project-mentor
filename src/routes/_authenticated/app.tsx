@@ -8,28 +8,30 @@ import { getActiveProject } from "@/lib/projects.functions";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { GuidedTour } from "@/components/guided-tour";
+import { useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/app")({
   component: AppLayout,
 });
 
-type NavItem = { to: string; label: string; icon: typeof Mail; exact?: boolean };
+type NavItem = { to: string; label: string; icon: typeof Mail; exact?: boolean; tour?: string };
 const NAV: NavItem[] = [
-  { to: "/app", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { to: "/app/inbox", label: "Inbox", icon: Mail },
+  { to: "/app", label: "Dashboard", icon: LayoutDashboard, exact: true, tour: "dashboard" },
+  { to: "/app/inbox", label: "Inbox", icon: Mail, tour: "inbox" },
   { to: "/app/comms", label: "Comms", icon: Send },
   { to: "/app/meetings", label: "Meetings", icon: Users },
-  { to: "/app/stakeholders", label: "Stakeholders", icon: Contact },
-  { to: "/app/tasks", label: "Tasks", icon: ListChecks },
+  { to: "/app/stakeholders", label: "Stakeholders", icon: Contact, tour: "stakeholders" },
+  { to: "/app/tasks", label: "Tasks", icon: ListChecks, tour: "tasks" },
   { to: "/app/completed", label: "Completed", icon: CheckCircle2 },
-  { to: "/app/documents", label: "Documents", icon: FileText },
+  { to: "/app/documents", label: "Documents", icon: FileText, tour: "documents" },
   { to: "/app/reports", label: "Status reports", icon: FileBarChart2 },
   { to: "/app/budget", label: "Budget", icon: Wallet },
   { to: "/app/changes", label: "Change requests", icon: GitPullRequest },
   { to: "/app/gates", label: "Phase gates", icon: Gavel },
   { to: "/app/risk", label: "Risk & RAG", icon: ShieldAlert },
   { to: "/app/progress", label: "Progress", icon: Gauge },
-  { to: "/app/learning", label: "Learning", icon: Compass },
+  { to: "/app/learning", label: "Learning", icon: Compass, tour: "learning" },
   { to: "/app/settings", label: "Settings", icon: Settings },
 ];
 
@@ -55,6 +57,14 @@ function AppLayout() {
     if (pathname === "/app/projects" || pathname.startsWith("/app/projects/")) return;
     navigate({ to: "/app/projects" });
   }, [active, activeLoading, pathname, navigate]);
+
+  const [tourDismissed, setTourDismissed] = useState(false);
+  const activeAny = active as any;
+  const showTour =
+    !!activeAny?.id &&
+    !!activeAny?.intro_seen_at &&
+    !activeAny?.tour_completed_at &&
+    !tourDismissed;
 
 
   async function signOut() {
@@ -102,6 +112,7 @@ function AppLayout() {
                 <Link
                   key={to}
                   to={to}
+                  data-tour={NAV.find((n) => n.to === to)?.tour}
                   className={`relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-md p-2 text-center text-[11px] leading-tight transition ${
                     active
                       ? "bg-foreground text-background"
@@ -164,6 +175,12 @@ function AppLayout() {
           <Outlet />
         </main>
       </div>
+      {showTour && (
+        <GuidedTour
+          instanceId={activeAny.id}
+          onDone={() => setTourDismissed(true)}
+        />
+      )}
     </div>
   );
 }
