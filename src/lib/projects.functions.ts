@@ -230,6 +230,72 @@ ${pmRole}`;
         body,
       });
       if (inboxErr) throw inboxErr;
+
+      // Seed the four first-day objectives as real tasks so they appear in
+      // Tasks, What's Next and the dashboard — not just buried in the email.
+      const { count: existingTasks } = await supabase
+        .from("tasks")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .eq("project_instance_id", data.instanceId);
+
+      if (!existingTasks || existingTasks === 0) {
+        const objectives = [
+          {
+            title: "Read the Project Charter",
+            description: "Open the charter in Documents and get familiar with scope, objectives and key constraints.",
+            priority: "high" as const,
+            category: "Documentation",
+            linked_area: "charter",
+            linked_module_route: "/app/documents",
+            completion_action: "Open Documents → Project Charter and review it end-to-end.",
+          },
+          {
+            title: "Meet your key stakeholders",
+            description: "Review the stakeholder roster — names, roles, sentiment and concerns.",
+            priority: "medium" as const,
+            category: "Stakeholder",
+            linked_area: "stakeholders",
+            linked_module_route: "/app/stakeholders",
+            completion_action: "Open Stakeholders and read each profile card.",
+          },
+          {
+            title: "Review the current project status",
+            description: "Check Progress and RAID to understand where the programme stands today.",
+            priority: "medium" as const,
+            category: "Reporting",
+            linked_area: "reports",
+            linked_module_route: "/app/progress",
+            completion_action: "Open Progress and the RAID log to scan the current state.",
+          },
+          {
+            title: "Submit an initial status update",
+            description: "Write your first weekly status report and submit it to Emma.",
+            priority: "high" as const,
+            category: "Reporting",
+            linked_area: "reports",
+            linked_module_route: "/app/reports",
+            completion_action: "Open Reports → New status report and submit it.",
+          },
+        ];
+
+        const { error: tasksErr } = await supabase.from("tasks").insert(
+          objectives.map((o) => ({
+            user_id: userId,
+            project_instance_id: data.instanceId,
+            title: o.title,
+            description: o.description,
+            priority: o.priority,
+            category: o.category,
+            linked_area: o.linked_area,
+            linked_module_route: o.linked_module_route,
+            completion_action: o.completion_action,
+            status: "todo",
+            source: "onboarding",
+          })),
+        );
+        if (tasksErr) console.error("first-day tasks seed failed", tasksErr);
+      }
     }
 
     return { ok: true };
