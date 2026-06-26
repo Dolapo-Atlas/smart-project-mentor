@@ -129,15 +129,46 @@ export const startProject = createServerFn({ method: "POST" })
 
 export const markIntroSeen = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ instanceId: z.string().uuid() }).parse(d))
+  .inputValidator((d: unknown) =>
+    z.object({ instanceId: z.string().uuid(), templateId: z.string().uuid().optional() }).parse(d),
+  )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    const { data: owned } = await supabase
+      .from("project_instances")
+      .select("id, template_id")
+      .eq("id", data.instanceId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (!owned) throw new Error("Project not found");
+    if (data.templateId && owned.template_id !== data.templateId) {
+      throw new Error("This intro does not match the active project.");
+    }
+
+    const { error: activeErr } = await supabase
+      .from("profiles")
+      .update({ current_project_instance_id: data.instanceId })
+      .eq("id", userId);
+    if (activeErr) throw activeErr;
+
     const { error } = await supabase
       .from("project_instances")
       .update({ intro_seen_at: new Date().toISOString() })
       .eq("id", data.instanceId)
       .eq("user_id", userId);
     if (error) throw error;
+
+    const { error: stateErr } = await supabase
+      .from("simulation_state")
+      .upsert(
+        {
+          user_id: userId,
+          project_instance_id: data.instanceId,
+          project_name: (inst as any)?.display_name || (inst as any)?.project_templates?.title || "Atlas Simulation",
+        },
+        { onConflict: "user_id,project_instance_id" },
+      );
+    if (stateErr) throw stateErr;
 
     // Seed the welcome email for this project instance (idempotent).
     const { data: inst } = await supabase
@@ -198,7 +229,7 @@ ${pmRole}`;
         tone: "supportive",
         body,
       });
-      if (inboxErr) console.error("welcome email seed failed", inboxErr);
+      if (inboxErr) throw inboxErr;
     }
 
     return { ok: true };
