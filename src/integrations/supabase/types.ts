@@ -559,6 +559,7 @@ export type Database = {
           current_phase: string
           display_name: string | null
           id: string
+          intro_seen_at: string | null
           last_active_at: string
           progress_pct: number
           seeded: boolean
@@ -574,6 +575,7 @@ export type Database = {
           current_phase?: string
           display_name?: string | null
           id?: string
+          intro_seen_at?: string | null
           last_active_at?: string
           progress_pct?: number
           seeded?: boolean
@@ -589,6 +591,7 @@ export type Database = {
           current_phase?: string
           display_name?: string | null
           id?: string
+          intro_seen_at?: string | null
           last_active_at?: string
           progress_pct?: number
           seeded?: boolean
@@ -611,54 +614,75 @@ export type Database = {
       project_templates: {
         Row: {
           category: string
+          chapters_count: number | null
           created_at: string
           description: string
           difficulty: string
           duration_days: number
+          estimated_hours: string | null
           icon: string
           id: string
           is_playable: boolean
           is_recommended: boolean
           key_skills: string[]
+          pm_name: string | null
+          pm_role: string | null
           slug: string
           sort_order: number
+          sponsor_name: string | null
+          sponsor_role: string | null
           stakeholder_count: number
           title: string
           updated_at: string
+          welcome_intro: string | null
         }
         Insert: {
           category: string
+          chapters_count?: number | null
           created_at?: string
           description: string
           difficulty: string
           duration_days: number
+          estimated_hours?: string | null
           icon?: string
           id?: string
           is_playable?: boolean
           is_recommended?: boolean
           key_skills?: string[]
+          pm_name?: string | null
+          pm_role?: string | null
           slug: string
           sort_order?: number
+          sponsor_name?: string | null
+          sponsor_role?: string | null
           stakeholder_count: number
           title: string
           updated_at?: string
+          welcome_intro?: string | null
         }
         Update: {
           category?: string
+          chapters_count?: number | null
           created_at?: string
           description?: string
           difficulty?: string
           duration_days?: number
+          estimated_hours?: string | null
           icon?: string
           id?: string
           is_playable?: boolean
           is_recommended?: boolean
           key_skills?: string[]
+          pm_name?: string | null
+          pm_role?: string | null
           slug?: string
           sort_order?: number
+          sponsor_name?: string | null
+          sponsor_role?: string | null
           stakeholder_count?: number
           title?: string
           updated_at?: string
+          welcome_intro?: string | null
         }
         Relationships: []
       }

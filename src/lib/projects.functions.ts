@@ -71,6 +71,7 @@ export const startProject = createServerFn({ method: "POST" })
       .maybeSingle();
 
     let instanceId = existing?.id;
+    let requiresIntro = false;
     if (!instanceId) {
       const { data: created, error: cErr } = await supabase
         .from("project_instances")
@@ -84,11 +85,18 @@ export const startProject = createServerFn({ method: "POST" })
         .single();
       if (cErr) throw cErr;
       instanceId = created.id;
+      requiresIntro = true;
     } else {
       await supabase
         .from("project_instances")
         .update({ status: "active", last_active_at: new Date().toISOString() })
         .eq("id", instanceId);
+      const { data: row } = await supabase
+        .from("project_instances")
+        .select("intro_seen_at")
+        .eq("id", instanceId)
+        .maybeSingle();
+      requiresIntro = !row?.intro_seen_at;
     }
 
     await supabase
@@ -109,7 +117,33 @@ export const startProject = createServerFn({ method: "POST" })
       await supabase.from("simulation_state").insert({ user_id: userId });
     }
 
-    return { instanceId };
+    return { instanceId, requiresIntro, templateId: template.id };
+  });
+
+export const markIntroSeen = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ instanceId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("project_instances")
+      .update({ intro_seen_at: new Date().toISOString() })
+      .eq("id", data.instanceId)
+      .eq("user_id", context.userId);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+export const getTemplateById = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ templateId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: tpl, error } = await context.supabase
+      .from("project_templates")
+      .select("*")
+      .eq("id", data.templateId)
+      .maybeSingle();
+    if (error) throw error;
+    return tpl;
   });
 
 export const setActiveProject = createServerFn({ method: "POST" })
