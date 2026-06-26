@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
-import { Mail, ListChecks, FileText, Gauge, LayoutDashboard, LogOut, ArrowLeft, ShieldAlert, FileBarChart2, Wallet, GitPullRequest, Gavel, Users, Send, Compass, Contact, CheckCircle2, Settings, FolderKanban, Award } from "lucide-react";
+import { Mail, ListChecks, FileText, Gauge, LayoutDashboard, LogOut, ArrowLeft, ShieldAlert, FileBarChart2, Wallet, GitPullRequest, Gavel, Users, Send, Compass, Contact, CheckCircle2, Settings, FolderKanban, Award, Activity } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -31,7 +31,8 @@ const NAV: NavItem[] = [
   { to: "/app/budget", label: "Budget", icon: Wallet },
   { to: "/app/changes", label: "Change requests", icon: GitPullRequest },
   { to: "/app/gates", label: "Phase gates", icon: Gavel },
-  { to: "/app/risk", label: "Risk & RAG", icon: ShieldAlert },
+  { to: "/app/raid", label: "RAID Log", icon: ShieldAlert },
+  { to: "/app/health", label: "Project Health", icon: Activity },
   { to: "/app/progress", label: "Progress", icon: Gauge },
   { to: "/app/reviews", label: "Reviews", icon: Award },
   { to: "/app/learning", label: "Learning", icon: Compass, tour: "learning" },
