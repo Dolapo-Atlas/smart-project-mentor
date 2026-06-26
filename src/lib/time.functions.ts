@@ -291,7 +291,24 @@ export const advanceTime = createServerFn({ method: "POST" })
           body: `Hi — circling back on "${t.title}". The deadline has passed and I haven't seen anything yet. Can you let me know where this is and when I can expect it? I've bumped the priority on my side.\n\n${sender}`,
         });
         newEmails.push(`${sender}: Chasing: ${t.title}`);
-        sentimentDeltas[sender] = (sentimentDeltas[sender] ?? 0) - 2;
+        // Inline sentiment hit (the global deltas were already applied above)
+        const { data: existingRel } = await supabase
+          .from("stakeholder_relationships")
+          .select("sentiment,interaction_count")
+          .eq("user_id", userId)
+          .eq("stakeholder_name", sender)
+          .maybeSingle();
+        const baseline = ARCHETYPE_SENTIMENT[sender] ?? 0;
+        const cur = existingRel?.sentiment ?? baseline;
+        await supabase.from("stakeholder_relationships").upsert(
+          {
+            user_id: userId,
+            stakeholder_name: sender,
+            sentiment: Math.max(-100, cur - 2),
+            interaction_count: (existingRel?.interaction_count ?? 0) + 1,
+          },
+          { onConflict: "user_id,stakeholder_name" },
+        );
       }
       if ((overdue?.length ?? 0) > 0) {
         beats.push({
