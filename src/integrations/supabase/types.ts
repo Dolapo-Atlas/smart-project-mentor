@@ -566,6 +566,7 @@ export type Database = {
           started_at: string
           status: string
           template_id: string
+          tour_completed_at: string | null
           updated_at: string
           user_id: string
         }
@@ -582,6 +583,7 @@ export type Database = {
           started_at?: string
           status?: string
           template_id: string
+          tour_completed_at?: string | null
           updated_at?: string
           user_id: string
         }
@@ -598,6 +600,7 @@ export type Database = {
           started_at?: string
           status?: string
           template_id?: string
+          tour_completed_at?: string | null
           updated_at?: string
           user_id?: string
         }

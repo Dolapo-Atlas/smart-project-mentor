@@ -1,0 +1,1 @@
+ALTER TABLE public.project_instances ADD COLUMN IF NOT EXISTS tour_completed_at timestamptz;
