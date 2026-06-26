@@ -292,7 +292,7 @@ export const decideChangeRequest = createServerFn({ method: "POST" })
     // Stakeholder reaction
     const reactor = data.decision === "approved" ? "Priya Anand" : cr.requested_by;
     const reactorRole = data.decision === "approved"
-      ? "Finance Lead, Northbridge Health Services"
+      ? "Finance Lead, Atlas Enterprise"
       : "Stakeholder";
     await context.supabase.from("inbox_messages").insert({
       user_id: context.userId,
@@ -426,7 +426,7 @@ type TranscriptTurn = {
 const ATTENDEE_BOOK: Record<string, Attendee> = {
   pm:        { role_key: "pm",        name: "Sarah Williams",  role: "Project Manager",                       persona: "Senior PM. Direct, pragmatic, slightly impatient with vague status. Pushes for owners and dates." },
   sponsor:   { role_key: "sponsor",   name: "David Okafor",    role: "Executive Sponsor, Director of Transformation", persona: "Outcome-focused. Uses board language. Pushes back on cost and timeline. Will name names." },
-  finance:   { role_key: "finance",   name: "Priya Anand",     role: "Finance Lead, Northbridge Health Services", persona: "Spreadsheet-led, sceptical of vendor claims. Wants forecast vs actuals, not narrative." },
+  finance:   { role_key: "finance",   name: "Priya Anand",     role: "Finance Lead, Atlas Enterprise", persona: "Spreadsheet-led, sceptical of vendor claims. Wants forecast vs actuals, not narrative." },
   tech:      { role_key: "tech",      name: "James Lin",       role: "Technical Lead",                        persona: "Engineer. Surfaces integration risk and dependency chains. Resists optimistic dates." },
   vendor:    { role_key: "vendor",    name: "CareSoft Ltd",    role: "Vendor — CareSoft (Account Director)",  persona: "Polished, defends vendor commercials. Will offer a workaround before owning a delay." },
   care_home: { role_key: "care_home", name: "Margaret Hollis", role: "Care Home Manager (Willow Lodge)",       persona: "Operational, protective of staff. Speaks plainly. Raises readiness and training concerns." },

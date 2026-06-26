@@ -41,7 +41,7 @@ function Welcome() {
         {phase === "loading" ? (
           <div className="w-full max-w-md text-center">
             <div className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-              Northbridge Health Services
+              Atlas Enterprise
             </div>
             <h1 className="mt-4 font-display text-3xl font-medium">
               Employee Portal Loading{dots}
@@ -58,13 +58,13 @@ function Welcome() {
         ) : (
           <div className="w-full">
             <div className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-              Northbridge Health Services · Employee Portal
+              Atlas Enterprise · Employee Portal
             </div>
             <h1 className="mt-3 font-display text-5xl font-medium tracking-tight">
               Welcome, {firstName}.
             </h1>
             <p className="mt-4 max-w-xl text-base text-muted-foreground">
-              Northbridge Health Services has assigned you to a live project. Your
+              Atlas Enterprise has assigned you to a live project. Your
               workspace is ready.
             </p>
 

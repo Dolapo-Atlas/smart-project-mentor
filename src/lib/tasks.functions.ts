@@ -396,7 +396,7 @@ export async function generateTasksFromEmail(
   userId: string,
   message: { id: string; sender_name: string; sender_role: string; subject: string; body: string; tone: string },
 ): Promise<number> {
-  const prompt = `A stakeholder just emailed the project coordinator on the "Digital Care Records Rollout" at Northbridge Health Services.
+  const prompt = `A stakeholder just emailed the project coordinator on the "Digital Care Records Rollout" at Atlas Enterprise.
 From: ${message.sender_name} (${message.sender_role})
 Tone: ${message.tone}
 Subject: ${message.subject}

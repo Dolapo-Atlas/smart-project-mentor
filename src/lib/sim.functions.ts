@@ -65,7 +65,7 @@ export const completeOnboarding = createServerFn({ method: "POST" })
         career_goal: data.career_goal,
         display_name: `${data.first_name} ${data.last_name}`.trim(),
         role: "Project Coordinator",
-        company: "Northbridge Health Services",
+        company: "Atlas Enterprise",
         manager: "Sarah Williams",
         project_name: "Digital Care Records Rollout",
         start_date: today,
@@ -84,13 +84,13 @@ export const completeOnboarding = createServerFn({ method: "POST" })
       await supabase.from("inbox_messages").insert({
         user_id: userId,
         sender_name: "Sarah Williams",
-        sender_role: "Project Manager, Northbridge Health Services",
+        sender_role: "Project Manager, Atlas Enterprise",
         subject: "Welcome to the Digital Care Records Project",
         tone: "supportive",
         body:
 `Hi ${firstName},
 
-Welcome to Northbridge Health Services.
+Welcome to Atlas Enterprise.
 
 You'll be joining the Digital Care Records Rollout Project as Project Coordinator. You'll be reporting to me, and working alongside our clinical, finance and vendor leads.
 
@@ -106,7 +106,7 @@ Regards,
 
 Sarah Williams
 Project Manager
-Northbridge Health Services`,
+Atlas Enterprise`,
       });
 
       await supabase.from("tasks").insert([
@@ -401,7 +401,7 @@ export const generateStakeholderMessage = createServerFn({ method: "POST" })
       .order("created_at", { ascending: false })
       .limit(3);
 
-    const prompt = `You are simulating stakeholders on the "${state?.project_name ?? "Digital Care Records Rollout"}" project at ${state?.company ?? "Northbridge Health Services"}.
+    const prompt = `You are simulating stakeholders on the "${state?.project_name ?? "Digital Care Records Rollout"}" project at ${state?.company ?? "Atlas Enterprise"}.
 Project: move 12 care homes from paper-based records to a digital care record platform. Budget £500,000. Timeline 6 months. The project is currently behind schedule.
 Current chapter: ${state?.chapter}. Project health: ${state?.health}. Coordinator reputation: ${state?.reputation}/100. Progress: ${state?.progress}/100.
 Recent documents from the coordinator: ${JSON.stringify(recentDocs ?? [])}.
@@ -441,7 +441,7 @@ About half the time, this email should put the coordinator in an awkward positio
       } catch {
         output = {
           sender_name: "Sarah Williams",
-          sender_role: "Project Manager, Northbridge Health Services",
+          sender_role: "Project Manager, Atlas Enterprise",
           subject: "Quick check-in on the rollout",
           body: `Hi ${firstName},\n\nCan you send me a short status update on where we are with the rollout? Particularly the RAID log and any vendor blockers.\n\nThanks,\nSarah`,
           tone: "neutral",
@@ -556,7 +556,7 @@ Sarah`;
       await context.supabase.from("inbox_messages").insert({
         user_id: context.userId,
         sender_name: "Sarah Williams",
-        sender_role: "Project Manager, Northbridge Health Services",
+        sender_role: "Project Manager, Atlas Enterprise",
         subject: `Re: ${title} — submitted`,
         tone: "neutral",
         body,
@@ -897,7 +897,7 @@ function buildEvidenceBasedReaction(
     return sender === "Sarah Williams"
       ? {
           sender_name: "Sarah Williams",
-          sender_role: "Project Manager, Northbridge Health Services",
+          sender_role: "Project Manager, Atlas Enterprise",
           subject: `Re: ${title}`,
           tone: "supportive",
           body: `${title} is now in much better shape. I can see the project dates, decision rights, change control route, governance board, and success criteria, so this no longer reads like the first draft.\n\nPlease turn the remaining RAID points into named actions with owners, mitigations, and review dates so I can brief David with confidence.\n\nThanks,\nSarah`,
@@ -1001,7 +1001,7 @@ export const reviewDocument = createServerFn({ method: "POST" })
     }
     const signals = scoreSignals(excerpt);
     const evidenceFeedback = fallbackFeedback(doc.title, excerpt);
-    const prompt = `You are a senior PMO reviewer at ${state?.company ?? "Northbridge Health Services"} assessing a project coordinator's deliverable on the "${state?.project_name}" project (chapter: ${state?.chapter}; phase: ${state?.phase}). Budget £500,000, 6-month timeline, currently behind schedule. The 12-care-home digital records rollout is the context.
+    const prompt = `You are a senior PMO reviewer at ${state?.company ?? "Atlas Enterprise"} assessing a project coordinator's deliverable on the "${state?.project_name}" project (chapter: ${state?.chapter}; phase: ${state?.phase}). Budget £500,000, 6-month timeline, currently behind schedule. The 12-care-home digital records rollout is the context.
 
 Document title: "${doc.title}". Treat this as a workplace deliverable (e.g. Project Charter, Stakeholder Register, RAID Log, Status Report, Meeting Minutes, Change Request) and review it the way a sponsor or governance board would.
 

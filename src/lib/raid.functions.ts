@@ -113,7 +113,7 @@ function buildStakeholderReaction(item: RaidRow, firstName: string) {
       body:
 `Hi ${firstName},
 
-We note the dependency logged against CareSoft configuration. Our team can provide an updated milestone position, but we will need final data migration requirements from Northbridge before confirming dates.
+We note the dependency logged against CareSoft configuration. Our team can provide an updated milestone position, but we will need final data migration requirements from Atlas Enterprise before confirming dates.
 
 Please share the agreed scope and migration cut-off so we can align our delivery plan.
 
@@ -126,7 +126,7 @@ CareSoft Ltd`,
   if (item.kind === "risk" && isScheduleRelated(blob)) {
     return {
       sender_name: "Sarah Williams",
-      sender_role: "Project Manager, Northbridge Health Services",
+      sender_role: "Project Manager, Atlas Enterprise",
       subject: `Re: ${item.title}`,
       tone: "neutral" as const,
       body:
@@ -163,7 +163,7 @@ Clinical Governance Lead`,
   if (item.kind === "issue") {
     return {
       sender_name: "Sarah Williams",
-      sender_role: "Project Manager, Northbridge Health Services",
+      sender_role: "Project Manager, Atlas Enterprise",
       subject: `Re: ${item.title}`,
       tone: "urgent" as const,
       body:
@@ -180,7 +180,7 @@ Sarah`,
   if (isHigh) {
     return {
       sender_name: "Sarah Williams",
-      sender_role: "Project Manager, Northbridge Health Services",
+      sender_role: "Project Manager, Atlas Enterprise",
       subject: `Re: ${item.title}`,
       tone: "neutral" as const,
       body:
@@ -367,7 +367,7 @@ export const submitRaidLog = createServerFn({ method: "POST" })
     await supabase.from("inbox_messages").insert({
       user_id: userId,
       sender_name: "Sarah Williams",
-      sender_role: "Project Manager, Northbridge Health Services",
+      sender_role: "Project Manager, Atlas Enterprise",
       subject: "Initial RAID Log Review",
       tone: "supportive",
       body:
