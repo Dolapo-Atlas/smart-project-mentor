@@ -8,8 +8,9 @@ const Sev = z.enum(["low", "medium", "high", "critical"]);
 const Status = z.enum(["open", "mitigating", "closed"]);
 const Rag = z.enum(["green", "amber", "red"]);
 const Area = z.enum([
-  "scope", "schedule", "budget", "quality", "resources", "stakeholders", "risks",
+  "scope", "schedule", "budget", "quality", "resources", "stakeholders", "risks", "benefits", "overall",
 ]);
+const Trend = z.enum(["improving", "stable", "declining"]);
 
 type RaidRow = {
   id: string;
@@ -411,13 +412,19 @@ export const listRag = createServerFn({ method: "GET" })
 export const upsertRag = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    z.object({ area: Area, rag: Rag, note: z.string().optional() }).parse(d),
+    z.object({
+      area: Area,
+      rag: Rag,
+      note: z.string().optional(),
+      trend: Trend.optional(),
+      updated_by: z.string().optional(),
+    }).parse(d),
   )
   .handler(async ({ data, context }) => {
     const { data: row, error } = await context.supabase
       .from("workstream_rag")
       .upsert(
-        { user_id: context.userId, ...data },
+        { user_id: context.userId, ...data, updated_at: new Date().toISOString() },
         { onConflict: "user_id,area" },
       )
       .select()
