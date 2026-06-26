@@ -47,7 +47,7 @@ function Onboarding() {
 
   const mut = useMutation({
     mutationFn: () => submit({ data: form }),
-    onSuccess: () => navigate({ to: "/welcome" }),
+    onSuccess: () => navigate({ to: "/app/projects" }),
     onError: (e) => toast.error(e instanceof Error ? e.message : "Could not save profile"),
   });
 
