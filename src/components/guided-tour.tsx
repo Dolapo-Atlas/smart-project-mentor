@@ -65,6 +65,24 @@ export function GuidedTour({ instanceId, onDone }: { instanceId: string; onDone:
     };
   }, []);
 
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        mark.mutate();
+      } else if (e.key === "Enter" || e.key === "ArrowRight") {
+        e.preventDefault();
+        if (stepIdx < STEPS.length - 1) setStepIdx(stepIdx + 1);
+        else mark.mutate();
+      } else if (e.key === "ArrowLeft" && stepIdx > 0) {
+        e.preventDefault();
+        setStepIdx(stepIdx - 1);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [stepIdx, mark]);
+
   function next() {
     if (stepIdx < STEPS.length - 1) {
       setStepIdx(stepIdx + 1);
