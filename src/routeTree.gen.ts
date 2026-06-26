@@ -13,6 +13,7 @@ import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as InviteCodeRouteImport } from './routes/invite.$code'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as AuthenticatedWelcomeRouteImport } from './routes/_authenticated/welcome'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
@@ -61,6 +62,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InviteCodeRoute = InviteCodeRouteImport.update({
+  id: '/invite/$code',
+  path: '/invite/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
@@ -235,6 +241,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/welcome': typeof AuthenticatedWelcomeRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/invite/$code': typeof InviteCodeRoute
   '/admin/signups': typeof AuthenticatedAdminSignupsRoute
   '/app/budget': typeof AuthenticatedAppBudgetRoute
   '/app/changes': typeof AuthenticatedAppChangesRoute
@@ -269,6 +276,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/welcome': typeof AuthenticatedWelcomeRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/invite/$code': typeof InviteCodeRoute
   '/admin/signups': typeof AuthenticatedAdminSignupsRoute
   '/app/budget': typeof AuthenticatedAppBudgetRoute
   '/app/changes': typeof AuthenticatedAppChangesRoute
@@ -306,6 +314,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/welcome': typeof AuthenticatedWelcomeRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/invite/$code': typeof InviteCodeRoute
   '/_authenticated/admin/signups': typeof AuthenticatedAdminSignupsRoute
   '/_authenticated/app/budget': typeof AuthenticatedAppBudgetRoute
   '/_authenticated/app/changes': typeof AuthenticatedAppChangesRoute
@@ -343,6 +352,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/welcome'
     | '/email/unsubscribe'
+    | '/invite/$code'
     | '/admin/signups'
     | '/app/budget'
     | '/app/changes'
@@ -377,6 +387,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/welcome'
     | '/email/unsubscribe'
+    | '/invite/$code'
     | '/admin/signups'
     | '/app/budget'
     | '/app/changes'
@@ -413,6 +424,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding'
     | '/_authenticated/welcome'
     | '/email/unsubscribe'
+    | '/invite/$code'
     | '/_authenticated/admin/signups'
     | '/_authenticated/app/budget'
     | '/_authenticated/app/changes'
@@ -447,6 +459,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
+  InviteCodeRoute: typeof InviteCodeRoute
   ApiPublicEarlyAccessRoute: typeof ApiPublicEarlyAccessRoute
   ApiPublicTtsRoute: typeof ApiPublicTtsRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
@@ -483,6 +496,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/invite/$code': {
+      id: '/invite/$code'
+      path: '/invite/$code'
+      fullPath: '/invite/$code'
+      preLoaderRoute: typeof InviteCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/email/unsubscribe': {
@@ -769,6 +789,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
+  InviteCodeRoute: InviteCodeRoute,
   ApiPublicEarlyAccessRoute: ApiPublicEarlyAccessRoute,
   ApiPublicTtsRoute: ApiPublicTtsRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
