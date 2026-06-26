@@ -35,12 +35,20 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: { emailRedirectTo: window.location.origin + "/app" },
         });
         if (error) throw error;
+        // Supabase returns success with an empty identities array when the
+        // email is already registered (to prevent enumeration). Detect it.
+        if (data.user && data.user.identities && data.user.identities.length === 0) {
+          toast.error("That email is already registered. Sign in instead.");
+          setMode("signin");
+          setLoading(false);
+          return;
+        }
         toast.success("Account created. You're in.");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
