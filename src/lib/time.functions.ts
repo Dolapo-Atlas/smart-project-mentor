@@ -273,6 +273,7 @@ export const advanceTime = createServerFn({ method: "POST" })
         high: "critical",
         critical: "critical",
       };
+      const chasedSenders = new Set<string>();
       for (const t of overdue ?? []) {
         const newPriority = bump[t.priority] ?? "high";
         if (newPriority !== t.priority) {
@@ -282,6 +283,8 @@ export const advanceTime = createServerFn({ method: "POST" })
             .eq("id", t.id);
         }
         const sender = t.linked_stakeholder ?? "Emma Collins";
+        if (chasedSenders.has(sender)) continue;
+        chasedSenders.add(sender);
         await supabase.from("inbox_messages").insert({
           user_id: userId,
           sender_name: sender,
