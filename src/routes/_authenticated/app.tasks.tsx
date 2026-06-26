@@ -40,6 +40,7 @@ import {
 import { toast } from "sonner";
 import { TimeControls } from "@/components/time-controls";
 import { StakeholderHoverAvatar as StakeholderAvatar } from "@/components/stakeholder-card";
+import { MentorTriggerButton } from "@/components/mentor/task-mentor";
 
 export const Route = createFileRoute("/_authenticated/app/tasks")({
   component: Tasks,
@@ -479,6 +480,17 @@ function TaskCard({
             </button>
           </div>
         </div>
+        <MentorTriggerButton
+          task={{
+            id: t.id,
+            title: t.title,
+            description: t.description,
+            priority: t.priority,
+            category: t.category,
+            stakeholder: t.linked_stakeholder,
+          }}
+          className="ml-1 shrink-0"
+        />
       </div>
     </li>
   );
