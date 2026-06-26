@@ -37,7 +37,7 @@ function ProjectIntro() {
   ];
 
   const seenMut = useMutation({
-    mutationFn: () => markSeen({ data: { instanceId: (active as any).id } }),
+    mutationFn: () => markSeen({ data: { instanceId: (active as any).id, templateId } }),
   });
 
   useEffect(() => {
@@ -59,8 +59,9 @@ function ProjectIntro() {
     setLoading(true);
     try {
       await seenMut.mutateAsync();
-    } catch {
-      /* non-blocking */
+    } catch (error) {
+      setLoading(false);
+      throw error;
     }
   }
 
