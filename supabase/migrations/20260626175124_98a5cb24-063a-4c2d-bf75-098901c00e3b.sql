@@ -1,0 +1,2 @@
+GRANT SELECT ON public.early_access_signups TO authenticated;
+CREATE POLICY "Admin can view signups" ON public.early_access_signups FOR SELECT TO authenticated USING ((auth.jwt() ->> 'email') = 'rasaqdolapo@gmail.com');
