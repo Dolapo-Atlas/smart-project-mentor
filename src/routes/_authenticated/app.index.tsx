@@ -6,6 +6,7 @@ import {
   generateStakeholderMessage,
   listInbox,
 } from "@/lib/sim.functions";
+import { getActiveProject } from "@/lib/projects.functions";
 import { Button } from "@/components/ui/button";
 import { Sparkles, FileText, ListChecks, Activity, ClipboardCheck } from "lucide-react";
 import { toast } from "sonner";
@@ -24,9 +25,11 @@ function Dashboard() {
   const fetchOverview = useServerFn(getOverview);
   const fetchInbox = useServerFn(listInbox);
   const genMessage = useServerFn(generateStakeholderMessage);
+  const fetchActive = useServerFn(getActiveProject);
 
   const { data: overview } = useQuery({ queryKey: ["overview"], queryFn: () => fetchOverview() });
   const { data: inbox } = useQuery({ queryKey: ["inbox"], queryFn: () => fetchInbox() });
+  const { data: active } = useQuery({ queryKey: ["active-project"], queryFn: () => fetchActive() });
 
   const summon = useMutation({
     mutationFn: () => genMessage(),
@@ -59,18 +62,21 @@ function Dashboard() {
   const greeting =
     hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 
+  const tpl = (active as any)?.project_templates;
+  const projectTitle = (active as any)?.display_name ?? tpl?.title ?? state?.project_name ?? "Digital Care Records Rollout";
+  const projectDesc = tpl?.description ?? "12 care homes · £500,000 budget · 6-month timeline";
+
   return (
     <div className="space-y-10">
       <header>
         <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-          {state?.chapter ?? "Chapter One"} · {state?.company ?? "Northbridge Health Services"} · Day {state?.current_day ?? 1} · Week {state?.current_week ?? 1}
+          {state?.chapter ?? "Chapter One"} · {projectTitle} · Day {state?.current_day ?? 1} · Week {state?.current_week ?? 1}
         </div>
         <h1 className="mt-2 font-display text-4xl font-medium tracking-tight md:text-5xl">
           {greeting}, {name}.
         </h1>
         <p className="mt-2 max-w-2xl text-muted-foreground">
-          {state?.project_name ?? "Digital Care Records Rollout"} · 12 care homes ·
-          £500,000 budget · 6-month timeline. You have {overview?.unread ?? 0} unread,{" "}
+          {projectTitle} — {projectDesc}. You have {overview?.unread ?? 0} unread,{" "}
           {overview?.openTasks ?? 0} open tasks, and {overview?.pendingReviews ?? 0} document(s)
           awaiting review.
         </p>
