@@ -116,8 +116,27 @@ export function LearningDrawer() {
 
             <div className="flex-1 overflow-y-auto px-5 py-5">
               {loading && !data && (
-                <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Thinking…
+                <div className="space-y-3">
+                  <div className="h-3 w-2/3 animate-pulse rounded bg-muted" />
+                  <div className="h-3 w-full animate-pulse rounded bg-muted" />
+                  <div className="h-3 w-5/6 animate-pulse rounded bg-muted" />
+                  <div className="h-16 w-full animate-pulse rounded-md bg-muted/60" />
+                </div>
+              )}
+              {fetchBrief.isError && !loading && (
+                <div className="rounded-md border border-destructive/40 bg-destructive/5 p-4 text-sm">
+                  <div className="font-medium text-destructive">Mentor is offline</div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Couldn't reach the AI gateway. Check your connection or try again.
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="mt-3"
+                    onClick={() => fetchBrief.mutate({})}
+                  >
+                    Retry
+                  </Button>
                 </div>
               )}
 
