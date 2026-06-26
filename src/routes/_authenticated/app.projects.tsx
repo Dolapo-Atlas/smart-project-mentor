@@ -117,10 +117,14 @@ function ProjectsPicker() {
 
   const switchTo = useMutation({
     mutationFn: (instanceId: string) => setActiveFn({ data: { instanceId } }),
-    onSuccess: () => {
+    onSuccess: (res: any) => {
       qc.invalidateQueries();
-      toast.success("Switched simulation");
-      navigate({ to: "/app" });
+      if (res?.requiresIntro && res?.templateId) {
+        navigate({ to: "/project-intro/$templateId", params: { templateId: res.templateId } });
+      } else {
+        toast.success("Resuming simulation");
+        navigate({ to: "/app" });
+      }
     },
   });
 
