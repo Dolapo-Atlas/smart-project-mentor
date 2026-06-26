@@ -1485,41 +1485,26 @@ function EarlyAccess() {
                 </p>
                 <p className="mt-5 inline-flex items-center gap-2 text-xs font-medium text-primary">
                   <ShieldCheck className="h-3.5 w-3.5" />
-                  Only the first 100 users will receive Founder Access.
+                  Join the Atlas Founder Cohort — the first 100 professionals shaping Atlas.
                 </p>
               </div>
 
               <div>
                 {done ? (
-                  <div className="flex flex-col items-start gap-4 rounded-2xl border border-border bg-background/60 p-8">
-                    <CheckCircle2 className="h-8 w-8 text-primary" />
-                    <h3 className="font-display text-2xl">You're in. 🎉</h3>
-                    <p className="text-sm text-muted-foreground">
-                      We'll send you early access details soon. Get ready to experience the workplace before day one.
-                    </p>
-
-                    <div className="mt-4 w-full border-t border-border pt-5">
-                      <h4 className="font-display text-lg">Know someone breaking into PM?</h4>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        Send them this — they'll thank you later.
-                      </p>
-                      <Button
-                        type="button"
-                        onClick={onShare}
-                        className="mt-4 rounded-full bg-primary px-5 py-5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-                      >
-                        {copied ? "Link copied!" : (<>Share Atlas with a friend <ArrowRight className="ml-1 h-4 w-4" /></>)}
-                      </Button>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => setDone(false)}
-                      className="mt-2 text-sm text-primary underline-offset-4 hover:underline"
-                    >
-                      Submit another
-                    </button>
-                  </div>
+                  <WelcomeCard
+                    referralCode={referralCode}
+                    referralCount={referralCount}
+                    inviteUrl={inviteUrl}
+                    onShare={onShare}
+                    copied={copied}
+                    onCopyLink={copyInviteLink}
+                    linkCopied={linkCopied}
+                    onReset={() => {
+                      setDone(false);
+                      setReferralCode(null);
+                      setReferralCount(null);
+                    }}
+                  />
                 ) : (
                   <form onSubmit={onSubmit} className="space-y-4 rounded-2xl border border-border bg-background/70 p-6 backdrop-blur sm:p-7">
                     <div className="grid gap-4 sm:grid-cols-2">
