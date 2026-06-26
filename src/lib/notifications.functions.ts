@@ -25,10 +25,10 @@ export const listNotifications = createServerFn({ method: "GET" })
         .limit(10),
       supabase
         .from("tasks")
-        .select("id,title,status,updated_at,linked_stakeholder")
+        .select("id,title,status,completed_at,submitted_at,created_at,linked_stakeholder")
         .eq("user_id", userId)
         .in("status", ["done", "approved", "submitted"])
-        .order("updated_at", { ascending: false })
+        .order("created_at", { ascending: false })
         .limit(5),
       supabase
         .from("stakeholder_relationships")
@@ -56,6 +56,7 @@ export const listNotifications = createServerFn({ method: "GET" })
     }
 
     for (const t of doneTasks ?? []) {
+      const at = t.completed_at ?? t.submitted_at ?? t.created_at;
       items.push({
         id: `task-${t.id}`,
         kind: "task_done",
@@ -66,7 +67,7 @@ export const listNotifications = createServerFn({ method: "GET" })
         detail: t.linked_stakeholder
           ? `Reviewed by ${t.linked_stakeholder}`
           : "Task moved forward",
-        at: t.updated_at,
+        at,
         href: "/app/tasks",
         unread: false,
       });
