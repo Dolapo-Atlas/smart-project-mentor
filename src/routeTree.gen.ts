@@ -36,6 +36,7 @@ import { Route as AuthenticatedAppCommsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAppChangesRouteImport } from './routes/_authenticated/app.changes'
 import { Route as AuthenticatedAppBudgetRouteImport } from './routes/_authenticated/app.budget'
 import { Route as AuthenticatedAdminSignupsRouteImport } from './routes/_authenticated/admin.signups'
+import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -181,6 +182,12 @@ const AuthenticatedAdminSignupsRoute =
     path: '/admin/signups',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const LovableEmailQueueProcessRoute =
+  LovableEmailQueueProcessRouteImport.update({
+    id: '/lovable/email/queue/process',
+    path: '/lovable/email/queue/process',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -209,6 +216,7 @@ export interface FileRoutesByFullPath {
   '/project-intro/$templateId': typeof AuthenticatedProjectIntroTemplateIdRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
   '/app/': typeof AuthenticatedAppIndexRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -236,6 +244,7 @@ export interface FileRoutesByTo {
   '/project-intro/$templateId': typeof AuthenticatedProjectIntroTemplateIdRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
   '/app': typeof AuthenticatedAppIndexRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -266,6 +275,7 @@ export interface FileRoutesById {
   '/_authenticated/project-intro/$templateId': typeof AuthenticatedProjectIntroTemplateIdRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -296,6 +306,7 @@ export interface FileRouteTypes {
     | '/project-intro/$templateId'
     | '/api/public/tts'
     | '/app/'
+    | '/lovable/email/queue/process'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -323,6 +334,7 @@ export interface FileRouteTypes {
     | '/project-intro/$templateId'
     | '/api/public/tts'
     | '/app'
+    | '/lovable/email/queue/process'
   id:
     | '__root__'
     | '/'
@@ -352,6 +364,7 @@ export interface FileRouteTypes {
     | '/_authenticated/project-intro/$templateId'
     | '/api/public/tts'
     | '/_authenticated/app/'
+    | '/lovable/email/queue/process'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -359,6 +372,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ApiPublicTtsRoute: typeof ApiPublicTtsRoute
+  LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -552,6 +566,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSignupsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/lovable/email/queue/process': {
+      id: '/lovable/email/queue/process'
+      path: '/lovable/email/queue/process'
+      fullPath: '/lovable/email/queue/process'
+      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -625,6 +646,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ApiPublicTtsRoute: ApiPublicTtsRoute,
+  LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
