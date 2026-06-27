@@ -150,6 +150,22 @@ function inferConcept(task: MentorTaskContext): {
   const t = (task.title + " " + (task.description ?? "")).toLowerCase();
   const who = task.stakeholder ?? "your stakeholder";
 
+  if (t.includes("charter")) {
+    return {
+      name: "Project Charter",
+      whatIs:
+        "A Project Charter is the founding document that authorises a project. It captures the purpose, objectives, scope boundaries, key stakeholders, high-level milestones, success criteria, and the sponsor's mandate to the project manager.",
+      whenUsed:
+        "Written at the very start of the project — during Initiation — before detailed planning. It is signed off by the sponsor and used as the reference point when scope or priorities are challenged later.",
+      thisTask: `Draft the charter so ${who} can sign off on why this project exists, what it must deliver, and the authority you have to run it.`,
+      hints: [
+        "State the business problem first — one short paragraph, no jargon.",
+        "List 3-5 specific, measurable objectives and the success criteria for each.",
+        "Make scope boundaries explicit: in scope, out of scope, assumptions, constraints.",
+        "Name the sponsor, the PM, and the key stakeholder groups before circulating.",
+      ],
+    };
+  }
   if (t.includes("cost") && t.includes("benefit")) {
     return {
       name: "Cost-Benefit Analysis",
