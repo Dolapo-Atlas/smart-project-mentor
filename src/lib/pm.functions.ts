@@ -5,6 +5,7 @@ import { z } from "zod";
 import { generateObject, generateText } from "ai";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
 import type { Json } from "@/integrations/supabase/types";
+import { loadRoster, rosterByRole, rosterByName, DEFAULT_ROSTER, type RosterMember } from "./roster";
 
 const MODEL = "google/gemini-3-flash-preview";
 function getModel() {
@@ -43,6 +44,65 @@ async function getProjectCtx(supabase: any, userId: string) {
     ? ""
     : `IMPORTANT: This is a "${name}" project. Do NOT reference healthcare, care homes, patients, clinical governance, "Digital Care Records", or NHS unless the project title above explicitly says so. Speak only in terms relevant to ${name}.`;
   return { name, description, category, skills, domainGuard };
+}
+
+/* ============= ROSTER HELPERS ============= */
+
+/**
+ * Persona prose per role. The roster supplies the person's name and title;
+ * we layer the *behavioural* persona on top so the AI knows how each archetype
+ * is supposed to behave in a meeting, regardless of which name the template
+ * happens to use.
+ */
+const PERSONA_BY_ROLE: Record<string, string> = {
+  pm:         "Senior PM. Direct, pragmatic, slightly impatient with vague status. Pushes for owners and dates.",
+  sponsor:    "Outcome-focused executive. Uses board language. Pushes back on cost and timeline. Will name names.",
+  finance:    "Spreadsheet-led, sceptical of vendor claims. Wants forecast vs actuals, not narrative.",
+  tech:       "Engineer. Surfaces integration risk and dependency chains. Resists optimistic dates.",
+  vendor:     "Polished commercial lead. Defends vendor pricing and scope. Will offer a workaround before owning a delay.",
+  operations: "Operational lead. Speaks plainly. Protective of staff. Raises readiness and run-state concerns.",
+  admin:      "Domain administrator. Notices process and compliance gaps the room is glossing over.",
+  clinical:   "Safety-first specialist. Will halt go-lives over governance gaps.",
+  care_home:  "Site manager. Protective of staff. Speaks plainly. Raises readiness and training concerns.",
+};
+
+function personaFor(role: string): string {
+  return PERSONA_BY_ROLE[role] ?? `${role} specialist. Speaks from their domain expertise and pushes back when something doesn't add up.`;
+}
+
+function memberToAttendee(m: RosterMember): Attendee {
+  return {
+    role_key: m.role,
+    name: m.name,
+    role: m.title,
+    persona: personaFor(m.role),
+  };
+}
+
+/** Which roles should be in the room for each meeting kind. */
+const KIND_ROLES: Record<string, string[]> = {
+  standup:  ["pm", "tech", "operations", "clinical"],
+  steering: ["sponsor", "pm", "finance", "clinical", "operations"],
+  vendor:   ["vendor", "tech", "pm"],
+  retro:    ["pm", "tech", "operations", "care_home"],
+};
+
+function attendeesForKind(roster: RosterMember[], kind: string): Attendee[] {
+  const wanted = KIND_ROLES[kind] ?? ["pm", "sponsor"];
+  const byRole = rosterByRole(roster);
+  const seen = new Set<string>();
+  const out: Attendee[] = [];
+  for (const role of wanted) {
+    const m = byRole[role];
+    if (m && !seen.has(m.role)) {
+      out.push(memberToAttendee(m));
+      seen.add(m.role);
+    }
+  }
+  // If kind asks for roles the project doesn't have (e.g. CRM has no
+  // `clinical`), fall back to the PM + sponsor so the meeting still opens.
+  if (out.length === 0 && roster[0]) out.push(memberToAttendee(roster[0]));
+  return out;
 }
 
 const Rag = z.enum(["green", "amber", "red"]);
