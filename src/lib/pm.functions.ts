@@ -817,7 +817,9 @@ export const autoMinutes = createServerFn({ method: "POST" })
       )
       .join("\n\n");
 
-    const prompt = `You are taking minutes for a ${meeting.kind} meeting titled "${meeting.title}" on the Digital Care Records Rollout.
+    const pctx = await getProjectCtx(context.supabase, context.userId);
+    const prompt = `You are taking minutes for a ${meeting.kind} meeting titled "${meeting.title}" on the "${pctx.name}" project.
+${pctx.domainGuard}
 
 Transcript:
 ${transcriptText}
