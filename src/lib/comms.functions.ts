@@ -4,7 +4,8 @@ import { z } from "zod";
 import { generateObject } from "ai";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
 import { applyCompetencyStatus } from "./learning.functions";
-import { ARCHETYPE_SENTIMENT } from "./pm.functions";
+import { ARCHETYPE_SENTIMENT_BY_ROLE } from "./pm.functions";
+import { loadRoster, DEFAULT_ROSTER, type RosterMember } from "./roster";
 
 const MODEL = "google/gemini-3-flash-preview";
 function getModel() {
@@ -13,15 +14,11 @@ function getModel() {
   return createLovableAiGatewayProvider(key)(MODEL);
 }
 
-export const STAKEHOLDERS: { role: string; name: string; title: string }[] = [
-  { role: "pm", name: "Sarah Williams", title: "Project Manager" },
-  { role: "sponsor", name: "David Okafor", title: "Executive Sponsor" },
-  { role: "finance", name: "Priya Anand", title: "Finance Lead" },
-  { role: "tech", name: "James Lin", title: "Technical Lead" },
-  { role: "vendor", name: "CareSoft Ltd", title: "Vendor — Implementation" },
-  { role: "care_home", name: "Margaret Hollis", title: "Care Home Manager, Oakwood" },
-  { role: "clinical", name: "Rachel Stone", title: "Clinical Governance Lead" },
-];
+// Legacy export kept so existing UI imports keep compiling; live UI should
+// call `useRoster()` from `@/lib/roster` for the active project's cast.
+export const STAKEHOLDERS: { role: string; name: string; title: string }[] = DEFAULT_ROSTER.map(
+  (m) => ({ role: m.role, name: m.name, title: m.title }),
+);
 
 const MsgType = z.enum(["Update", "Escalation", "Request", "FYI"]);
 const AttachKind = z.enum(["document", "status_report", "raid", "change_request", "budget", "gate", "none"]);
