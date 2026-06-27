@@ -86,6 +86,36 @@ function downloadBlob(blob: Blob, filename: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+function isMobile() {
+  if (typeof navigator === "undefined") return false;
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+}
+
+/**
+ * Deliver a file to the user reliably across browsers:
+ * - On mobile (where multi-download is blocked & .png often opens inline),
+ *   try the native Share sheet first so the file can be saved to Files/Photos.
+ * - Otherwise fall back to a standard anchor download.
+ */
+async function deliverFile(blob: Blob, filename: string) {
+  try {
+    const nav = navigator as Navigator & {
+      canShare?: (d: { files: File[] }) => boolean;
+      share?: (d: { files: File[]; title?: string }) => Promise<void>;
+    };
+    if (isMobile() && nav.share && nav.canShare) {
+      const file = new File([blob], filename, { type: blob.type || "application/octet-stream" });
+      if (nav.canShare({ files: [file] })) {
+        await nav.share({ files: [file], title: filename });
+        return;
+      }
+    }
+  } catch {
+    // user cancelled or share failed — fall through to download
+  }
+  downloadBlob(blob, filename);
+}
+
 function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
   return new Promise((resolve, reject) => {
     canvas.toBlob(
@@ -427,12 +457,26 @@ export function MarketingExport() {
       const raw = await captureOnce();
       const slug = pathname.replace(/^\/+|\/+$/g, "").replace(/\//g, "-") || "page";
       const stamp = tsStamp();
-      for (const v of selectedVariants) {
+      // Single variant → deliver the PNG directly.
+      // Multiple variants OR mobile → bundle into one ZIP so the browser
+      // only has to accept one download (mobile blocks sequential downloads).
+      if (selectedVariants.length === 1) {
+        const v = selectedVariants[0];
         const composed = compose(raw, v, aspect);
         const blob = await canvasToBlob(composed);
-        downloadBlob(blob, `atlas-${slug}-${v}-${aspect.replace(":", "x")}-${stamp}.png`);
+        await deliverFile(blob, `atlas-${slug}-${v}-${aspect.replace(":", "x")}-${stamp}.png`);
+        toast.success("Exported — check your downloads or Files app");
+      } else {
+        const zip = new JSZip();
+        for (const v of selectedVariants) {
+          const composed = compose(raw, v, aspect);
+          const blob = await canvasToBlob(composed);
+          zip.file(`atlas-${slug}-${v}-${aspect.replace(":", "x")}.png`, blob);
+        }
+        const out = await zip.generateAsync({ type: "blob" });
+        await deliverFile(out, `atlas-${slug}-${stamp}.zip`);
+        toast.success(`Exported ${selectedVariants.length} variants — saved as ZIP`);
       }
-      toast.success(`Exported ${selectedVariants.length} variant${selectedVariants.length > 1 ? "s" : ""}`);
     } catch (e) {
       console.error(e);
       toast.error("Capture failed");
@@ -463,7 +507,7 @@ export function MarketingExport() {
         toast.message(`Captured ${t.label}`);
       }
       const out = await zip.generateAsync({ type: "blob" });
-      downloadBlob(out, `atlas-marketing-pack-${tsStamp()}.zip`);
+      await deliverFile(out, `atlas-marketing-pack-${tsStamp()}.zip`);
       toast.success(`Marketing pack ready — ${selectedTargets.length} pages × ${selectedVariants.length} variants`);
       await navigate({ to: original });
     } catch (e) {
