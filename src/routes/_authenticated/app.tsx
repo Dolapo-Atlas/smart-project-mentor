@@ -12,7 +12,7 @@ import { GuidedTour } from "@/components/guided-tour";
 import { LearningDrawer } from "@/components/learning-drawer";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { Coffee } from "lucide-react";
-import { ScreenshotMode } from "@/components/screenshot-mode";
+import { MarketingExport } from "@/components/marketing-export";
 
 export const Route = createFileRoute("/_authenticated/app")({
   component: AppLayout,
@@ -206,7 +206,7 @@ function AppLayout() {
         />
       )}
       {active && <LearningDrawer />}
-      {active && <ScreenshotMode />}
+      {active && <MarketingExport />}
       {showCoffee && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-background/95 backdrop-blur-sm animate-in fade-in duration-500">
           <div className="w-full max-w-lg px-8 text-center">
