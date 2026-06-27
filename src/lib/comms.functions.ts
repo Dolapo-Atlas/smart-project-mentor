@@ -192,19 +192,22 @@ function fallbackReply(
 ): Reply {
   const topic = attachmentLabel ? ` and the attached ${attachmentLabel}` : "";
   const bodyByRole: Record<string, string> = {
-    pm: `I have reviewed your note${topic}. Please convert the key points into dated actions, then show me which items need sponsor or governance input before Friday.\n\nThanks,\nSarah`,
-    clinical: `I have picked this up${topic}. Before clinical governance can support it, I need the safety impact, approval route, and escalation triggers made explicit.\n\nRachel Stone`,
-    sponsor: `I have seen your update${topic}. What I need next is a concise decision-ready view: options, risk, cost, recommendation, and the consequence of waiting.\n\nDavid Okafor`,
-    finance: `I have reviewed the update${topic}. Please send the cost implication, forecast movement, and any approval required before this is treated as agreed.\n\nPriya Anand`,
-    tech: `I have checked this from the technical side${topic}. The next version needs to call out migration, downtime, integration ownership, and acceptance criteria.\n\nJames Lin`,
-    vendor: `We have reviewed the request${topic}. Please confirm whether this is within the agreed scope or should be handled as a formal change request.\n\nCareSoft Ltd`,
-    care_home: `I have read the update${topic}. Please make sure the plan reflects staff availability on the floor, training time, and what happens if the home is not ready.\n\nMargaret Hollis`,
+    pm: `I have reviewed your note${topic}. Please convert the key points into dated actions, then show me which items need sponsor or governance input before Friday.`,
+    clinical: `I have picked this up${topic}. Before governance can support it, I need the safety impact, approval route, and escalation triggers made explicit.`,
+    sponsor: `I have seen your update${topic}. What I need next is a concise decision-ready view: options, risk, cost, recommendation, and the consequence of waiting.`,
+    finance: `I have reviewed the update${topic}. Please send the cost implication, forecast movement, and any approval required before this is treated as agreed.`,
+    tech: `I have checked this from the technical side${topic}. The next version needs to call out migration, downtime, integration ownership, and acceptance criteria.`,
+    vendor: `We have reviewed the request${topic}. Please confirm whether this is within the agreed scope or should be handled as a formal change request.`,
+    operations: `I have read the update${topic}. Please make sure the plan reflects on-the-ground operations, staffing, and what happens if a site is not ready.`,
+    admin: `Noted${topic}. Before I can sign this off, the audit trail and compliance points need to be clean.`,
+    care_home: `I have read the update${topic}. Please make sure the plan reflects staff availability on the floor, training time, and what happens if the home is not ready.`,
   };
+  const lead = bodyByRole[stakeholder.role] ?? `I have reviewed your note${topic}. Please send the next actions and owner list when ready.`;
   return {
     sender_role: stakeholder.title,
     subject: `Re: ${subject}`,
-    body: bodyByRole[stakeholder.role] ?? `I have reviewed your note${topic}. Please send the next actions and owner list when ready.\n\n${stakeholder.name}`,
-    sentiment: ["clinical", "finance", "care_home"].includes(stakeholder.role) ? "concerned" : "neutral",
+    body: `${lead}\n\n${stakeholder.name}\n${stakeholder.title}`,
+    sentiment: ["clinical", "finance", "care_home", "operations"].includes(stakeholder.role) ? "concerned" : "neutral",
   };
 }
 
