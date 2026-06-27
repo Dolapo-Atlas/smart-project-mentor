@@ -522,7 +522,6 @@ export function MarketingExport() {
     <div
       data-screenshot-launcher
       data-marketing-hide
-      data-marketing-hide
       className="fixed bottom-24 left-4 z-30 print:hidden md:bottom-auto md:left-auto md:right-6 md:top-24"
     >
       <Dialog open={open} onOpenChange={setOpen}>
