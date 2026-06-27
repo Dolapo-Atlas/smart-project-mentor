@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Trash2, Plus, Paperclip, ShieldAlert, AlertOctagon, Link2, HelpCircle } from "lucide-react";
 import { toast } from "sonner";
-import { STAKEHOLDERS } from "@/lib/stakeholders";
+import { useRoster } from "@/lib/roster";
 import { format } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/app/raid")({
