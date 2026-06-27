@@ -713,7 +713,9 @@ export const advanceMeeting = createServerFn({ method: "POST" })
       .map((t) => `${t.speaker_name} (${t.speaker_role}): ${t.body}`)
       .join("\n\n");
 
-    const prompt = `You are ${speaker.name}, ${speaker.role}, in a live ${meeting.kind} meeting on the Digital Care Records Rollout.
+    const pctx = await getProjectCtx(context.supabase, context.userId);
+    const prompt = `You are ${speaker.name}, ${speaker.role}, in a live ${meeting.kind} meeting on the "${pctx.name}" project${pctx.description ? ` (${pctx.description})` : ""}.
+${pctx.domainGuard}
 Persona: ${speaker.persona}
 
 Meeting: "${meeting.title}"
