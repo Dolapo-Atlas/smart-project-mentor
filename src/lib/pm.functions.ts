@@ -13,6 +13,38 @@ function getModel() {
   return createLovableAiGatewayProvider(key)(MODEL);
 }
 
+/**
+ * Pull the active project context for the current user so AI prompts can be
+ * grounded in the right project (CRM, Website, EV Charging, etc.) instead of
+ * defaulting to "Digital Care Records Rollout".
+ */
+async function getProjectCtx(supabase: any, userId: string) {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("current_project_instance_id")
+    .eq("id", userId)
+    .maybeSingle();
+  const instanceId = profile?.current_project_instance_id as string | undefined;
+  if (!instanceId) {
+    return { name: "the programme", description: "", category: "", skills: [] as string[], domainGuard: "" };
+  }
+  const { data: inst } = await supabase
+    .from("project_instances")
+    .select("display_name, project_templates(title, description, category, key_skills)")
+    .eq("id", instanceId)
+    .maybeSingle();
+  const tpl: any = (inst as any)?.project_templates ?? {};
+  const name = (inst as any)?.display_name || tpl.title || "the programme";
+  const description: string = tpl.description ?? "";
+  const category: string = tpl.category ?? "";
+  const skills: string[] = Array.isArray(tpl.key_skills) ? tpl.key_skills : [];
+  const isHealth = /care|health|clinical|patient|nhs/i.test(`${name} ${category} ${description}`);
+  const domainGuard = isHealth
+    ? ""
+    : `IMPORTANT: This is a "${name}" project. Do NOT reference healthcare, care homes, patients, clinical governance, "Digital Care Records", or NHS unless the project title above explicitly says so. Speak only in terms relevant to ${name}.`;
+  return { name, description, category, skills, domainGuard };
+}
+
 const Rag = z.enum(["green", "amber", "red"]);
 
 function mondayOf(d: Date): string {
