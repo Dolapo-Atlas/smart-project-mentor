@@ -7,16 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Users, ShieldAlert, CalendarPlus, UserCog } from "lucide-react";
 import { delegateInboxMessage } from "@/lib/delegate.functions";
 import { createMeeting } from "@/lib/pm.functions";
+import { useRoster, rosterByName, rosterByRole } from "@/lib/roster";
 
 type Mode = "ask_pm" | "escalate_sponsor" | "assign_lead";
-
-const LEAD_BY_SENDER: Record<string, { name: string; label: string }> = {
-  "Priya Anand": { name: "Priya Anand", label: "Finance Lead" },
-  "James Lin": { name: "James Lin", label: "Technical Lead" },
-  "Rachel Stone": { name: "Rachel Stone", label: "Clinical Governance Lead" },
-  "CareSoft Ltd": { name: "CareSoft Account Director", label: "Vendor" },
-  "Margaret Hollis": { name: "Margaret Hollis", label: "Care Home Manager" },
-};
 
 export function DelegatePanel({
   inboxId,
@@ -32,6 +25,19 @@ export function DelegatePanel({
   const delegateFn = useServerFn(delegateInboxMessage);
   const meetingFn = useServerFn(createMeeting);
   const [pendingMode, setPendingMode] = useState<Mode | "meeting" | null>(null);
+  const roster = useRoster();
+  const byRole = rosterByRole(roster);
+  const byName = rosterByName(roster);
+  const senderMember = byName[senderName];
+  const pm = byRole.pm;
+  const sponsor = byRole.sponsor;
+  // The "functional lead" for this thread is whoever owns the sender's
+  // domain — for finance senders that's the finance lead, etc. Skip if the
+  // sender IS the lead (would be a no-op).
+  const lead =
+    senderMember && senderMember.role !== "pm" && senderMember.role !== "sponsor"
+      ? senderMember
+      : null;
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ["inbox"] });
@@ -56,7 +62,12 @@ export function DelegatePanel({
     mutationFn: () =>
       meetingFn({
         data: {
-          kind: senderName === "Priya Anand" ? "steering" : senderName === "CareSoft Ltd" ? "vendor" : "standup",
+          kind:
+            senderMember?.role === "finance"
+              ? "steering"
+              : senderMember?.role === "vendor"
+                ? "vendor"
+                : "standup",
           title: `Review with ${senderName}: ${subject.replace(/^re:\s*/i, "")}`,
           agenda: `Triggered from inbox message "${subject}" from ${senderName}. Walk through their concern, agree owners, capture decisions.`,
         },
@@ -72,8 +83,7 @@ export function DelegatePanel({
     onSettled: () => setPendingMode(null),
   });
 
-  const lead = LEAD_BY_SENDER[senderName];
-  const showLead = !!lead && lead.name !== "Sarah Williams";
+  const showLead = !!lead;
   const busy = delegate.isPending || meeting.isPending;
 
   const Card = ({
@@ -111,15 +121,15 @@ export function DelegatePanel({
       <div className="mt-3 grid gap-2">
         <Card
           icon={<Users className="h-4 w-4" />}
-          title="Ask Sarah Williams (PM) to take it"
-          hint="Sarah owns the reply. She'll quietly resent it if you over-delegate."
+          title={`Ask ${pm?.name ?? "the PM"} (${pm?.title ?? "Project Manager"}) to take it`}
+          hint={`${pm?.name?.split(" ")[0] ?? "The PM"} owns the reply. They'll quietly resent it if you over-delegate.`}
           action={() => delegate.mutate("ask_pm")}
           mode="ask_pm"
         />
         {showLead && (
           <Card
             icon={<UserCog className="h-4 w-4" />}
-            title={`Assign to ${lead.name} (${lead.label})`}
+            title={`Assign to ${lead.name} (${lead.title})`}
             hint="The right specialist responds directly — usually the best move for technical or governance questions."
             action={() => delegate.mutate("assign_lead")}
             mode="assign_lead"
@@ -134,7 +144,7 @@ export function DelegatePanel({
         />
         <Card
           icon={<ShieldAlert className="h-4 w-4" />}
-          title="Escalate to David Okafor (Sponsor)"
+          title={`Escalate to ${sponsor?.name ?? "the Sponsor"} (${sponsor?.title ?? "Executive Sponsor"})`}
           hint="Reserve this for budget, scope or governance. Sponsors lose patience with trivial escalations."
           action={() => delegate.mutate("escalate_sponsor")}
           mode="escalate_sponsor"
