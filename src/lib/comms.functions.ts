@@ -145,8 +145,8 @@ Thanks — I can see the updated RAID log now. The items have owners/mitigations
 
 Please keep it current as decisions change, but you don't need to re-upload or chase me on this thread. This clears the RAID follow-up for governance.
 
-Sarah Williams
-Project Manager`,
+${stakeholder.name}
+${stakeholder.title}`,
     };
   }
 
@@ -161,8 +161,8 @@ Thanks — I can see the updated RAID log. The entries are controlled with owner
 
 No re-upload needed. Keep the escalation triggers clear and we'll use this version for governance.
 
-Sarah Williams
-Project Manager`,
+${stakeholder.name}
+${stakeholder.title}`,
     };
   }
 
@@ -177,8 +177,8 @@ Thanks — I can see the RAID update. It is in the right place, so no need to re
 
 Before I can treat it as complete for governance, please add the missing owner or mitigation details for: ${missingControls.slice(0, 3).map((item) => item.title).join("; ")}${missingControls.length > 3 ? ` and ${missingControls.length - 3} more` : ""}.
 
-Sarah Williams
-Project Manager`,
+${stakeholder.name}
+${stakeholder.title}`,
     };
   }
 
