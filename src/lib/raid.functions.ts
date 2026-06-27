@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
-import { STAKEHOLDERS } from "./comms.functions";
+import { loadRoster, rosterByRole, type RosterMember } from "./roster";
 
 const Kind = z.enum(["risk", "assumption", "issue", "dependency"]);
 const Sev = z.enum(["low", "medium", "high", "critical"]);
@@ -34,14 +34,15 @@ function isClinicalRelated(text: string): boolean {
   return /\b(clinical|clinician|nurse|care staff|adoption|governance|safety)\b/i.test(text);
 }
 
-function findStakeholder(owner: string | null | undefined) {
+function findStakeholder(roster: RosterMember[], owner: string | null | undefined) {
   if (!owner) return null;
   const q = owner.trim().toLowerCase();
   if (!q) return null;
   return (
-    STAKEHOLDERS.find((s) => s.name.toLowerCase() === q) ||
-    STAKEHOLDERS.find((s) => s.role.toLowerCase() === q) ||
-    STAKEHOLDERS.find((s) => s.name.toLowerCase().includes(q) || q.includes(s.name.toLowerCase())) ||
+    roster.find((s) => s.name.toLowerCase() === q) ||
+    roster.find((s) => s.role.toLowerCase() === q) ||
+    roster.find((s) => s.title.toLowerCase() === q) ||
+    roster.find((s) => s.name.toLowerCase().includes(q) || q.includes(s.name.toLowerCase())) ||
     null
   );
 }
@@ -51,8 +52,9 @@ async function notifyOwnerAssigned(
   userId: string,
   item: { id: string; kind: string; title: string; description: string | null; severity: string; likelihood: string; mitigation: string | null; owner: string | null },
   firstName: string,
+  roster: RosterMember[],
 ) {
-  const sh = findStakeholder(item.owner);
+  const sh = findStakeholder(roster, item.owner);
   if (!sh) return false;
   const body =
 `Hi ${sh.name.split(" ")[0]},
@@ -99,35 +101,39 @@ ${sh.title}`,
   return true;
 }
 
-function buildStakeholderReaction(item: RaidRow, firstName: string) {
+function buildStakeholderReaction(item: RaidRow, firstName: string, roster: RosterMember[]) {
   const blob = `${item.title}\n${item.description ?? ""}`;
   const isHigh = ["high", "critical"].includes(item.severity) ||
     ["high", "critical"].includes(item.likelihood);
+  const byRole = rosterByRole(roster);
+  const pm = byRole.pm;
+  const vendor = byRole.vendor;
+  const clinical = byRole.clinical ?? byRole.admin ?? byRole.operations;
 
   // Vendor dependency
-  if (item.kind === "dependency" && isVendorRelated(blob)) {
+  if (item.kind === "dependency" && isVendorRelated(blob) && vendor) {
     return {
-      sender_name: "CareSoft Ltd",
-      sender_role: "Vendor — Digital Care Records Platform",
+      sender_name: vendor.name,
+      sender_role: vendor.title,
       subject: `Re: ${item.title}`,
       tone: "neutral" as const,
       body:
 `Hi ${firstName},
 
-We note the dependency logged against CareSoft configuration. Our team can provide an updated milestone position, but we will need final data migration requirements from Atlas Enterprise before confirming dates.
+We note the dependency logged. Our team can provide an updated milestone position, but we will need final requirements confirmed before locking dates.
 
 Please share the agreed scope and migration cut-off so we can align our delivery plan.
 
 Regards,
-CareSoft Ltd`,
+${vendor.name}`,
     };
   }
 
   // Schedule risk
-  if (item.kind === "risk" && isScheduleRelated(blob)) {
+  if (item.kind === "risk" && isScheduleRelated(blob) && pm) {
     return {
-      sender_name: "Sarah Williams",
-      sender_role: "Project Manager, Atlas Enterprise",
+      sender_name: pm.name,
+      sender_role: pm.title,
       subject: `Re: ${item.title}`,
       tone: "neutral" as const,
       body:
@@ -136,15 +142,15 @@ CareSoft Ltd`,
 Thanks for logging this. Please make sure the risk is reflected in the RAG status and included in the next status report. I'd like to see the owner, mitigation and the trigger that would cause us to escalate.
 
 Thanks,
-Sarah`,
+${pm.name.split(" ")[0]}`,
     };
   }
 
-  // Clinical adoption / governance risk
-  if (item.kind === "risk" && (isClinicalRelated(blob) || isHigh)) {
+  // Governance / safety risk
+  if (item.kind === "risk" && (isClinicalRelated(blob) || isHigh) && clinical) {
     return {
-      sender_name: "Rachel Stone",
-      sender_role: "Clinical Governance Lead",
+      sender_name: clinical.name,
+      sender_role: clinical.title,
       subject: `Re: ${item.title}`,
       tone: "supportive" as const,
       body:
@@ -152,36 +158,36 @@ Sarah`,
 
 Thanks for logging this risk. I agree this needs active management. Please confirm the owner, mitigation actions, and escalation trigger before the next governance review.
 
-If safety or clinical readiness is in scope, route the mitigation through me before it goes to the sponsor.
+If governance or readiness is in scope, route the mitigation through me before it goes to the sponsor.
 
 Regards,
-Rachel Stone
-Clinical Governance Lead`,
+${clinical.name}
+${clinical.title}`,
     };
   }
 
   // Issue (always reacts)
-  if (item.kind === "issue") {
+  if (item.kind === "issue" && pm) {
     return {
-      sender_name: "Sarah Williams",
-      sender_role: "Project Manager, Atlas Enterprise",
+      sender_name: pm.name,
+      sender_role: pm.title,
       subject: `Re: ${item.title}`,
       tone: "urgent" as const,
       body:
 `Hi ${firstName},
 
-Logged. Treat this as live — I want an owner and a same-week action assigned. If it is going to slip into next reporting cycle, flag it so I can brief David before he hears it elsewhere.
+Logged. Treat this as live — I want an owner and a same-week action assigned. If it is going to slip into next reporting cycle, flag it so I can brief the sponsor before they hear it elsewhere.
 
 Thanks,
-Sarah`,
+${pm.name.split(" ")[0]}`,
     };
   }
 
   // Generic high-sev fallback
-  if (isHigh) {
+  if (isHigh && pm) {
     return {
-      sender_name: "Sarah Williams",
-      sender_role: "Project Manager, Atlas Enterprise",
+      sender_name: pm.name,
+      sender_role: pm.title,
       subject: `Re: ${item.title}`,
       tone: "neutral" as const,
       body:
@@ -190,7 +196,7 @@ Sarah`,
 Thanks for logging this. Given the severity/likelihood, please confirm the owner, mitigation and the escalation trigger so we can reflect it in the next status report.
 
 Thanks,
-Sarah`,
+${pm.name.split(" ")[0]}`,
     };
   }
   return null;
@@ -281,7 +287,8 @@ export const createRaid = createServerFn({ method: "POST" })
       .maybeSingle();
     const firstName = profile?.preferred_name?.trim() || profile?.first_name || "there";
 
-    const reaction = buildStakeholderReaction(row as RaidRow, firstName);
+    const roster = await loadRoster(context.supabase, context.userId);
+    const reaction = buildStakeholderReaction(row as RaidRow, firstName, roster);
     let emailed = false;
     if (reaction) {
       await context.supabase.from("inbox_messages").insert({
@@ -291,7 +298,7 @@ export const createRaid = createServerFn({ method: "POST" })
       emailed = true;
     }
 
-    await notifyOwnerAssigned(context.supabase, context.userId, row as any, firstName);
+    await notifyOwnerAssigned(context.supabase, context.userId, row as any, firstName, roster);
 
     await recomputeRiskRag(context.supabase, context.userId);
     await maybeAutoSubmitRaidTask(context.supabase, context.userId);
@@ -348,6 +355,7 @@ export const submitRaidLog = createServerFn({ method: "POST" })
       .eq("id", userId)
       .maybeSingle();
     const firstName = profile?.preferred_name?.trim() || profile?.first_name || "there";
+    const roster = await loadRoster(supabase, userId);
 
     const { data: task } = await supabase
       .from("tasks")
@@ -365,13 +373,14 @@ export const submitRaidLog = createServerFn({ method: "POST" })
       const key = (it.owner ?? "").trim().toLowerCase();
       if (!key || seen.has(key)) continue;
       seen.add(key);
-      await notifyOwnerAssigned(supabase, userId, it as any, firstName);
+      await notifyOwnerAssigned(supabase, userId, it as any, firstName, roster);
     }
 
+    const pm = rosterByRole(roster).pm;
     await supabase.from("inbox_messages").insert({
       user_id: userId,
-      sender_name: "Sarah Williams",
-      sender_role: "Project Manager, Atlas Enterprise",
+      sender_name: pm?.name ?? "Project Manager",
+      sender_role: pm?.title ?? "Project Manager",
       subject: "Initial RAID Log Review",
       tone: "supportive",
       body:
@@ -382,7 +391,7 @@ Thanks for building the initial RAID log.
 I can see you have captured early risks, assumptions and dependencies. Please make sure each item has a clear owner, mitigation action and escalation trigger before governance review.
 
 Regards,
-Sarah`,
+${pm?.name?.split(" ")[0] ?? "Sarah"}`,
     });
 
     const { data: s } = await supabase
