@@ -15,6 +15,7 @@ type Stakeholder = {
   name: string;
   role: string;
   type: string;
+  seed?: string;
   sentiment: number;
   concerns: string[];
   notes: string;
@@ -72,14 +73,22 @@ export function StakeholderHoverAvatar({
   name,
   size = "sm",
   className,
+  seed,
+  role,
 }: {
   name: string;
   size?: "xs" | "sm" | "md" | "lg";
   className?: string;
+  seed?: string;
+  role?: string;
 }) {
   const [open, setOpen] = useState(false);
   const { data } = useStakeholders();
   const s = data?.find((x) => x.name === name);
+  // Prefer explicit seed/role; otherwise pull from the resolved stakeholder
+  // record (which now carries the project-specific seed and role type).
+  const effSeed = seed ?? s?.seed;
+  const effRole = role ?? s?.type;
 
   return (
     <>
@@ -91,7 +100,7 @@ export function StakeholderHoverAvatar({
             className={`cursor-pointer rounded-full transition hover:opacity-80 ${className ?? ""}`}
             aria-label={`Open ${name} profile`}
           >
-            <StakeholderAvatar name={name} size={size} />
+            <StakeholderAvatar name={name} size={size} seed={effSeed} role={effRole} />
           </button>
         </HoverCardTrigger>
         <HoverCardContent className="w-72">
@@ -110,7 +119,7 @@ function StakeholderQuickPreview({ name, stakeholder }: { name: string; stakehol
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-3">
-        <StakeholderAvatar name={name} size="md" />
+        <StakeholderAvatar name={name} size="md" seed={stakeholder?.seed} role={stakeholder?.type} />
         <div className="min-w-0">
           <div className="truncate font-semibold">{name}</div>
           <div className="truncate text-xs text-muted-foreground">{role}</div>
@@ -194,7 +203,7 @@ export function StakeholderProfileDialog({
       <DialogContent className="max-w-xl">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <StakeholderAvatar name={name} size="lg" />
+            <StakeholderAvatar name={name} size="lg" seed={s?.seed} role={s?.type} />
             <div className="min-w-0">
               <DialogTitle className="truncate">{name}</DialogTitle>
               <DialogDescription className="truncate">{s?.role ?? ""}</DialogDescription>
