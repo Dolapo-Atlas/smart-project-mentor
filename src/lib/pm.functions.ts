@@ -611,8 +611,10 @@ export const startMeeting = createServerFn({ method: "POST" })
     const transcript = transcriptOf(meeting);
     if (transcript.length > 0) return meeting;
 
+    const pctx = await getProjectCtx(context.supabase, context.userId);
     const prompt = `You are ${opener.name}, ${opener.role}. ${opener.persona}
-You are opening a ${meeting.kind} meeting titled "${meeting.title}" on the Digital Care Records Rollout (£500k, 6 months, behind schedule).
+You are opening a ${meeting.kind} meeting titled "${meeting.title}" on the "${pctx.name}" project${pctx.description ? ` (${pctx.description})` : ""}.
+${pctx.domainGuard}
 Agenda: ${meeting.agenda || "(none — set the frame yourself in 1 sentence)"}
 
 Open the meeting in 1-2 sentences. Greet the room, name what we're here to resolve, and hand off to the next person with a specific question. Plain spoken, no fluff.`;
