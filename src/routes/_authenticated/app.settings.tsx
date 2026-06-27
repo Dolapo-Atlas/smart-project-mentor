@@ -4,7 +4,7 @@ import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Volume2 } from "lucide-react";
-import { STAKEHOLDERS } from "@/lib/stakeholders";
+import { useRoster } from "@/lib/roster";
 
 export const Route = createFileRoute("/_authenticated/app/settings")({
   component: SettingsPage,
