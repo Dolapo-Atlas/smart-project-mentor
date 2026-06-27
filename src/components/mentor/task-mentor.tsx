@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { mentorBrief } from "@/lib/mentor.functions";
+import { useRouterState } from "@tanstack/react-router";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -147,6 +150,22 @@ function inferConcept(task: MentorTaskContext): {
   const t = (task.title + " " + (task.description ?? "")).toLowerCase();
   const who = task.stakeholder ?? "your stakeholder";
 
+  if (t.includes("charter")) {
+    return {
+      name: "Project Charter",
+      whatIs:
+        "A Project Charter is the founding document that authorises a project. It captures the purpose, objectives, scope boundaries, key stakeholders, high-level milestones, success criteria, and the sponsor's mandate to the project manager.",
+      whenUsed:
+        "Written at the very start of the project — during Initiation — before detailed planning. It is signed off by the sponsor and used as the reference point when scope or priorities are challenged later.",
+      thisTask: `Draft the charter so ${who} can sign off on why this project exists, what it must deliver, and the authority you have to run it.`,
+      hints: [
+        "State the business problem first — one short paragraph, no jargon.",
+        "List 3-5 specific, measurable objectives and the success criteria for each.",
+        "Make scope boundaries explicit: in scope, out of scope, assumptions, constraints.",
+        "Name the sponsor, the PM, and the key stakeholder groups before circulating.",
+      ],
+    };
+  }
   if (t.includes("cost") && t.includes("benefit")) {
     return {
       name: "Cost-Benefit Analysis",
@@ -302,24 +321,6 @@ export function HintsPanel({ task }: { task: MentorTaskContext }) {
 // ---------- Ask AI ----------
 type ChatMsg = { role: "user" | "mentor"; text: string };
 
-function mockMentorReply(task: MentorTaskContext, q: string): string {
-  const c = inferConcept(task);
-  const lower = q.toLowerCase();
-  if (lower.includes("how") && (lower.includes("start") || lower.includes("begin"))) {
-    return `Start by re-reading the task: "${task.title}". Ask yourself — what is the single output ${task.stakeholder ?? "the stakeholder"} actually needs? Once that's clear, the first hint above usually unlocks the rest.`;
-  }
-  if (lower.includes("template") || lower.includes("example")) {
-    return `I won't give you a finished template — that would short-circuit your learning. But the Files tab lists the right reference for a ${c.name}. Skim it, then sketch your own structure.`;
-  }
-  if (lower.includes("priya") || lower.includes("david") || lower.includes("stakeholder")) {
-    return `Think about what they're really worried about, not just what they wrote. A short acknowledgement plus one concrete next step usually lowers tension more than a long defence.`;
-  }
-  if (lower.includes("why")) {
-    return `Good question to ask. In a ${c.name}, the "why" usually traces back to a decision someone needs to make. Figure out the decision first; the content follows.`;
-  }
-  return `Good question. For "${task.title}", I'd think about it this way: ${c.thisTask} Try the first hint and tell me what you find — I can react to your draft, but I won't write it for you.`;
-}
-
 export function AskMentorPanel({ task }: { task: MentorTaskContext }) {
   const [messages, setMessages] = useState<ChatMsg[]>([
     {
@@ -329,18 +330,26 @@ export function AskMentorPanel({ task }: { task: MentorTaskContext }) {
   ]);
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
+  const ask = useServerFn(mentorBrief);
+  const route = useRouterState({ select: (s) => s.location.pathname });
 
-  function send(e: React.FormEvent) {
+  async function send(e: React.FormEvent) {
     e.preventDefault();
     const q = input.trim();
-    if (!q) return;
+    if (!q || thinking) return;
+    const taskCtx = `Current task: "${task.title}"${task.description ? ` — ${task.description}` : ""}${task.stakeholder ? ` (for ${task.stakeholder})` : ""}${task.category ? ` [${task.category}]` : ""}.`;
     setMessages((m) => [...m, { role: "user", text: q }]);
     setInput("");
     setThinking(true);
-    setTimeout(() => {
-      setMessages((m) => [...m, { role: "mentor", text: mockMentorReply(task, q) }]);
+    try {
+      const res = await ask({ data: { route, question: `${taskCtx}\n\nLearner asks: ${q}` } });
+      const text = res?.answer?.trim() || "I couldn't reach the mentor service just now — try again in a moment.";
+      setMessages((m) => [...m, { role: "mentor", text }]);
+    } catch (err) {
+      setMessages((m) => [...m, { role: "mentor", text: "Something went wrong reaching the mentor. Please try again." }]);
+    } finally {
       setThinking(false);
-    }, 600);
+    }
   }
 
   return (
