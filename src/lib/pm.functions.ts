@@ -196,14 +196,18 @@ Score 0-100. A good status report has: concrete achievements with evidence, name
           .eq("id", row.id);
 
         // Sponsor reaction in inbox
-        await context.supabase.from("inbox_messages").insert({
-          user_id: context.userId,
-          sender_name: "David Okafor",
-          sender_role: "Executive Sponsor, Director of Transformation",
-          subject: `Re: Week ${week_start} status`,
-          body: object.sponsor_reaction,
-          tone: object.score >= 70 ? "supportive" : object.score >= 50 ? "curious" : "frustrated",
-        });
+        {
+          const roster = await loadRoster(context.supabase, context.userId);
+          const sponsor = rosterByRole(roster).sponsor ?? DEFAULT_ROSTER.find((r) => r.role === "sponsor")!;
+          await context.supabase.from("inbox_messages").insert({
+            user_id: context.userId,
+            sender_name: sponsor.name,
+            sender_role: sponsor.title,
+            subject: `Re: Week ${week_start} status`,
+            body: object.sponsor_reaction,
+            tone: object.score >= 70 ? "supportive" : object.score >= 50 ? "curious" : "frustrated",
+          });
+        }
 
         // Submitting a credible status report ticks reporting competencies.
         try {
