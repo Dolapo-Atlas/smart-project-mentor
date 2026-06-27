@@ -13,6 +13,38 @@ function getModel() {
   return createLovableAiGatewayProvider(key)(MODEL);
 }
 
+/**
+ * Pull the active project context for the current user so AI prompts can be
+ * grounded in the right project (CRM, Website, EV Charging, etc.) instead of
+ * defaulting to "Digital Care Records Rollout".
+ */
+async function getProjectCtx(supabase: any, userId: string) {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("current_project_instance_id")
+    .eq("id", userId)
+    .maybeSingle();
+  const instanceId = profile?.current_project_instance_id as string | undefined;
+  if (!instanceId) {
+    return { name: "the programme", description: "", category: "", skills: [] as string[], domainGuard: "" };
+  }
+  const { data: inst } = await supabase
+    .from("project_instances")
+    .select("display_name, project_templates(title, description, category, key_skills)")
+    .eq("id", instanceId)
+    .maybeSingle();
+  const tpl: any = (inst as any)?.project_templates ?? {};
+  const name = (inst as any)?.display_name || tpl.title || "the programme";
+  const description: string = tpl.description ?? "";
+  const category: string = tpl.category ?? "";
+  const skills: string[] = Array.isArray(tpl.key_skills) ? tpl.key_skills : [];
+  const isHealth = /care|health|clinical|patient|nhs/i.test(`${name} ${category} ${description}`);
+  const domainGuard = isHealth
+    ? ""
+    : `IMPORTANT: This is a "${name}" project. Do NOT reference healthcare, care homes, patients, clinical governance, "Digital Care Records", or NHS unless the project title above explicitly says so. Speak only in terms relevant to ${name}.`;
+  return { name, description, category, skills, domainGuard };
+}
+
 const Rag = z.enum(["green", "amber", "red"]);
 
 function mondayOf(d: Date): string {
@@ -77,7 +109,9 @@ export const upsertStatusReport = createServerFn({ method: "POST" })
           weaknesses: z.array(z.string()),
           sponsor_reaction: z.string(),
         });
-        const prompt = `You are a programme sponsor reviewing a weekly status report from your project coordinator on the Digital Care Records Rollout (£500k, 6 months, behind schedule).
+        const projectCtx = await getProjectCtx(context.supabase, context.userId);
+        const prompt = `You are a programme sponsor reviewing a weekly status report from your project coordinator on the "${projectCtx.name}" project.
+${projectCtx.domainGuard}
 
 Week: ${week_start}
 RAG: ${data.rag_summary}
@@ -577,8 +611,10 @@ export const startMeeting = createServerFn({ method: "POST" })
     const transcript = transcriptOf(meeting);
     if (transcript.length > 0) return meeting;
 
+    const pctx = await getProjectCtx(context.supabase, context.userId);
     const prompt = `You are ${opener.name}, ${opener.role}. ${opener.persona}
-You are opening a ${meeting.kind} meeting titled "${meeting.title}" on the Digital Care Records Rollout (£500k, 6 months, behind schedule).
+You are opening a ${meeting.kind} meeting titled "${meeting.title}" on the "${pctx.name}" project${pctx.description ? ` (${pctx.description})` : ""}.
+${pctx.domainGuard}
 Agenda: ${meeting.agenda || "(none — set the frame yourself in 1 sentence)"}
 
 Open the meeting in 1-2 sentences. Greet the room, name what we're here to resolve, and hand off to the next person with a specific question. Plain spoken, no fluff.`;
@@ -677,7 +713,9 @@ export const advanceMeeting = createServerFn({ method: "POST" })
       .map((t) => `${t.speaker_name} (${t.speaker_role}): ${t.body}`)
       .join("\n\n");
 
-    const prompt = `You are ${speaker.name}, ${speaker.role}, in a live ${meeting.kind} meeting on the Digital Care Records Rollout.
+    const pctx = await getProjectCtx(context.supabase, context.userId);
+    const prompt = `You are ${speaker.name}, ${speaker.role}, in a live ${meeting.kind} meeting on the "${pctx.name}" project${pctx.description ? ` (${pctx.description})` : ""}.
+${pctx.domainGuard}
 Persona: ${speaker.persona}
 
 Meeting: "${meeting.title}"
@@ -727,9 +765,11 @@ export const holdMeeting = createServerFn({ method: "POST" })
 
     let ai_summary: string | null = null;
     try {
+      const pctx = await getProjectCtx(context.supabase, context.userId);
       const { text } = await generateText({
         model: getModel(),
-        prompt: `Summarise this ${meeting.kind} meeting on the Digital Care Records Rollout in 3-5 bullet points covering decisions, actions (with owners), and unresolved questions. Be terse and workplace-realistic.
+        prompt: `Summarise this ${meeting.kind} meeting on the "${pctx.name}" project in 3-5 bullet points covering decisions, actions (with owners), and unresolved questions. Be terse and workplace-realistic.
+${pctx.domainGuard}
 
 Agenda:
 ${meeting.agenda ?? "(none)"}
@@ -777,7 +817,9 @@ export const autoMinutes = createServerFn({ method: "POST" })
       )
       .join("\n\n");
 
-    const prompt = `You are taking minutes for a ${meeting.kind} meeting titled "${meeting.title}" on the Digital Care Records Rollout.
+    const pctx = await getProjectCtx(context.supabase, context.userId);
+    const prompt = `You are taking minutes for a ${meeting.kind} meeting titled "${meeting.title}" on the "${pctx.name}" project.
+${pctx.domainGuard}
 
 Transcript:
 ${transcriptText}
