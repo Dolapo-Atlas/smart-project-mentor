@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { listComms, listAttachables, sendComm, STAKEHOLDERS } from "@/lib/comms.functions";
+import { listComms, listAttachables, sendComm } from "@/lib/comms.functions";
+import { useRoster } from "@/lib/roster";
 import { recordDocument } from "@/lib/sim.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { useMemo, useRef, useState } from "react";
@@ -33,6 +34,7 @@ function Comms() {
   const fetchAttach = useServerFn(listAttachables);
   const send = useServerFn(sendComm);
   const recordFn = useServerFn(recordDocument);
+  const roster = useRoster();
 
   const { data: messages } = useQuery({ queryKey: ["comms"], queryFn: () => fetchComms() });
   const { data: attach } = useQuery({ queryKey: ["comms_attach"], queryFn: () => fetchAttach() });
@@ -160,7 +162,7 @@ function Comms() {
       <section className="rounded-lg border border-border bg-card p-6">
         <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">To</div>
         <div className="mt-2 flex flex-wrap gap-2">
-          {STAKEHOLDERS.map((s) => (
+          {roster.map((s) => (
             <button
               key={s.role}
               onClick={() => toggleRole(s.role)}
@@ -170,7 +172,7 @@ function Comms() {
                   : "border-border text-muted-foreground hover:text-foreground"
               }`}
             >
-              <StakeholderAvatar name={s.name} size="xs" />
+              <StakeholderAvatar name={s.name} size="xs" seed={s.seed} role={s.role} />
               <span>{s.name} <span className="opacity-60">· {s.title}</span></span>
             </button>
           ))}
@@ -290,10 +292,11 @@ function Comms() {
                     {replies.map((r) => (
                       <div key={r.id}>
                         {(() => {
-                          const sName = STAKEHOLDERS.find((s) => s.role === r.from_role)?.name ?? r.from_role;
+                          const sh = roster.find((s) => s.role === r.from_role);
+                          const sName = sh?.name ?? r.from_role;
                           return (
                             <div className="flex items-start gap-2">
-                              <StakeholderAvatar name={sName} size="sm" />
+                              <StakeholderAvatar name={sName} size="sm" seed={sh?.seed} role={sh?.role} />
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2 text-xs">
                                   <span className="font-medium">{sName}</span>

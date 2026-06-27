@@ -784,6 +784,7 @@ export type Database = {
           sponsor_name: string | null
           sponsor_role: string | null
           stakeholder_count: number
+          stakeholders: Json
           title: string
           updated_at: string
           welcome_intro: string | null
@@ -808,6 +809,7 @@ export type Database = {
           sponsor_name?: string | null
           sponsor_role?: string | null
           stakeholder_count: number
+          stakeholders?: Json
           title: string
           updated_at?: string
           welcome_intro?: string | null
@@ -832,6 +834,7 @@ export type Database = {
           sponsor_name?: string | null
           sponsor_role?: string | null
           stakeholder_count?: number
+          stakeholders?: Json
           title?: string
           updated_at?: string
           welcome_intro?: string | null

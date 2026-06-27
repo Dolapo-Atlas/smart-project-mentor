@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Trash2, Plus, Paperclip, ShieldAlert, AlertOctagon, Link2, HelpCircle } from "lucide-react";
 import { toast } from "sonner";
-import { STAKEHOLDERS } from "@/lib/stakeholders";
+import { useRoster } from "@/lib/roster";
 import { format } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/app/raid")({
@@ -53,6 +53,7 @@ function RaidPage() {
   const setStatusFn = useServerFn(updateRaidStatus);
   const delRaidFn = useServerFn(deleteRaid);
   const submitRaidFn = useServerFn(submitRaidLog);
+  const roster = useRoster();
 
   const { data: raid } = useQuery({ queryKey: ["raid"], queryFn: () => fetchRaid() });
 
@@ -170,7 +171,7 @@ function RaidPage() {
               onChange={(e) => setForm({ ...form, owner: e.target.value })}
               className="h-10 rounded-md border border-input bg-background px-3 text-sm">
               <option value="">Owner (unassigned)</option>
-              {STAKEHOLDERS.map((s) => (
+              {roster.map((s) => (
                 <option key={s.role} value={s.name}>{s.name} — {s.title}</option>
               ))}
             </select>

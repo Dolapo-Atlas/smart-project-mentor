@@ -5,6 +5,7 @@ import { z } from "zod";
 import { generateObject, generateText } from "ai";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
 import type { Json } from "@/integrations/supabase/types";
+import { loadRoster, rosterByRole, rosterByName, DEFAULT_ROSTER, type RosterMember } from "./roster";
 
 const MODEL = "google/gemini-3-flash-preview";
 function getModel() {
@@ -43,6 +44,65 @@ async function getProjectCtx(supabase: any, userId: string) {
     ? ""
     : `IMPORTANT: This is a "${name}" project. Do NOT reference healthcare, care homes, patients, clinical governance, "Digital Care Records", or NHS unless the project title above explicitly says so. Speak only in terms relevant to ${name}.`;
   return { name, description, category, skills, domainGuard };
+}
+
+/* ============= ROSTER HELPERS ============= */
+
+/**
+ * Persona prose per role. The roster supplies the person's name and title;
+ * we layer the *behavioural* persona on top so the AI knows how each archetype
+ * is supposed to behave in a meeting, regardless of which name the template
+ * happens to use.
+ */
+const PERSONA_BY_ROLE: Record<string, string> = {
+  pm:         "Senior PM. Direct, pragmatic, slightly impatient with vague status. Pushes for owners and dates.",
+  sponsor:    "Outcome-focused executive. Uses board language. Pushes back on cost and timeline. Will name names.",
+  finance:    "Spreadsheet-led, sceptical of vendor claims. Wants forecast vs actuals, not narrative.",
+  tech:       "Engineer. Surfaces integration risk and dependency chains. Resists optimistic dates.",
+  vendor:     "Polished commercial lead. Defends vendor pricing and scope. Will offer a workaround before owning a delay.",
+  operations: "Operational lead. Speaks plainly. Protective of staff. Raises readiness and run-state concerns.",
+  admin:      "Domain administrator. Notices process and compliance gaps the room is glossing over.",
+  clinical:   "Safety-first specialist. Will halt go-lives over governance gaps.",
+  care_home:  "Site manager. Protective of staff. Speaks plainly. Raises readiness and training concerns.",
+};
+
+function personaFor(role: string): string {
+  return PERSONA_BY_ROLE[role] ?? `${role} specialist. Speaks from their domain expertise and pushes back when something doesn't add up.`;
+}
+
+function memberToAttendee(m: RosterMember): Attendee {
+  return {
+    role_key: m.role,
+    name: m.name,
+    role: m.title,
+    persona: personaFor(m.role),
+  };
+}
+
+/** Which roles should be in the room for each meeting kind. */
+const KIND_ROLES: Record<string, string[]> = {
+  standup:  ["pm", "tech", "operations", "clinical"],
+  steering: ["sponsor", "pm", "finance", "clinical", "operations"],
+  vendor:   ["vendor", "tech", "pm"],
+  retro:    ["pm", "tech", "operations", "care_home"],
+};
+
+function attendeesForKind(roster: RosterMember[], kind: string): Attendee[] {
+  const wanted = KIND_ROLES[kind] ?? ["pm", "sponsor"];
+  const byRole = rosterByRole(roster);
+  const seen = new Set<string>();
+  const out: Attendee[] = [];
+  for (const role of wanted) {
+    const m = byRole[role];
+    if (m && !seen.has(m.role)) {
+      out.push(memberToAttendee(m));
+      seen.add(m.role);
+    }
+  }
+  // If kind asks for roles the project doesn't have (e.g. CRM has no
+  // `clinical`), fall back to the PM + sponsor so the meeting still opens.
+  if (out.length === 0 && roster[0]) out.push(memberToAttendee(roster[0]));
+  return out;
 }
 
 const Rag = z.enum(["green", "amber", "red"]);
@@ -136,14 +196,18 @@ Score 0-100. A good status report has: concrete achievements with evidence, name
           .eq("id", row.id);
 
         // Sponsor reaction in inbox
-        await context.supabase.from("inbox_messages").insert({
-          user_id: context.userId,
-          sender_name: "David Okafor",
-          sender_role: "Executive Sponsor, Director of Transformation",
-          subject: `Re: Week ${week_start} status`,
-          body: object.sponsor_reaction,
-          tone: object.score >= 70 ? "supportive" : object.score >= 50 ? "curious" : "frustrated",
-        });
+        {
+          const roster = await loadRoster(context.supabase, context.userId);
+          const sponsor = rosterByRole(roster).sponsor ?? DEFAULT_ROSTER.find((r) => r.role === "sponsor")!;
+          await context.supabase.from("inbox_messages").insert({
+            user_id: context.userId,
+            sender_name: sponsor.name,
+            sender_role: sponsor.title,
+            subject: `Re: Week ${week_start} status`,
+            body: object.sponsor_reaction,
+            tone: object.score >= 70 ? "supportive" : object.score >= 50 ? "curious" : "frustrated",
+          });
+        }
 
         // Submitting a credible status report ticks reporting competencies.
         try {
@@ -267,11 +331,15 @@ export const generateChangeRequest = createServerFn({ method: "POST" })
       schedule_impact_days: z.number().int(),
       risk_impact: z.enum(["low", "medium", "high"]),
     });
-    const prompt = `Generate ONE realistic change request for the Digital Care Records Rollout project (£500k, 6 months, behind schedule, 12 care homes, vendor: CareSoft Ltd).
+    const pctx = await getProjectCtx(context.supabase, context.userId);
+    const roster = await loadRoster(context.supabase, context.userId);
+    const cast = roster.map((r) => `${r.name} (${r.title})`).join(", ");
+    const prompt = `Generate ONE realistic change request for the "${pctx.name}" project${pctx.description ? ` — ${pctx.description}` : ""}.
+${pctx.domainGuard}
 
-Pick a plausible requester from: David Okafor (Executive Sponsor), Sarah Williams (PM), Priya Anand (Finance Lead), James Lin (Technical Lead), CareSoft Ltd (Vendor), Margaret Hollis (Care Home Manager), Rachel Stone (Clinical Governance).
+Pick a plausible requester from this cast: ${cast}. Use their exact name in requested_by.
 
-Be specific: name a scope change ("add iPad rollout to 4 additional homes", "extend training by 2 weeks", "swap reporting module for Power BI", "vendor adds £35k for SSO integration"). cost_impact in GBP (can be negative for descope). schedule_impact_days can be negative. risk_impact reflects whether this raises overall project risk.`;
+Be specific to the project domain: name a concrete scope change (e.g. add a module, extend a phase, swap a tool, vendor adds cost for a new integration). cost_impact in GBP (can be negative for descope). schedule_impact_days can be negative. risk_impact reflects whether this raises overall project risk.`;
     const { object } = await generateObject({ model: getModel(), schema: Schema, prompt });
     const { data: row, error } = await context.supabase
       .from("change_requests")
@@ -323,11 +391,16 @@ export const decideChangeRequest = createServerFn({ method: "POST" })
       });
     }
 
-    // Stakeholder reaction
-    const reactor = data.decision === "approved" ? "Priya Anand" : cr.requested_by;
-    const reactorRole = data.decision === "approved"
-      ? "Finance Lead, Atlas Enterprise"
-      : "Stakeholder";
+    // Stakeholder reaction — finance lead celebrates / disappointed requester pushes back.
+    const roster = await loadRoster(context.supabase, context.userId);
+    const byRole = rosterByRole(roster);
+    const byName = rosterByName(roster);
+    const reactorMember =
+      data.decision === "approved"
+        ? byRole.finance ?? byRole.sponsor ?? roster[0]
+        : byName[cr.requested_by] ?? roster[0];
+    const reactor = reactorMember?.name ?? cr.requested_by;
+    const reactorRole = reactorMember?.title ?? "Stakeholder";
     await context.supabase.from("inbox_messages").insert({
       user_id: context.userId,
       sender_name: reactor,
@@ -457,22 +530,8 @@ type TranscriptTurn = {
   body: string;
 };
 
-const ATTENDEE_BOOK: Record<string, Attendee> = {
-  pm:        { role_key: "pm",        name: "Sarah Williams",  role: "Project Manager",                       persona: "Senior PM. Direct, pragmatic, slightly impatient with vague status. Pushes for owners and dates." },
-  sponsor:   { role_key: "sponsor",   name: "David Okafor",    role: "Executive Sponsor, Director of Transformation", persona: "Outcome-focused. Uses board language. Pushes back on cost and timeline. Will name names." },
-  finance:   { role_key: "finance",   name: "Priya Anand",     role: "Finance Lead, Atlas Enterprise", persona: "Spreadsheet-led, sceptical of vendor claims. Wants forecast vs actuals, not narrative." },
-  tech:      { role_key: "tech",      name: "James Lin",       role: "Technical Lead",                        persona: "Engineer. Surfaces integration risk and dependency chains. Resists optimistic dates." },
-  vendor:    { role_key: "vendor",    name: "CareSoft Ltd",    role: "Vendor — CareSoft (Account Director)",  persona: "Polished, defends vendor commercials. Will offer a workaround before owning a delay." },
-  care_home: { role_key: "care_home", name: "Margaret Hollis", role: "Care Home Manager (Willow Lodge)",       persona: "Operational, protective of staff. Speaks plainly. Raises readiness and training concerns." },
-  clinical:  { role_key: "clinical",  name: "Rachel Stone",    role: "Clinical Governance Lead",              persona: "Patient-safety first. Will halt go-lives over information governance gaps." },
-};
-
-const KIND_ATTENDEES: Record<string, string[]> = {
-  standup:  ["pm", "tech", "clinical"],
-  steering: ["sponsor", "pm", "finance", "clinical"],
-  vendor:   ["vendor", "tech", "pm"],
-  retro:    ["pm", "tech", "clinical", "care_home"],
-};
+// Meeting attendees are derived from the active project's roster — see
+// `attendeesForKind()` and `memberToAttendee()` above.
 
 export const listMeetings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -497,7 +556,8 @@ export const createMeeting = createServerFn({ method: "POST" })
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    const attendees = (KIND_ATTENDEES[data.kind] ?? []).map((k) => ATTENDEE_BOOK[k]);
+    const roster = await loadRoster(context.supabase, context.userId);
+    const attendees = attendeesForKind(roster, data.kind);
     const { data: row, error } = await context.supabase
       .from("meetings")
       .insert({
@@ -531,7 +591,10 @@ function attendeesOf(meeting: any): Attendee[] {
 
 export const listAttendeeRoster = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async () => Object.values(ATTENDEE_BOOK));
+  .handler(async ({ context }) => {
+    const roster = await loadRoster(context.supabase, context.userId);
+    return roster.map(memberToAttendee);
+  });
 
 export const addMeetingAttendee = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -551,9 +614,11 @@ export const addMeetingAttendee = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const meeting = await loadMeeting(context.supabase, context.userId, data.id);
     const current = attendeesOf(meeting);
+    const roster = await loadRoster(context.supabase, context.userId);
+    const byRole = rosterByRole(roster);
     let toAdd: Attendee | undefined;
-    if (data.role_key && ATTENDEE_BOOK[data.role_key]) {
-      toAdd = ATTENDEE_BOOK[data.role_key];
+    if (data.role_key && byRole[data.role_key]) {
+      toAdd = memberToAttendee(byRole[data.role_key]);
     } else if (data.custom) {
       const slug = data.custom.name.toLowerCase().replace(/[^a-z0-9]+/g, "_").slice(0, 24) || `guest_${Date.now()}`;
       toAdd = {
@@ -600,12 +665,13 @@ export const startMeeting = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const meeting = await loadMeeting(context.supabase, context.userId, data.id);
     const attendees = attendeesOf(meeting);
+    const roster = await loadRoster(context.supabase, context.userId);
     if (attendees.length === 0) {
-      const fresh = (KIND_ATTENDEES[meeting.kind] ?? []).map((k) => ATTENDEE_BOOK[k]);
+      const fresh = attendeesForKind(roster, meeting.kind);
       await context.supabase.from("meetings").update({ attendees: fresh as unknown as Json }).eq("id", meeting.id);
     }
     // Opening turn: PM (or first attendee) frames the meeting.
-    const list = attendees.length ? attendees : (KIND_ATTENDEES[meeting.kind] ?? []).map((k) => ATTENDEE_BOOK[k]);
+    const list = attendees.length ? attendees : attendeesForKind(roster, meeting.kind);
     const opener = list.find((a) => a.role_key === "pm") ?? list[0];
     if (!opener) return meeting;
     const transcript = transcriptOf(meeting);
@@ -691,7 +757,8 @@ export const advanceMeeting = createServerFn({ method: "POST" })
     const meeting = await loadMeeting(context.supabase, context.userId, data.id);
     let attendees = attendeesOf(meeting);
     if (attendees.length === 0) {
-      attendees = (KIND_ATTENDEES[meeting.kind] ?? []).map((k) => ATTENDEE_BOOK[k]);
+      const roster = await loadRoster(context.supabase, context.userId);
+      attendees = attendeesForKind(roster, meeting.kind);
     }
     const transcript = transcriptOf(meeting);
 
@@ -965,20 +1032,20 @@ export const summonConflict = createServerFn({ method: "POST" })
       body: z.string(),
       tone: z.enum(["urgent", "frustrated", "supportive", "curious", "neutral"]),
     });
+    const pctx = await getProjectCtx(supabase, userId);
+    const roster = await loadRoster(supabase, userId);
+    const cast = roster.map((r) => `${r.name} (${r.title}, role:${r.role})`).join("\n- ");
+    const prompt = `Generate ONE email where a stakeholder DISAGREES with another stakeholder or with a recent decision on the "${pctx.name}" project. This is real-life project tension, not gameplay.
+${pctx.domainGuard}
 
-    const prompt = `Generate ONE email where a stakeholder DISAGREES with another stakeholder or with a recent decision on the Digital Care Records Rollout. This is real-life project tension, not gameplay.
+Cast (pick sender_name and sender_role from here only):
+- ${cast}
 
-Pick a realistic disagreement, e.g.:
-- Finance (Priya Anand) pushes back on the vendor's proposed cost increase
-- Clinical Governance (Rachel Stone) objects to the timeline cutting clinical safety review
-- Care Home Manager (Margaret Hollis) protests that her home isn't ready and is being rushed
-- Technical Lead (James Lin) disputes a sponsor decision that ignores integration risk
-- Sponsor (David Okafor) questions why the PM is escalating instead of resolving directly
-- Vendor (CareSoft Ltd) refuses to absorb cost of a scope change
+Pick a realistic disagreement appropriate to this project domain — e.g. finance pushing back on vendor cost, an operations/site lead protesting they're being rushed, a technical lead disputing a sponsor decision that ignores integration risk, a vendor refusing to absorb scope-change cost, or the sponsor questioning why issues are being escalated rather than resolved.
 
 Reference real context. Coordinator: ${firstName}. Project health: ${state?.health}. Recent messages: ${JSON.stringify(recentMsgs)}. Recent change requests: ${JSON.stringify(recentCRs)}.
 
-The email should put ${firstName} in the middle and force a judgement call. Address ${firstName} by first name. 2-4 short paragraphs. Sign off.`;
+The email should put ${firstName} in the middle and force a judgement call. Address ${firstName} by first name. 2-4 short paragraphs. Sign off with the stakeholder's name and title.`;
 
     const { object } = await generateObject({ model: getModel(), schema: Schema, prompt });
     const { data: msg, error } = await supabase
@@ -992,44 +1059,57 @@ The email should put ${firstName} in the middle and force a judgement call. Addr
 
 /* ============= STAKEHOLDER RELATIONSHIPS ============= */
 
-const STAKEHOLDER_BOOK: Array<{ name: string; role: string; type: string }> = [
-  { name: "David Okafor", role: "Executive Sponsor", type: "sponsor" },
-  { name: "Sarah Williams", role: "Project Manager (peer / mentor)", type: "pm" },
-  { name: "Priya Anand", role: "Finance Business Partner", type: "pmo" },
-  { name: "James Lin", role: "Technical Lead", type: "tech" },
-  { name: "Margaret Hollis", role: "Care Home Manager", type: "operations" },
-  { name: "Rachel Stone", role: "Clinical Governance Lead", type: "clinical" },
-  { name: "CareSoft Ltd", role: "Vendor – CareSoft Ltd", type: "vendor" },
-];
-
-// Archetype starting sentiment — each stakeholder begins with a baseline
-// reflecting their disposition. The coordinator earns or loses ground from there.
-export const ARCHETYPE_SENTIMENT: Record<string, number> = {
-  "David Okafor": 0,        // sponsor — neutral, busy, expects clarity
-  "Sarah Williams": 10,     // PM peer/mentor — supportive
-  "Priya Anand": -10,       // finance — mildly skeptical until value is shown
-  "James Lin": -5,          // tech — cautious, integration-anxious
-  "Margaret Hollis": -5,    // care home manager — protective of staff
-  "Rachel Stone": -15,      // clinical governance — skeptical until safety proven
-  "CareSoft Ltd": 0,        // vendor — transactional
+// Archetype starting sentiment is now keyed by ROLE (not name), so every
+// project gets the same disposition baselines regardless of which person
+// is filling each seat.
+export const ARCHETYPE_SENTIMENT_BY_ROLE: Record<string, number> = {
+  sponsor:    0,
+  pm:         10,
+  finance:    -10,
+  tech:       -5,
+  operations: -5,
+  admin:      0,
+  care_home:  -5,
+  clinical:   -15,
+  vendor:     0,
 };
+
+// Backward-compat: legacy modules import `ARCHETYPE_SENTIMENT` keyed by
+// stakeholder name. Returning 0 for unknown names is safe because every
+// call site uses `?? 0`.
+export const ARCHETYPE_SENTIMENT: Record<string, number> = {
+  "David Okafor": 0,
+  "Sarah Williams": 10,
+  "Priya Anand": -10,
+  "James Lin": -5,
+  "Margaret Hollis": -5,
+  "Rachel Stone": -15,
+  "CareSoft Ltd": 0,
+};
+
+function baselineFor(member: { role: string; name: string } | undefined): number {
+  if (!member) return 0;
+  return ARCHETYPE_SENTIMENT_BY_ROLE[member.role] ?? ARCHETYPE_SENTIMENT[member.name] ?? 0;
+}
 
 export const getStakeholders = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
+    const roster = await loadRoster(supabase, userId);
     const { data: rows } = await supabase
       .from("stakeholder_relationships")
       .select("*")
       .eq("user_id", userId);
     const byName = new Map((rows ?? []).map((r) => [r.stakeholder_name, r]));
-    return STAKEHOLDER_BOOK.map((s) => {
+    return roster.map((s) => {
       const r = byName.get(s.name);
       return {
         name: s.name,
-        role: s.role,
-        type: s.type,
-        sentiment: r?.sentiment ?? ARCHETYPE_SENTIMENT[s.name] ?? 0,
+        role: s.title,
+        type: s.role,
+        seed: s.seed,
+        sentiment: r?.sentiment ?? baselineFor(s),
         concerns: (r?.concerns ?? []) as string[],
         notes: r?.notes ?? "",
         interaction_count: r?.interaction_count ?? 0,
@@ -1043,7 +1123,8 @@ export const updateStakeholder = createServerFn({ method: "POST" })
   .inputValidator((d: { name: string; sentimentDelta?: number; addConcern?: string; removeConcern?: string; notes?: string; bumpInteraction?: boolean }) => d)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const book = STAKEHOLDER_BOOK.find((s) => s.name === data.name);
+    const roster = await loadRoster(supabase, userId);
+    const book = rosterByName(roster)[data.name];
     if (!book) throw new Error("Unknown stakeholder");
 
     const { data: existing } = await supabase
@@ -1054,7 +1135,7 @@ export const updateStakeholder = createServerFn({ method: "POST" })
       .maybeSingle();
 
     const current = existing ?? {
-      sentiment: ARCHETYPE_SENTIMENT[data.name] ?? 0,
+      sentiment: baselineFor(book),
       concerns: [] as string[],
       notes: "",
       interaction_count: 0,
@@ -1070,7 +1151,7 @@ export const updateStakeholder = createServerFn({ method: "POST" })
     const payload = {
       user_id: userId,
       stakeholder_name: data.name,
-      role: book.role,
+      role: book.title,
       sentiment,
       concerns,
       notes: data.notes ?? current.notes,
@@ -1087,22 +1168,12 @@ export const updateStakeholder = createServerFn({ method: "POST" })
     return row;
   });
 
-const STAKEHOLDER_ROLE_KEY_BY_NAME: Record<string, string> = {
-  "David Okafor": "sponsor",
-  "Sarah Williams": "pm",
-  "Priya Anand": "finance",
-  "James Lin": "tech",
-  "Margaret Hollis": "care_home",
-  "Rachel Stone": "clinical",
-  "CareSoft Ltd": "vendor",
-};
-
-function recoveryTemplate(name: string) {
-  if (name === "Priya Anand") {
+function recoveryTemplate(name: string, member?: RosterMember) {
+  if (member?.role === "finance") {
     return {
       subject: "Forecast controls and approval route — follow-up",
       body:
-`Priya,
+`Hi ${name.split(" ")[0]},
 
 You're right to keep challenging the numbers. I don't want to send another narrative update without giving you the finance control view you need.
 
@@ -1116,7 +1187,7 @@ Coordinator`,
 
 Please send the forecast vs actuals and the approval route before the governance pack is finalised. I’m not trying to block the project — I need assurance that cost exposure is visible before decisions are made.
 
-Priya`,
+${name.split(" ")[0]}`,
       concern: "Needs forecast vs actuals, cost exposure, and approval route before supporting decisions.",
     };
   }
@@ -1146,7 +1217,8 @@ export const repairStakeholderRelationship = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ name: z.string().min(1) }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const book = STAKEHOLDER_BOOK.find((s) => s.name === data.name);
+    const roster = await loadRoster(supabase, userId);
+    const book = rosterByName(roster)[data.name];
     if (!book) throw new Error("Unknown stakeholder");
 
     const { data: existing } = await supabase
@@ -1156,11 +1228,11 @@ export const repairStakeholderRelationship = createServerFn({ method: "POST" })
       .eq("stakeholder_name", data.name)
       .maybeSingle();
 
-    const currentSentiment = existing?.sentiment ?? ARCHETYPE_SENTIMENT[data.name] ?? 0;
+    const currentSentiment = existing?.sentiment ?? baselineFor(book);
     const nextSentiment = Math.max(-10, Math.min(100, currentSentiment + 30));
-    const template = recoveryTemplate(data.name);
+    const template = recoveryTemplate(data.name, book);
     const threadId = crypto.randomUUID();
-    const roleKey = STAKEHOLDER_ROLE_KEY_BY_NAME[data.name] ?? book.type;
+    const roleKey = book.role;
 
     await supabase.from("comms_messages").insert({
       user_id: userId,
@@ -1191,7 +1263,7 @@ export const repairStakeholderRelationship = createServerFn({ method: "POST" })
     await supabase.from("inbox_messages").insert({
       user_id: userId,
       sender_name: data.name,
-      sender_role: book.role,
+      sender_role: book.title,
       subject: `Re: ${template.subject}`,
       body: template.reply,
       tone: nextSentiment >= -19 ? "neutral" : "frustrated",
@@ -1206,7 +1278,7 @@ export const repairStakeholderRelationship = createServerFn({ method: "POST" })
         {
           user_id: userId,
           stakeholder_name: data.name,
-          role: book.role,
+          role: book.title,
           sentiment: nextSentiment,
           concerns,
           notes: existing?.notes ?? "",

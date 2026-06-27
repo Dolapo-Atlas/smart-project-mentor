@@ -4,7 +4,8 @@ import { z } from "zod";
 import { generateObject } from "ai";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
 import { applyCompetencyStatus } from "./learning.functions";
-import { ARCHETYPE_SENTIMENT } from "./pm.functions";
+import { ARCHETYPE_SENTIMENT_BY_ROLE } from "./pm.functions";
+import { loadRoster, DEFAULT_ROSTER, type RosterMember } from "./roster";
 
 const MODEL = "google/gemini-3-flash-preview";
 function getModel() {
@@ -13,15 +14,11 @@ function getModel() {
   return createLovableAiGatewayProvider(key)(MODEL);
 }
 
-export const STAKEHOLDERS: { role: string; name: string; title: string }[] = [
-  { role: "pm", name: "Sarah Williams", title: "Project Manager" },
-  { role: "sponsor", name: "David Okafor", title: "Executive Sponsor" },
-  { role: "finance", name: "Priya Anand", title: "Finance Lead" },
-  { role: "tech", name: "James Lin", title: "Technical Lead" },
-  { role: "vendor", name: "CareSoft Ltd", title: "Vendor — Implementation" },
-  { role: "care_home", name: "Margaret Hollis", title: "Care Home Manager, Oakwood" },
-  { role: "clinical", name: "Rachel Stone", title: "Clinical Governance Lead" },
-];
+// Legacy export kept so existing UI imports keep compiling; live UI should
+// call `useRoster()` from `@/lib/roster` for the active project's cast.
+export const STAKEHOLDERS: { role: string; name: string; title: string }[] = DEFAULT_ROSTER.map(
+  (m) => ({ role: m.role, name: m.name, title: m.title }),
+);
 
 const MsgType = z.enum(["Update", "Escalation", "Request", "FYI"]);
 const AttachKind = z.enum(["document", "status_report", "raid", "change_request", "budget", "gate", "none"]);
@@ -148,8 +145,8 @@ Thanks — I can see the updated RAID log now. The items have owners/mitigations
 
 Please keep it current as decisions change, but you don't need to re-upload or chase me on this thread. This clears the RAID follow-up for governance.
 
-Sarah Williams
-Project Manager`,
+${stakeholder.name}
+${stakeholder.title}`,
     };
   }
 
@@ -164,8 +161,8 @@ Thanks — I can see the updated RAID log. The entries are controlled with owner
 
 No re-upload needed. Keep the escalation triggers clear and we'll use this version for governance.
 
-Sarah Williams
-Project Manager`,
+${stakeholder.name}
+${stakeholder.title}`,
     };
   }
 
@@ -180,8 +177,8 @@ Thanks — I can see the RAID update. It is in the right place, so no need to re
 
 Before I can treat it as complete for governance, please add the missing owner or mitigation details for: ${missingControls.slice(0, 3).map((item) => item.title).join("; ")}${missingControls.length > 3 ? ` and ${missingControls.length - 3} more` : ""}.
 
-Sarah Williams
-Project Manager`,
+${stakeholder.name}
+${stakeholder.title}`,
     };
   }
 
@@ -195,19 +192,22 @@ function fallbackReply(
 ): Reply {
   const topic = attachmentLabel ? ` and the attached ${attachmentLabel}` : "";
   const bodyByRole: Record<string, string> = {
-    pm: `I have reviewed your note${topic}. Please convert the key points into dated actions, then show me which items need sponsor or governance input before Friday.\n\nThanks,\nSarah`,
-    clinical: `I have picked this up${topic}. Before clinical governance can support it, I need the safety impact, approval route, and escalation triggers made explicit.\n\nRachel Stone`,
-    sponsor: `I have seen your update${topic}. What I need next is a concise decision-ready view: options, risk, cost, recommendation, and the consequence of waiting.\n\nDavid Okafor`,
-    finance: `I have reviewed the update${topic}. Please send the cost implication, forecast movement, and any approval required before this is treated as agreed.\n\nPriya Anand`,
-    tech: `I have checked this from the technical side${topic}. The next version needs to call out migration, downtime, integration ownership, and acceptance criteria.\n\nJames Lin`,
-    vendor: `We have reviewed the request${topic}. Please confirm whether this is within the agreed scope or should be handled as a formal change request.\n\nCareSoft Ltd`,
-    care_home: `I have read the update${topic}. Please make sure the plan reflects staff availability on the floor, training time, and what happens if the home is not ready.\n\nMargaret Hollis`,
+    pm: `I have reviewed your note${topic}. Please convert the key points into dated actions, then show me which items need sponsor or governance input before Friday.`,
+    clinical: `I have picked this up${topic}. Before governance can support it, I need the safety impact, approval route, and escalation triggers made explicit.`,
+    sponsor: `I have seen your update${topic}. What I need next is a concise decision-ready view: options, risk, cost, recommendation, and the consequence of waiting.`,
+    finance: `I have reviewed the update${topic}. Please send the cost implication, forecast movement, and any approval required before this is treated as agreed.`,
+    tech: `I have checked this from the technical side${topic}. The next version needs to call out migration, downtime, integration ownership, and acceptance criteria.`,
+    vendor: `We have reviewed the request${topic}. Please confirm whether this is within the agreed scope or should be handled as a formal change request.`,
+    operations: `I have read the update${topic}. Please make sure the plan reflects on-the-ground operations, staffing, and what happens if a site is not ready.`,
+    admin: `Noted${topic}. Before I can sign this off, the audit trail and compliance points need to be clean.`,
+    care_home: `I have read the update${topic}. Please make sure the plan reflects staff availability on the floor, training time, and what happens if the home is not ready.`,
   };
+  const lead = bodyByRole[stakeholder.role] ?? `I have reviewed your note${topic}. Please send the next actions and owner list when ready.`;
   return {
     sender_role: stakeholder.title,
     subject: `Re: ${subject}`,
-    body: bodyByRole[stakeholder.role] ?? `I have reviewed your note${topic}. Please send the next actions and owner list when ready.\n\n${stakeholder.name}`,
-    sentiment: ["clinical", "finance", "care_home"].includes(stakeholder.role) ? "concerned" : "neutral",
+    body: `${lead}\n\n${stakeholder.name}\n${stakeholder.title}`,
+    sentiment: ["clinical", "finance", "care_home", "operations"].includes(stakeholder.role) ? "concerned" : "neutral",
   };
 }
 
@@ -316,7 +316,8 @@ export const sendComm = createServerFn({ method: "POST" })
     };
     evidence.evidenceSummary = buildEvidenceSummary(evidence);
 
-    const stakeholders = STAKEHOLDERS.filter((s) => data.to_roles.includes(s.role));
+    const roster = await loadRoster(supabase, uid);
+    const stakeholders: RosterMember[] = roster.filter((s) => data.to_roles.includes(s.role));
     const { data: recentReplies } = await supabase
       .from("inbox_messages")
       .select("sender_name,subject,body")
@@ -325,7 +326,8 @@ export const sendComm = createServerFn({ method: "POST" })
       .limit(8);
 
     for (const sh of stakeholders) {
-      const prompt = `You are simulating "${sh.name}, ${sh.title}" on the "${state?.project_name ?? "Digital Care Records Rollout"}" project.
+      const projectName = state?.project_name ?? "the programme";
+      const prompt = `You are simulating "${sh.name}, ${sh.title}" on the "${projectName}" project.
 Project state: phase=${state?.phase}, health=${state?.health}, reputation=${state?.reputation}/100, progress=${state?.progress}/100.
 
 Current workspace evidence you can see:
@@ -338,14 +340,16 @@ ${data.body}
 ${data.attachment_label ? `Attached: ${data.attachment_kind} — ${data.attachment_label}` : "No attachment."}
 Recent inbox replies to avoid repeating: ${JSON.stringify(recentReplies ?? [])}
 
-Write a realistic reply FROM ${sh.name} (${sh.title}) to the coordinator. Stay in character:
-- Finance pushes back on cost/value, asks for forecasts.
-- Sponsor is busy, expects clarity, can be impatient.
-- Vendor deflects blame, references contract.
-- Care home manager talks about staff/floor reality.
-- Clinical lead worries about patient safety & governance.
-- PM checks process, RAID, deadlines.
-- Tech lead talks integrations, data migration, downtime.
+Write a realistic reply FROM ${sh.name} (${sh.title}) to the coordinator. Stay in character for their role (${sh.role}):
+- pm: checks process, RAID, deadlines, owners.
+- sponsor: busy, expects clarity, can be impatient.
+- finance: pushes back on cost/value, asks for forecasts and approval routes.
+- tech: talks integrations, data, downtime, acceptance criteria.
+- vendor: defends commercials and scope, references contract.
+- operations / care_home: talks about staff, floor reality, readiness, training.
+- admin: process and compliance, what is owed for audit.
+- clinical: patient safety, governance, escalation triggers.
+Stay grounded in the "${projectName}" project domain — do NOT invent unrelated context.
 
 Use the workspace evidence above. If the coordinator says something is updated, attached, completed, or has no pending items and the evidence supports that, acknowledge it and do not claim you cannot see the file, central folder, RAID log, or pending action. Do not invent missing artefacts.
 Only disagree, push back, ask hard questions, or escalate when there is a specific unresolved gap in the evidence (for example missing owner, missing mitigation, open high/critical RAID item, pending document review, or open task). If the evidence resolves the issue, be positive or neutral.
@@ -355,7 +359,7 @@ Choose sentiment honestly: positive, neutral, pushback, concerned, or ignored (i
       let out: Reply;
       try {
         out = evidenceAwareReply(
-          sh,
+          { role: sh.role, name: sh.name, title: sh.title },
           data.subject,
           data.body,
           data.attachment_kind,
@@ -363,11 +367,11 @@ Choose sentiment honestly: positive, neutral, pushback, concerned, or ignored (i
           evidence,
         ) ?? (await generateObject({ model: getModel(), prompt, schema: ReplySchema })).object;
       } catch {
-        out = fallbackReply(sh, data.subject, data.attachment_label);
+        out = fallbackReply({ role: sh.role, name: sh.name, title: sh.title }, data.subject, data.attachment_label);
       }
 
       if (isPlaceholderReply(out.body) || (recentReplies ?? []).some((m) => m.sender_name === sh.name && m.body.trim().toLowerCase() === out.body.trim().toLowerCase())) {
-        out = fallbackReply(sh, data.subject, data.attachment_label);
+        out = fallbackReply({ role: sh.role, name: sh.name, title: sh.title }, data.subject, data.attachment_label);
       }
 
       await supabase.from("comms_messages").insert({
@@ -406,7 +410,7 @@ Choose sentiment honestly: positive, neutral, pushback, concerned, or ignored (i
         .eq("user_id", uid)
         .eq("stakeholder_name", sh.name)
         .maybeSingle();
-      const baseline = ARCHETYPE_SENTIMENT[sh.name] ?? 0;
+      const baseline = ARCHETYPE_SENTIMENT_BY_ROLE[sh.role] ?? 0;
       const nextSentiment = Math.max(-100, Math.min(100, (existing?.sentiment ?? baseline) + delta));
       await supabase.from("stakeholder_relationships").upsert(
         {

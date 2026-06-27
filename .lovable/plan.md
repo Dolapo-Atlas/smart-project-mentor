@@ -1,67 +1,55 @@
-Execute three workstreams sequentially. Each phase is self-contained and ships before the next begins.
+## Goal
+Every simulation gets its own cast — unique random names + titles fitting that project's domain, with persona avatars. No more "Margaret Hollis (Care Home Manager)" showing up in the CRM project.
 
-## Phase 1 — Polish Pass (Milestones 1–5)
+## What ships
 
-Tighten the "First Day at Work" arc end-to-end.
+### 1. Per-template roster (data)
+Add a `stakeholders jsonb` column to `project_templates`. Each template gets 7 roles with project-appropriate random names + titles + persona seeds:
 
-**Project Intro screen**
-- Add subtle parallax on the hero card; ensure skills pills wrap cleanly on mobile.
-- Fix transition loader timing so the three steps feel paced (currently too fast on fast networks).
-- Guard against missing template metadata (fallback copy instead of empty pills).
+| Role | CRM Implementation | Website Redesign | Office Relocation | EV Charging | Product Launch | Digital Care Records |
+|---|---|---|---|---|---|---|
+| pm | Emma Collins — Programme Manager | (same role pattern across all) | | | | |
+| sponsor | Marcus Hale — Chief Revenue Officer | Lena Park — VP Marketing | Daniel Reeve — COO | Aisha Bello — Director of Infrastructure | Jordan Pike — Chief Product Officer | David Okafor — Executive Sponsor |
+| finance | Priya Anand — Finance Lead (kept consistent — finance always Priya) | | | | | |
+| tech | Ravi Shah — CRM Solutions Architect | Mei Tanaka — Lead Frontend Engineer | Tom Becker — IT Infrastructure Lead | Henrik Olsen — Charging Systems Engineer | Sofia Marín — Platform Lead | James Lin — Technical Lead |
+| ops/domain1 | Hannah Briggs — Sales Operations Lead | Olu Adeyemi — UX Research Lead | Clara Voss — Facilities Manager | Ife Lawal — Site Acquisition Manager | Theo Ranjit — Go-to-Market Lead | Margaret Hollis — Care Home Manager |
+| domain2 | Liam Doyle — CRM Admin | Yuki Sato — Brand Designer | Priscilla Owen — HR Business Partner | Marco Conti — Grid Compliance Officer | Nadia Roche — Customer Insights Lead | Rachel Stone — Clinical Governance Lead |
+| vendor | Saleforce-style: "Helio CRM (Vendor)" | "PixelForge Studio (Vendor)" | "Hartwell Movers (Vendor)" | "VoltaGrid Ltd (Vendor)" | "Northbeam Agency (Vendor)" | CareSoft Ltd |
 
-**Welcome email**
-- Verify idempotency under double-click on "Enter simulation".
-- Ensure preferred name fallback chain works for users with no profile name set.
+Names will be slightly randomized at seed time so two users on the same template still see the same cast (deterministic per template), but different templates have entirely different casts.
 
-**Guided tour**
-- Recalculate spotlight on scroll, not just resize.
-- Add Esc-to-skip keyboard handler.
-- Ensure tour does not start if the user lands on a non-sidebar route first.
+### 2. Runtime roster resolver
+New `src/lib/roster.ts`:
+- `DEFAULT_ROSTER` (Digital Care Records — current names, no behavior change for existing data)
+- `rosterFromTemplate(template)` returns `{role, name, title, archetype}[]`
+- `getActiveRoster(supabase, userId)` server helper that joins `profiles.current_project_instance_id → project_instances.template_id → project_templates.stakeholders`, falls back to DEFAULT_ROSTER.
 
-**Learning drawer (Mentor)**
-- Cache last brief per route for 60s to avoid re-fetching on every open.
-- Add loading skeleton instead of blank tab.
-- Show error state with retry when the AI Gateway fails.
+### 3. Refactor call sites
+Replace static `import { STAKEHOLDERS }` with roster lookup in:
+- **Server fns**: `pm.functions.ts`, `comms.functions.ts`, `delegate.functions.ts`, `sim.functions.ts`, `tasks.functions.ts`, `raid.functions.ts` — accept resolved roster, no hardcoded names in prompts.
+- **UI**: `app.comms.tsx`, `app.raid.tsx`, `app.settings.tsx`, `delegate-panel.tsx`, `stakeholder-card.tsx`, `app.inbox.tsx` — fetch roster via new `useRoster()` query hook.
+- **Sentiment/archetype maps** keyed by role instead of by name so they survive name changes.
 
-**Notifications + task aging**
-- Debounce the 20s poll when the tab is hidden (pause + resume on focus).
-- Cap chase emails at one per stakeholder per advance to avoid inbox spam.
-- Add a "Mark all read" affordance on the bell popover.
+### 4. Persona avatars
+`stakeholder-avatar.tsx` already uses DiceBear notionists with a `seed`. Update it to:
+- Accept optional `seed` prop (falls back to name slug).
+- Roster entries carry a stable `persona_seed` (e.g. `crm-sponsor-marcus-hale`), giving each cast member a distinct illustrated face that stays consistent within a project but differs across projects.
+- Role still drives the ring colour.
 
-## Phase 2 — New Arc: Performance Review & Team Dynamics
+### 5. Migration + reseed
+One migration to:
+- Add `stakeholders jsonb` to `project_templates`.
+- Update all 6 templates' `stakeholders`, `pm_name`, `sponsor_name`, `sponsor_role` to the project-specific cast above.
+- Backfill existing `project_instances` (none of those rows store the roster; resolver reads from template at runtime, so nothing else to migrate).
 
-A recurring "review moment" that closes the feedback loop on coordinator behaviour.
+## Out of scope (this round)
+- Renaming people inside *already-sent* inbox messages or comms (historical data keeps old names).
+- Per-user randomization (different users see the same cast for the same template — keeps the sim shareable/testable).
 
-**Performance Review**
-- New table `performance_reviews` (instance_id, week_number, score_delivery, score_stakeholder, score_decision, narrative, created_at).
-- Server fn `generatePerformanceReview` — runs when the user advances past a week boundary. Pulls task completion rate, average stakeholder sentiment, and decision quality (RAID closure rate) into a structured AI-generated review from the Programme Manager.
-- New route `/app/reviews` — timeline of past reviews with score chips and narrative.
-- Trigger surfaced in the time-advance dialog as a "Review available" banner.
+## Risks
+- Existing comms/inbox rows reference old names like "Margaret Hollis". They'll continue to display correctly — only *new* AI-generated content uses the new roster. If you want a clean slate per project, start a new project instance after this ships.
 
-**Team Dynamics**
-- New table `team_relationships` (instance_id, stakeholder_a, stakeholder_b, tension_score, last_event).
-- When two stakeholders have opposing sentiment toward the coordinator (e.g. one frustrated, one happy), generate a "team tension" story beat — e.g. Priya emails complaining about David's pushback.
-- Surface on the Stakeholders page as a small "Team pulse" widget showing 1–2 active dynamics.
-
-## Phase 3 — Bug Sweep
-
-Playtest the full loop and fix anything broken.
-
-- Drive Playwright through: project pick → intro → tour → first email → first task submit → status report → advance day → advance week → review.
-- Capture screenshots at each step; log console errors and failed network requests.
-- Fix anything that crashes, mis-renders, or blocks progression.
-- Verify RLS on new tables from Phase 2; run the security scanner.
-- Report findings with before/after screenshots for any visual fixes.
-
-## Technical Details
-
-- All new server fns use `requireSupabaseAuth` and live in `src/lib/*.functions.ts`.
-- New tables follow the `active_project_instance_id` scoping pattern with GRANTs to `authenticated` + `service_role` and RLS policies that read `instance_id` against the user's active instance.
-- Review generation uses Lovable AI Gateway (`google/gemini-2.5-flash`), structured output via Zod.
-- Phase 3 Playwright scripts live under `/tmp/browser/sweep/` and use the injected Supabase session.
-
-## Order of Operations
-
-1. Ship Phase 1 in one batch, confirm working, then move on.
-2. Ship Phase 2 schema + logic + UI, confirm working, then move on.
-3. Run Phase 3 sweep last so it covers everything from Phases 1 and 2.
+## Technical notes
+- All sentiment/archetype maps re-keyed from name → role to stop carrying healthcare baselines into other sims.
+- AI prompts will receive the roster as a "Cast of stakeholders" block, so the model never invents names from a different domain.
+- Vendor entries continue to use organisation names (not personal names) since that matches how vendors actually email.
