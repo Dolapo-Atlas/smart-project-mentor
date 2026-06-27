@@ -35,6 +35,7 @@ function Row({
 function SettingsPage() {
   const { settings, update } = useVoiceSettings();
   const { play, stop, state } = useSpeech();
+  const roster = useRoster();
 
   return (
     <div className="space-y-8">
@@ -116,7 +117,7 @@ function SettingsPage() {
           Each stakeholder uses a consistent voice. Preview them below.
         </p>
         <ul className="mt-4 divide-y divide-border">
-          {STAKEHOLDERS.map((s) => {
+          {roster.map((s) => {
             const voice = voiceForStakeholder(s.name);
             return (
               <li key={s.role} className="flex items-center justify-between gap-4 py-3">
