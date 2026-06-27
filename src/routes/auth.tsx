@@ -39,6 +39,15 @@ function AuthPage() {
           setMode("signin");
           return;
         }
+        // Enforce invite-only allowlist for new OAuth signups.
+        const userEmail = data.user.email ?? "";
+        const { data: allowed } = await supabase.rpc("is_email_allowed", { _email: userEmail });
+        if (!allowed) {
+          await supabase.auth.signOut();
+          toast.error("Atlas is invite-only right now. Join the waitlist on the homepage.");
+          setMode("signin");
+          return;
+        }
       }
       navigate({ to: "/app" });
     });
@@ -49,6 +58,15 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "signup") {
+        const { data: allowed, error: allowErr } = await supabase.rpc("is_email_allowed", {
+          _email: email,
+        });
+        if (allowErr) throw allowErr;
+        if (!allowed) {
+          toast.error("Atlas is invite-only right now. Join the waitlist on the homepage.");
+          setLoading(false);
+          return;
+        }
         const { data, error } = await supabase.auth.signUp({
           email,
           password,

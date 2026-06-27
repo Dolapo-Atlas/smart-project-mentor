@@ -947,6 +947,27 @@ export type Database = {
           },
         ]
       }
+      signup_allowlist: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          note: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          note?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          note?: string | null
+        }
+        Relationships: []
+      }
       simulation_state: {
         Row: {
           chapter: string
@@ -1378,6 +1399,7 @@ export type Database = {
         Returns: number
       }
       gen_referral_code: { Args: never; Returns: string }
+      is_email_allowed: { Args: { _email: string }; Returns: boolean }
       move_to_dlq: {
         Args: {
           dlq_name: string
