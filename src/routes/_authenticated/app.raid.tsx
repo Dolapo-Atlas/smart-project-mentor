@@ -53,6 +53,7 @@ function RaidPage() {
   const setStatusFn = useServerFn(updateRaidStatus);
   const delRaidFn = useServerFn(deleteRaid);
   const submitRaidFn = useServerFn(submitRaidLog);
+  const roster = useRoster();
 
   const { data: raid } = useQuery({ queryKey: ["raid"], queryFn: () => fetchRaid() });
 
