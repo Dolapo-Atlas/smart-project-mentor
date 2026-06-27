@@ -313,7 +313,8 @@ export const sendComm = createServerFn({ method: "POST" })
     };
     evidence.evidenceSummary = buildEvidenceSummary(evidence);
 
-    const stakeholders = STAKEHOLDERS.filter((s) => data.to_roles.includes(s.role));
+    const roster = await loadRoster(supabase, uid);
+    const stakeholders: RosterMember[] = roster.filter((s) => data.to_roles.includes(s.role));
     const { data: recentReplies } = await supabase
       .from("inbox_messages")
       .select("sender_name,subject,body")
@@ -322,7 +323,8 @@ export const sendComm = createServerFn({ method: "POST" })
       .limit(8);
 
     for (const sh of stakeholders) {
-      const prompt = `You are simulating "${sh.name}, ${sh.title}" on the "${state?.project_name ?? "Digital Care Records Rollout"}" project.
+      const projectName = state?.project_name ?? "the programme";
+      const prompt = `You are simulating "${sh.name}, ${sh.title}" on the "${projectName}" project.
 Project state: phase=${state?.phase}, health=${state?.health}, reputation=${state?.reputation}/100, progress=${state?.progress}/100.
 
 Current workspace evidence you can see:
@@ -335,14 +337,16 @@ ${data.body}
 ${data.attachment_label ? `Attached: ${data.attachment_kind} — ${data.attachment_label}` : "No attachment."}
 Recent inbox replies to avoid repeating: ${JSON.stringify(recentReplies ?? [])}
 
-Write a realistic reply FROM ${sh.name} (${sh.title}) to the coordinator. Stay in character:
-- Finance pushes back on cost/value, asks for forecasts.
-- Sponsor is busy, expects clarity, can be impatient.
-- Vendor deflects blame, references contract.
-- Care home manager talks about staff/floor reality.
-- Clinical lead worries about patient safety & governance.
-- PM checks process, RAID, deadlines.
-- Tech lead talks integrations, data migration, downtime.
+Write a realistic reply FROM ${sh.name} (${sh.title}) to the coordinator. Stay in character for their role (${sh.role}):
+- pm: checks process, RAID, deadlines, owners.
+- sponsor: busy, expects clarity, can be impatient.
+- finance: pushes back on cost/value, asks for forecasts and approval routes.
+- tech: talks integrations, data, downtime, acceptance criteria.
+- vendor: defends commercials and scope, references contract.
+- operations / care_home: talks about staff, floor reality, readiness, training.
+- admin: process and compliance, what is owed for audit.
+- clinical: patient safety, governance, escalation triggers.
+Stay grounded in the "${projectName}" project domain — do NOT invent unrelated context.
 
 Use the workspace evidence above. If the coordinator says something is updated, attached, completed, or has no pending items and the evidence supports that, acknowledge it and do not claim you cannot see the file, central folder, RAID log, or pending action. Do not invent missing artefacts.
 Only disagree, push back, ask hard questions, or escalate when there is a specific unresolved gap in the evidence (for example missing owner, missing mitigation, open high/critical RAID item, pending document review, or open task). If the evidence resolves the issue, be positive or neutral.
@@ -352,7 +356,7 @@ Choose sentiment honestly: positive, neutral, pushback, concerned, or ignored (i
       let out: Reply;
       try {
         out = evidenceAwareReply(
-          sh,
+          { role: sh.role, name: sh.name, title: sh.title },
           data.subject,
           data.body,
           data.attachment_kind,
@@ -360,11 +364,11 @@ Choose sentiment honestly: positive, neutral, pushback, concerned, or ignored (i
           evidence,
         ) ?? (await generateObject({ model: getModel(), prompt, schema: ReplySchema })).object;
       } catch {
-        out = fallbackReply(sh, data.subject, data.attachment_label);
+        out = fallbackReply({ role: sh.role, name: sh.name, title: sh.title }, data.subject, data.attachment_label);
       }
 
       if (isPlaceholderReply(out.body) || (recentReplies ?? []).some((m) => m.sender_name === sh.name && m.body.trim().toLowerCase() === out.body.trim().toLowerCase())) {
-        out = fallbackReply(sh, data.subject, data.attachment_label);
+        out = fallbackReply({ role: sh.role, name: sh.name, title: sh.title }, data.subject, data.attachment_label);
       }
 
       await supabase.from("comms_messages").insert({
@@ -403,7 +407,7 @@ Choose sentiment honestly: positive, neutral, pushback, concerned, or ignored (i
         .eq("user_id", uid)
         .eq("stakeholder_name", sh.name)
         .maybeSingle();
-      const baseline = ARCHETYPE_SENTIMENT[sh.name] ?? 0;
+      const baseline = ARCHETYPE_SENTIMENT_BY_ROLE[sh.role] ?? 0;
       const nextSentiment = Math.max(-100, Math.min(100, (existing?.sentiment ?? baseline) + delta));
       await supabase.from("stakeholder_relationships").upsert(
         {
