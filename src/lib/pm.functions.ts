@@ -109,7 +109,9 @@ export const upsertStatusReport = createServerFn({ method: "POST" })
           weaknesses: z.array(z.string()),
           sponsor_reaction: z.string(),
         });
-        const prompt = `You are a programme sponsor reviewing a weekly status report from your project coordinator on the Digital Care Records Rollout (£500k, 6 months, behind schedule).
+        const projectCtx = await getProjectCtx(context.supabase, context.userId);
+        const prompt = `You are a programme sponsor reviewing a weekly status report from your project coordinator on the "${projectCtx.name}" project.
+${projectCtx.domainGuard}
 
 Week: ${week_start}
 RAG: ${data.rag_summary}
