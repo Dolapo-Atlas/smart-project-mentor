@@ -521,22 +521,8 @@ type TranscriptTurn = {
   body: string;
 };
 
-const ATTENDEE_BOOK: Record<string, Attendee> = {
-  pm:        { role_key: "pm",        name: "Sarah Williams",  role: "Project Manager",                       persona: "Senior PM. Direct, pragmatic, slightly impatient with vague status. Pushes for owners and dates." },
-  sponsor:   { role_key: "sponsor",   name: "David Okafor",    role: "Executive Sponsor, Director of Transformation", persona: "Outcome-focused. Uses board language. Pushes back on cost and timeline. Will name names." },
-  finance:   { role_key: "finance",   name: "Priya Anand",     role: "Finance Lead, Atlas Enterprise", persona: "Spreadsheet-led, sceptical of vendor claims. Wants forecast vs actuals, not narrative." },
-  tech:      { role_key: "tech",      name: "James Lin",       role: "Technical Lead",                        persona: "Engineer. Surfaces integration risk and dependency chains. Resists optimistic dates." },
-  vendor:    { role_key: "vendor",    name: "CareSoft Ltd",    role: "Vendor — CareSoft (Account Director)",  persona: "Polished, defends vendor commercials. Will offer a workaround before owning a delay." },
-  care_home: { role_key: "care_home", name: "Margaret Hollis", role: "Care Home Manager (Willow Lodge)",       persona: "Operational, protective of staff. Speaks plainly. Raises readiness and training concerns." },
-  clinical:  { role_key: "clinical",  name: "Rachel Stone",    role: "Clinical Governance Lead",              persona: "Patient-safety first. Will halt go-lives over information governance gaps." },
-};
-
-const KIND_ATTENDEES: Record<string, string[]> = {
-  standup:  ["pm", "tech", "clinical"],
-  steering: ["sponsor", "pm", "finance", "clinical"],
-  vendor:   ["vendor", "tech", "pm"],
-  retro:    ["pm", "tech", "clinical", "care_home"],
-};
+// Meeting attendees are derived from the active project's roster — see
+// `attendeesForKind()` and `memberToAttendee()` above.
 
 export const listMeetings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -561,7 +547,8 @@ export const createMeeting = createServerFn({ method: "POST" })
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    const attendees = (KIND_ATTENDEES[data.kind] ?? []).map((k) => ATTENDEE_BOOK[k]);
+    const roster = await loadRoster(context.supabase, context.userId);
+    const attendees = attendeesForKind(roster, data.kind);
     const { data: row, error } = await context.supabase
       .from("meetings")
       .insert({
@@ -595,7 +582,10 @@ function attendeesOf(meeting: any): Attendee[] {
 
 export const listAttendeeRoster = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async () => Object.values(ATTENDEE_BOOK));
+  .handler(async ({ context }) => {
+    const roster = await loadRoster(context.supabase, context.userId);
+    return roster.map(memberToAttendee);
+  });
 
 export const addMeetingAttendee = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -615,9 +605,11 @@ export const addMeetingAttendee = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const meeting = await loadMeeting(context.supabase, context.userId, data.id);
     const current = attendeesOf(meeting);
+    const roster = await loadRoster(context.supabase, context.userId);
+    const byRole = rosterByRole(roster);
     let toAdd: Attendee | undefined;
-    if (data.role_key && ATTENDEE_BOOK[data.role_key]) {
-      toAdd = ATTENDEE_BOOK[data.role_key];
+    if (data.role_key && byRole[data.role_key]) {
+      toAdd = memberToAttendee(byRole[data.role_key]);
     } else if (data.custom) {
       const slug = data.custom.name.toLowerCase().replace(/[^a-z0-9]+/g, "_").slice(0, 24) || `guest_${Date.now()}`;
       toAdd = {
@@ -664,12 +656,13 @@ export const startMeeting = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const meeting = await loadMeeting(context.supabase, context.userId, data.id);
     const attendees = attendeesOf(meeting);
+    const roster = await loadRoster(context.supabase, context.userId);
     if (attendees.length === 0) {
-      const fresh = (KIND_ATTENDEES[meeting.kind] ?? []).map((k) => ATTENDEE_BOOK[k]);
+      const fresh = attendeesForKind(roster, meeting.kind);
       await context.supabase.from("meetings").update({ attendees: fresh as unknown as Json }).eq("id", meeting.id);
     }
     // Opening turn: PM (or first attendee) frames the meeting.
-    const list = attendees.length ? attendees : (KIND_ATTENDEES[meeting.kind] ?? []).map((k) => ATTENDEE_BOOK[k]);
+    const list = attendees.length ? attendees : attendeesForKind(roster, meeting.kind);
     const opener = list.find((a) => a.role_key === "pm") ?? list[0];
     if (!opener) return meeting;
     const transcript = transcriptOf(meeting);
@@ -755,7 +748,8 @@ export const advanceMeeting = createServerFn({ method: "POST" })
     const meeting = await loadMeeting(context.supabase, context.userId, data.id);
     let attendees = attendeesOf(meeting);
     if (attendees.length === 0) {
-      attendees = (KIND_ATTENDEES[meeting.kind] ?? []).map((k) => ATTENDEE_BOOK[k]);
+      const roster = await loadRoster(context.supabase, context.userId);
+      attendees = attendeesForKind(roster, meeting.kind);
     }
     const transcript = transcriptOf(meeting);
 
