@@ -62,17 +62,36 @@ export function StakeholderAvatar({
   name,
   size = "sm",
   className,
+  seed: seedOverride,
+  role,
 }: {
   name: string;
   size?: keyof typeof SIZES;
   className?: string;
+  /** Stable seed for the avatar (preferred — keeps the same face per project persona). */
+  seed?: string;
+  /** Role key for ring colour (sponsor, pm, finance, tech, vendor, operations, admin, clinical, care_home). */
+  role?: string;
 }) {
   const m = metaFor(name);
   const s = SIZES[size];
+  const seed = seedOverride ?? m.seed;
+  const ringByRole: Record<string, string> = {
+    sponsor: "ring-purple-500",
+    pm: "ring-blue-500",
+    clinical: "ring-red-500",
+    operations: "ring-emerald-500",
+    admin: "ring-amber-500",
+    care_home: "ring-emerald-500",
+    tech: "ring-teal-500",
+    vendor: "ring-orange-500",
+    finance: "ring-slate-400",
+  };
+  const ring = role && ringByRole[role] ? ringByRole[role] : m.ring;
   // Notionists: clean, professional Notion/Linear-style illustrated avatars.
   // Muted neutral background palette so the role ring carries the colour signal.
   const url = `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(
-    m.seed,
+    seed,
   )}&radius=50&backgroundColor=eef2f7,e5e7eb,f1f5f9,e2e8f0,f3f4f6&backgroundType=solid`;
   return (
     <span
@@ -82,7 +101,7 @@ export function StakeholderAvatar({
         s.text,
         m.bg,
         m.fg,
-        m.ring,
+        ring,
         className,
       )}
       aria-label={name}
