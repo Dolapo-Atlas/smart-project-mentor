@@ -765,9 +765,11 @@ export const holdMeeting = createServerFn({ method: "POST" })
 
     let ai_summary: string | null = null;
     try {
+      const pctx = await getProjectCtx(context.supabase, context.userId);
       const { text } = await generateText({
         model: getModel(),
-        prompt: `Summarise this ${meeting.kind} meeting on the Digital Care Records Rollout in 3-5 bullet points covering decisions, actions (with owners), and unresolved questions. Be terse and workplace-realistic.
+        prompt: `Summarise this ${meeting.kind} meeting on the "${pctx.name}" project in 3-5 bullet points covering decisions, actions (with owners), and unresolved questions. Be terse and workplace-realistic.
+${pctx.domainGuard}
 
 Agenda:
 ${meeting.agenda ?? "(none)"}
