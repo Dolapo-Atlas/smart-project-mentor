@@ -171,7 +171,7 @@ function RaidPage() {
               onChange={(e) => setForm({ ...form, owner: e.target.value })}
               className="h-10 rounded-md border border-input bg-background px-3 text-sm">
               <option value="">Owner (unassigned)</option>
-              {STAKEHOLDERS.map((s) => (
+              {roster.map((s) => (
                 <option key={s.role} value={s.name}>{s.name} — {s.title}</option>
               ))}
             </select>
