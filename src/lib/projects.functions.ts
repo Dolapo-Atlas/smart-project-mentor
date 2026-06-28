@@ -191,7 +191,7 @@ export const markIntroSeen = createServerFn({ method: "POST" })
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("first_name, preferred_name, display_name")
+        .select("first_name, preferred_name, display_name, role, career_goal")
         .eq("id", userId)
         .maybeSingle();
       const firstName =
@@ -199,10 +199,14 @@ export const markIntroSeen = createServerFn({ method: "POST" })
         profile?.first_name ||
         profile?.display_name?.split(" ")[0] ||
         "there";
+      const roleTitle =
+        (profile as any)?.role?.trim() ||
+        (profile as any)?.career_goal?.trim() ||
+        "Project Coordinator";
 
       const body = `Hi ${firstName},
 
-Welcome to ${projectTitle}. We're delighted you've joined us as our new Project Coordinator.
+Welcome to ${projectTitle}. We're delighted you've joined us as our new ${roleTitle}.
 
 Over the coming weeks you'll help us coordinate stakeholders, maintain project documentation, support meetings, update reports and keep delivery moving.
 

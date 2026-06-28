@@ -62,9 +62,9 @@ export const completeOnboarding = createServerFn({ method: "POST" })
         last_name: data.last_name,
         preferred_name: data.preferred_name || null,
         country: data.country,
-        career_goal: data.career_goal,
         display_name: `${data.first_name} ${data.last_name}`.trim(),
-        role: "Project Coordinator",
+        career_goal: data.career_goal,
+        role: data.career_goal,
         company: "Atlas Enterprise",
         manager: "Sarah Williams",
         project_name: "Digital Care Records Rollout",
@@ -92,7 +92,7 @@ export const completeOnboarding = createServerFn({ method: "POST" })
 
 Welcome to Atlas Enterprise.
 
-You'll be joining the Digital Care Records Rollout Project as Project Coordinator. You'll be reporting to me, and working alongside our clinical, finance and vendor leads.
+You'll be joining the Digital Care Records Rollout Project as ${data.career_goal}. You'll be reporting to me, and working alongside our clinical, finance and vendor leads.
 
 I won't sugar-coat it: the project is currently three weeks behind schedule and the sponsor, David Okafor, has requested an update by Friday. Before then I need three deliverables on file:
 
@@ -389,11 +389,15 @@ export const generateStakeholderMessage = createServerFn({ method: "POST" })
       .maybeSingle();
     const { data: profile } = await supabase
       .from("profiles")
-      .select("first_name, preferred_name, last_name")
+      .select("first_name, preferred_name, last_name, role, career_goal")
       .eq("id", userId)
       .maybeSingle();
     const firstName =
       profile?.preferred_name?.trim() || profile?.first_name || "the coordinator";
+    const roleTitle =
+      (profile as any)?.role?.trim() ||
+      (profile as any)?.career_goal?.trim() ||
+      "Project Coordinator";
     const { data: recentDocs } = await supabase
       .from("documents")
       .select("title,status,quality_score")
@@ -403,13 +407,13 @@ export const generateStakeholderMessage = createServerFn({ method: "POST" })
 
     const prompt = `You are simulating stakeholders on the "${state?.project_name ?? "Digital Care Records Rollout"}" project at ${state?.company ?? "Atlas Enterprise"}.
 Project: move 12 care homes from paper-based records to a digital care record platform. Budget £500,000. Timeline 6 months. The project is currently behind schedule.
-Current chapter: ${state?.chapter}. Project health: ${state?.health}. Coordinator reputation: ${state?.reputation}/100. Progress: ${state?.progress}/100.
-Recent documents from the coordinator: ${JSON.stringify(recentDocs ?? [])}.
+Current chapter: ${state?.chapter}. Project health: ${state?.health}. ${roleTitle} reputation: ${state?.reputation}/100. Progress: ${state?.progress}/100.
+Recent documents from the ${roleTitle}: ${JSON.stringify(recentDocs ?? [])}.
 
-The project coordinator's first name is "${firstName}". Address them by this first name in the email body (e.g. "Hi ${firstName},", "Thanks ${firstName}", "${firstName}, I need…"). Do not use generic salutations like "Hi there" or "Hi team".
+The ${roleTitle}'s first name is "${firstName}". Address them by this first name in the email body (e.g. "Hi ${firstName},", "Thanks ${firstName}", "${firstName}, I need…"). Do not use generic salutations like "Hi there" or "Hi team".
 
-Write ONE realistic, professional workplace email to ${firstName} (the project coordinator) from ONE of these stakeholders — pick whichever is most plausible given the state:
-- Sarah Williams, Project Manager (the coordinator's line manager)
+Write ONE realistic, professional workplace email to ${firstName} (the ${roleTitle} on this project) from ONE of these stakeholders — pick whichever is most plausible given the state:
+- Sarah Williams, Project Manager (${firstName}'s line manager)
 - David Okafor, Executive Sponsor (Director of Transformation)
 - Priya Anand, Finance Lead
 - James Lin, Technical Lead (digital records platform vendor liaison)
@@ -419,7 +423,7 @@ Write ONE realistic, professional workplace email to ${firstName} (the project c
 
 Style: like a real workplace email. No game-y language. Reference the rollout, RAID items, status reports, governance, change requests, vendor delays, care-home readiness, or training — whatever fits. Ask a pointed question, request a deliverable, raise a risk, or escalate. 2–4 short paragraphs. Sign off with the sender's name and role.
 
-About half the time, this email should put the coordinator in an awkward position: contradict another stakeholder's recent message, push back on a sponsor decision, escalate over the PM's head, miss a deadline and ask for cover, or demand something Finance/Clinical will object to. Real projects are political — don't make every email supportive.`;
+About half the time, this email should put ${firstName} (the ${roleTitle}) in an awkward position: contradict another stakeholder's recent message, push back on a sponsor decision, escalate over the PM's head, miss a deadline and ask for cover, or demand something Finance/Clinical will object to. Real projects are political — don't make every email supportive.`;
 
     let output: z.infer<typeof StakeholderSchema>;
     try {

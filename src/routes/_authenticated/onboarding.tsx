@@ -149,8 +149,8 @@ function Onboarding() {
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              Your first assignment will be the Project Coordinator simulation. Other
-              tracks are in development.
+              You'll be assigned this role across your simulation. Stakeholders, emails
+              and feedback will address you as a {form.career_goal}.
             </p>
           </div>
 
