@@ -299,12 +299,15 @@ function Hero() {
             </div>
           </Reveal>
           <Reveal delay={320}>
-            <div className="mt-10 flex items-center gap-6 text-xs text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="h-3.5 w-3.5 text-primary" /> Learn by doing. Not by watching.
+            <div className="mt-10 flex flex-wrap items-center gap-4">
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-semibold text-foreground shadow-[0_8px_24px_-12px_color-mix(in_oklab,var(--primary)_50%,transparent)]">
+                <ShieldCheck className="h-4 w-4 text-primary" />
+                <span>
+                  Learn by doing.{" "}
+                  <span className="italic text-primary">Not by watching.</span>
+                </span>
               </div>
-              <div className="hidden h-3 w-px bg-border sm:block" />
-              <div className="hidden items-center gap-2 sm:flex">
+              <div className="hidden items-center gap-2 text-xs text-muted-foreground sm:flex">
                 <Sparkles className="h-3.5 w-3.5 text-primary" /> First 100 get Founder Access
               </div>
             </div>
