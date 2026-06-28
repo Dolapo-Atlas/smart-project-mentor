@@ -1672,12 +1672,10 @@ function WelcomeCard({
       {/* Invitation */}
       <div className="rounded-xl border border-border/70 bg-card/60 p-5">
         <h4 className="font-display text-lg">
-          Know someone breaking into Project Management?
+          Know someone who manages projects?
         </h4>
         <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-          Atlas was built for people starting their project careers. Invite
-          someone who would genuinely benefit from experiencing the workplace
-          before day one.
+          Atlas is the platform where professionals learn by managing realistic projects. Invite a coordinator, PMO, business analyst, scrum master or delivery lead who'd benefit from real practice before doing it for real.
         </p>
 
         {referralCode ? (
@@ -1704,7 +1702,7 @@ function WelcomeCard({
             "Link copied!"
           ) : (
             <>
-              Invite a Future PM <ArrowRight className="ml-1 h-4 w-4" />
+              Invite a professional <ArrowRight className="ml-1 h-4 w-4" />
             </>
           )}
         </Button>
@@ -1828,7 +1826,7 @@ function SiteFooter() {
       <div className="border-t border-border/60">
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-2 px-6 py-6 text-xs text-muted-foreground sm:flex-row sm:items-center lg:px-10">
           <p>© {new Date().getFullYear()} Atlas. The companies and projects are fictional; the work is real practice.</p>
-          <p>Made with care for the next generation of PMs.</p>
+          <p>Made with care for professionals who learn by doing.</p>
         </div>
       </div>
     </footer>
