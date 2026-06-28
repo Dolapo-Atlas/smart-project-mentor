@@ -62,9 +62,9 @@ export const completeOnboarding = createServerFn({ method: "POST" })
         last_name: data.last_name,
         preferred_name: data.preferred_name || null,
         country: data.country,
-        career_goal: data.career_goal,
         display_name: `${data.first_name} ${data.last_name}`.trim(),
-        role: "Project Coordinator",
+        career_goal: data.career_goal,
+        role: data.career_goal,
         company: "Atlas Enterprise",
         manager: "Sarah Williams",
         project_name: "Digital Care Records Rollout",
@@ -92,7 +92,7 @@ export const completeOnboarding = createServerFn({ method: "POST" })
 
 Welcome to Atlas Enterprise.
 
-You'll be joining the Digital Care Records Rollout Project as Project Coordinator. You'll be reporting to me, and working alongside our clinical, finance and vendor leads.
+You'll be joining the Digital Care Records Rollout Project as ${data.career_goal}. You'll be reporting to me, and working alongside our clinical, finance and vendor leads.
 
 I won't sugar-coat it: the project is currently three weeks behind schedule and the sponsor, David Okafor, has requested an update by Friday. Before then I need three deliverables on file:
 
