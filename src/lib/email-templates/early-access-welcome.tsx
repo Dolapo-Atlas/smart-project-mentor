@@ -39,16 +39,11 @@ const EarlyAccessWelcome = ({ name, referral_code }: Props) => {
             We're delighted you've joined the Atlas Founder Cohort.
           </Text>
           <Text style={body}>
-            Atlas was created to solve a simple problem. Many aspiring Project
-            Coordinators, PMOs, Business Analysts and Project Managers learn
-            the theory, but never experience what it's actually like to work
-            inside a live project.
+            Atlas is the platform where professionals learn by managing realistic projects. Many aspiring and early-career coordinators, PMOs, business analysts, scrum masters and project managers learn the theory, but never experience what it's actually like to work inside a live project.
           </Text>
           <Text style={body}>Atlas changes that.</Text>
           <Text style={body}>
-            Soon, you'll step into realistic projects, work with AI
-            stakeholders, manage priorities, respond to emails, solve problems
-            and build the confidence employers expect.
+            Soon, you'll step into realistic projects, collaborate with stakeholders, manage priorities, respond to emails, solve problems and build the confidence employers expect — all inside a safe, AI-powered simulation.
           </Text>
           <Text style={body}>
             Before launch, we'll send you your onboarding pack and invite you
@@ -69,7 +64,7 @@ const EarlyAccessWelcome = ({ name, referral_code }: Props) => {
               <Text style={smallLabel}>Your Founder invite link</Text>
               <Text style={link}>{inviteUrl}</Text>
               <Text style={hint}>
-                Share it with someone breaking into Project Management.
+                Share it with anyone who wants to learn by managing realistic projects.
               </Text>
             </>
           ) : null}

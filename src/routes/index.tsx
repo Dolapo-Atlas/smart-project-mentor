@@ -39,16 +39,17 @@ import { AutoDemo } from "@/components/auto-demo";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Atlas — A Coordinator's Diary" },
+      { title: "Atlas | Learn by Managing Realistic Projects" },
       {
         name: "description",
         content:
-          "Experience the workplace before you're in it. Atlas is an immersive workplace simulation for aspiring Project Coordinators, PMOs and Project Managers.",
+          "Atlas is a workplace simulation platform where professionals learn by managing realistic projects, working with stakeholders, meetings, budgets, risks, and project decisions.",
       },
-      { property: "og:title", content: "Atlas — A Coordinator's Diary" },
+      { property: "og:title", content: "Atlas | Learn by Managing Realistic Projects" },
       {
         property: "og:description",
-        content: "Experience the workplace before you're in it.",
+        content:
+          "The platform where professionals learn by managing realistic projects. Learn by doing — not by watching.",
       },
     ],
   }),
@@ -265,19 +266,19 @@ function Hero() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
               </span>
-              Now accepting early access
+              Now accepting Founder Access
             </span>
           </Reveal>
           <Reveal delay={80}>
             <h1 className="mt-6 font-display text-[clamp(2.6rem,6.2vw,5.25rem)] font-medium leading-[1.02] tracking-[-0.02em] text-foreground">
-              Experience the workplace{" "}
-              <span className="italic text-primary">before</span>{" "}
-              you're in it.
+              The platform where professionals{" "}
+              <span className="italic text-primary">learn</span>{" "}
+              by managing realistic projects.
             </h1>
           </Reveal>
           <Reveal delay={160}>
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">
-              Atlas is an immersive workplace simulation where aspiring Project Coordinators, PMOs and Project Managers experience real stakeholder communication, real documentation and real project decisions — before their first day on the job.
+              Experience realistic workplace scenarios, collaborate with stakeholders, make decisions, and build the confidence employers expect — all inside a safe, AI-powered simulation.
             </p>
           </Reveal>
           <Reveal delay={240}>
@@ -286,7 +287,7 @@ function Hero() {
                 href="#early-access"
                 className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground shadow-[0_1px_0_rgba(255,255,255,0.25)_inset,0_12px_30px_-12px_rgba(217,119,6,0.6)] transition-all hover:-translate-y-0.5 hover:shadow-[0_1px_0_rgba(255,255,255,0.3)_inset,0_18px_36px_-12px_rgba(217,119,6,0.7)]"
               >
-                Request Early Access
+                Start your first project
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </a>
               <a
@@ -294,14 +295,14 @@ function Hero() {
                 className="group inline-flex items-center gap-2 rounded-full border border-border bg-card/70 px-6 py-3 text-sm font-medium text-foreground backdrop-blur transition-all hover:-translate-y-0.5 hover:bg-card"
               >
                 <PlayCircle className="h-4 w-4 text-primary" />
-                See inside the simulation
+                Experience Atlas
               </a>
             </div>
           </Reveal>
           <Reveal delay={320}>
             <div className="mt-10 flex items-center gap-6 text-xs text-muted-foreground">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="h-3.5 w-3.5 text-primary" /> Built with real PM frameworks
+                <ShieldCheck className="h-3.5 w-3.5 text-primary" /> Learn by doing. Not by watching.
               </div>
               <div className="hidden h-3 w-px bg-border sm:block" />
               <div className="hidden items-center gap-2 sm:flex">
@@ -1307,7 +1308,7 @@ function Founder() {
             <p>I built TryNextRole to help people get interviews.</p>
             <p>Then I realised the biggest challenge begins after getting hired.</p>
             <p className="text-foreground/90">
-              Atlas helps aspiring professionals experience real project work — before they ever enter the workplace.
+              Atlas helps aspiring and early-career professionals — coordinators, PMOs, business analysts, scrum masters, change managers and project managers — gain real-world experience by managing realistic projects before stepping into them at work.
             </p>
           </div>
         </Reveal>
@@ -1371,7 +1372,7 @@ function EarlyAccess() {
     const shareData = {
       title: "Atlas — Founder Cohort",
       text:
-        "I'm one of the first members of the Atlas Founder Cohort.\n\nAtlas is building a realistic workplace simulation where aspiring Project Coordinators, PMOs, Business Analysts and Project Managers gain practical experience before their first role.\n\nThought you might like it too.\n\nJoin the Founder Cohort:",
+        "I'm one of the first members of the Atlas Founder Cohort.\n\nAtlas is the platform where professionals learn by managing realistic projects — responding to stakeholders, running meetings, managing budgets and making decisions that affect outcomes.\n\nThought you might like it too.\n\nJoin the Founder Cohort:",
       url,
     };
     if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
@@ -1477,10 +1478,10 @@ function EarlyAccess() {
                   <Sparkles className="h-3.5 w-3.5" /> Early access
                 </p>
                 <h2 className="mt-5 font-display text-[clamp(2rem,4vw,3rem)] font-medium leading-[1.05] tracking-[-0.02em]">
-                  Start your first day at Atlas.
+                  Step into your first project.
                 </h2>
                 <p className="mt-4 max-w-md text-[15px] leading-relaxed text-muted-foreground">
-                  We're onboarding aspiring coordinators, PMOs and PMs in small cohorts. Tell us where you're heading and we'll send your invitation.
+                  We're onboarding aspiring and early-career professionals — coordinators, PMOs, business analysts, scrum masters, delivery and change managers — in small cohorts. Tell us where you're heading and we'll send your invitation.
                 </p>
                 <p className="mt-5 inline-flex items-center gap-2 text-xs font-medium text-primary">
                   <ShieldCheck className="h-3.5 w-3.5" />
@@ -1671,12 +1672,10 @@ function WelcomeCard({
       {/* Invitation */}
       <div className="rounded-xl border border-border/70 bg-card/60 p-5">
         <h4 className="font-display text-lg">
-          Know someone breaking into Project Management?
+          Know someone who manages projects?
         </h4>
         <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-          Atlas was built for people starting their project careers. Invite
-          someone who would genuinely benefit from experiencing the workplace
-          before day one.
+          Atlas is the platform where professionals learn by managing realistic projects. Invite a coordinator, PMO, business analyst, scrum master or delivery lead who'd benefit from real practice before doing it for real.
         </p>
 
         {referralCode ? (
@@ -1703,7 +1702,7 @@ function WelcomeCard({
             "Link copied!"
           ) : (
             <>
-              Invite a Future PM <ArrowRight className="ml-1 h-4 w-4" />
+              Invite a professional <ArrowRight className="ml-1 h-4 w-4" />
             </>
           )}
         </Button>
@@ -1735,11 +1734,11 @@ function Faq() {
   const items = [
     {
       q: "Who is Atlas for?",
-      a: "Aspiring Project Coordinators, PMO analysts and Project Managers who want to experience the workplace before their first role.",
+      a: "Professionals who manage projects — aspiring and early-career coordinators, PMOs, business analysts, scrum masters, delivery managers, change managers and project managers who want practical experience before doing it for real.",
     },
     {
       q: "Is this another course?",
-      a: "No. Atlas is a simulation. You don't watch lessons — you read inboxes, draft documents and make decisions with consequences.",
+      a: "No. Atlas is a workplace simulation platform. You don't watch lessons — you manage realistic projects, respond to stakeholders, run meetings and make decisions with consequences.",
     },
     {
       q: "How long does the simulation run?",
@@ -1789,7 +1788,7 @@ function SiteFooter() {
             <AtlasMark className="h-6 w-6" /> Atlas
           </Link>
           <p className="mt-4 max-w-sm text-sm text-muted-foreground">
-            An immersive workplace simulation for aspiring Project Coordinators, PMOs and Project Managers.
+            The platform where professionals learn by managing realistic projects.
           </p>
         </div>
         <div>
@@ -1827,7 +1826,7 @@ function SiteFooter() {
       <div className="border-t border-border/60">
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-2 px-6 py-6 text-xs text-muted-foreground sm:flex-row sm:items-center lg:px-10">
           <p>© {new Date().getFullYear()} Atlas. The companies and projects are fictional; the work is real practice.</p>
-          <p>Made with care for the next generation of PMs.</p>
+          <p>Made with care for professionals who learn by doing.</p>
         </div>
       </div>
     </footer>
