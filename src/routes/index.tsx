@@ -271,9 +271,8 @@ function Hero() {
           </Reveal>
           <Reveal delay={80}>
             <h1 className="mt-6 font-display text-[clamp(2.6rem,6.2vw,5.25rem)] font-medium leading-[1.02] tracking-[-0.02em] text-foreground">
-              The platform where professionals{" "}
-              <span className="italic text-primary">learn</span>{" "}
-              by managing realistic projects.
+              Experience the workplace before you&rsquo;re{" "}
+              <span className="italic text-primary">in it</span>.
             </h1>
           </Reveal>
           <Reveal delay={160}>
