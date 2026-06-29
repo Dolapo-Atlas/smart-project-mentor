@@ -888,6 +888,16 @@ ${data.minutes ?? "(none)"}`,
       .select()
       .single();
     if (error) throw error;
+    // Chapter trigger: a closed vendor / kickoff meeting completes ch.4.
+    try {
+      const hay = `${(meeting as any).title ?? ""} ${(meeting as any).kind ?? ""}`.toLowerCase();
+      if (/(vendor|kickoff|kick-off)/.test(hay)) {
+        const { tickChapterBySlug } = await import("@/lib/chapters.functions");
+        await tickChapterBySlug(context.supabase, context.userId, "vendor-kickoff");
+      }
+    } catch (e) {
+      console.error("chapter tick (vendor-kickoff) failed", e);
+    }
     return row;
   });
 
