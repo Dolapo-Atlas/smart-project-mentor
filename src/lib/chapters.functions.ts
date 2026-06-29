@@ -33,6 +33,44 @@ export async function tickChapterBySlug(
       .maybeSingle();
     const chapterId = (ch as any)?.id;
     if (!chapterId) return;
+    // Difficulty gate: a chapter only ticks complete when the user has
+    // *also* closed enough tasks. The signal action (e.g. replying to the
+    // sponsor) opens the door; doing the work walks them through it.
+    // Threshold scales with chapter number: ch 1 = 2 done, ch 2 = 4 done,
+    // ch 3 = 6 done, ... ch N = N*2 done tasks (status done or approved).
+    const { data: full } = await supabase
+      .from("project_chapters")
+      .select("id,chapter_number")
+      .eq("template_id", templateId)
+      .eq("slug", slug)
+      .maybeSingle();
+    const chapterNumber: number = (full as any)?.chapter_number ?? 1;
+    const requiredDone = Math.max(2, chapterNumber * 2);
+
+    const { count: doneCount } = await supabase
+      .from("tasks")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .eq("project_instance_id", instanceId)
+      .in("status", ["done", "approved"]);
+    const completedTasks = doneCount ?? 0;
+
+    if (completedTasks < requiredDone) {
+      // Park the signal as "active + pending" so the UI can hint at it,
+      // but do NOT mark the chapter complete yet.
+      await supabase.from("chapter_progress").upsert(
+        {
+          user_id: userId,
+          project_instance_id: instanceId,
+          chapter_id: chapterId,
+          status: "active",
+          started_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id,project_instance_id,chapter_id" },
+      );
+      return;
+    }
+
     await supabase.from("chapter_progress").upsert(
       {
         user_id: userId,
