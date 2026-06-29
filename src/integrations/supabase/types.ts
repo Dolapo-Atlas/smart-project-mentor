@@ -180,6 +180,60 @@ export type Database = {
           },
         ]
       }
+      chapter_progress: {
+        Row: {
+          chapter_id: string
+          completed_at: string | null
+          created_at: string
+          id: string
+          project_instance_id: string
+          score: number | null
+          started_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          chapter_id: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          project_instance_id: string
+          score?: number | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          chapter_id?: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          project_instance_id?: string
+          score?: number | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chapter_progress_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "project_chapters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapter_progress_project_instance_id_fkey"
+            columns: ["project_instance_id"]
+            isOneToOne: false
+            referencedRelation: "project_instances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comms_messages: {
         Row: {
           attachment_kind: string | null
@@ -697,6 +751,59 @@ export type Database = {
             columns: ["current_project_instance_id"]
             isOneToOne: false
             referencedRelation: "project_instances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_chapters: {
+        Row: {
+          chapter_number: number
+          completion_hint: string | null
+          created_at: string
+          id: string
+          objective: string
+          phase: string
+          slug: string
+          summary: string
+          template_id: string
+          title: string
+          unlock_after_chapter: number | null
+          updated_at: string
+        }
+        Insert: {
+          chapter_number: number
+          completion_hint?: string | null
+          created_at?: string
+          id?: string
+          objective: string
+          phase: string
+          slug: string
+          summary: string
+          template_id: string
+          title: string
+          unlock_after_chapter?: number | null
+          updated_at?: string
+        }
+        Update: {
+          chapter_number?: number
+          completion_hint?: string | null
+          created_at?: string
+          id?: string
+          objective?: string
+          phase?: string
+          slug?: string
+          summary?: string
+          template_id?: string
+          title?: string
+          unlock_after_chapter?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_chapters_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "project_templates"
             referencedColumns: ["id"]
           },
         ]
