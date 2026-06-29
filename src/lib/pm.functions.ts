@@ -1207,9 +1207,16 @@ export const updateStakeholder = createServerFn({ method: "POST" })
         .select("id", { count: "exact", head: true })
         .eq("user_id", userId);
       const threshold = Math.max(3, Math.ceil(roster.length / 2));
+      const { tickChapterBySlug } = await import("@/lib/chapters.functions");
       if ((count ?? 0) >= threshold) {
-        const { tickChapterBySlug } = await import("@/lib/chapters.functions");
         await tickChapterBySlug(supabase, userId, "stakeholder-mapping");
+      }
+      // Sentiment-based chapter ticks.
+      if (book.role === "clinical" && sentiment >= 40) {
+        await tickChapterBySlug(supabase, userId, "clinical-signoff");
+      }
+      if (book.role === "care_home" && sentiment >= 25) {
+        await tickChapterBySlug(supabase, userId, "frontline-pushback");
       }
     } catch (e) {
       console.error("chapter tick (stakeholder-mapping) failed", e);
