@@ -14,6 +14,7 @@ import { formatDistanceToNow } from "date-fns";
 import { StakeholderHoverAvatar as StakeholderAvatar } from "@/components/stakeholder-card";
 import { TimeControls } from "@/components/time-controls";
 import { WhatsNextPanel } from "@/components/whats-next-panel";
+import { ChapterStrip } from "@/components/chapter-strip";
 
 export const Route = createFileRoute("/_authenticated/app/")({
   component: Dashboard,
@@ -84,6 +85,8 @@ function Dashboard() {
           <TimeControls />
         </div>
       </header>
+
+      <ChapterStrip />
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <div className={`rounded-lg border p-5 ${healthStyle[health]}`}>
