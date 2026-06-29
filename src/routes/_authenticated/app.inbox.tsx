@@ -18,6 +18,7 @@ import { useVoiceSettings } from "@/lib/voice";
 import { Link } from "@tanstack/react-router";
 import { useServerFn as useServerFn2 } from "@tanstack/react-start";
 import { listTasksRich } from "@/lib/tasks.functions";
+import { useRoster, rosterByName } from "@/lib/roster";
 
 export const Route = createFileRoute("/_authenticated/app/inbox")({
   component: Inbox,
@@ -31,8 +32,10 @@ const toneStyles: Record<string, string> = {
   neutral: "bg-muted text-muted-foreground",
 };
 
-// Map known sender names to stakeholder role keys used by sendComm.
-const SENDER_ROLE_MAP: Record<string, string> = {
+// Static fallback for legacy DCR names. Live role lookup uses the active
+// project's roster (see `useRoster()` below) so dynamic stakeholder names
+// from any project_template can still be replied to.
+const LEGACY_SENDER_ROLE_MAP: Record<string, string> = {
   "Sarah Williams": "pm",
   "David Okafor": "sponsor",
   "Priya Anand": "finance",
@@ -49,6 +52,8 @@ function Inbox() {
   const markFn = useServerFn(markRead);
   const genFn = useServerFn(generateStakeholderMessage);
   const stirFn = useServerFn(summonConflict);
+  const roster = useRoster();
+  const rosterMap = rosterByName(roster);
   const { data: messages } = useQuery({ queryKey: ["inbox"], queryFn: () => fetchInbox() });
   const fetchTasks = useServerFn2(listTasksRich);
   const { data: allTasks } = useQuery({ queryKey: ["tasks"], queryFn: () => fetchTasks() });
