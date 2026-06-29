@@ -1199,6 +1199,21 @@ export const updateStakeholder = createServerFn({ method: "POST" })
       .select()
       .single();
     if (error) throw error;
+    // Chapter trigger: once the coordinator has logged notes / sentiment for
+    // half the roster, the stakeholder-mapping chapter is complete.
+    try {
+      const { count } = await supabase
+        .from("stakeholder_relationships")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId);
+      const threshold = Math.max(3, Math.ceil(roster.length / 2));
+      if ((count ?? 0) >= threshold) {
+        const { tickChapterBySlug } = await import("@/lib/chapters.functions");
+        await tickChapterBySlug(supabase, userId, "stakeholder-mapping");
+      }
+    } catch (e) {
+      console.error("chapter tick (stakeholder-mapping) failed", e);
+    }
     return row;
   });
 
