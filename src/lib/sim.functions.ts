@@ -1189,7 +1189,7 @@ Do not use the same wording as any recent inbox message. Do not write a generic 
             interaction_count: (existing?.interaction_count ?? 0) + 1,
             last_interaction: new Date().toISOString(),
           },
-          { onConflict: "user_id,stakeholder_name" },
+          { onConflict: "user_id,project_instance_id,stakeholder_name" },
         );
       }
     } catch (e) {

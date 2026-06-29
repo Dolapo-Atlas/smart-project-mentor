@@ -233,7 +233,7 @@ export const advanceTime = createServerFn({ method: "POST" })
           sentiment: next,
           interaction_count: (existing?.interaction_count ?? 0) + 1,
         },
-        { onConflict: "user_id,stakeholder_name" },
+        { onConflict: "user_id,project_instance_id,stakeholder_name" },
       );
     }
 
@@ -310,7 +310,7 @@ export const advanceTime = createServerFn({ method: "POST" })
             sentiment: Math.max(-100, cur - 2),
             interaction_count: (existingRel?.interaction_count ?? 0) + 1,
           },
-          { onConflict: "user_id,stakeholder_name" },
+          { onConflict: "user_id,project_instance_id,stakeholder_name" },
         );
       }
       if ((overdue?.length ?? 0) > 0) {
