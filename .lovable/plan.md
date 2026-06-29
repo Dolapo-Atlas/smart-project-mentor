@@ -1,55 +1,93 @@
-## Goal
-Every simulation gets its own cast — unique random names + titles fitting that project's domain, with persona avatars. No more "Margaret Hollis (Care Home Manager)" showing up in the CRM project.
 
-## What ships
+# Flagship: Digital Care Records — End-to-End Polish
 
-### 1. Per-template roster (data)
-Add a `stakeholders jsonb` column to `project_templates`. Each template gets 7 roles with project-appropriate random names + titles + persona seeds:
+Turn Digital Care Records (DCR) into Atlas's flagship template. Other templates stay listed but are marked "Coming soon" until DCR is fully polished. One project, one cast, one arc — finishable in 8–12 hours with a clear win/loss and a shareable certificate.
 
-| Role | CRM Implementation | Website Redesign | Office Relocation | EV Charging | Product Launch | Digital Care Records |
-|---|---|---|---|---|---|---|
-| pm | Emma Collins — Programme Manager | (same role pattern across all) | | | | |
-| sponsor | Marcus Hale — Chief Revenue Officer | Lena Park — VP Marketing | Daniel Reeve — COO | Aisha Bello — Director of Infrastructure | Jordan Pike — Chief Product Officer | David Okafor — Executive Sponsor |
-| finance | Priya Anand — Finance Lead (kept consistent — finance always Priya) | | | | | |
-| tech | Ravi Shah — CRM Solutions Architect | Mei Tanaka — Lead Frontend Engineer | Tom Becker — IT Infrastructure Lead | Henrik Olsen — Charging Systems Engineer | Sofia Marín — Platform Lead | James Lin — Technical Lead |
-| ops/domain1 | Hannah Briggs — Sales Operations Lead | Olu Adeyemi — UX Research Lead | Clara Voss — Facilities Manager | Ife Lawal — Site Acquisition Manager | Theo Ranjit — Go-to-Market Lead | Margaret Hollis — Care Home Manager |
-| domain2 | Liam Doyle — CRM Admin | Yuki Sato — Brand Designer | Priscilla Owen — HR Business Partner | Marco Conti — Grid Compliance Officer | Nadia Roche — Customer Insights Lead | Rachel Stone — Clinical Governance Lead |
-| vendor | Saleforce-style: "Helio CRM (Vendor)" | "PixelForge Studio (Vendor)" | "Hartwell Movers (Vendor)" | "VoltaGrid Ltd (Vendor)" | "Northbeam Agency (Vendor)" | CareSoft Ltd |
+## 1. Lock the 12-chapter arc
 
-Names will be slightly randomized at seed time so two users on the same template still see the same cast (deterministic per template), but different templates have entirely different casts.
+A scripted spine of chapters in `project_templates.chapters jsonb`. Each chapter has: title, phase (Initiation / Planning / Execution / Monitoring / Closure), unlock trigger, completion criteria, and 1–3 seed events (emails, tasks, meetings) injected when the chapter opens.
 
-### 2. Runtime roster resolver
-New `src/lib/roster.ts`:
-- `DEFAULT_ROSTER` (Digital Care Records — current names, no behavior change for existing data)
-- `rosterFromTemplate(template)` returns `{role, name, title, archetype}[]`
-- `getActiveRoster(supabase, userId)` server helper that joins `profiles.current_project_instance_id → project_instances.template_id → project_templates.stakeholders`, falls back to DEFAULT_ROSTER.
+```text
+1.  Day One — Welcome & Brief
+2.  Stakeholder Mapping
+3.  Project Charter Approval
+4.  Vendor Kickoff (CareSoft)
+5.  Requirements & Clinical Sign-off
+6.  Risk Register & Mitigation
+7.  Budget Lock & Change Control
+8.  Pilot Site Go-Live (Oakwood)
+9.  Frontline Pushback
+10. Mid-Programme Status Report
+11. Rollout Decision Gate
+12. Closure, Handover & Lessons Learned
+```
 
-### 3. Refactor call sites
-Replace static `import { STAKEHOLDERS }` with roster lookup in:
-- **Server fns**: `pm.functions.ts`, `comms.functions.ts`, `delegate.functions.ts`, `sim.functions.ts`, `tasks.functions.ts`, `raid.functions.ts` — accept resolved roster, no hardcoded names in prompts.
-- **UI**: `app.comms.tsx`, `app.raid.tsx`, `app.settings.tsx`, `delegate-panel.tsx`, `stakeholder-card.tsx`, `app.inbox.tsx` — fetch roster via new `useRoster()` query hook.
-- **Sentiment/archetype maps** keyed by role instead of by name so they survive name changes.
+Chapter progression is driven by `chapter_state` on `simulation_state` (advances when criteria met). Each chapter opens with a seeded inbox message + 1 task; closing it stamps a chapter completion row used by scoring.
 
-### 4. Persona avatars
-`stakeholder-avatar.tsx` already uses DiceBear notionists with a `seed`. Update it to:
-- Accept optional `seed` prop (falls back to name slug).
-- Roster entries carry a stable `persona_seed` (e.g. `crm-sponsor-marcus-hale`), giving each cast member a distinct illustrated face that stays consistent within a project but differs across projects.
-- Role still drives the ring colour.
+## 2. Win/loss + certificate
 
-### 5. Migration + reseed
-One migration to:
-- Add `stakeholders jsonb` to `project_templates`.
-- Update all 6 templates' `stakeholders`, `pm_name`, `sponsor_name`, `sponsor_role` to the project-specific cast above.
-- Backfill existing `project_instances` (none of those rows store the roster; resolver reads from template at runtime, so nothing else to migrate).
+New table `project_outcomes` (user_id, instance_id, score breakdown, grade, completed_at, certificate_id).
 
-## Out of scope (this round)
-- Renaming people inside *already-sent* inbox messages or comms (historical data keeps old names).
-- Per-user randomization (different users see the same cast for the same template — keeps the sim shareable/testable).
+Score = weighted sum of:
+- Stakeholder sentiment average at closure (30%)
+- Tasks completed on time vs late vs skipped (25%)
+- Budget variance (15%)
+- RAID hygiene — risks logged before they fire (15%)
+- Status reports submitted on cadence (15%)
+
+Grades: Distinction ≥85 / Pass ≥60 / Conditional 40–59 / Did Not Pass <40.
+
+On reaching Chapter 12 completion, generate a PDF certificate ("Atlas Certificate of Completion — Digital Care Records, Grade: X") via existing PDF flow used in reports, stored at `/mnt/documents`-style download. Show a Results screen at `/app/results` with breakdown, replayable highlights, and a share link.
+
+## 3. AI dialogue quality bar
+
+- **Cast lockdown**: DCR roster (Sarah, David, Priya, James, Margaret, Rachel, CareSoft) becomes canonical. Strip the generic "stakeholder X" fallbacks from prompts; always inject the cast block + project context block.
+- **Eval set**: `src/lib/evals/dcr.ts` — 25 golden prompt→expected-traits pairs (e.g. "Margaret reacts to delayed pilot" → expects: in-character, mentions Oakwood residents, frustrated tone, asks for revised date). Add `bun run eval:dcr` that runs them through the gateway and scores with a judge model. Threshold ≥80% pass to ship.
+- **Prompt hardening**: shared `dcrSystemPrompt()` builder enforces domain guard (no CRM/website lingo), persona voice per role, length caps, and "never invent new stakeholders" rule.
+- **Regression hook**: log every generated message into `ai_feedback` with chapter + persona so we can spot drift.
+
+## 4. Sidebar cut to 6
+
+Hide modules that don't pull weight in DCR. Final nav:
+
+```text
+Home · Inbox · Tasks · Stakeholders · RAID · Reports
+```
+
+Moved into secondary surfaces (not sidebar items):
+- Meetings → entered from Inbox/Tasks when a meeting event fires
+- Budget, Changes, Gates, Health, Progress, Documents → grouped under a single "Project" panel on Home
+- Learning, Completed, Reviews, Comms, Settings → user menu
+
+Admin/Signups stays admin-only.
+
+## 5. Template gating
+
+`project_templates.status` column: `flagship` | `coming_soon`. Project picker still shows all six but only DCR is selectable; others get a "Coming soon — vote for next" tile that increments a counter in `template_interest`.
+
+## 6. Out of scope (this pass)
+
+- Building the other 5 templates' content
+- Multiplayer / co-op rooms
+- Mobile-specific layouts beyond what already works
+- Re-recording TTS briefings for new chapters (existing voice flow reused)
+
+## Technical sketch
+
+- **Migration**: add `chapters jsonb`, `status text` to `project_templates`; create `project_outcomes`, `template_interest`; seed DCR chapters; mark other 5 `coming_soon`.
+- **Server fns** (`src/lib/`):
+  - `chapters.functions.ts` — `getCurrentChapter`, `advanceChapter`, `seedChapterEvents`
+  - `outcomes.functions.ts` — `computeScore`, `finalizeRun`, `generateCertificate`
+  - Update `pm.functions.ts`, `comms.functions.ts`, `sim.functions.ts` to inject DCR cast + chapter context into every prompt.
+- **UI**:
+  - `src/components/app-sidebar.tsx` — trimmed to 6 items, gated by active template
+  - `src/routes/_authenticated/app.index.tsx` — chapter progress strip, current-chapter card, "Project" accordion with budget/gates/health/etc.
+  - `src/routes/_authenticated/app.results.$instanceId.tsx` — results + certificate download
+  - `src/routes/_authenticated/app.projects.tsx` — flagship badge on DCR, "Coming soon + vote" on others
+- **Evals**: `src/lib/evals/dcr.ts`, `scripts/eval-dcr.ts`, npm script `eval:dcr`. Manual gate, not CI-blocking.
 
 ## Risks
-- Existing comms/inbox rows reference old names like "Margaret Hollis". They'll continue to display correctly — only *new* AI-generated content uses the new roster. If you want a clean slate per project, start a new project instance after this ships.
 
-## Technical notes
-- All sentiment/archetype maps re-keyed from name → role to stop carrying healthcare baselines into other sims.
-- AI prompts will receive the roster as a "Cast of stakeholders" block, so the model never invents names from a different domain.
-- Vendor entries continue to use organisation names (not personal names) since that matches how vendors actually email.
+- Existing in-flight runs on other templates will be paused (shown as "Paused — template under development"). We won't delete their data.
+- Score formula is a v1 and will need tuning after first 10 real playthroughs.
+- Cert PDF rendering on Workers — reuse the same HTML→PDF path already used for status reports to avoid native deps.
