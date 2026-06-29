@@ -1,5 +1,13 @@
 import { createFileRoute, Link, Outlet, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
-import { Mail, ListChecks, FileText, Gauge, LayoutDashboard, LogOut, ArrowLeft, ShieldAlert, FileBarChart2, Wallet, GitPullRequest, Gavel, Users, Send, Compass, Contact, CheckCircle2, Settings, FolderKanban, Award, Activity } from "lucide-react";
+import { Mail, ListChecks, LayoutDashboard, LogOut, ArrowLeft, ShieldAlert, FileBarChart2, Contact, FolderKanban, MoreHorizontal } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -19,24 +27,26 @@ export const Route = createFileRoute("/_authenticated/app")({
 
 type NavItem = { to: string; label: string; icon: typeof Mail; exact?: boolean; tour?: string };
 const NAV: NavItem[] = [
-  { to: "/app", label: "Dashboard", icon: LayoutDashboard, exact: true, tour: "dashboard" },
+  { to: "/app", label: "Home", icon: LayoutDashboard, exact: true, tour: "dashboard" },
   { to: "/app/inbox", label: "Inbox", icon: Mail, tour: "inbox" },
-  { to: "/app/comms", label: "Comms", icon: Send },
-  { to: "/app/meetings", label: "Meetings", icon: Users },
-  { to: "/app/stakeholders", label: "Stakeholders", icon: Contact, tour: "stakeholders" },
   { to: "/app/tasks", label: "Tasks", icon: ListChecks, tour: "tasks" },
-  { to: "/app/completed", label: "Completed", icon: CheckCircle2 },
-  { to: "/app/documents", label: "Documents", icon: FileText, tour: "documents" },
-  { to: "/app/reports", label: "Status reports", icon: FileBarChart2 },
-  { to: "/app/budget", label: "Budget", icon: Wallet },
-  { to: "/app/changes", label: "Change requests", icon: GitPullRequest },
-  { to: "/app/gates", label: "Phase gates", icon: Gavel },
-  { to: "/app/raid", label: "RAID Log", icon: ShieldAlert },
-  { to: "/app/health", label: "Project Health", icon: Activity },
-  { to: "/app/progress", label: "Progress", icon: Gauge },
-  { to: "/app/reviews", label: "Reviews", icon: Award },
-  { to: "/app/learning", label: "Learning", icon: Compass, tour: "learning" },
-  { to: "/app/settings", label: "Settings", icon: Settings },
+  { to: "/app/stakeholders", label: "People", icon: Contact, tour: "stakeholders" },
+  { to: "/app/raid", label: "RAID", icon: ShieldAlert },
+  { to: "/app/reports", label: "Reports", icon: FileBarChart2 },
+];
+const MORE_LINKS: { to: string; label: string }[] = [
+  { to: "/app/meetings", label: "Meetings" },
+  { to: "/app/comms", label: "Comms" },
+  { to: "/app/documents", label: "Documents" },
+  { to: "/app/budget", label: "Budget" },
+  { to: "/app/changes", label: "Change requests" },
+  { to: "/app/gates", label: "Phase gates" },
+  { to: "/app/health", label: "Project health" },
+  { to: "/app/progress", label: "Progress" },
+  { to: "/app/completed", label: "Completed work" },
+  { to: "/app/reviews", label: "Reviews" },
+  { to: "/app/learning", label: "Learning" },
+  { to: "/app/settings", label: "Settings" },
 ];
 
 function AppLayout() {
