@@ -64,7 +64,7 @@ export async function tickChapterBySlug(
           project_instance_id: instanceId,
           chapter_id: chapterId,
           status: "active",
-          signal_fired_at: new Date().toISOString(),
+          started_at: new Date().toISOString(),
         },
         { onConflict: "user_id,project_instance_id,chapter_id" },
       );
