@@ -1195,7 +1195,7 @@ export const updateStakeholder = createServerFn({ method: "POST" })
 
     const { data: row, error } = await supabase
       .from("stakeholder_relationships")
-      .upsert(payload, { onConflict: "user_id,stakeholder_name" })
+      .upsert(payload, { onConflict: "user_id,project_instance_id,stakeholder_name" })
       .select()
       .single();
     if (error) throw error;
@@ -1341,7 +1341,7 @@ export const repairStakeholderRelationship = createServerFn({ method: "POST" })
           interaction_count: (existing?.interaction_count ?? 0) + 1,
           last_interaction: new Date().toISOString(),
         },
-        { onConflict: "user_id,stakeholder_name" },
+        { onConflict: "user_id,project_instance_id,stakeholder_name" },
       )
       .select()
       .single();

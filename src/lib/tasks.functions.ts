@@ -285,7 +285,7 @@ async function applyImpact(
           last_interaction: new Date().toISOString(),
           role: existing?.role ?? null,
         },
-        { onConflict: "user_id,stakeholder_name" },
+        { onConflict: "user_id,project_instance_id,stakeholder_name" },
       );
       summary.push(`${name} ${delta > 0 ? "+" : ""}${delta}`);
     }
