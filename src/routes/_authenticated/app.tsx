@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
-import { Mail, ListChecks, LayoutDashboard, LogOut, ArrowLeft, ShieldAlert, FileBarChart2, Contact, FolderKanban, MoreHorizontal } from "lucide-react";
+import { Mail, ListChecks, LayoutDashboard, LogOut, ArrowLeft, ShieldAlert, FileBarChart2, Contact, FolderKanban, MoreHorizontal, FileText, Users, Wallet, Activity, Gauge, Gavel, Award, Send, GitPullRequest, CheckCircle2, Compass, Settings } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -25,30 +25,83 @@ export const Route = createFileRoute("/_authenticated/app")({
   component: AppLayout,
 });
 
-type NavItem = { to: string; label: string; icon: typeof Mail; exact?: boolean; tour?: string };
-const NAV: NavItem[] = [
+type NavItem = {
+  to: string;
+  label: string;
+  icon: typeof Mail;
+  exact?: boolean;
+  tour?: string;
+};
+
+// Always-visible items. Inbox & Tasks anchor every phase — they're how the user
+// receives and acts on work.
+const PINNED: NavItem[] = [
   { to: "/app", label: "Home", icon: LayoutDashboard, exact: true, tour: "dashboard" },
   { to: "/app/inbox", label: "Inbox", icon: Mail, tour: "inbox" },
   { to: "/app/tasks", label: "Tasks", icon: ListChecks, tour: "tasks" },
-  { to: "/app/stakeholders", label: "People", icon: Contact, tour: "stakeholders" },
-  { to: "/app/raid", label: "RAID", icon: ShieldAlert },
-  { to: "/app/reports", label: "Reports", icon: FileBarChart2 },
 ];
-const MORE_LINKS: { to: string; label: string }[] = [
-  { to: "/app/results", label: "Final review & certificate" },
-  { to: "/app/meetings", label: "Meetings" },
-  { to: "/app/comms", label: "Comms" },
-  { to: "/app/documents", label: "Documents" },
-  { to: "/app/budget", label: "Budget" },
-  { to: "/app/changes", label: "Change requests" },
-  { to: "/app/gates", label: "Phase gates" },
-  { to: "/app/health", label: "Project health" },
-  { to: "/app/progress", label: "Progress" },
-  { to: "/app/completed", label: "Completed work" },
-  { to: "/app/reviews", label: "Reviews" },
-  { to: "/app/learning", label: "Learning" },
-  { to: "/app/settings", label: "Settings" },
+
+// Phase-specific items surface the modules that actually matter right now.
+// Each phase gets 3 contextual items, keeping the sidebar to 6 visible slots
+// (3 pinned + 3 contextual) before the "More" overflow.
+const PHASE_NAV: Record<string, NavItem[]> = {
+  initiation: [
+    { to: "/app/stakeholders", label: "People", icon: Contact, tour: "stakeholders" },
+    { to: "/app/documents", label: "Charter", icon: FileText, tour: "documents" },
+    { to: "/app/gates", label: "Kick-off gate", icon: Gavel },
+  ],
+  planning: [
+    { to: "/app/raid", label: "RAID", icon: ShieldAlert },
+    { to: "/app/budget", label: "Budget", icon: Wallet },
+    { to: "/app/stakeholders", label: "People", icon: Contact, tour: "stakeholders" },
+  ],
+  execution: [
+    { to: "/app/raid", label: "RAID", icon: ShieldAlert },
+    { to: "/app/meetings", label: "Meetings", icon: Users },
+    { to: "/app/reports", label: "Reports", icon: FileBarChart2 },
+  ],
+  monitoring: [
+    { to: "/app/reports", label: "Reports", icon: FileBarChart2 },
+    { to: "/app/health", label: "Health", icon: Activity },
+    { to: "/app/progress", label: "Progress", icon: Gauge },
+  ],
+  closure: [
+    { to: "/app/reports", label: "Reports", icon: FileBarChart2 },
+    { to: "/app/completed", label: "Completed", icon: CheckCircle2 },
+    { to: "/app/results", label: "Close out", icon: Award },
+  ],
+};
+
+// Everything else lives under More. The list is dynamic — items already in the
+// active phase row are removed so we don't show duplicates.
+const ALL_OVERFLOW: NavItem[] = [
+  { to: "/app/results", label: "Final review & certificate", icon: Award },
+  { to: "/app/stakeholders", label: "People", icon: Contact },
+  { to: "/app/meetings", label: "Meetings", icon: Users },
+  { to: "/app/comms", label: "Comms", icon: Send },
+  { to: "/app/raid", label: "RAID log", icon: ShieldAlert },
+  { to: "/app/reports", label: "Status reports", icon: FileBarChart2 },
+  { to: "/app/documents", label: "Documents", icon: FileText },
+  { to: "/app/budget", label: "Budget", icon: Wallet },
+  { to: "/app/changes", label: "Change requests", icon: GitPullRequest },
+  { to: "/app/gates", label: "Phase gates", icon: Gavel },
+  { to: "/app/health", label: "Project health", icon: Activity },
+  { to: "/app/progress", label: "Progress", icon: Gauge },
+  { to: "/app/completed", label: "Completed work", icon: CheckCircle2 },
+  { to: "/app/reviews", label: "Reviews", icon: Award },
+  { to: "/app/learning", label: "Learning", icon: Compass },
+  { to: "/app/settings", label: "Settings", icon: Settings },
 ];
+
+function normalisePhase(p?: string | null): keyof typeof PHASE_NAV {
+  const k = (p ?? "").toLowerCase().trim();
+  if (k.startsWith("init")) return "initiation";
+  if (k.startsWith("plan")) return "planning";
+  if (k.startsWith("exec")) return "execution";
+  if (k.startsWith("mon")) return "monitoring";
+  if (k.startsWith("clos")) return "closure";
+  return "execution";
+}
 
 function AppLayout() {
   const navigate = useNavigate();
