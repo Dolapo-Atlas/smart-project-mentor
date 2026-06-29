@@ -150,6 +150,28 @@ function AppLayout() {
                 </Link>
               );
             })}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-md p-2 text-center text-[11px] leading-tight text-foreground/80 transition hover:bg-accent hover:text-foreground"
+                >
+                  <MoreHorizontal className="h-5 w-5 shrink-0" />
+                  <span className="line-clamp-2">More</span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56">
+                <DropdownMenuLabel className="text-xs uppercase tracking-wider text-muted-foreground">
+                  Project tools
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {MORE_LINKS.map((m) => (
+                  <DropdownMenuItem key={m.to} asChild>
+                    <Link to={m.to}>{m.label}</Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </nav>
 
           <div className="mt-10 rounded-md border border-border bg-card p-4">
