@@ -407,6 +407,14 @@ ${pm?.name?.split(" ")[0] ?? "Sarah"}`,
       })
       .eq("user_id", userId);
 
+    // Chapter trigger: submitting the RAID log closes the risk-register chapter.
+    try {
+      const { tickChapterBySlug } = await import("@/lib/chapters.functions");
+      await tickChapterBySlug(supabase, userId, "risk-register");
+    } catch (e) {
+      console.error("chapter tick (risk-register) failed", e);
+    }
+
     return { ok: true };
   });
 
