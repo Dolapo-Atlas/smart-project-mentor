@@ -447,8 +447,9 @@ Choose sentiment honestly: positive, neutral, pushback, concerned, or ignored (i
       console.error("learning journey micro-tick failed", e);
     }
 
-    // Chapter trigger: first reply to the sponsor closes the kickoff chapter.
-    if (data.to_roles.includes("sponsor")) {
+    // Chapter trigger: first reply to the sponsor OR PM closes the kickoff
+    // chapter. The welcome email is usually from the PM, so accept either.
+    if (data.to_roles.includes("sponsor") || data.to_roles.includes("pm")) {
       try {
         const { tickChapterBySlug } = await import("@/lib/chapters.functions");
         await tickChapterBySlug(supabase, uid, "kickoff");
