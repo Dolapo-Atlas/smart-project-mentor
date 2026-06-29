@@ -273,7 +273,12 @@ function ProjectsPicker() {
                 {t.is_recommended && (
                   <div className="absolute -top-3 left-5 flex items-center gap-1 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground shadow">
                     <Sparkles className="h-3 w-3" />
-                    RECOMMENDED
+                    FLAGSHIP — POLISHED END-TO-END
+                  </div>
+                )}
+                {!t.is_playable && (
+                  <div className="absolute -top-3 right-5 rounded-full bg-muted px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground shadow-sm">
+                    Coming soon
                   </div>
                 )}
 
