@@ -1,6 +1,53 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+// Server-only helper (no module-scope side effects). Safe to import from other
+// *.functions.ts files. Marks a chapter complete by slug for the user's active
+// project instance. Idempotent and swallows errors so it never breaks the
+// originating action.
+export async function tickChapterBySlug(
+  supabase: any,
+  userId: string,
+  slug: string,
+): Promise<void> {
+  try {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("current_project_instance_id")
+      .eq("id", userId)
+      .maybeSingle();
+    const instanceId = (profile as any)?.current_project_instance_id;
+    if (!instanceId) return;
+    const { data: inst } = await supabase
+      .from("project_instances")
+      .select("template_id")
+      .eq("id", instanceId)
+      .maybeSingle();
+    const templateId = (inst as any)?.template_id;
+    if (!templateId) return;
+    const { data: ch } = await supabase
+      .from("project_chapters")
+      .select("id")
+      .eq("template_id", templateId)
+      .eq("slug", slug)
+      .maybeSingle();
+    const chapterId = (ch as any)?.id;
+    if (!chapterId) return;
+    await supabase.from("chapter_progress").upsert(
+      {
+        user_id: userId,
+        project_instance_id: instanceId,
+        chapter_id: chapterId,
+        status: "complete",
+        completed_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id,project_instance_id,chapter_id" },
+    );
+  } catch (e) {
+    console.error("tickChapterBySlug failed", slug, e);
+  }
+}
+
 export type ChapterRow = {
   id: string;
   chapter_number: number;
