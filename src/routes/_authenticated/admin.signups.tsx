@@ -5,7 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { toast } from "sonner";
 
-const ADMIN_EMAIL = "rasaqdolapo@gmail.com";
+const ADMIN_EMAILS = [
+  "rasaqdolapo@gmail.com",
+  "fuhad.dolapo@gmail.com",
+];
 
 type Signup = {
   id: string;
@@ -21,7 +24,8 @@ export const Route = createFileRoute("/_authenticated/admin/signups")({
   ssr: false,
   beforeLoad: async () => {
     const { data } = await supabase.auth.getUser();
-    if (data.user?.email !== ADMIN_EMAIL) {
+    const email = data.user?.email?.toLowerCase();
+    if (!email || !ADMIN_EMAILS.includes(email)) {
       throw redirect({ to: "/app" });
     }
   },

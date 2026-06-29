@@ -10,13 +10,17 @@ import { Loader2, PlayCircle } from "lucide-react";
 import { toast } from "sonner";
 import { listEvalRuns, listEvalResults, runEvalSuite } from "@/lib/evals.functions";
 
-const ADMIN_EMAIL = "rasaqdolapo@gmail.com";
+const ADMIN_EMAILS = [
+  "rasaqdolapo@gmail.com",
+  "fuhad.dolapo@gmail.com",
+];
 
 export const Route = createFileRoute("/_authenticated/admin/evals")({
   ssr: false,
   beforeLoad: async () => {
     const { data } = await supabase.auth.getUser();
-    if (data.user?.email !== ADMIN_EMAIL) throw redirect({ to: "/app" });
+    const email = data.user?.email?.toLowerCase();
+    if (!email || !ADMIN_EMAILS.includes(email)) throw redirect({ to: "/app" });
   },
   component: EvalsAdmin,
 });
