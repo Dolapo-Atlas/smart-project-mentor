@@ -447,6 +447,16 @@ Choose sentiment honestly: positive, neutral, pushback, concerned, or ignored (i
       console.error("learning journey micro-tick failed", e);
     }
 
+    // Chapter trigger: first reply to the sponsor closes the kickoff chapter.
+    if (data.to_roles.includes("sponsor")) {
+      try {
+        const { tickChapterBySlug } = await import("@/lib/chapters.functions");
+        await tickChapterBySlug(supabase, uid, "kickoff");
+      } catch (e) {
+        console.error("chapter tick (kickoff) failed", e);
+      }
+    }
+
     return { ok: true, thread_id: threadId, replies: stakeholders.length };
   });
 
