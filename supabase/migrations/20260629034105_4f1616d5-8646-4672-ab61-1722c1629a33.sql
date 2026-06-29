@@ -1,0 +1,2 @@
+ALTER TABLE public.stakeholder_relationships DROP CONSTRAINT IF EXISTS stakeholder_relationships_user_id_stakeholder_name_key;
+ALTER TABLE public.stakeholder_relationships ADD CONSTRAINT stakeholder_relationships_user_proj_name_key UNIQUE (user_id, project_instance_id, stakeholder_name);
