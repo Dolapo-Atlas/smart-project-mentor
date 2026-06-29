@@ -527,6 +527,16 @@ Decide: pass or fail this gate. Score 0-100. Be tough but fair. Failed means the
           .update({ phase: next })
           .eq("user_id", userId);
       }
+      // Chapter triggers: pilot gate closes ch.8, any later passed gate closes ch.11.
+      try {
+        const { tickChapterBySlug } = await import("@/lib/chapters.functions");
+        if (data.phase === "execution") {
+          await tickChapterBySlug(supabase, userId, "pilot-golive");
+        }
+        await tickChapterBySlug(supabase, userId, "phase-gate");
+      } catch (e) {
+        console.error("chapter tick (phase-gate) failed", e);
+      }
     }
 
     return object;
