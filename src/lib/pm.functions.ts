@@ -224,6 +224,13 @@ Score 0-100. A good status report has: concrete achievements with evidence, name
       } catch (e) {
         console.error("status report scoring failed", e);
       }
+      // Chapter trigger: submitting a status report closes chapter 10.
+      try {
+        const { tickChapterBySlug } = await import("@/lib/chapters.functions");
+        await tickChapterBySlug(context.supabase, context.userId, "status-report");
+      } catch (e) {
+        console.error("chapter tick (status-report) failed", e);
+      }
     }
     return row;
   });
@@ -290,6 +297,13 @@ export const addBudgetLine = createServerFn({ method: "POST" })
       .select()
       .single();
     if (error) throw error;
+    // Chapter trigger: first budget line closes the budget-lock chapter.
+    try {
+      const { tickChapterBySlug } = await import("@/lib/chapters.functions");
+      await tickChapterBySlug(context.supabase, context.userId, "budget-lock");
+    } catch (e) {
+      console.error("chapter tick (budget-lock) failed", e);
+    }
     return row;
   });
 
@@ -512,6 +526,16 @@ Decide: pass or fail this gate. Score 0-100. Be tough but fair. Failed means the
           .from("simulation_state")
           .update({ phase: next })
           .eq("user_id", userId);
+      }
+      // Chapter triggers: pilot gate closes ch.8, any later passed gate closes ch.11.
+      try {
+        const { tickChapterBySlug } = await import("@/lib/chapters.functions");
+        if (data.phase === "execution") {
+          await tickChapterBySlug(supabase, userId, "pilot-golive");
+        }
+        await tickChapterBySlug(supabase, userId, "phase-gate");
+      } catch (e) {
+        console.error("chapter tick (phase-gate) failed", e);
       }
     }
 
@@ -864,6 +888,16 @@ ${data.minutes ?? "(none)"}`,
       .select()
       .single();
     if (error) throw error;
+    // Chapter trigger: a closed vendor / kickoff meeting completes ch.4.
+    try {
+      const hay = `${(meeting as any).title ?? ""} ${(meeting as any).kind ?? ""}`.toLowerCase();
+      if (/(vendor|kickoff|kick-off)/.test(hay)) {
+        const { tickChapterBySlug } = await import("@/lib/chapters.functions");
+        await tickChapterBySlug(context.supabase, context.userId, "vendor-kickoff");
+      }
+    } catch (e) {
+      console.error("chapter tick (vendor-kickoff) failed", e);
+    }
     return row;
   });
 
@@ -1165,6 +1199,28 @@ export const updateStakeholder = createServerFn({ method: "POST" })
       .select()
       .single();
     if (error) throw error;
+    // Chapter trigger: once the coordinator has logged notes / sentiment for
+    // half the roster, the stakeholder-mapping chapter is complete.
+    try {
+      const { count } = await supabase
+        .from("stakeholder_relationships")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId);
+      const threshold = Math.max(3, Math.ceil(roster.length / 2));
+      const { tickChapterBySlug } = await import("@/lib/chapters.functions");
+      if ((count ?? 0) >= threshold) {
+        await tickChapterBySlug(supabase, userId, "stakeholder-mapping");
+      }
+      // Sentiment-based chapter ticks.
+      if (book.role === "clinical" && sentiment >= 40) {
+        await tickChapterBySlug(supabase, userId, "clinical-signoff");
+      }
+      if (book.role === "care_home" && sentiment >= 25) {
+        await tickChapterBySlug(supabase, userId, "frontline-pushback");
+      }
+    } catch (e) {
+      console.error("chapter tick (stakeholder-mapping) failed", e);
+    }
     return row;
   });
 

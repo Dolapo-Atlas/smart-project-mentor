@@ -224,6 +224,14 @@ export const finalizeRun = createServerFn({ method: "POST" })
       .eq("id", instanceId)
       .eq("user_id", userId);
 
+    // Chapter trigger: finalising the run completes the closure chapter.
+    try {
+      const { tickChapterBySlug } = await import("@/lib/chapters.functions");
+      await tickChapterBySlug(supabase, userId, "closure");
+    } catch (e) {
+      console.error("chapter tick (closure) failed", e);
+    }
+
     return data;
   });
 

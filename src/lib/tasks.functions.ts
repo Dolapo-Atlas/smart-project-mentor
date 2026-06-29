@@ -219,6 +219,16 @@ export const submitTaskWithWork = createServerFn({ method: "POST" })
       .update({ status: "submitted", submission: data.submission, submitted_at: new Date().toISOString() })
       .eq("id", data.id)
       .eq("user_id", userId);
+    // Chapter trigger: submitting the Project Charter task closes chapter 3.
+    try {
+      const title = String((task as any)?.title ?? "");
+      if (/charter/i.test(title)) {
+        const { tickChapterBySlug } = await import("@/lib/chapters.functions");
+        await tickChapterBySlug(supabase, userId, "charter");
+      }
+    } catch (e) {
+      console.error("chapter tick (charter) failed", e);
+    }
     return { ok: true };
   });
 
