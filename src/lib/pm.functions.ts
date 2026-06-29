@@ -1195,7 +1195,7 @@ export const updateStakeholder = createServerFn({ method: "POST" })
 
     const { data: row, error } = await supabase
       .from("stakeholder_relationships")
-      .upsert(payload, { onConflict: "user_id,stakeholder_name" })
+      .upsert(payload, { onConflict: "user_id,project_instance_id,stakeholder_name" })
       .select()
       .single();
     if (error) throw error;
