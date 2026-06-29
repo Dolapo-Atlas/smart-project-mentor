@@ -7,6 +7,7 @@ import {
   listInbox,
 } from "@/lib/sim.functions";
 import { getActiveProject } from "@/lib/projects.functions";
+import { listChapters } from "@/lib/chapters.functions";
 import { Button } from "@/components/ui/button";
 import { Sparkles, FileText, ListChecks, Activity, ClipboardCheck } from "lucide-react";
 import { toast } from "sonner";
@@ -27,10 +28,12 @@ function Dashboard() {
   const fetchInbox = useServerFn(listInbox);
   const genMessage = useServerFn(generateStakeholderMessage);
   const fetchActive = useServerFn(getActiveProject);
+  const fetchChapters = useServerFn(listChapters);
 
   const { data: overview } = useQuery({ queryKey: ["overview"], queryFn: () => fetchOverview() });
   const { data: inbox } = useQuery({ queryKey: ["inbox"], queryFn: () => fetchInbox() });
   const { data: active } = useQuery({ queryKey: ["active-project"], queryFn: () => fetchActive() });
+  const { data: chaptersData } = useQuery({ queryKey: ["chapters"], queryFn: () => fetchChapters() });
 
   const summon = useMutation({
     mutationFn: () => genMessage(),
@@ -67,11 +70,23 @@ function Dashboard() {
   const projectTitle = (active as any)?.display_name ?? tpl?.title ?? state?.project_name ?? "Digital Care Records Rollout";
   const projectDesc = tpl?.description ?? "12 care homes · £500,000 budget · 6-month timeline";
 
+  // Single source of truth for chapter — the chapter strip's data, not the
+  // stale free-text label on simulation_state.
+  const activeChapter = chaptersData?.chapters.find((c) => c.status === "active") ?? null;
+  const chapterHeader = activeChapter
+    ? `Chapter ${activeChapter.chapter_number}: ${activeChapter.title}`
+    : chaptersData && chaptersData.completedCount === chaptersData.totalCount && chaptersData.totalCount > 0
+    ? "All chapters complete"
+    : state?.chapter ?? "Chapter One";
+  const chapterStatTitle = activeChapter
+    ? `Ch. ${activeChapter.chapter_number}: ${activeChapter.title}`
+    : chapterHeader.replace(/^Chapter\s+/i, "Ch. ");
+
   return (
     <div className="space-y-10">
       <header>
         <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-          {state?.chapter ?? "Chapter One"} · {projectTitle} · Day {state?.current_day ?? 1} · Week {state?.current_week ?? 1}
+          {chapterHeader} · {projectTitle} · Day {state?.current_day ?? 1} · Week {state?.current_week ?? 1}
         </div>
         <h1 className="mt-2 font-display text-4xl font-medium tracking-tight md:text-5xl">
           {greeting}, {name}.
@@ -94,7 +109,7 @@ function Dashboard() {
           <div className="mt-2 font-display text-3xl font-medium capitalize">{health}</div>
           <div className="mt-1 text-xs opacity-80">Sponsor's current view</div>
         </div>
-        <Stat label="Chapter" value={state?.chapter?.replace(/^Chapter\s+/i, "Ch. ") ?? "—"} hint="Current storyline" icon={Sparkles} />
+        <Stat label="Chapter" value={chapterStatTitle} hint="Current storyline" icon={Sparkles} />
         <Stat label="Open tasks" value={overview?.openTasks ?? 0} hint="Not yet completed" icon={ListChecks} />
         <Stat label="Pending reviews" value={overview?.pendingReviews ?? 0} hint="Awaiting AI panel" icon={ClipboardCheck} />
         <Stat label="Reputation" value={`${state?.reputation ?? 50}/100`} hint="Across stakeholders" icon={Activity} />
