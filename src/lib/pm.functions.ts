@@ -224,6 +224,13 @@ Score 0-100. A good status report has: concrete achievements with evidence, name
       } catch (e) {
         console.error("status report scoring failed", e);
       }
+      // Chapter trigger: submitting a status report closes chapter 10.
+      try {
+        const { tickChapterBySlug } = await import("@/lib/chapters.functions");
+        await tickChapterBySlug(context.supabase, context.userId, "status-report");
+      } catch (e) {
+        console.error("chapter tick (status-report) failed", e);
+      }
     }
     return row;
   });
