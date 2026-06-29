@@ -234,7 +234,9 @@ function Inbox() {
                 </div>
               )}
               {(() => {
-                const role = SENDER_ROLE_MAP[selected.sender_name];
+                const role =
+                  rosterMap[selected.sender_name]?.role ??
+                  LEGACY_SENDER_ROLE_MAP[selected.sender_name];
                 const isSystem = selected.sender_name === "Project Update";
                 if (isSystem) return null;
                 const subject = selected.subject.startsWith("Re:")
