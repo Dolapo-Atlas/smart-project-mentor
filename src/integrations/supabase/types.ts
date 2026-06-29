@@ -14,6 +14,92 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_eval_results: {
+        Row: {
+          case_id: string
+          category: string
+          created_at: string
+          expected: string
+          id: string
+          judge_notes: string | null
+          passed: boolean
+          prompt: string
+          response: string
+          run_id: string
+          score: number
+          user_id: string
+        }
+        Insert: {
+          case_id: string
+          category: string
+          created_at?: string
+          expected: string
+          id?: string
+          judge_notes?: string | null
+          passed: boolean
+          prompt: string
+          response: string
+          run_id: string
+          score: number
+          user_id: string
+        }
+        Update: {
+          case_id?: string
+          category?: string
+          created_at?: string
+          expected?: string
+          id?: string
+          judge_notes?: string | null
+          passed?: boolean
+          prompt?: string
+          response?: string
+          run_id?: string
+          score?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_eval_results_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "ai_eval_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_eval_runs: {
+        Row: {
+          avg_score: number
+          created_at: string
+          id: string
+          notes: string | null
+          passed: number
+          suite: string
+          total: number
+          user_id: string
+        }
+        Insert: {
+          avg_score?: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          passed?: number
+          suite: string
+          total?: number
+          user_id: string
+        }
+        Update: {
+          avg_score?: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          passed?: number
+          suite?: string
+          total?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       ai_feedback: {
         Row: {
           category_scores: Json
