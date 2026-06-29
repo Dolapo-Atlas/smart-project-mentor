@@ -144,6 +144,12 @@ function AppLayout() {
   const isActive = (to: string, exact?: boolean) =>
     exact ? pathname === to : pathname === to || pathname.startsWith(to + "/");
 
+  const phaseKey = normalisePhase(overview?.state?.phase as string | undefined);
+  const phaseLabel = phaseKey.charAt(0).toUpperCase() + phaseKey.slice(1);
+  const NAV: NavItem[] = [...PINNED, ...PHASE_NAV[phaseKey]];
+  const navTos = new Set(NAV.map((n) => n.to));
+  const MORE_LINKS = ALL_OVERFLOW.filter((n) => !navTos.has(n.to));
+
   return (
     <div className="min-h-screen bg-background text-foreground paper-texture">
       <div className="mx-auto grid min-h-screen max-w-[1400px] grid-cols-1 md:grid-cols-[260px_1fr]">
@@ -153,6 +159,11 @@ function AppLayout() {
           </Link>
           <div className="mt-1 text-xs uppercase tracking-[0.18em] text-muted-foreground">
             {overview?.state?.project_name ?? "Loading…"}
+          </div>
+
+          <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/50 px-2.5 py-1 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+            <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+            Phase · {phaseLabel}
           </div>
 
           <div className="mt-3 flex items-center gap-2">
