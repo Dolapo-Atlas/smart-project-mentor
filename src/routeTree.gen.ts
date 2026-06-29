@@ -15,6 +15,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as InviteCodeRouteImport } from './routes/invite.$code'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
+import { Route as CertSlugRouteImport } from './routes/cert.$slug'
 import { Route as AuthenticatedWelcomeRouteImport } from './routes/_authenticated/welcome'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
@@ -27,6 +28,7 @@ import { Route as AuthenticatedAppTasksRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAppStakeholdersRouteImport } from './routes/_authenticated/app.stakeholders'
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
 import { Route as AuthenticatedAppReviewsRouteImport } from './routes/_authenticated/app.reviews'
+import { Route as AuthenticatedAppResultsRouteImport } from './routes/_authenticated/app.results'
 import { Route as AuthenticatedAppReportsRouteImport } from './routes/_authenticated/app.reports'
 import { Route as AuthenticatedAppRaidRouteImport } from './routes/_authenticated/app.raid'
 import { Route as AuthenticatedAppProjectsRouteImport } from './routes/_authenticated/app.projects'
@@ -73,6 +75,11 @@ const InviteCodeRoute = InviteCodeRouteImport.update({
 const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   id: '/email/unsubscribe',
   path: '/email/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CertSlugRoute = CertSlugRouteImport.update({
+  id: '/cert/$slug',
+  path: '/cert/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedWelcomeRoute = AuthenticatedWelcomeRouteImport.update({
@@ -136,6 +143,11 @@ const AuthenticatedAppSettingsRoute =
 const AuthenticatedAppReviewsRoute = AuthenticatedAppReviewsRouteImport.update({
   id: '/reviews',
   path: '/reviews',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppResultsRoute = AuthenticatedAppResultsRouteImport.update({
+  id: '/results',
+  path: '/results',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
 const AuthenticatedAppReportsRoute = AuthenticatedAppReportsRouteImport.update({
@@ -246,6 +258,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/welcome': typeof AuthenticatedWelcomeRoute
+  '/cert/$slug': typeof CertSlugRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/invite/$code': typeof InviteCodeRoute
   '/admin/signups': typeof AuthenticatedAdminSignupsRoute
@@ -263,6 +276,7 @@ export interface FileRoutesByFullPath {
   '/app/projects': typeof AuthenticatedAppProjectsRoute
   '/app/raid': typeof AuthenticatedAppRaidRoute
   '/app/reports': typeof AuthenticatedAppReportsRoute
+  '/app/results': typeof AuthenticatedAppResultsRoute
   '/app/reviews': typeof AuthenticatedAppReviewsRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/stakeholders': typeof AuthenticatedAppStakeholdersRoute
@@ -282,6 +296,7 @@ export interface FileRoutesByTo {
   '/unsubscribe': typeof UnsubscribeRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/welcome': typeof AuthenticatedWelcomeRoute
+  '/cert/$slug': typeof CertSlugRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/invite/$code': typeof InviteCodeRoute
   '/admin/signups': typeof AuthenticatedAdminSignupsRoute
@@ -299,6 +314,7 @@ export interface FileRoutesByTo {
   '/app/projects': typeof AuthenticatedAppProjectsRoute
   '/app/raid': typeof AuthenticatedAppRaidRoute
   '/app/reports': typeof AuthenticatedAppReportsRoute
+  '/app/results': typeof AuthenticatedAppResultsRoute
   '/app/reviews': typeof AuthenticatedAppReviewsRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/stakeholders': typeof AuthenticatedAppStakeholdersRoute
@@ -321,6 +337,7 @@ export interface FileRoutesById {
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/welcome': typeof AuthenticatedWelcomeRoute
+  '/cert/$slug': typeof CertSlugRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/invite/$code': typeof InviteCodeRoute
   '/_authenticated/admin/signups': typeof AuthenticatedAdminSignupsRoute
@@ -338,6 +355,7 @@ export interface FileRoutesById {
   '/_authenticated/app/projects': typeof AuthenticatedAppProjectsRoute
   '/_authenticated/app/raid': typeof AuthenticatedAppRaidRoute
   '/_authenticated/app/reports': typeof AuthenticatedAppReportsRoute
+  '/_authenticated/app/results': typeof AuthenticatedAppResultsRoute
   '/_authenticated/app/reviews': typeof AuthenticatedAppReviewsRoute
   '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
   '/_authenticated/app/stakeholders': typeof AuthenticatedAppStakeholdersRoute
@@ -360,6 +378,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/onboarding'
     | '/welcome'
+    | '/cert/$slug'
     | '/email/unsubscribe'
     | '/invite/$code'
     | '/admin/signups'
@@ -377,6 +396,7 @@ export interface FileRouteTypes {
     | '/app/projects'
     | '/app/raid'
     | '/app/reports'
+    | '/app/results'
     | '/app/reviews'
     | '/app/settings'
     | '/app/stakeholders'
@@ -396,6 +416,7 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/onboarding'
     | '/welcome'
+    | '/cert/$slug'
     | '/email/unsubscribe'
     | '/invite/$code'
     | '/admin/signups'
@@ -413,6 +434,7 @@ export interface FileRouteTypes {
     | '/app/projects'
     | '/app/raid'
     | '/app/reports'
+    | '/app/results'
     | '/app/reviews'
     | '/app/settings'
     | '/app/stakeholders'
@@ -434,6 +456,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app'
     | '/_authenticated/onboarding'
     | '/_authenticated/welcome'
+    | '/cert/$slug'
     | '/email/unsubscribe'
     | '/invite/$code'
     | '/_authenticated/admin/signups'
@@ -451,6 +474,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/projects'
     | '/_authenticated/app/raid'
     | '/_authenticated/app/reports'
+    | '/_authenticated/app/results'
     | '/_authenticated/app/reviews'
     | '/_authenticated/app/settings'
     | '/_authenticated/app/stakeholders'
@@ -470,6 +494,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
+  CertSlugRoute: typeof CertSlugRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   InviteCodeRoute: typeof InviteCodeRoute
   ApiPublicEarlyAccessRoute: typeof ApiPublicEarlyAccessRoute
@@ -522,6 +547,13 @@ declare module '@tanstack/react-router' {
       path: '/email/unsubscribe'
       fullPath: '/email/unsubscribe'
       preLoaderRoute: typeof EmailUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cert/$slug': {
+      id: '/cert/$slug'
+      path: '/cert/$slug'
+      fullPath: '/cert/$slug'
+      preLoaderRoute: typeof CertSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/welcome': {
@@ -606,6 +638,13 @@ declare module '@tanstack/react-router' {
       path: '/reviews'
       fullPath: '/app/reviews'
       preLoaderRoute: typeof AuthenticatedAppReviewsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/results': {
+      id: '/_authenticated/app/results'
+      path: '/results'
+      fullPath: '/app/results'
+      preLoaderRoute: typeof AuthenticatedAppResultsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/reports': {
@@ -752,6 +791,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppProjectsRoute: typeof AuthenticatedAppProjectsRoute
   AuthenticatedAppRaidRoute: typeof AuthenticatedAppRaidRoute
   AuthenticatedAppReportsRoute: typeof AuthenticatedAppReportsRoute
+  AuthenticatedAppResultsRoute: typeof AuthenticatedAppResultsRoute
   AuthenticatedAppReviewsRoute: typeof AuthenticatedAppReviewsRoute
   AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
   AuthenticatedAppStakeholdersRoute: typeof AuthenticatedAppStakeholdersRoute
@@ -774,6 +814,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppProjectsRoute: AuthenticatedAppProjectsRoute,
   AuthenticatedAppRaidRoute: AuthenticatedAppRaidRoute,
   AuthenticatedAppReportsRoute: AuthenticatedAppReportsRoute,
+  AuthenticatedAppResultsRoute: AuthenticatedAppResultsRoute,
   AuthenticatedAppReviewsRoute: AuthenticatedAppReviewsRoute,
   AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
   AuthenticatedAppStakeholdersRoute: AuthenticatedAppStakeholdersRoute,
@@ -809,6 +850,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   UnsubscribeRoute: UnsubscribeRoute,
+  CertSlugRoute: CertSlugRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   InviteCodeRoute: InviteCodeRoute,
   ApiPublicEarlyAccessRoute: ApiPublicEarlyAccessRoute,
