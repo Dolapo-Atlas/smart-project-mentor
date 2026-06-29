@@ -11,7 +11,6 @@ import { toast } from "sonner";
 import { GuidedTour } from "@/components/guided-tour";
 import { LearningDrawer } from "@/components/learning-drawer";
 import { NotificationsBell } from "@/components/notifications-bell";
-import { Coffee } from "lucide-react";
 import { MarketingExport } from "@/components/marketing-export";
 
 export const Route = createFileRoute("/_authenticated/app")({
@@ -70,22 +69,6 @@ function AppLayout() {
     !!activeAny?.intro_seen_at &&
     !activeAny?.tour_completed_at &&
     !tourDismissed;
-
-  // One-time "Grab a coffee" intermission per project instance.
-  const [showCoffee, setShowCoffee] = useState(false);
-  useEffect(() => {
-    if (!activeAny?.id || !activeAny?.intro_seen_at) return;
-    if (typeof window === "undefined") return;
-    const key = `atlas-coffee-seen-${activeAny.id}`;
-    if (!window.localStorage.getItem(key)) setShowCoffee(true);
-  }, [activeAny?.id, activeAny?.intro_seen_at]);
-  function dismissCoffee() {
-    if (activeAny?.id) {
-      window.localStorage.setItem(`atlas-coffee-seen-${activeAny.id}`, "1");
-    }
-    setShowCoffee(false);
-    navigate({ to: "/app/inbox" });
-  }
 
 
   async function signOut() {
@@ -199,7 +182,7 @@ function AppLayout() {
           <Outlet />
         </main>
       </div>
-      {showTour && !showCoffee && (
+      {showTour && (
         <GuidedTour
           instanceId={activeAny.id}
           onDone={() => setTourDismissed(true)}
@@ -207,36 +190,6 @@ function AppLayout() {
       )}
       {active && <LearningDrawer />}
       {active && <MarketingExport />}
-      {showCoffee && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-background/95 backdrop-blur-sm animate-in fade-in duration-500">
-          <div className="w-full max-w-lg px-8 text-center">
-            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-border bg-card">
-              <Coffee className="h-9 w-9 text-primary animate-pulse" />
-            </div>
-            <div className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
-              Before you begin
-            </div>
-            <h2 className="mt-3 font-display text-3xl font-medium tracking-tight md:text-4xl">
-              Grab a coffee ☕
-            </h2>
-            <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-              Take a breath. Your first day at{" "}
-              <span className="text-foreground">
-                {activeAny?.display_name ?? activeAny?.project_templates?.title ?? "your project"}
-              </span>{" "}
-              is about to start. Emma's welcome note and your first objectives are waiting in the inbox.
-            </p>
-            <div className="mt-8 flex justify-center">
-              <Button size="lg" onClick={dismissCoffee}>
-                I'm ready — let's go
-              </Button>
-            </div>
-            <div className="mt-4 text-xs text-muted-foreground">
-              Tip: This sim runs at your pace. Nothing happens until you act.
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
