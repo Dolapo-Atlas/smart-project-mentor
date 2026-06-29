@@ -35,6 +35,7 @@ const NAV: NavItem[] = [
   { to: "/app/reports", label: "Reports", icon: FileBarChart2 },
 ];
 const MORE_LINKS: { to: string; label: string }[] = [
+  { to: "/app/results", label: "Final review & certificate" },
   { to: "/app/meetings", label: "Meetings" },
   { to: "/app/comms", label: "Comms" },
   { to: "/app/documents", label: "Documents" },
