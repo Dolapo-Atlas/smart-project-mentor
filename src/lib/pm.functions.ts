@@ -297,6 +297,13 @@ export const addBudgetLine = createServerFn({ method: "POST" })
       .select()
       .single();
     if (error) throw error;
+    // Chapter trigger: first budget line closes the budget-lock chapter.
+    try {
+      const { tickChapterBySlug } = await import("@/lib/chapters.functions");
+      await tickChapterBySlug(context.supabase, context.userId, "budget-lock");
+    } catch (e) {
+      console.error("chapter tick (budget-lock) failed", e);
+    }
     return row;
   });
 
