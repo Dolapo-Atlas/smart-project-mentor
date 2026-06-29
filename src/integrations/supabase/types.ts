@@ -763,6 +763,65 @@ export type Database = {
           },
         ]
       }
+      project_outcomes: {
+        Row: {
+          breakdown: Json
+          completed_at: string
+          created_at: string
+          grade: string
+          highlights: Json
+          id: string
+          project_instance_id: string
+          score: number
+          share_slug: string
+          template_title: string
+          updated_at: string
+          user_display_name: string | null
+          user_id: string
+          user_role: string | null
+        }
+        Insert: {
+          breakdown?: Json
+          completed_at?: string
+          created_at?: string
+          grade?: string
+          highlights?: Json
+          id?: string
+          project_instance_id: string
+          score?: number
+          share_slug?: string
+          template_title: string
+          updated_at?: string
+          user_display_name?: string | null
+          user_id: string
+          user_role?: string | null
+        }
+        Update: {
+          breakdown?: Json
+          completed_at?: string
+          created_at?: string
+          grade?: string
+          highlights?: Json
+          id?: string
+          project_instance_id?: string
+          score?: number
+          share_slug?: string
+          template_title?: string
+          updated_at?: string
+          user_display_name?: string | null
+          user_id?: string
+          user_role?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_outcomes_project_instance_id_fkey"
+            columns: ["project_instance_id"]
+            isOneToOne: false
+            referencedRelation: "project_instances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_templates: {
         Row: {
           category: string
