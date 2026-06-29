@@ -27,6 +27,7 @@ import { Route as AuthenticatedAppTasksRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAppStakeholdersRouteImport } from './routes/_authenticated/app.stakeholders'
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
 import { Route as AuthenticatedAppReviewsRouteImport } from './routes/_authenticated/app.reviews'
+import { Route as AuthenticatedAppResultsRouteImport } from './routes/_authenticated/app.results'
 import { Route as AuthenticatedAppReportsRouteImport } from './routes/_authenticated/app.reports'
 import { Route as AuthenticatedAppRaidRouteImport } from './routes/_authenticated/app.raid'
 import { Route as AuthenticatedAppProjectsRouteImport } from './routes/_authenticated/app.projects'
@@ -136,6 +137,11 @@ const AuthenticatedAppSettingsRoute =
 const AuthenticatedAppReviewsRoute = AuthenticatedAppReviewsRouteImport.update({
   id: '/reviews',
   path: '/reviews',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppResultsRoute = AuthenticatedAppResultsRouteImport.update({
+  id: '/results',
+  path: '/results',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
 const AuthenticatedAppReportsRoute = AuthenticatedAppReportsRouteImport.update({
@@ -263,6 +269,7 @@ export interface FileRoutesByFullPath {
   '/app/projects': typeof AuthenticatedAppProjectsRoute
   '/app/raid': typeof AuthenticatedAppRaidRoute
   '/app/reports': typeof AuthenticatedAppReportsRoute
+  '/app/results': typeof AuthenticatedAppResultsRoute
   '/app/reviews': typeof AuthenticatedAppReviewsRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/stakeholders': typeof AuthenticatedAppStakeholdersRoute
@@ -299,6 +306,7 @@ export interface FileRoutesByTo {
   '/app/projects': typeof AuthenticatedAppProjectsRoute
   '/app/raid': typeof AuthenticatedAppRaidRoute
   '/app/reports': typeof AuthenticatedAppReportsRoute
+  '/app/results': typeof AuthenticatedAppResultsRoute
   '/app/reviews': typeof AuthenticatedAppReviewsRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/stakeholders': typeof AuthenticatedAppStakeholdersRoute
@@ -338,6 +346,7 @@ export interface FileRoutesById {
   '/_authenticated/app/projects': typeof AuthenticatedAppProjectsRoute
   '/_authenticated/app/raid': typeof AuthenticatedAppRaidRoute
   '/_authenticated/app/reports': typeof AuthenticatedAppReportsRoute
+  '/_authenticated/app/results': typeof AuthenticatedAppResultsRoute
   '/_authenticated/app/reviews': typeof AuthenticatedAppReviewsRoute
   '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
   '/_authenticated/app/stakeholders': typeof AuthenticatedAppStakeholdersRoute
@@ -377,6 +386,7 @@ export interface FileRouteTypes {
     | '/app/projects'
     | '/app/raid'
     | '/app/reports'
+    | '/app/results'
     | '/app/reviews'
     | '/app/settings'
     | '/app/stakeholders'
@@ -413,6 +423,7 @@ export interface FileRouteTypes {
     | '/app/projects'
     | '/app/raid'
     | '/app/reports'
+    | '/app/results'
     | '/app/reviews'
     | '/app/settings'
     | '/app/stakeholders'
@@ -451,6 +462,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/projects'
     | '/_authenticated/app/raid'
     | '/_authenticated/app/reports'
+    | '/_authenticated/app/results'
     | '/_authenticated/app/reviews'
     | '/_authenticated/app/settings'
     | '/_authenticated/app/stakeholders'
@@ -608,6 +620,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppReviewsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/results': {
+      id: '/_authenticated/app/results'
+      path: '/results'
+      fullPath: '/app/results'
+      preLoaderRoute: typeof AuthenticatedAppResultsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/reports': {
       id: '/_authenticated/app/reports'
       path: '/reports'
@@ -752,6 +771,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppProjectsRoute: typeof AuthenticatedAppProjectsRoute
   AuthenticatedAppRaidRoute: typeof AuthenticatedAppRaidRoute
   AuthenticatedAppReportsRoute: typeof AuthenticatedAppReportsRoute
+  AuthenticatedAppResultsRoute: typeof AuthenticatedAppResultsRoute
   AuthenticatedAppReviewsRoute: typeof AuthenticatedAppReviewsRoute
   AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
   AuthenticatedAppStakeholdersRoute: typeof AuthenticatedAppStakeholdersRoute
@@ -774,6 +794,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppProjectsRoute: AuthenticatedAppProjectsRoute,
   AuthenticatedAppRaidRoute: AuthenticatedAppRaidRoute,
   AuthenticatedAppReportsRoute: AuthenticatedAppReportsRoute,
+  AuthenticatedAppResultsRoute: AuthenticatedAppResultsRoute,
   AuthenticatedAppReviewsRoute: AuthenticatedAppReviewsRoute,
   AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
   AuthenticatedAppStakeholdersRoute: AuthenticatedAppStakeholdersRoute,
