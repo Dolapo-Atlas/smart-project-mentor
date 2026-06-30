@@ -1,4 +1,30 @@
 import { cn } from "@/lib/utils";
+import photoSarah from "@/assets/roster/dcr-pm-sarah.jpg";
+import photoDavid from "@/assets/roster/dcr-sponsor-david.jpg";
+import photoPriya from "@/assets/roster/dcr-finance-priya.jpg";
+import photoJames from "@/assets/roster/dcr-tech-james.jpg";
+import photoMargaret from "@/assets/roster/dcr-ops-margaret.jpg";
+import photoRachel from "@/assets/roster/dcr-clin-rachel.jpg";
+import photoCaresoft from "@/assets/roster/dcr-vendor-caresoft.jpg";
+
+// Photoreal portraits keyed by stable roster seed AND display name so the
+// right face shows up whether callers pass `seed` or just `name`.
+const PHOTOS: Record<string, string> = {
+  "dcr-pm-sarah-williams": photoSarah,
+  "dcr-sponsor-david-okafor": photoDavid,
+  "dcr-finance-priya-anand": photoPriya,
+  "dcr-tech-james-lin": photoJames,
+  "dcr-ops-margaret-hollis": photoMargaret,
+  "dcr-clin-rachel-stone": photoRachel,
+  "dcr-vendor-caresoft": photoCaresoft,
+  "Sarah Williams": photoSarah,
+  "David Okafor": photoDavid,
+  "Priya Anand": photoPriya,
+  "James Lin": photoJames,
+  "Margaret Hollis": photoMargaret,
+  "Rachel Stone": photoRachel,
+  "CareSoft Ltd": photoCaresoft,
+};
 
 type StakeholderMeta = {
   seed: string;
@@ -88,11 +114,15 @@ export function StakeholderAvatar({
     finance: "ring-slate-400",
   };
   const ring = role && ringByRole[role] ? ringByRole[role] : m.ring;
-  // Notionists: clean, professional Notion/Linear-style illustrated avatars.
-  // Muted neutral background palette so the role ring carries the colour signal.
-  const url = `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(
-    seed,
-  )}&radius=50&backgroundColor=eef2f7,e5e7eb,f1f5f9,e2e8f0,f3f4f6&backgroundType=solid`;
+  // Prefer photoreal portrait when we have one for this seed/name; otherwise
+  // fall back to the Notionists illustrated avatar so unknown personas still
+  // get a stable face.
+  const photo = PHOTOS[seed] ?? PHOTOS[name];
+  const url =
+    photo ??
+    `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(
+      seed,
+    )}&radius=50&backgroundColor=eef2f7,e5e7eb,f1f5f9,e2e8f0,f3f4f6&backgroundType=solid`;
   return (
     <span
       className={cn(
