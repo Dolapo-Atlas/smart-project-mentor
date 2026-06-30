@@ -1511,16 +1511,26 @@ function EarlyAccess() {
                   <form onSubmit={onSubmit} className="space-y-4 rounded-2xl border border-border bg-background/70 p-6 backdrop-blur sm:p-7">
                     <div className="grid gap-4 sm:grid-cols-2">
                       <Field label="Name">
-                        <Input value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="Alex Morgan" maxLength={100} required />
+                        <Input value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="Your full name" maxLength={100} required className="placeholder:text-muted-foreground/50" />
                       </Field>
                       <Field label="Email">
-                        <Input type="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="alex@example.com" maxLength={255} required />
+                        <Input type="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="you@email.com" maxLength={255} required className="placeholder:text-muted-foreground/50" />
                       </Field>
                       <Field label="Target role">
-                        <Input value={form.role} onChange={(e) => update("role", e.target.value)} placeholder="Project Coordinator" maxLength={100} required />
+                        <Input value={form.role} onChange={(e) => update("role", e.target.value)} placeholder="e.g. Project Coordinator" maxLength={100} required className="placeholder:text-muted-foreground/50" />
                       </Field>
                       <Field label="Country">
-                        <Input value={form.country} onChange={(e) => update("country", e.target.value)} placeholder="United Kingdom" maxLength={80} required />
+                        <select
+                          value={form.country}
+                          onChange={(e) => update("country", e.target.value)}
+                          required
+                          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        >
+                          <option value="" disabled>Select your country…</option>
+                          {COUNTRIES.map((c) => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                        </select>
                       </Field>
                       <Field label="Current experience level" className="sm:col-span-2">
                         <select
