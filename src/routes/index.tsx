@@ -1342,6 +1342,29 @@ const EXPERIENCE_LEVELS = [
   "5+ years",
 ];
 
+const COUNTRIES = [
+  "Afghanistan","Albania","Algeria","Andorra","Angola","Antigua and Barbuda","Argentina","Armenia","Australia","Austria",
+  "Azerbaijan","Bahamas","Bahrain","Bangladesh","Barbados","Belarus","Belgium","Belize","Benin","Bhutan",
+  "Bolivia","Bosnia and Herzegovina","Botswana","Brazil","Brunei","Bulgaria","Burkina Faso","Burundi","Cabo Verde","Cambodia",
+  "Cameroon","Canada","Central African Republic","Chad","Chile","China","Colombia","Comoros","Congo","Costa Rica",
+  "Croatia","Cuba","Cyprus","Czech Republic","Denmark","Djibouti","Dominica","Dominican Republic","Ecuador","Egypt",
+  "El Salvador","Equatorial Guinea","Eritrea","Estonia","Eswatini","Ethiopia","Fiji","Finland","France","Gabon",
+  "Gambia","Georgia","Germany","Ghana","Greece","Grenada","Guatemala","Guinea","Guinea-Bissau","Guyana",
+  "Haiti","Honduras","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland","Israel",
+  "Italy","Jamaica","Japan","Jordan","Kazakhstan","Kenya","Kiribati","Kuwait","Kyrgyzstan","Laos",
+  "Latvia","Lebanon","Lesotho","Liberia","Libya","Liechtenstein","Lithuania","Luxembourg","Madagascar","Malawi",
+  "Malaysia","Maldives","Mali","Malta","Marshall Islands","Mauritania","Mauritius","Mexico","Micronesia","Moldova",
+  "Monaco","Mongolia","Montenegro","Morocco","Mozambique","Myanmar","Namibia","Nauru","Nepal","Netherlands",
+  "New Zealand","Nicaragua","Niger","Nigeria","North Korea","North Macedonia","Norway","Oman","Pakistan","Palau",
+  "Palestine","Panama","Papua New Guinea","Paraguay","Peru","Philippines","Poland","Portugal","Qatar","Romania",
+  "Russia","Rwanda","Saint Kitts and Nevis","Saint Lucia","Saint Vincent and the Grenadines","Samoa","San Marino",
+  "Sao Tome and Principe","Saudi Arabia","Senegal","Serbia","Seychelles","Sierra Leone","Singapore","Slovakia","Slovenia",
+  "Solomon Islands","Somalia","South Africa","South Korea","South Sudan","Spain","Sri Lanka","Sudan","Suriname","Sweden",
+  "Switzerland","Syria","Taiwan","Tajikistan","Tanzania","Thailand","Timor-Leste","Togo","Tonga","Trinidad and Tobago",
+  "Tunisia","Turkey","Turkmenistan","Tuvalu","Uganda","Ukraine","United Arab Emirates","United Kingdom","United States","Uruguay",
+  "Uzbekistan","Vanuatu","Vatican City","Venezuela","Vietnam","Yemen","Zambia","Zimbabwe",
+];
+
 function EarlyAccess() {
   const [form, setForm] = useState({ name: "", email: "", role: "", country: "", level: "" });
   const [submitting, setSubmitting] = useState(false);
@@ -1511,16 +1534,26 @@ function EarlyAccess() {
                   <form onSubmit={onSubmit} className="space-y-4 rounded-2xl border border-border bg-background/70 p-6 backdrop-blur sm:p-7">
                     <div className="grid gap-4 sm:grid-cols-2">
                       <Field label="Name">
-                        <Input value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="Alex Morgan" maxLength={100} required />
+                        <Input value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="Your full name" maxLength={100} required className="placeholder:text-muted-foreground/50" />
                       </Field>
                       <Field label="Email">
-                        <Input type="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="alex@example.com" maxLength={255} required />
+                        <Input type="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="you@email.com" maxLength={255} required className="placeholder:text-muted-foreground/50" />
                       </Field>
                       <Field label="Target role">
-                        <Input value={form.role} onChange={(e) => update("role", e.target.value)} placeholder="Project Coordinator" maxLength={100} required />
+                        <Input value={form.role} onChange={(e) => update("role", e.target.value)} placeholder="e.g. Project Coordinator" maxLength={100} required className="placeholder:text-muted-foreground/50" />
                       </Field>
                       <Field label="Country">
-                        <Input value={form.country} onChange={(e) => update("country", e.target.value)} placeholder="United Kingdom" maxLength={80} required />
+                        <select
+                          value={form.country}
+                          onChange={(e) => update("country", e.target.value)}
+                          required
+                          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        >
+                          <option value="" disabled>Select your country…</option>
+                          {COUNTRIES.map((c) => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                        </select>
                       </Field>
                       <Field label="Current experience level" className="sm:col-span-2">
                         <select
