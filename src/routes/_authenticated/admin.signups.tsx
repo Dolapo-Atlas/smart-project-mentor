@@ -2,8 +2,10 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
+import { approveSignup, listAllowlist } from "@/lib/admin.functions";
 
 const ADMIN_EMAILS = [
   "rasaqdolapo@gmail.com",
@@ -35,6 +37,10 @@ export const Route = createFileRoute("/_authenticated/admin/signups")({
 function SignupsAdmin() {
   const [rows, setRows] = useState<Signup[]>([]);
   const [loading, setLoading] = useState(true);
+  const [allowed, setAllowed] = useState<Set<string>>(new Set());
+  const [approving, setApproving] = useState<string | null>(null);
+  const approve = useServerFn(approveSignup);
+  const fetchAllow = useServerFn(listAllowlist);
 
   useEffect(() => {
     supabase
@@ -46,7 +52,23 @@ function SignupsAdmin() {
         else setRows((data ?? []) as Signup[]);
         setLoading(false);
       });
-  }, []);
+    fetchAllow()
+      .then((emails) => setAllowed(new Set(emails)))
+      .catch(() => {});
+  }, [fetchAllow]);
+
+  async function handleApprove(email: string) {
+    setApproving(email);
+    try {
+      await approve({ data: { email } });
+      setAllowed((prev) => new Set(prev).add(email.toLowerCase()));
+      toast.success(`${email} can now sign in`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to approve");
+    } finally {
+      setApproving(null);
+    }
+  }
 
   function downloadCsv() {
     const headers = ["created_at", "name", "email", "desired_role", "country", "experience_level"];
@@ -91,6 +113,7 @@ function SignupsAdmin() {
               <th className="px-4 py-3">Role</th>
               <th className="px-4 py-3">Country</th>
               <th className="px-4 py-3">Experience</th>
+              <th className="px-4 py-3">Access</th>
             </tr>
           </thead>
           <tbody>
@@ -108,11 +131,31 @@ function SignupsAdmin() {
                 <td className="px-4 py-3">{r.desired_role}</td>
                 <td className="px-4 py-3 text-muted-foreground">{r.country ?? "—"}</td>
                 <td className="px-4 py-3 text-muted-foreground">{r.experience_level ?? "—"}</td>
+                <td className="px-4 py-3">
+                  {allowed.has(r.email.toLowerCase()) ? (
+                    <span className="inline-flex items-center gap-1 text-xs text-emerald-600">
+                      <Check className="h-3.5 w-3.5" /> Approved
+                    </span>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={approving === r.email}
+                      onClick={() => handleApprove(r.email)}
+                    >
+                      {approving === r.email ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        "Approve"
+                      )}
+                    </Button>
+                  )}
+                </td>
               </tr>
             ))}
             {!loading && !rows.length && (
               <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">
+                <td colSpan={7} className="px-4 py-10 text-center text-muted-foreground">
                   No signups yet.
                 </td>
               </tr>
