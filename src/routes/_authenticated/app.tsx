@@ -250,6 +250,21 @@ function AppLayout() {
                     <Link to={m.to}>{m.label}</Link>
                   </DropdownMenuItem>
                 ))}
+                {isAdmin && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel className="text-xs uppercase tracking-wider text-muted-foreground">
+                      Admin
+                    </DropdownMenuLabel>
+                    {ADMIN_LINKS.map((m) => (
+                      <DropdownMenuItem key={m.to} asChild>
+                        <Link to={m.to}>
+                          <m.icon className="mr-2 h-3.5 w-3.5" /> {m.label}
+                        </Link>
+                      </DropdownMenuItem>
+                    ))}
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </nav>
