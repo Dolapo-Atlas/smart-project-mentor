@@ -125,7 +125,7 @@ export const generateMarketing = createServerFn({ method: "POST" })
         brief,
         channel: data.channel ?? null,
         audience: data.audience ?? null,
-        content: object,
+        content: object as any,
       })
       .select("*")
       .single();
