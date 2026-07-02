@@ -309,7 +309,7 @@ export const generateIdeas = createServerFn({ method: "POST" })
         data.theme ? ` on the theme: ${data.theme}` : ""
       }. Do NOT repeat these already-shipped titles:\n${already || "(none yet)"}\n\nEach idea: a specific title, the best platform, the asset type, a one-line hook, and why it works.`,
     });
-    return object;
+    return object as z.infer<typeof IdeasSchema>;
   });
 
 const SwipeAnalysisSchema = z.object({
