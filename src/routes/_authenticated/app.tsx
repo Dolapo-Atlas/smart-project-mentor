@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
-import { Mail, ListChecks, LayoutDashboard, LogOut, ArrowLeft, ShieldAlert, FileBarChart2, Contact, FolderKanban, MoreHorizontal, FileText, Users, Wallet, Activity, Gauge, Gavel, Award, Send, GitPullRequest, CheckCircle2, Compass, Settings, Shield, UserCheck } from "lucide-react";
+import { Mail, ListChecks, LayoutDashboard, LogOut, ArrowLeft, ShieldAlert, FileBarChart2, Contact, FolderKanban, MoreHorizontal, FileText, Users, Wallet, Activity, Gauge, Gavel, Award, Send, GitPullRequest, CheckCircle2, Compass, Settings, Shield, UserCheck, Megaphone } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -30,6 +30,7 @@ const ADMIN_EMAILS = ["rasaqdolapo@gmail.com", "fuhad.dolapo@gmail.com"];
 const ADMIN_LINKS: NavItem[] = [
   { to: "/admin/signups", label: "Early access signups", icon: UserCheck },
   { to: "/admin/evals", label: "AI evals", icon: Shield },
+  { to: "/admin/marketing", label: "Marketing agent", icon: Megaphone },
 ];
 
 type NavItem = {
