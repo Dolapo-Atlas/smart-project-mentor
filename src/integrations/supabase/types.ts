@@ -610,36 +610,57 @@ export type Database = {
       }
       marketing_assets: {
         Row: {
+          asset_type: string | null
           audience: string | null
           brief: string
+          campaign: string | null
           channel: string | null
           content: Json
           created_at: string
           id: string
           kind: string
+          platform: string | null
+          prompt: string | null
+          tags: string[] | null
           title: string
+          tone: string | null
+          updated_at: string
           user_id: string
         }
         Insert: {
+          asset_type?: string | null
           audience?: string | null
           brief: string
+          campaign?: string | null
           channel?: string | null
           content?: Json
           created_at?: string
           id?: string
           kind: string
+          platform?: string | null
+          prompt?: string | null
+          tags?: string[] | null
           title: string
+          tone?: string | null
+          updated_at?: string
           user_id: string
         }
         Update: {
+          asset_type?: string | null
           audience?: string | null
           brief?: string
+          campaign?: string | null
           channel?: string | null
           content?: Json
           created_at?: string
           id?: string
           kind?: string
+          platform?: string | null
+          prompt?: string | null
+          tags?: string[] | null
           title?: string
+          tone?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -1457,6 +1478,42 @@ export type Database = {
           id?: string
           metadata?: Json | null
           reason?: string
+        }
+        Relationships: []
+      }
+      swipe_files: {
+        Row: {
+          analysis: Json | null
+          created_at: string
+          id: string
+          image_url: string | null
+          notes: string | null
+          source: string | null
+          tags: string[] | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          analysis?: Json | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          notes?: string | null
+          source?: string | null
+          tags?: string[] | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          analysis?: Json | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          notes?: string | null
+          source?: string | null
+          tags?: string[] | null
+          title?: string
+          user_id?: string
         }
         Relationships: []
       }
