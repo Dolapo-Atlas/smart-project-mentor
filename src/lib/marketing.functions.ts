@@ -327,7 +327,8 @@ export const analyseSwipe = createServerFn({ method: "POST" })
   .inputValidator((input: { title: string; source?: string; notes?: string; imageUrl?: string }) => input)
   .handler(async ({ data, context }) => {
     if (!isAdmin(context.claims)) throw new Response("Forbidden", { status: 403 });
-    const { supabase, userId } = context;
+    const supabase = context.supabase as any;
+    const { userId } = context;
     const { object } = await generateObject({
       model: model(),
       schema: SwipeAnalysisSchema as any,
@@ -349,10 +350,11 @@ export const listSwipes = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     if (!isAdmin(context.claims)) throw new Response("Forbidden", { status: 403 });
-    const { supabase, userId } = context;
+    const supabase = context.supabase as any;
+    const { userId } = context;
     const { data, error } = await supabase.from("swipe_files").select("*").eq("user_id", userId).order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
-    return data ?? [];
+    return (data ?? []) as any[];
   });
 
 export const deleteSwipe = createServerFn({ method: "POST" })
@@ -360,7 +362,8 @@ export const deleteSwipe = createServerFn({ method: "POST" })
   .inputValidator((input: { id: string }) => input)
   .handler(async ({ data, context }) => {
     if (!isAdmin(context.claims)) throw new Response("Forbidden", { status: 403 });
-    const { supabase, userId } = context;
+    const supabase = context.supabase as any;
+    const { userId } = context;
     const { error } = await supabase.from("swipe_files").delete().eq("id", data.id).eq("user_id", userId);
     if (error) throw new Error(error.message);
     return { ok: true };
