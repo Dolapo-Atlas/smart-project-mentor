@@ -608,6 +608,42 @@ export type Database = {
           },
         ]
       }
+      marketing_assets: {
+        Row: {
+          audience: string | null
+          brief: string
+          channel: string | null
+          content: Json
+          created_at: string
+          id: string
+          kind: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          audience?: string | null
+          brief: string
+          channel?: string | null
+          content?: Json
+          created_at?: string
+          id?: string
+          kind: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          audience?: string | null
+          brief?: string
+          channel?: string | null
+          content?: Json
+          created_at?: string
+          id?: string
+          kind?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       meetings: {
         Row: {
           agenda: string | null
