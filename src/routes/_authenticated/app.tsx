@@ -115,7 +115,6 @@ function normalisePhase(p?: string | null): keyof typeof PHASE_NAV {
 }
 
 function AppLayout() {
-  console.log("[AppLayout] render");
   const navigate = useNavigate();
   const router = useRouter();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -127,7 +126,6 @@ function AppLayout() {
   // the fold. Auto-scroll the main region into view so tapping a tile feels
   // like a real navigation instead of a silent tab toggle.
   useEffect(() => {
-    console.log("[nav-scroll] effect", { pathname, isMobile, first: isFirstRender.current });
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
@@ -142,7 +140,6 @@ function AppLayout() {
       if (!el) return;
       const top = el.getBoundingClientRect().top + window.scrollY - 8;
       window.scrollTo({ top, behavior: "smooth" });
-      document.body.setAttribute("data-nav-scrolled", String(top));
     };
     const t1 = window.setTimeout(doScroll, 50);
     const t2 = window.setTimeout(doScroll, 400);
