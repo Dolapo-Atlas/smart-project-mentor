@@ -1688,6 +1688,48 @@ export type Database = {
           },
         ]
       }
+      workplace_skills: {
+        Row: {
+          created_at: string
+          first_earned_at: string
+          id: string
+          label: string
+          last_practised_at: string
+          skill_key: string
+          source: string | null
+          times_practised: number
+          tool_family: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          first_earned_at?: string
+          id?: string
+          label: string
+          last_practised_at?: string
+          skill_key: string
+          source?: string | null
+          times_practised?: number
+          tool_family: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          first_earned_at?: string
+          id?: string
+          label?: string
+          last_practised_at?: string
+          skill_key?: string
+          source?: string | null
+          times_practised?: number
+          tool_family?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       workstream_rag: {
         Row: {
           area: Database["public"]["Enums"]["workstream_area"]
