@@ -20,6 +20,8 @@ import { GuidedTour } from "@/components/guided-tour";
 import { LearningDrawer } from "@/components/learning-drawer";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { MarketingExport } from "@/components/marketing-export";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useRef } from "react";
 
 export const Route = createFileRoute("/_authenticated/app")({
   component: AppLayout,
@@ -116,6 +118,29 @@ function AppLayout() {
   const navigate = useNavigate();
   const router = useRouter();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isMobile = useIsMobile();
+  const mainRef = useRef<HTMLElement | null>(null);
+  const isFirstRender = useRef(true);
+
+  // On mobile, when the user taps a nav tile the route content lives below
+  // the fold. Auto-scroll the main region into view so tapping a tile feels
+  // like a real navigation instead of a silent tab toggle.
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    if (!isMobile) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    const el = mainRef.current;
+    if (!el) return;
+    // Delay one frame so the new route has laid out.
+    requestAnimationFrame(() => {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, [pathname, isMobile]);
   const fetchOverview = useServerFn(getOverview);
   const { data: overview } = useQuery({
     queryKey: ["overview"],
@@ -298,7 +323,11 @@ function AppLayout() {
           </Button>
         </aside>
 
-        <main className="min-w-0 px-4 py-6 sm:px-6 sm:py-8 md:px-10 md:py-12">
+        <main
+          ref={mainRef}
+          key={pathname}
+          className="min-w-0 px-4 py-6 sm:px-6 sm:py-8 md:px-10 md:py-12 scroll-mt-4 animate-in fade-in slide-in-from-bottom-2 duration-300"
+        >
           {pathname !== "/app" && (
             <button
               type="button"
