@@ -120,10 +120,10 @@ function Inbox() {
 
   return (
     <div className="space-y-6">
-      <header className="flex items-center justify-between">
-        <div>
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0">
           <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Correspondence</div>
-          <h1 className="font-display text-4xl font-medium">Inbox</h1>
+          <h1 className="font-display text-3xl font-medium sm:text-4xl">Inbox</h1>
         </div>
         <div className="flex flex-wrap gap-2">
           <TimeControls compact />
@@ -138,7 +138,7 @@ function Inbox() {
         </div>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
+      <div className="grid gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
         <ul className="space-y-2">
           {(messages ?? []).length === 0 && (
             <li className="rounded-md border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
