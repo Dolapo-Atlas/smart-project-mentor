@@ -135,12 +135,17 @@ function AppLayout() {
       return;
     }
     // Delay past the router's own scroll restoration so ours wins.
-    const t = window.setTimeout(() => {
+    const doScroll = () => {
       const el = mainRef.current;
       if (!el) return;
       el.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 120);
-    return () => window.clearTimeout(t);
+    };
+    const t1 = window.setTimeout(doScroll, 50);
+    const t2 = window.setTimeout(doScroll, 350);
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+    };
   }, [pathname, isMobile]);
   const fetchOverview = useServerFn(getOverview);
   const { data: overview } = useQuery({
