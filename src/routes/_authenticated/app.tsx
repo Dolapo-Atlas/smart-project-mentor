@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
-import { Mail, ListChecks, LayoutDashboard, LogOut, ArrowLeft, ShieldAlert, FileBarChart2, Contact, FolderKanban, MoreHorizontal, FileText, Users, Wallet, Activity, Gauge, Gavel, Award, Send, GitPullRequest, CheckCircle2, Compass, Settings, Shield, UserCheck, Megaphone } from "lucide-react";
+import { Mail, ListChecks, LayoutDashboard, LogOut, ArrowLeft, ShieldAlert, FileBarChart2, Contact, FolderKanban, MoreHorizontal, FileText, Users, Wallet, Activity, Gauge, Gavel, Award, Send, GitPullRequest, CheckCircle2, Compass, Settings, Shield, UserCheck, Megaphone, Sparkles } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -98,6 +98,7 @@ const ALL_OVERFLOW: NavItem[] = [
   { to: "/app/completed", label: "Completed work", icon: CheckCircle2 },
   { to: "/app/reviews", label: "Reviews", icon: Award },
   { to: "/app/learning", label: "Learning", icon: Compass },
+  { to: "/app/workplace-tools", label: "Workplace tools", icon: Sparkles },
   { to: "/app/settings", label: "Settings", icon: Settings },
 ];
 
