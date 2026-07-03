@@ -126,6 +126,7 @@ function AppLayout() {
   // the fold. Auto-scroll the main region into view so tapping a tile feels
   // like a real navigation instead of a silent tab toggle.
   useEffect(() => {
+    console.log("[nav-scroll] effect", { pathname, isMobile, first: isFirstRender.current });
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
