@@ -154,6 +154,43 @@
   }
 }
 
+@layer base {
+  /*
+   * Mobile responsiveness safety net.
+   * Prevents horizontal scroll across the app and ensures long words,
+   * media, and inputs never exceed the viewport on narrow screens.
+   */
+  html, body {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+  body {
+    -webkit-text-size-adjust: 100%;
+  }
+  h1, h2, h3, h4, h5, h6, p, li, dd, dt, span, a {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  img, svg, video, canvas, iframe, embed, object {
+    max-width: 100%;
+    height: auto;
+  }
+  /* Inputs and textareas frequently blow out flex parents on iOS. */
+  input, textarea, select {
+    max-width: 100%;
+  }
+  /* Tables inside prose-style content should scroll horizontally rather
+     than push the whole page wider than the viewport. */
+  table {
+    max-width: 100%;
+  }
+  /* Give code blocks a scroll instead of overflowing. */
+  pre {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+}
+
 @layer utilities {
   .paper-texture {
     background-image:
