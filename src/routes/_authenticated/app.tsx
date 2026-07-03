@@ -140,10 +140,12 @@ function AppLayout() {
     const doScroll = () => {
       const el = mainRef.current;
       if (!el) return;
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      const top = el.getBoundingClientRect().top + window.scrollY - 8;
+      window.scrollTo({ top, behavior: "smooth" });
+      document.body.setAttribute("data-nav-scrolled", String(top));
     };
     const t1 = window.setTimeout(doScroll, 50);
-    const t2 = window.setTimeout(doScroll, 350);
+    const t2 = window.setTimeout(doScroll, 400);
     return () => {
       window.clearTimeout(t1);
       window.clearTimeout(t2);
