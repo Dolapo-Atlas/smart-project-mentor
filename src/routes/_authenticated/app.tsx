@@ -115,6 +115,7 @@ function normalisePhase(p?: string | null): keyof typeof PHASE_NAV {
 }
 
 function AppLayout() {
+  console.log("[AppLayout] render");
   const navigate = useNavigate();
   const router = useRouter();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
