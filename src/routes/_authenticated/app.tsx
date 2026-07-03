@@ -134,12 +134,19 @@ function AppLayout() {
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
-    const el = mainRef.current;
-    if (!el) return;
-    // Delay one frame so the new route has laid out.
-    requestAnimationFrame(() => {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
+    // Delay past the router's own scroll restoration so ours wins.
+    const doScroll = () => {
+      const el = mainRef.current;
+      if (!el) return;
+      const top = el.getBoundingClientRect().top + window.scrollY - 8;
+      window.scrollTo({ top, behavior: "smooth" });
+    };
+    const t1 = window.setTimeout(doScroll, 50);
+    const t2 = window.setTimeout(doScroll, 400);
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+    };
   }, [pathname, isMobile]);
   const fetchOverview = useServerFn(getOverview);
   const { data: overview } = useQuery({
