@@ -258,7 +258,7 @@ function Hero() {
             "radial-gradient(60% 50% at 80% 0%, color-mix(in oklab, var(--primary) 14%, transparent), transparent 70%), radial-gradient(40% 35% at 0% 30%, color-mix(in oklab, var(--primary) 8%, transparent), transparent 70%)",
         }}
       />
-      <div className="mx-auto grid max-w-7xl items-center gap-14 px-6 lg:grid-cols-[1.05fr_1fr] lg:gap-20 lg:px-10">
+      <div className="mx-auto grid max-w-7xl items-center gap-14 px-5 sm:px-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:gap-20 lg:px-10">
         <div>
           <Reveal>
             <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card/70 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur">
