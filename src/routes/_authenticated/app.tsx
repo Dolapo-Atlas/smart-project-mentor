@@ -86,6 +86,7 @@ const PHASE_NAV: Record<string, NavItem[]> = {
 // active phase row are removed so we don't show duplicates.
 const ALL_OVERFLOW: NavItem[] = [
   { to: "/app/results", label: "Final review & certificate", icon: Award },
+  { to: "/app/gemini", label: "Gemini AI features", icon: Sparkles },
   { to: "/app/stakeholders", label: "People", icon: Contact },
   { to: "/app/meetings", label: "Meetings", icon: Users },
   { to: "/app/comms", label: "Comms", icon: Send },
