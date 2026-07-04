@@ -22,6 +22,7 @@ import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/ap
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as ApiPublicTtsRouteImport } from './routes/api/public/tts'
+import { Route as ApiPublicGeminiTestRouteImport } from './routes/api/public/gemini-test'
 import { Route as ApiPublicEarlyAccessRouteImport } from './routes/api/public/early-access'
 import { Route as AuthenticatedProjectIntroTemplateIdRouteImport } from './routes/_authenticated/project-intro.$templateId'
 import { Route as AuthenticatedAppWorkplaceToolsRouteImport } from './routes/_authenticated/app.workplace-tools'
@@ -113,6 +114,11 @@ const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
 const ApiPublicTtsRoute = ApiPublicTtsRouteImport.update({
   id: '/api/public/tts',
   path: '/api/public/tts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicGeminiTestRoute = ApiPublicGeminiTestRouteImport.update({
+  id: '/api/public/gemini-test',
+  path: '/api/public/gemini-test',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicEarlyAccessRoute = ApiPublicEarlyAccessRouteImport.update({
@@ -306,6 +312,7 @@ export interface FileRoutesByFullPath {
   '/app/workplace-tools': typeof AuthenticatedAppWorkplaceToolsRoute
   '/project-intro/$templateId': typeof AuthenticatedProjectIntroTemplateIdRoute
   '/api/public/early-access': typeof ApiPublicEarlyAccessRoute
+  '/api/public/gemini-test': typeof ApiPublicGeminiTestRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/app/': typeof AuthenticatedAppIndexRoute
@@ -347,6 +354,7 @@ export interface FileRoutesByTo {
   '/app/workplace-tools': typeof AuthenticatedAppWorkplaceToolsRoute
   '/project-intro/$templateId': typeof AuthenticatedProjectIntroTemplateIdRoute
   '/api/public/early-access': typeof ApiPublicEarlyAccessRoute
+  '/api/public/gemini-test': typeof ApiPublicGeminiTestRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/app': typeof AuthenticatedAppIndexRoute
@@ -391,6 +399,7 @@ export interface FileRoutesById {
   '/_authenticated/app/workplace-tools': typeof AuthenticatedAppWorkplaceToolsRoute
   '/_authenticated/project-intro/$templateId': typeof AuthenticatedProjectIntroTemplateIdRoute
   '/api/public/early-access': typeof ApiPublicEarlyAccessRoute
+  '/api/public/gemini-test': typeof ApiPublicGeminiTestRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
@@ -435,6 +444,7 @@ export interface FileRouteTypes {
     | '/app/workplace-tools'
     | '/project-intro/$templateId'
     | '/api/public/early-access'
+    | '/api/public/gemini-test'
     | '/api/public/tts'
     | '/lovable/email/suppression'
     | '/app/'
@@ -476,6 +486,7 @@ export interface FileRouteTypes {
     | '/app/workplace-tools'
     | '/project-intro/$templateId'
     | '/api/public/early-access'
+    | '/api/public/gemini-test'
     | '/api/public/tts'
     | '/lovable/email/suppression'
     | '/app'
@@ -519,6 +530,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/workplace-tools'
     | '/_authenticated/project-intro/$templateId'
     | '/api/public/early-access'
+    | '/api/public/gemini-test'
     | '/api/public/tts'
     | '/lovable/email/suppression'
     | '/_authenticated/app/'
@@ -536,6 +548,7 @@ export interface RootRouteChildren {
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   InviteCodeRoute: typeof InviteCodeRoute
   ApiPublicEarlyAccessRoute: typeof ApiPublicEarlyAccessRoute
+  ApiPublicGeminiTestRoute: typeof ApiPublicGeminiTestRoute
   ApiPublicTtsRoute: typeof ApiPublicTtsRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
@@ -634,6 +647,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/tts'
       fullPath: '/api/public/tts'
       preLoaderRoute: typeof ApiPublicTtsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/gemini-test': {
+      id: '/api/public/gemini-test'
+      path: '/api/public/gemini-test'
+      fullPath: '/api/public/gemini-test'
+      preLoaderRoute: typeof ApiPublicGeminiTestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/early-access': {
@@ -919,6 +939,7 @@ const rootRouteChildren: RootRouteChildren = {
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   InviteCodeRoute: InviteCodeRoute,
   ApiPublicEarlyAccessRoute: ApiPublicEarlyAccessRoute,
+  ApiPublicGeminiTestRoute: ApiPublicGeminiTestRoute,
   ApiPublicTtsRoute: ApiPublicTtsRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
