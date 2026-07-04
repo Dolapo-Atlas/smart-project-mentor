@@ -55,3 +55,42 @@ export async function pingGemini(): Promise<{
   );
   return { ok: true, model: DEFAULT_GEMINI_MODEL, reply: reply.trim() };
 }
+
+/**
+ * Ask Gemini to return a JSON object matching the provided schema.
+ * Uses Gemini's native `responseMimeType: application/json` + `responseSchema`
+ * so the model is constrained server-side. Returns the parsed object.
+ */
+export async function generateGeminiJSON<T = unknown>(
+  prompt: string,
+  options: {
+    schema: Record<string, unknown>;
+    model?: string;
+    systemInstruction?: string;
+  },
+): Promise<T> {
+  const client = getGeminiClient();
+  const response = await client.models.generateContent({
+    model: options.model ?? DEFAULT_GEMINI_MODEL,
+    contents: prompt,
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: options.schema,
+      ...(options.systemInstruction
+        ? { systemInstruction: options.systemInstruction }
+        : {}),
+    },
+  });
+  const text = response.text ?? "";
+  if (!text) throw new Error("Gemini returned empty response");
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new Error(`Gemini returned non-JSON output: ${text.slice(0, 200)}`);
+  }
+}
+
+/** True when Gemini is configured — safe for graceful fallback checks. */
+export function isGeminiAvailable(): boolean {
+  return typeof process.env.GEMINI_API_KEY === "string" && process.env.GEMINI_API_KEY.length > 0;
+}
