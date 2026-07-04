@@ -86,6 +86,7 @@ const PHASE_NAV: Record<string, NavItem[]> = {
 // active phase row are removed so we don't show duplicates.
 const ALL_OVERFLOW: NavItem[] = [
   { to: "/app/results", label: "Final review & certificate", icon: Award },
+  { to: "/app/gemini", label: "Gemini AI features", icon: Sparkles },
   { to: "/app/stakeholders", label: "People", icon: Contact },
   { to: "/app/meetings", label: "Meetings", icon: Users },
   { to: "/app/comms", label: "Comms", icon: Send },
@@ -328,6 +329,15 @@ function AppLayout() {
           >
             <LogOut className="mr-2 h-4 w-4" /> Sign out
           </Button>
+
+          <Link
+            to="/app/gemini"
+            className="mt-4 flex items-center justify-center gap-1.5 rounded-md border border-border/60 bg-card/40 px-2 py-1.5 text-[10px] uppercase tracking-[0.14em] text-muted-foreground transition hover:border-primary/50 hover:text-foreground"
+            title="Learn how Atlas uses Google Gemini"
+          >
+            <Sparkles className="h-3 w-3 text-primary" />
+            Powered by Google Gemini
+          </Link>
         </aside>
 
         <main
