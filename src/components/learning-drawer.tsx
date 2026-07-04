@@ -219,36 +219,65 @@ export function LearningDrawer() {
               )}
 
               {tab === "ask" && (
-                <section className="space-y-4">
-                  <div className="text-xs uppercase tracking-widest text-muted-foreground">
-                    Ask the mentor
+                <section className="flex h-full flex-col">
+                  <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto pr-1">
+                    {chat.length === 0 && (
+                      <div className="rounded-md border border-dashed border-border bg-background/60 p-4 text-sm text-muted-foreground">
+                        <div className="mb-1 font-medium text-foreground">Ask Atlas anything.</div>
+                        The mentor sees your current screen, project phase, stakeholders,
+                        RAID, open tasks and recent conversations — and coaches you
+                        rather than writing your work.
+                      </div>
+                    )}
+                    {chat.map((t, i) => (
+                      <div
+                        key={i}
+                        className={
+                          t.role === "learner"
+                            ? "ml-auto max-w-[85%] rounded-md bg-primary/10 px-3 py-2 text-sm"
+                            : "mr-auto max-w-[92%] rounded-md border border-border bg-background/60 px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap"
+                        }
+                      >
+                        {t.content}
+                      </div>
+                    ))}
+                    {chatMutation.isPending && (
+                      <div className="mr-auto flex items-center gap-2 rounded-md border border-border bg-background/60 px-3 py-2 text-xs text-muted-foreground">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" /> Thinking…
+                      </div>
+                    )}
                   </div>
-                  <form onSubmit={submitQuestion} className="space-y-2">
+                  <form onSubmit={submitQuestion} className="mt-3 space-y-2 border-t border-border pt-3">
                     <Textarea
-                      placeholder="e.g. How do I respond to a pushback from David without making it worse?"
+                      placeholder="e.g. How should I handle David's pushback on the timeline?"
                       value={question}
                       onChange={(e) => setQuestion(e.target.value)}
-                      rows={3}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          submitQuestion(e as unknown as React.FormEvent);
+                        }
+                      }}
+                      rows={2}
                     />
-                    <Button type="submit" disabled={loading || !question.trim()} size="sm">
-                      {loading ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <Send className="mr-2 h-4 w-4" />
-                      )}
-                      Ask
-                    </Button>
-                  </form>
-                  {data?.answer && (
-                    <div className="rounded-md border border-primary/30 bg-primary/5 p-3 text-sm leading-relaxed">
-                      {data.answer}
+                    <div className="flex items-center justify-between">
+                      <p className="text-[11px] text-muted-foreground">
+                        Coaches — never writes your deliverables.
+                      </p>
+                      <Button
+                        type="submit"
+                        disabled={chatMutation.isPending || !question.trim()}
+                        size="sm"
+                      >
+                        {chatMutation.isPending ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <Send className="mr-2 h-4 w-4" />
+                        )}
+                        Ask
+                      </Button>
                     </div>
-                  )}
-                  {!data?.answer && !loading && (
-                    <p className="text-xs text-muted-foreground">
-                      Grounded in your current screen and project state.
-                    </p>
-                  )}
+                  </form>
                 </section>
               )}
             </div>
