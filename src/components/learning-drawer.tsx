@@ -22,7 +22,10 @@ export function LearningDrawer() {
   const [question, setQuestion] = useState("");
   const [data, setData] = useState<Brief | null>(null);
   const [lastRoute, setLastRoute] = useState<string | null>(null);
+  const [chat, setChat] = useState<ChatTurn[]>([]);
   const askFn = useServerFn(mentorBrief);
+  const chatFn = useServerFn(mentorChat);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const fetchBrief = useMutation({
     mutationFn: (v: { question?: string }) =>
@@ -32,6 +35,32 @@ export function LearningDrawer() {
       setLastRoute(pathname);
     },
   });
+
+  const chatMutation = useMutation({
+    mutationFn: (v: { question: string; history: ChatTurn[] }) =>
+      chatFn({
+        data: { route: pathname, question: v.question, history: v.history },
+      }) as Promise<{ answer: string }>,
+    onSuccess: (res) => {
+      setChat((prev) => [...prev, { role: "mentor", content: res.answer }]);
+    },
+    onError: () => {
+      setChat((prev) => [
+        ...prev,
+        {
+          role: "mentor",
+          content:
+            "I couldn't reach the mentor service just now. Try again in a moment — meanwhile the Task and Hints tabs still work.",
+        },
+      ]);
+    },
+  });
+
+  useEffect(() => {
+    if (tab === "ask" && scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [chat, chatMutation.isPending, tab]);
 
   function ensureLoaded() {
     if (!data || lastRoute !== pathname) fetchBrief.mutate({});
@@ -45,8 +74,12 @@ export function LearningDrawer() {
 
   function submitQuestion(e: React.FormEvent) {
     e.preventDefault();
-    if (!question.trim()) return;
-    fetchBrief.mutate({ question: question.trim() });
+    const q = question.trim();
+    if (!q || chatMutation.isPending) return;
+    const priorHistory = chat;
+    setChat((prev) => [...prev, { role: "learner", content: q }]);
+    setQuestion("");
+    chatMutation.mutate({ question: q, history: priorHistory });
   }
 
   const loading = fetchBrief.isPending;
@@ -57,10 +90,10 @@ export function LearningDrawer() {
         <button
           onClick={() => openDrawer("task")}
           className="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full bg-foreground px-4 py-2.5 text-sm font-medium text-background shadow-lg transition hover:scale-[1.02] hover:bg-foreground/90"
-          aria-label="Open Atlas Mentor"
+          aria-label="Ask Atlas Mentor"
         >
-          <Lightbulb className="h-4 w-4 text-primary" />
-          Mentor
+          <Sparkles className="h-4 w-4 text-primary" />
+          Ask Atlas
         </button>
       )}
 
