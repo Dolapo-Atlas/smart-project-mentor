@@ -6,6 +6,11 @@ import { createLovableAiGatewayProvider } from "./ai-gateway.server";
 import { applyCompetencyStatus } from "./learning.functions";
 import { ARCHETYPE_SENTIMENT_BY_ROLE } from "./pm.functions";
 import { loadRoster, DEFAULT_ROSTER, type RosterMember } from "./roster";
+import {
+  generateStakeholderReply,
+  isStakeholderAIAvailable,
+  type ThreadMessage,
+} from "./stakeholder-ai.server";
 
 const MODEL = "google/gemini-3-flash-preview";
 function getModel() {
@@ -356,18 +361,79 @@ Only disagree, push back, ask hard questions, or escalate when there is a specif
 2-4 short paragraphs. Sign off with name & role. Do not use generic placeholder wording like "Thanks for the note — I'll come back to you shortly".
 Choose sentiment honestly: positive, neutral, pushback, concerned, or ignored (if ignored, body is a short auto-reply / out of office).`;
 
-      let out: Reply;
+      // Pull recent conversation history between this coordinator and this
+      // stakeholder role so Gemini has thread context. Falls through cleanly
+      // if the query errors — history is a nice-to-have for the AI path.
+      let history: ThreadMessage[] = [];
       try {
-        out = evidenceAwareReply(
-          { role: sh.role, name: sh.name, title: sh.title },
-          data.subject,
-          data.body,
-          data.attachment_kind,
-          data.attachment_label,
-          evidence,
-        ) ?? (await generateObject({ model: getModel(), prompt, schema: ReplySchema })).object;
+        const { data: prior } = await supabase
+          .from("comms_messages")
+          .select("direction,from_role,to_roles,subject,body,created_at")
+          .eq("user_id", uid)
+          .or(`from_role.eq.${sh.role},to_roles.cs.{${sh.role}}`)
+          .order("created_at", { ascending: true })
+          .limit(20);
+        history = (prior ?? []).map((m) => ({
+          direction: m.direction === "outbound" ? "outbound" : "inbound",
+          from: m.direction === "outbound" ? "Coordinator" : sh.name,
+          subject: m.subject ?? "",
+          body: m.body ?? "",
+        }));
       } catch {
-        out = fallbackReply({ role: sh.role, name: sh.name, title: sh.title }, data.subject, data.attachment_label);
+        history = [];
+      }
+
+      let out: Reply;
+      // Priority 1: deterministic evidence-aware reply (existing behaviour
+      // for RAID governance emails). Keeps proven UX unchanged.
+      const deterministic = evidenceAwareReply(
+        { role: sh.role, name: sh.name, title: sh.title },
+        data.subject,
+        data.body,
+        data.attachment_kind,
+        data.attachment_label,
+        evidence,
+      );
+      if (deterministic) {
+        out = deterministic;
+      } else {
+        // Priority 2: Gemini in-character reply with thread history.
+        // Priority 3: existing Lovable-Gateway generateObject path.
+        // Priority 4: static per-role fallback.
+        try {
+          if (isStakeholderAIAvailable()) {
+            const gem = await generateStakeholderReply({
+              stakeholder: { role: sh.role, name: sh.name, title: sh.title },
+              project: {
+                projectName,
+                phase: state?.phase,
+                health: state?.health,
+                reputation: state?.reputation,
+                progress: state?.progress,
+                evidenceSummary: evidence.evidenceSummary,
+                attachmentDetail: evidence.attachmentDetail,
+              },
+              learnerMessage: {
+                subject: data.subject,
+                body: data.body,
+                msgType: data.msg_type,
+                attachmentKind: data.attachment_kind,
+                attachmentLabel: data.attachment_label,
+              },
+              history,
+            });
+            out = ReplySchema.parse(gem);
+          } else {
+            throw new Error("Gemini not configured");
+          }
+        } catch (gemErr) {
+          console.warn("[comms] Gemini stakeholder reply failed, falling back:", gemErr);
+          try {
+            out = (await generateObject({ model: getModel(), prompt, schema: ReplySchema })).object;
+          } catch {
+            out = fallbackReply({ role: sh.role, name: sh.name, title: sh.title }, data.subject, data.attachment_label);
+          }
+        }
       }
 
       if (isPlaceholderReply(out.body) || (recentReplies ?? []).some((m) => m.sender_name === sh.name && m.body.trim().toLowerCase() === out.body.trim().toLowerCase())) {
