@@ -3,6 +3,12 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { generateObject, generateText } from "ai";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
+import {
+  generateMentorAnswer,
+  isMentorAIAvailable,
+  type MentorContext,
+  type MentorTurn,
+} from "./mentor-ai.server";
 
 const MODEL = "google/gemini-3-flash-preview";
 function getModel() {
@@ -122,6 +128,143 @@ function lookupRoute(route: string) {
 }
 
 /**
+ * Gather a rich, read-only snapshot of the learner's current simulation.
+ * Everything is scoped to their active project instance via RLS.
+ */
+async function loadMentorContext(
+  supabase: any,
+  userId: string,
+  route: string,
+): Promise<MentorContext | null> {
+  const screenRaw = lookupRoute(route);
+  const screen = {
+    route: screenRaw.route,
+    area: screenRaw.area,
+    purpose: screenRaw.what,
+    concept: screenRaw.concept,
+  };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("current_project_instance_id, display_name")
+    .eq("id", userId)
+    .maybeSingle();
+  const projectId = profile?.current_project_instance_id as string | undefined;
+  if (!projectId) return null;
+
+  const [
+    { data: project },
+    { count: unread },
+    { count: openTasks },
+    { data: stakeholders },
+    { data: tasks },
+    { data: raid },
+    { data: comms },
+    { data: recentTasks },
+  ] = await Promise.all([
+    supabase
+      .from("project_instances")
+      .select("display_name, current_phase, progress_pct, status")
+      .eq("id", projectId)
+      .maybeSingle(),
+    supabase
+      .from("comms_messages")
+      .select("id", { count: "exact", head: true })
+      .eq("project_instance_id", projectId)
+      .eq("direction", "in")
+      .is("read_at", null),
+    supabase
+      .from("tasks")
+      .select("id", { count: "exact", head: true })
+      .eq("project_instance_id", projectId)
+      .in("status", ["todo", "in_progress"]),
+    supabase
+      .from("stakeholder_relationships")
+      .select("stakeholder_name, role, sentiment, concerns")
+      .eq("project_instance_id", projectId)
+      .order("last_interaction", { ascending: false })
+      .limit(8),
+    supabase
+      .from("tasks")
+      .select("title, status, priority, due_at")
+      .eq("project_instance_id", projectId)
+      .in("status", ["todo", "in_progress"])
+      .order("due_at", { ascending: true, nullsFirst: false })
+      .limit(8),
+    supabase
+      .from("raid_items")
+      .select("kind, title, severity, status, owner")
+      .eq("project_instance_id", projectId)
+      .neq("status", "closed")
+      .order("updated_at", { ascending: false })
+      .limit(8),
+    supabase
+      .from("comms_messages")
+        .select("direction, from_role, subject, body, created_at")
+      .eq("project_instance_id", projectId)
+      .order("created_at", { ascending: false })
+      .limit(6),
+    supabase
+      .from("tasks")
+      .select("title, submission, completion_action, completed_at")
+      .eq("project_instance_id", projectId)
+      .eq("status", "completed")
+      .order("completed_at", { ascending: false })
+      .limit(5),
+  ]);
+
+  const proj = (project ?? {}) as {
+    display_name?: string | null;
+    current_phase?: string | null;
+    progress_pct?: number | null;
+    status?: string | null;
+  };
+
+  return {
+    learnerName: profile?.display_name ?? undefined,
+    screen,
+    project: {
+      name: proj.display_name ?? "your project",
+      phase: proj.current_phase ?? null,
+      progressPct: proj.progress_pct ?? null,
+      status: proj.status ?? null,
+    },
+    counts: { openTasks: openTasks ?? 0, unreadInbox: unread ?? 0 },
+    stakeholders: (stakeholders ?? []).map((s: any) => ({
+      name: s.stakeholder_name,
+      role: s.role,
+      sentiment: s.sentiment ?? 50,
+      concerns: Array.isArray(s.concerns) ? s.concerns : [],
+    })),
+    tasks: (tasks ?? []).map((t: any) => ({
+      title: t.title,
+      status: t.status,
+      priority: t.priority,
+      due_at: t.due_at,
+    })),
+    raid: (raid ?? []).map((r: any) => ({
+      kind: r.kind,
+      title: r.title,
+      severity: r.severity,
+      status: r.status,
+      owner: r.owner,
+    })),
+    recentComms: (comms ?? []).map((m: any) => ({
+      direction: m.direction,
+      from: m.from_role ?? "unknown",
+      subject: m.subject ?? "(no subject)",
+      snippet: String(m.body ?? "").replace(/\s+/g, " ").slice(0, 140),
+    })),
+    recentDecisions: (recentTasks ?? [])
+      .filter((t: any) => t.completion_action)
+      .map((t: any) => `${t.title} → ${String(t.completion_action).slice(0, 80)}`),
+    recentEvidence: (recentTasks ?? [])
+      .filter((t: any) => t.submission)
+      .map((t: any) => `${t.title}: ${String(t.submission).replace(/\s+/g, " ").slice(0, 120)}`),
+  };
+}
+
+/**
  * Mentor brief for the current screen. Returns Task / Learn / Hints,
  * optionally an Ask-AI answer when a question is supplied.
  */
@@ -200,17 +343,96 @@ Avoid jargon. Be concrete to the current project state above.`,
 
     let answer: string | undefined;
     if (data.question && data.question.trim().length > 2) {
-      const { text } = await generateText({
-        model: getModel(),
-        prompt: `${grounding}
+      const question = data.question.trim();
 
-The learner asks: ${data.question.trim()}
+      // Prefer Gemini-powered mentor when configured; fall back to gateway.
+      if (isMentorAIAvailable()) {
+        try {
+          const mentorCtx = await loadMentorContext(supabase, userId, data.route);
+          if (mentorCtx) {
+            answer = await generateMentorAnswer({ context: mentorCtx, question });
+          }
+        } catch (err) {
+          console.warn("[mentor] Gemini path failed, falling back to gateway", err);
+        }
+      }
 
-Answer as a calm, senior PM mentor. 4-6 sentences max. Tie the answer to the
-current screen and project state where relevant. No bullet headers.`,
-      });
-      answer = text.trim();
+      if (!answer) {
+        const { text } = await generateText({
+          model: getModel(),
+          prompt: `${grounding}
+
+The learner asks: ${question}
+
+Answer as a calm, senior PM mentor. 4-6 sentences max. Coach — never write
+the learner's deliverables (emails, reports, RAID entries) for them. Tie the
+answer to the current screen and project state.`,
+        });
+        answer = text.trim();
+      }
     }
 
     return { ctx, brief, answer };
+  });
+
+/**
+ * Multi-turn mentor chat. Same context grounding as `mentorBrief`, but
+ * accepts prior turns so the learner can have a real conversation.
+ * Falls back to the Lovable AI gateway when Gemini is unavailable so the
+ * simulation never breaks.
+ */
+const MentorTurnSchema = z.object({
+  role: z.enum(["learner", "mentor"]),
+  content: z.string(),
+});
+
+export const mentorChat = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (input: {
+      route: string;
+      question: string;
+      history?: MentorTurn[];
+    }) => ({
+      route: z.string().parse(input.route),
+      question: z.string().min(1).max(2000).parse(input.question),
+      history: z.array(MentorTurnSchema).max(20).optional().parse(input.history),
+    }),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const question = data.question.trim();
+
+    if (isMentorAIAvailable()) {
+      try {
+        const mentorCtx = await loadMentorContext(supabase, userId, data.route);
+        if (mentorCtx) {
+          const answer = await generateMentorAnswer({
+            context: mentorCtx,
+            question,
+            history: data.history ?? [],
+          });
+          return { answer, source: "gemini" as const };
+        }
+      } catch (err) {
+        console.warn("[mentorChat] Gemini failed, falling back", err);
+      }
+    }
+
+    const screen = lookupRoute(data.route);
+    const historyText = (data.history ?? [])
+      .slice(-8)
+      .map((t) => `${t.role === "learner" ? "Learner" : "Mentor"}: ${t.content}`)
+      .join("\n");
+    const { text } = await generateText({
+      model: getModel(),
+      prompt: `You are Atlas Mentor — a calm, senior PM coach. Coach, do not write the learner's deliverables.
+Screen: ${screen.area} — ${screen.what}
+Concept: ${screen.concept}
+${historyText ? `\nConversation so far:\n${historyText}\n` : ""}
+Learner: ${question}
+
+Respond in 4-6 sentences or up to 5 bullets. Refuse to draft full emails or reports; instead coach on structure, audience and pitfalls.`,
+    });
+    return { answer: text.trim(), source: "gateway" as const };
   });

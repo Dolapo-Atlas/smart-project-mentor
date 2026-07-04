@@ -1,13 +1,14 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useRouterState } from "@tanstack/react-router";
-import { mentorBrief } from "@/lib/mentor.functions";
+import { mentorBrief, mentorChat } from "@/lib/mentor.functions";
 import { Lightbulb, X, Send, Sparkles, ListChecks, BookOpen, MessageCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
 type Tab = "task" | "learn" | "hints" | "ask";
+type ChatTurn = { role: "learner" | "mentor"; content: string };
 type Brief = {
   ctx: { area: string; what: string; concept: string };
   brief: { task: string; learn: string; hints: string[] };
@@ -21,7 +22,10 @@ export function LearningDrawer() {
   const [question, setQuestion] = useState("");
   const [data, setData] = useState<Brief | null>(null);
   const [lastRoute, setLastRoute] = useState<string | null>(null);
+  const [chat, setChat] = useState<ChatTurn[]>([]);
   const askFn = useServerFn(mentorBrief);
+  const chatFn = useServerFn(mentorChat);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const fetchBrief = useMutation({
     mutationFn: (v: { question?: string }) =>
@@ -31,6 +35,32 @@ export function LearningDrawer() {
       setLastRoute(pathname);
     },
   });
+
+  const chatMutation = useMutation({
+    mutationFn: (v: { question: string; history: ChatTurn[] }) =>
+      chatFn({
+        data: { route: pathname, question: v.question, history: v.history },
+      }) as Promise<{ answer: string }>,
+    onSuccess: (res) => {
+      setChat((prev) => [...prev, { role: "mentor", content: res.answer }]);
+    },
+    onError: () => {
+      setChat((prev) => [
+        ...prev,
+        {
+          role: "mentor",
+          content:
+            "I couldn't reach the mentor service just now. Try again in a moment — meanwhile the Task and Hints tabs still work.",
+        },
+      ]);
+    },
+  });
+
+  useEffect(() => {
+    if (tab === "ask" && scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [chat, chatMutation.isPending, tab]);
 
   function ensureLoaded() {
     if (!data || lastRoute !== pathname) fetchBrief.mutate({});
@@ -44,8 +74,12 @@ export function LearningDrawer() {
 
   function submitQuestion(e: React.FormEvent) {
     e.preventDefault();
-    if (!question.trim()) return;
-    fetchBrief.mutate({ question: question.trim() });
+    const q = question.trim();
+    if (!q || chatMutation.isPending) return;
+    const priorHistory = chat;
+    setChat((prev) => [...prev, { role: "learner", content: q }]);
+    setQuestion("");
+    chatMutation.mutate({ question: q, history: priorHistory });
   }
 
   const loading = fetchBrief.isPending;
@@ -56,10 +90,10 @@ export function LearningDrawer() {
         <button
           onClick={() => openDrawer("task")}
           className="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full bg-foreground px-4 py-2.5 text-sm font-medium text-background shadow-lg transition hover:scale-[1.02] hover:bg-foreground/90"
-          aria-label="Open Atlas Mentor"
+          aria-label="Ask Atlas Mentor"
         >
-          <Lightbulb className="h-4 w-4 text-primary" />
-          Mentor
+          <Sparkles className="h-4 w-4 text-primary" />
+          Ask Atlas
         </button>
       )}
 
@@ -185,36 +219,65 @@ export function LearningDrawer() {
               )}
 
               {tab === "ask" && (
-                <section className="space-y-4">
-                  <div className="text-xs uppercase tracking-widest text-muted-foreground">
-                    Ask the mentor
+                <section className="flex h-full flex-col">
+                  <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto pr-1">
+                    {chat.length === 0 && (
+                      <div className="rounded-md border border-dashed border-border bg-background/60 p-4 text-sm text-muted-foreground">
+                        <div className="mb-1 font-medium text-foreground">Ask Atlas anything.</div>
+                        The mentor sees your current screen, project phase, stakeholders,
+                        RAID, open tasks and recent conversations — and coaches you
+                        rather than writing your work.
+                      </div>
+                    )}
+                    {chat.map((t, i) => (
+                      <div
+                        key={i}
+                        className={
+                          t.role === "learner"
+                            ? "ml-auto max-w-[85%] rounded-md bg-primary/10 px-3 py-2 text-sm"
+                            : "mr-auto max-w-[92%] rounded-md border border-border bg-background/60 px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap"
+                        }
+                      >
+                        {t.content}
+                      </div>
+                    ))}
+                    {chatMutation.isPending && (
+                      <div className="mr-auto flex items-center gap-2 rounded-md border border-border bg-background/60 px-3 py-2 text-xs text-muted-foreground">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" /> Thinking…
+                      </div>
+                    )}
                   </div>
-                  <form onSubmit={submitQuestion} className="space-y-2">
+                  <form onSubmit={submitQuestion} className="mt-3 space-y-2 border-t border-border pt-3">
                     <Textarea
-                      placeholder="e.g. How do I respond to a pushback from David without making it worse?"
+                      placeholder="e.g. How should I handle David's pushback on the timeline?"
                       value={question}
                       onChange={(e) => setQuestion(e.target.value)}
-                      rows={3}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          submitQuestion(e as unknown as React.FormEvent);
+                        }
+                      }}
+                      rows={2}
                     />
-                    <Button type="submit" disabled={loading || !question.trim()} size="sm">
-                      {loading ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <Send className="mr-2 h-4 w-4" />
-                      )}
-                      Ask
-                    </Button>
-                  </form>
-                  {data?.answer && (
-                    <div className="rounded-md border border-primary/30 bg-primary/5 p-3 text-sm leading-relaxed">
-                      {data.answer}
+                    <div className="flex items-center justify-between">
+                      <p className="text-[11px] text-muted-foreground">
+                        Coaches — never writes your deliverables.
+                      </p>
+                      <Button
+                        type="submit"
+                        disabled={chatMutation.isPending || !question.trim()}
+                        size="sm"
+                      >
+                        {chatMutation.isPending ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <Send className="mr-2 h-4 w-4" />
+                        )}
+                        Ask
+                      </Button>
                     </div>
-                  )}
-                  {!data?.answer && !loading && (
-                    <p className="text-xs text-muted-foreground">
-                      Grounded in your current screen and project state.
-                    </p>
-                  )}
+                  </form>
                 </section>
               )}
             </div>
