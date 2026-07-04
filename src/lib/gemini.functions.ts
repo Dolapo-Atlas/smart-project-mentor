@@ -16,7 +16,7 @@ export const testGemini = createServerFn({ method: "POST" })
         return { ok: true as const, model: DEFAULT_GEMINI_MODEL, reply };
       }
       const result = await pingGemini();
-      return { ok: true as const, ...result };
+      return { ...result, ok: true as const };
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Unknown Gemini error";
