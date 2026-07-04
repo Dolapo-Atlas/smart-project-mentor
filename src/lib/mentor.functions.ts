@@ -200,7 +200,7 @@ async function loadMentorContext(
       .limit(8),
     supabase
       .from("comms_messages")
-      .select("direction, sender_name, subject, body, created_at")
+        .select("direction, from_role, subject, body, created_at")
       .eq("project_instance_id", projectId)
       .order("created_at", { ascending: false })
       .limit(6),
@@ -251,7 +251,7 @@ async function loadMentorContext(
     })),
     recentComms: (comms ?? []).map((m: any) => ({
       direction: m.direction,
-      from: m.sender_name ?? "unknown",
+      from: m.from_role ?? "unknown",
       subject: m.subject ?? "(no subject)",
       snippet: String(m.body ?? "").replace(/\s+/g, " ").slice(0, 140),
     })),
