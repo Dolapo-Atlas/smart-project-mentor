@@ -1,13 +1,14 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useRouterState } from "@tanstack/react-router";
-import { mentorBrief } from "@/lib/mentor.functions";
+import { mentorBrief, mentorChat } from "@/lib/mentor.functions";
 import { Lightbulb, X, Send, Sparkles, ListChecks, BookOpen, MessageCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
 type Tab = "task" | "learn" | "hints" | "ask";
+type ChatTurn = { role: "learner" | "mentor"; content: string };
 type Brief = {
   ctx: { area: string; what: string; concept: string };
   brief: { task: string; learn: string; hints: string[] };
