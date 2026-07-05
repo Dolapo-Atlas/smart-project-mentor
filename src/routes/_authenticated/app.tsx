@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getOverview } from "@/lib/sim.functions";
 import { getActiveProject } from "@/lib/projects.functions";
@@ -118,10 +118,12 @@ function normalisePhase(p?: string | null): keyof typeof PHASE_NAV {
 function AppLayout() {
   const navigate = useNavigate();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isMobile = useIsMobile();
   const mainRef = useRef<HTMLElement | null>(null);
   const isFirstRender = useRef(true);
+  const [signingOut, setSigningOut] = useState(false);
 
   // Scroll to top on route change without re-triggering animations or
   // multiple deferred scrolls (which caused a visible "snap back" flicker
@@ -161,9 +163,10 @@ function AppLayout() {
   useEffect(() => {
     if (activeLoading) return;
     if (active) return;
+    if (signingOut) return;
     if (pathname === "/app/projects" || pathname.startsWith("/app/projects/")) return;
     navigate({ to: "/app/projects" });
-  }, [active, activeLoading, pathname, navigate]);
+  }, [active, activeLoading, pathname, navigate, signingOut]);
 
   const [tourDismissed, setTourDismissed] = useState(false);
   const activeAny = active as any;
@@ -175,9 +178,17 @@ function AppLayout() {
 
 
   async function signOut() {
-    await supabase.auth.signOut();
-    toast.success("Signed out");
-    navigate({ to: "/auth" });
+    setSigningOut(true);
+    try {
+      await queryClient.cancelQueries();
+      queryClient.clear();
+      await supabase.auth.signOut();
+      toast.success("Signed out");
+      navigate({ to: "/auth", replace: true });
+    } catch (e) {
+      setSigningOut(false);
+      toast.error(e instanceof Error ? e.message : "Sign out failed");
+    }
   }
 
   const isActive = (to: string, exact?: boolean) =>
