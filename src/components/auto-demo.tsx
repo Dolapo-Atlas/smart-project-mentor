@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Mail, Sparkles, CheckCircle2, ArrowUpRight, ArrowDownRight, Pause, Play, RotateCw } from "lucide-react";
 
 /**
@@ -26,14 +26,25 @@ const BEATS = {
 const LOOP_MS = 31000;
 
 export function AutoDemo() {
+  // `t` only re-renders when a beat boundary is crossed. The progress bar and
+  // the ticking clock are updated directly via refs to avoid a 60fps React
+  // re-render of the entire demo section (which was making the whole page
+  // feel unresponsive to hover and clicks).
   const [t, setT] = useState(0);
   const [paused, setPaused] = useState(false);
   const [cycle, setCycle] = useState(0);
+  const progressRef = useRef<HTMLDivElement | null>(null);
+  const clockRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (paused) return;
+    const beatValues = Object.values(BEATS) as number[];
     const start = performance.now() - t;
     let raf = 0;
+    let lastBeatIdx = -1;
+    for (let i = 0; i < beatValues.length; i++) {
+      if (t >= beatValues[i]) lastBeatIdx = i;
+    }
     const tick = (now: number) => {
       const elapsed = now - start;
       if (elapsed >= LOOP_MS) {
@@ -41,7 +52,24 @@ export function AutoDemo() {
         setCycle((c) => c + 1);
         return;
       }
-      setT(elapsed);
+      // Direct DOM updates — cheap, no React reconciliation.
+      if (progressRef.current) {
+        progressRef.current.style.width = `${Math.min(100, (elapsed / LOOP_MS) * 100)}%`;
+      }
+      if (clockRef.current) {
+        clockRef.current.textContent = `09:${(Math.floor(elapsed / 1000) + 12)
+          .toString()
+          .padStart(2, "0")}`;
+      }
+      // Only re-render React when we cross a beat boundary.
+      let idx = -1;
+      for (let i = 0; i < beatValues.length; i++) {
+        if (elapsed >= beatValues[i]) idx = i;
+      }
+      if (idx !== lastBeatIdx) {
+        lastBeatIdx = idx;
+        setT(elapsed);
+      }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -118,7 +146,7 @@ export function AutoDemo() {
             <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
               atlas · {dayAdvanced ? "tuesday" : "monday"} · wk {dayAdvanced ? 4 : 3}
             </div>
-            <div className="text-[10px] text-muted-foreground">09:{(Math.floor(t / 1000) + 12).toString().padStart(2, "0")}</div>
+            <div ref={clockRef} className="text-[10px] text-muted-foreground tabular-nums">09:12</div>
           </div>
 
           {/* Body */}
@@ -288,8 +316,9 @@ export function AutoDemo() {
           {/* Progress bar */}
           <div className="relative h-1 w-full overflow-hidden bg-muted">
             <div
-              className="h-full bg-primary transition-[width] duration-150 ease-linear"
-              style={{ width: `${progress}%` }}
+              ref={progressRef}
+              className="h-full bg-primary"
+              style={{ width: "0%" }}
             />
           </div>
         </div>
