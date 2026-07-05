@@ -92,6 +92,12 @@ function AuthPage() {
   useEffect(() => {
     let cancelled = false;
     let fallbackTimer: number | undefined;
+    const hasPendingOAuth = sessionStorage.getItem("oauth_pending") === "1";
+
+    if (hasPendingOAuth) {
+      setAuthStatus("checking");
+      setLoading(true);
+    }
 
     const handleAuthenticatedUser = (user: NonNullable<Awaited<ReturnType<typeof supabase.auth.getUser>>["data"]["user"]>) => {
       if (!cancelled) void routeAuthenticatedUser(user);
@@ -101,7 +107,7 @@ function AuthPage() {
     supabase.auth.getSession().then(({ data }) => {
       if (cancelled) return;
       if (data.session?.user) handleAuthenticatedUser(data.session.user);
-      else if (sessionStorage.getItem("oauth_pending") === "1") {
+      else if (hasPendingOAuth) {
         fallbackTimer = window.setTimeout(async () => {
           if (cancelled) return;
           const latest = await supabase.auth.getSession();
