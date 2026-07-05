@@ -333,15 +333,20 @@ function AppLayout() {
           ref={mainRef}
           className="min-w-0 px-4 py-6 sm:px-6 sm:py-8 md:px-10 md:py-12 scroll-mt-4"
         >
-          {pathname !== "/app" && (
-            <button
-              type="button"
-              onClick={() => router.history.back()}
-              className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition hover:text-foreground"
-            >
-              <ArrowLeft className="h-4 w-4" /> Back
-            </button>
-          )}
+          {/* Always reserve the back-button slot so navigating between the
+              Home dashboard (no back button) and any other page doesn't shift
+              content down by a row and cause a visible flash. */}
+          <div className="mb-6 h-5">
+            {pathname !== "/app" && (
+              <button
+                type="button"
+                onClick={() => router.history.back()}
+                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition hover:text-foreground"
+              >
+                <ArrowLeft className="h-4 w-4" /> Back
+              </button>
+            )}
+          </div>
           <Outlet />
         </main>
       </div>
