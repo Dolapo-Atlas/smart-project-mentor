@@ -146,7 +146,7 @@ function AuthPage() {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: window.location.origin + "/app" },
+          options: { emailRedirectTo: window.location.origin + "/auth" },
         });
         if (error) throw error;
         // Supabase returns success with an empty identities array when the
@@ -178,7 +178,7 @@ function AuthPage() {
       routingRef.current = false;
       setLoading(false);
     } finally {
-      if (authStatus === "idle") setLoading(false);
+      if (!routingRef.current) setLoading(false);
     }
   }
 
