@@ -15,7 +15,7 @@ import { advanceTime, getReadiness } from "@/lib/time.functions";
 import { AlertTriangle, Mail, FileText, ListChecks, ClipboardList, ShieldAlert, Frown } from "lucide-react";
 import { toast } from "sonner";
 import { ReadAloudButton } from "@/components/read-aloud-button";
-import { useVoiceSettings, useSpeech, voiceForStakeholder } from "@/lib/voice";
+import { useVoiceSettings, useSpeech, personaForStakeholder } from "@/lib/voice";
 import { useEffect, useMemo } from "react";
 
 type Mode = "day" | "week" | "sprint" | "steerco" | "golive";
@@ -95,10 +95,12 @@ export function AdvanceTimeDialog({
     if (blockerCount === 0) return;
     if (playedRef.current) return;
     playedRef.current = true;
+    const persona = personaForStakeholder("Project Update");
     play(briefingText, {
-      voice: voiceForStakeholder("Project Update"),
+      voice: persona.voice,
+      instructions: persona.instructions,
       volume: settings.volume,
-      speed: settings.speed,
+      speed: persona.speed * settings.speed,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, data, briefingText, settings.enabled, settings.readBriefings]);
