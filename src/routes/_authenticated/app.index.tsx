@@ -38,6 +38,16 @@ function Dashboard() {
   });
   const { data: chaptersData } = useQuery({ queryKey: ["chapters"], queryFn: () => fetchChapters() });
 
+  const summon = useMutation({
+    mutationFn: () => genMessage(),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["inbox"] });
+      qc.invalidateQueries({ queryKey: ["overview"] });
+      toast.success("New email in your inbox.");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+
   // No active project (never picked one, or the current one was archived).
   // Show a calm prompt instead of stale dashboard data.
   if (activeLoaded && !active) {
@@ -65,16 +75,6 @@ function Dashboard() {
       </div>
     );
   }
-
-  const summon = useMutation({
-    mutationFn: () => genMessage(),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["inbox"] });
-      qc.invalidateQueries({ queryKey: ["overview"] });
-      toast.success("New email in your inbox.");
-    },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
-  });
 
   const recent = (inbox ?? []).slice(0, 3);
   const story = (overview?.state?.story_log as Array<{ at: string; beat: string }> | undefined) ?? [];
