@@ -11,7 +11,6 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
-  ssr: false,
   head: () => ({
     meta: [
       { title: "Sign in — Atlas" },
@@ -153,7 +152,7 @@ function AuthPage() {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: window.location.origin + "/auth" },
+          options: { emailRedirectTo: window.location.origin + "/auth/callback" },
         });
         if (error) throw error;
         // Supabase returns success with an empty identities array when the
@@ -199,7 +198,7 @@ function AuthPage() {
       sessionStorage.removeItem("oauth_intent");
     }
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin + "/auth",
+      redirect_uri: window.location.origin + "/auth/callback",
     });
     if (result.error) {
       toast.error(result.error.message ?? "Google sign-in failed");
@@ -244,7 +243,7 @@ function AuthPage() {
       sessionStorage.removeItem("oauth_intent");
     }
     const result = await lovable.auth.signInWithOAuth("apple", {
-      redirect_uri: window.location.origin + "/auth",
+      redirect_uri: window.location.origin + "/auth/callback",
     });
     if (result.error) {
       toast.error(result.error.message ?? "Apple sign-in failed");
