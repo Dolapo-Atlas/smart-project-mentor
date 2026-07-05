@@ -53,26 +53,136 @@ export function useVoiceSettings() {
   return { settings, update };
 }
 
-// Stable voice assignment per stakeholder name. Keep consistent throughout sim.
-const VOICE_MAP: Record<string, string> = {
-  "Sarah Williams": "shimmer",
-  "David Okafor": "echo",
-  "Priya Anand": "sage",
-  "James Lin": "verse",
-  "CareSoft Ltd": "ash",
-  "Margaret Hollis": "nova",
-  "Rachel Stone": "shimmer",
-  "Project Update": "coral",
+// -----------------------------------------------------------------------------
+// Persona-aware voices
+// -----------------------------------------------------------------------------
+// Every stakeholder gets a voice + speaking-style instructions that match their
+// personality, seniority, and function. The TTS model (gpt-4o-mini-tts) uses
+// the `instructions` field to steer tone, pacing, and warmth — so an executive
+// sponsor sounds authoritative, a clinical lead sounds calm and empathetic,
+// a vendor sounds polished and corporate, etc.
+//
+// Two lookup layers:
+//   1. NAME_PERSONAS — hand-crafted personas for the flagship Atlas cast.
+//   2. ROLE_PERSONAS — role-based fallbacks so new stakeholders in future
+//      project templates automatically inherit a matching voice.
+
+export type Persona = {
+  voice: string;      // one of the ALLOWED_VOICES in /api/public/tts
+  instructions: string;
+  speed: number;      // baseline speed; user's global speed multiplies this
 };
 
-export function voiceForStakeholder(name: string | null | undefined): string {
-  if (!name) return "alloy";
-  if (VOICE_MAP[name]) return VOICE_MAP[name];
-  // Stable hash fallback
-  const voices = ["alloy", "ash", "ballad", "coral", "echo", "sage", "shimmer", "verse", "marin", "cedar"];
+// Voices allowed by the TTS gateway.
+const VALID_VOICES = new Set([
+  "alloy", "ash", "ballad", "coral", "echo",
+  "sage", "shimmer", "verse", "marin", "cedar",
+]);
+
+const ROLE_PERSONAS: Record<string, Persona> = {
+  pm: {
+    voice: "coral",
+    instructions:
+      "Warm, organised, and collaborative — the calm project manager keeping everyone aligned. Speak with clear diction and a friendly, professional cadence.",
+    speed: 1.0,
+  },
+  sponsor: {
+    voice: "cedar",
+    instructions:
+      "Authoritative executive sponsor. Speak with measured gravitas, confident pacing, and a lower register. Sound like a senior leader who chooses words carefully.",
+    speed: 0.95,
+  },
+  finance: {
+    voice: "sage",
+    instructions:
+      "Precise, analytical finance lead. Speak crisply and evenly, with slight emphasis on numbers and financial terms. Neutral, no-nonsense delivery.",
+    speed: 1.0,
+  },
+  tech: {
+    voice: "echo",
+    instructions:
+      "Measured, thoughtful technical lead. Calm and articulate, with a slight pause before technical points. Sound like an experienced engineer explaining a system.",
+    speed: 0.98,
+  },
+  vendor: {
+    voice: "verse",
+    instructions:
+      "Polished corporate account manager from a vendor. Confident, warm, slightly formal — pitching without being pushy.",
+    speed: 1.02,
+  },
+  care_home: {
+    voice: "marin",
+    instructions:
+      "Warm, empathetic care home manager. Grounded and caring, with an unhurried, reassuring pace. Sound like someone who spends the day with residents and families.",
+    speed: 0.95,
+  },
+  operations: {
+    voice: "ballad",
+    instructions:
+      "Practical operations lead. Direct, energetic, matter-of-fact — someone who runs a rota and wants clear next steps.",
+    speed: 1.05,
+  },
+  clinical: {
+    voice: "shimmer",
+    instructions:
+      "Calm clinical governance lead. Professional, precise, and reassuring — the tone of a senior nurse or clinician explaining a safety concern.",
+    speed: 0.97,
+  },
+  admin: {
+    voice: "alloy",
+    instructions: "Neutral, helpful administrator. Clear and even, no strong colour.",
+    speed: 1.0,
+  },
+};
+
+// Named personas for the flagship Atlas cast override role defaults.
+const NAME_PERSONAS: Record<string, Persona> = {
+  "Sarah Williams": ROLE_PERSONAS.pm,
+  "David Okafor": ROLE_PERSONAS.sponsor,
+  "Priya Anand": ROLE_PERSONAS.finance,
+  "James Lin": ROLE_PERSONAS.tech,
+  "CareSoft Ltd": ROLE_PERSONAS.vendor,
+  "Margaret Hollis": ROLE_PERSONAS.care_home,
+  "Rachel Stone": ROLE_PERSONAS.clinical,
+  // System narrator for project briefings.
+  "Project Update": {
+    voice: "ash",
+    instructions:
+      "Documentary-style narrator giving a concise project briefing. Steady, engaging, neutral — think a professional newsreader.",
+    speed: 1.0,
+  },
+};
+
+const FALLBACK_VOICES = ["alloy", "ash", "ballad", "coral", "echo", "sage", "shimmer", "verse", "marin", "cedar"];
+const FALLBACK: Persona = {
+  voice: "alloy",
+  instructions: "Neutral, professional workplace voice. Clear diction, even pacing.",
+  speed: 1.0,
+};
+
+function stableVoiceFor(name: string): string {
   let h = 0;
   for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) | 0;
-  return voices[Math.abs(h) % voices.length];
+  return FALLBACK_VOICES[Math.abs(h) % FALLBACK_VOICES.length];
+}
+
+/** Full persona (voice + speaking instructions + baseline speed) for a stakeholder. */
+export function personaForStakeholder(
+  name: string | null | undefined,
+  role?: string | null,
+): Persona {
+  if (name && NAME_PERSONAS[name]) return NAME_PERSONAS[name];
+  if (role && ROLE_PERSONAS[role]) return ROLE_PERSONAS[role];
+  if (name) {
+    const voice = stableVoiceFor(name);
+    return { ...FALLBACK, voice: VALID_VOICES.has(voice) ? voice : "alloy" };
+  }
+  return FALLBACK;
+}
+
+/** Backwards-compat: just the voice id for a stakeholder. */
+export function voiceForStakeholder(name: string | null | undefined, role?: string | null): string {
+  return personaForStakeholder(name, role).voice;
 }
 
 export type SpeechController = {
@@ -87,7 +197,13 @@ export type SpeechController = {
  */
 export async function speak(
   text: string,
-  opts: { voice?: string; volume?: number; speed?: number; signal?: AbortSignal } = {},
+  opts: {
+    voice?: string;
+    volume?: number;
+    speed?: number;
+    instructions?: string;
+    signal?: AbortSignal;
+  } = {},
 ): Promise<HTMLAudioElement> {
   const res = await fetch("/api/public/tts", {
     method: "POST",
@@ -96,6 +212,7 @@ export async function speak(
       text,
       voice: opts.voice ?? "alloy",
       speed: opts.speed ?? 1,
+      instructions: opts.instructions,
     }),
     signal: opts.signal,
   });
@@ -132,7 +249,10 @@ export function useSpeech() {
   useEffect(() => () => stop(), [stop]);
 
   const play = useCallback(
-    async (text: string, opts: { voice?: string; volume?: number; speed?: number } = {}) => {
+    async (
+      text: string,
+      opts: { voice?: string; volume?: number; speed?: number; instructions?: string } = {},
+    ) => {
       stop();
       const ctrl = new AbortController();
       abortRef.current = ctrl;

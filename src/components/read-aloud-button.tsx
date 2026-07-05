@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Volume2, Loader2, Square } from "lucide-react";
-import { useSpeech, useVoiceSettings, voiceForStakeholder } from "@/lib/voice";
+import { useSpeech, useVoiceSettings, personaForStakeholder } from "@/lib/voice";
+import { useRoster } from "@/lib/roster";
 import { toast } from "sonner";
 
 export function ReadAloudButton({
@@ -18,7 +19,9 @@ export function ReadAloudButton({
 }) {
   const { settings } = useVoiceSettings();
   const { state, play, stop } = useSpeech();
-  const voice = voiceForStakeholder(stakeholder);
+  const roster = useRoster();
+  const role = stakeholder ? roster.find((m) => m.name === stakeholder)?.role : undefined;
+  const persona = personaForStakeholder(stakeholder, role);
 
   const onClick = () => {
     if (state !== "idle") {
@@ -29,7 +32,13 @@ export function ReadAloudButton({
       toast.error("Nothing to read");
       return;
     }
-    play(text, { voice, volume: settings.volume, speed: settings.speed });
+    play(text, {
+      voice: persona.voice,
+      instructions: persona.instructions,
+      volume: settings.volume,
+      // User's global speed multiplies the persona's baseline speed.
+      speed: persona.speed * settings.speed,
+    });
   };
 
   return (
