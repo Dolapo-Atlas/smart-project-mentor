@@ -130,9 +130,15 @@ function ProjectsPicker() {
 
   const archive = useMutation({
     mutationFn: (instanceId: string) => archiveFn({ data: { instanceId } }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["my-project-instances"] });
-      toast.success("Project archived");
+    onSuccess: (res: any) => {
+      // The active project may have been cleared server-side. Refresh
+      // every dashboard query so nothing stale sticks around.
+      qc.invalidateQueries();
+      if (res?.wasActive) {
+        toast.success("Project archived. Pick another simulation to continue.");
+      } else {
+        toast.success("Project archived");
+      }
     },
   });
 

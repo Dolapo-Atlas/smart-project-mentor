@@ -367,11 +367,26 @@ export const archiveProject = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ instanceId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    const { error } = await context.supabase
+    const { supabase, userId } = context;
+    const { error } = await supabase
       .from("project_instances")
       .update({ status: "archived" })
       .eq("id", data.instanceId)
-      .eq("user_id", context.userId);
+      .eq("user_id", userId);
     if (error) throw error;
-    return { ok: true };
+
+    // If this was the active project, clear the pointer so the dashboard
+    // stops showing stale data and prompts the learner to pick a new sim.
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("current_project_instance_id")
+      .eq("id", userId)
+      .maybeSingle();
+    if (profile?.current_project_instance_id === data.instanceId) {
+      await supabase
+        .from("profiles")
+        .update({ current_project_instance_id: null })
+        .eq("id", userId);
+    }
+    return { ok: true, wasActive: profile?.current_project_instance_id === data.instanceId };
   });

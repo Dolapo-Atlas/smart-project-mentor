@@ -32,8 +32,39 @@ function Dashboard() {
 
   const { data: overview } = useQuery({ queryKey: ["overview"], queryFn: () => fetchOverview() });
   const { data: inbox } = useQuery({ queryKey: ["inbox"], queryFn: () => fetchInbox() });
-  const { data: active } = useQuery({ queryKey: ["active-project"], queryFn: () => fetchActive() });
+  const { data: active, isSuccess: activeLoaded } = useQuery({
+    queryKey: ["active-project"],
+    queryFn: () => fetchActive(),
+  });
   const { data: chaptersData } = useQuery({ queryKey: ["chapters"], queryFn: () => fetchChapters() });
+
+  // No active project (never picked one, or the current one was archived).
+  // Show a calm prompt instead of stale dashboard data.
+  if (activeLoaded && !active) {
+    return (
+      <div className="mx-auto flex min-h-[60vh] max-w-2xl flex-col items-center justify-center px-6 py-16 text-center">
+        <div className="rounded-full border border-border bg-card px-3 py-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+          No active simulation
+        </div>
+        <h1 className="mt-6 font-display text-4xl font-medium tracking-tight md:text-5xl">
+          You don't have a project running.
+        </h1>
+        <p className="mt-4 max-w-lg text-muted-foreground">
+          Your previous simulation has been archived. Pick another project to
+          continue your Atlas experience — your progress from other simulations
+          is safe.
+        </p>
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <Button asChild size="lg">
+            <Link to="/app/projects">
+              <Sparkles className="mr-2 h-4 w-4" />
+              Pick a project
+            </Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   const summon = useMutation({
     mutationFn: () => genMessage(),
