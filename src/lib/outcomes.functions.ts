@@ -258,12 +258,10 @@ export const getMyOutcome = createServerFn({ method: "GET" })
 export const getPublicCertificate = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => z.object({ slug: z.string().min(6).max(64) }).parse(d))
   .handler(async ({ data }) => {
-    const supabase = createClient<Database>(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_PUBLISHABLE_KEY!,
-      { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
-    );
-    const { data: row, error } = await supabase
+    // Public certificate lookup: filter strictly by share_slug on the server
+    // using the admin client so anon has no direct table access.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row, error } = await supabaseAdmin
       .from("project_outcomes")
       .select("template_title, user_display_name, user_role, score, grade, completed_at, share_slug")
       .eq("share_slug", data.slug)

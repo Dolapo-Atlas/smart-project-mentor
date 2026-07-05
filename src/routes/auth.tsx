@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { checkEmailAllowed } from "@/lib/signup.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,7 +42,7 @@ function AuthPage() {
         }
         // Enforce invite-only allowlist for new OAuth signups.
         const userEmail = data.user.email ?? "";
-        const { data: allowed } = await supabase.rpc("is_email_allowed", { _email: userEmail });
+        const { allowed } = await checkEmailAllowed({ data: { email: userEmail } });
         if (!allowed) {
           await supabase.auth.signOut();
           toast.error("Atlas is invite-only right now. Join the waitlist on the homepage.");
@@ -58,10 +59,7 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "signup") {
-        const { data: allowed, error: allowErr } = await supabase.rpc("is_email_allowed", {
-          _email: email,
-        });
-        if (allowErr) throw allowErr;
+        const { allowed } = await checkEmailAllowed({ data: { email } });
         if (!allowed) {
           toast.error("Atlas is invite-only right now. Join the waitlist on the homepage.");
           setLoading(false);
