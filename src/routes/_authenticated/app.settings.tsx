@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useVoiceSettings, useSpeech, voiceForStakeholder } from "@/lib/voice";
+import { useVoiceSettings, useSpeech, personaForStakeholder } from "@/lib/voice";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
@@ -118,13 +118,13 @@ function SettingsPage() {
         </p>
         <ul className="mt-4 divide-y divide-border">
           {roster.map((s) => {
-            const voice = voiceForStakeholder(s.name);
+            const persona = personaForStakeholder(s.name, s.role);
             return (
               <li key={s.role} className="flex items-center justify-between gap-4 py-3">
                 <div>
                   <div className="text-sm font-medium">{s.name}</div>
                   <div className="text-xs text-muted-foreground">
-                    {s.title} · voice: {voice}
+                    {s.title} · voice: {persona.voice}
                   </div>
                 </div>
                 <Button
@@ -137,7 +137,12 @@ function SettingsPage() {
                     }
                     play(
                       `Hi, this is ${s.name}, ${s.title}. This is how I'll sound in your briefings.`,
-                      { voice, volume: settings.volume, speed: settings.speed },
+                      {
+                        voice: persona.voice,
+                        instructions: persona.instructions,
+                        volume: settings.volume,
+                        speed: persona.speed * settings.speed,
+                      },
                     );
                   }}
                 >
