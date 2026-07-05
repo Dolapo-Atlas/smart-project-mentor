@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { checkEmailAllowed } from "@/lib/signup.functions";
 import { getActiveProject } from "@/lib/projects.functions";
 
-export const Route = createFileRoute("/auth/callback")({
+export const Route = createFileRoute("/auth-callback")({
   component: AuthCallback,
 });
 
@@ -23,7 +23,9 @@ function AuthCallback() {
       navigate({ to: "/auth", replace: true });
     };
 
-    const routeUser = async (user: NonNullable<Awaited<ReturnType<typeof supabase.auth.getUser>>["data"]["user"]>) => {
+    const routeUser = async (
+      user: NonNullable<Awaited<ReturnType<typeof supabase.auth.getUser>>["data"]["user"]>,
+    ) => {
       if (done) return;
       done = true;
 

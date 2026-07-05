@@ -152,7 +152,7 @@ function AuthPage() {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: window.location.origin + "/auth/callback" },
+          options: { emailRedirectTo: window.location.origin + "/auth-callback" },
         });
         if (error) throw error;
         // Supabase returns success with an empty identities array when the
@@ -198,7 +198,7 @@ function AuthPage() {
       sessionStorage.removeItem("oauth_intent");
     }
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin + "/auth/callback",
+      redirect_uri: window.location.origin + "/auth-callback",
     });
     if (result.error) {
       toast.error(result.error.message ?? "Google sign-in failed");
@@ -243,7 +243,7 @@ function AuthPage() {
       sessionStorage.removeItem("oauth_intent");
     }
     const result = await lovable.auth.signInWithOAuth("apple", {
-      redirect_uri: window.location.origin + "/auth/callback",
+      redirect_uri: window.location.origin + "/auth-callback",
     });
     if (result.error) {
       toast.error(result.error.message ?? "Apple sign-in failed");
