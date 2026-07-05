@@ -24,6 +24,11 @@ export const Route = createFileRoute("/api/public/tts")({
           ? payload.voice!
           : "alloy";
         const speed = Math.min(2.0, Math.max(0.5, Number(payload.speed) || 1.0));
+        const instructionsRaw = (payload as { instructions?: unknown }).instructions;
+        const instructions =
+          typeof instructionsRaw === "string" && instructionsRaw.trim()
+            ? instructionsRaw.trim().slice(0, 500)
+            : undefined;
         if (!text) return new Response("Missing text", { status: 400 });
         if (text.length > 4000) {
           return new Response("Text too long", { status: 400 });
@@ -43,6 +48,7 @@ export const Route = createFileRoute("/api/public/tts")({
               voice,
               response_format: "mp3",
               speed,
+              ...(instructions ? { instructions } : {}),
             }),
           },
         );
