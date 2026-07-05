@@ -123,31 +123,20 @@ function AppLayout() {
   const mainRef = useRef<HTMLElement | null>(null);
   const isFirstRender = useRef(true);
 
-  // On mobile, when the user taps a nav tile the route content lives below
-  // the fold. Auto-scroll the main region into view so tapping a tile feels
-  // like a real navigation instead of a silent tab toggle.
+  // Scroll to top on route change without re-triggering animations or
+  // multiple deferred scrolls (which caused a visible "snap back" flicker
+  // to the previous page's content mid-transition).
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
     }
-    if (!isMobile) {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
+    if (isMobile && mainRef.current) {
+      const top = mainRef.current.getBoundingClientRect().top + window.scrollY - 8;
+      window.scrollTo({ top: Math.max(top, 0), behavior: "auto" });
+    } else {
+      window.scrollTo({ top: 0, behavior: "auto" });
     }
-    // Delay past the router's own scroll restoration so ours wins.
-    const doScroll = () => {
-      const el = mainRef.current;
-      if (!el) return;
-      const top = el.getBoundingClientRect().top + window.scrollY - 8;
-      window.scrollTo({ top, behavior: "smooth" });
-    };
-    const t1 = window.setTimeout(doScroll, 50);
-    const t2 = window.setTimeout(doScroll, 400);
-    return () => {
-      window.clearTimeout(t1);
-      window.clearTimeout(t2);
-    };
   }, [pathname, isMobile]);
   const fetchOverview = useServerFn(getOverview);
   const { data: overview } = useQuery({
@@ -342,8 +331,7 @@ function AppLayout() {
 
         <main
           ref={mainRef}
-          key={pathname}
-          className="min-w-0 px-4 py-6 sm:px-6 sm:py-8 md:px-10 md:py-12 scroll-mt-4 animate-in fade-in slide-in-from-bottom-2 duration-300"
+          className="min-w-0 px-4 py-6 sm:px-6 sm:py-8 md:px-10 md:py-12 scroll-mt-4"
         >
           {pathname !== "/app" && (
             <button
