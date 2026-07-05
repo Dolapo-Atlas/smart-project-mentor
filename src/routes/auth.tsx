@@ -27,12 +27,14 @@ function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data }) => {
-      if (!data.user) return;
+    let cancelled = false;
+
+    async function handleAuthenticatedUser(user: NonNullable<Awaited<ReturnType<typeof supabase.auth.getUser>>["data"]["user"]>) {
+      if (cancelled) return;
       const intent = sessionStorage.getItem("oauth_intent");
       if (intent === "signup") {
         sessionStorage.removeItem("oauth_intent");
-        const createdAt = new Date(data.user.created_at ?? 0).getTime();
+        const createdAt = new Date(user.created_at ?? 0).getTime();
         const isNew = Date.now() - createdAt < 60_000;
         if (!isNew) {
           await supabase.auth.signOut();
@@ -41,7 +43,7 @@ function AuthPage() {
           return;
         }
         // Enforce invite-only allowlist for new OAuth signups.
-        const userEmail = data.user.email ?? "";
+        const userEmail = user.email ?? "";
         const { allowed } = await checkEmailAllowed({ data: { email: userEmail } });
         if (!allowed) {
           await supabase.auth.signOut();
@@ -50,8 +52,26 @@ function AuthPage() {
           return;
         }
       }
+      if (cancelled) return;
       navigate({ to: "/app" });
+    }
+
+    // Check existing session immediately.
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session?.user) handleAuthenticatedUser(data.session.user);
     });
+
+    // Also react to sign-in events (e.g. Google OAuth completing after redirect).
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && session?.user) {
+        handleAuthenticatedUser(session.user);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      sub.subscription.unsubscribe();
+    };
   }, [navigate]);
 
   async function handleEmail(e: React.FormEvent) {
