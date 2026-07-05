@@ -35,6 +35,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import atlasLogo from "@/assets/atlas-logo.png.asset.json";
 import { AutoDemo } from "@/components/auto-demo";
+import { getReferralStats } from "@/lib/signup.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -1381,8 +1382,8 @@ function EarlyAccess() {
     let active = true;
     (async () => {
       try {
-        const { data } = await supabase.rpc("referral_stats", { code: referralCode });
-        if (active && typeof data === "number") setReferralCount(data);
+        const { count } = await getReferralStats({ data: { code: referralCode } });
+        if (active) setReferralCount(count);
       } catch {
         // ignore
       }
