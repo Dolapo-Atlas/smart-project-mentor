@@ -1,8 +1,10 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { checkEmailAllowed } from "@/lib/signup.functions";
+import { getActiveProject } from "@/lib/projects.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,45 +22,104 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
+  const fetchActiveProject = useServerFn(getActiveProject);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [authStatus, setAuthStatus] = useState<"idle" | "redirecting" | "checking">(() =>
+    typeof window !== "undefined" && sessionStorage.getItem("oauth_pending") === "1" ? "checking" : "idle",
+  );
+  const routingRef = useRef(false);
 
-  useEffect(() => {
-    let cancelled = false;
+  const routeAuthenticatedUser = useCallback(
+    async (
+      user: NonNullable<Awaited<ReturnType<typeof supabase.auth.getUser>>["data"]["user"]>,
+    ) => {
+      if (routingRef.current) return;
+      routingRef.current = true;
+      setAuthStatus("checking");
+      setLoading(true);
 
-    async function handleAuthenticatedUser(user: NonNullable<Awaited<ReturnType<typeof supabase.auth.getUser>>["data"]["user"]>) {
-      if (cancelled) return;
       const intent = sessionStorage.getItem("oauth_intent");
       if (intent === "signup") {
-        sessionStorage.removeItem("oauth_intent");
         const createdAt = new Date(user.created_at ?? 0).getTime();
         const isNew = Date.now() - createdAt < 60_000;
         if (!isNew) {
           await supabase.auth.signOut();
+          sessionStorage.removeItem("oauth_intent");
+          sessionStorage.removeItem("oauth_pending");
           toast.error("That Google account is already registered. Sign in instead.");
           setMode("signin");
+          setAuthStatus("idle");
+          setLoading(false);
+          routingRef.current = false;
           return;
         }
-        // Enforce invite-only allowlist for new OAuth signups.
+
         const userEmail = user.email ?? "";
         const { allowed } = await checkEmailAllowed({ data: { email: userEmail } });
         if (!allowed) {
           await supabase.auth.signOut();
+          sessionStorage.removeItem("oauth_intent");
+          sessionStorage.removeItem("oauth_pending");
           toast.error("Atlas is invite-only right now. Join the waitlist on the homepage.");
           setMode("signin");
+          setAuthStatus("idle");
+          setLoading(false);
+          routingRef.current = false;
           return;
         }
       }
-      if (cancelled) return;
-      navigate({ to: "/app" });
+
+      sessionStorage.removeItem("oauth_intent");
+      sessionStorage.removeItem("oauth_pending");
+
+      let hasActiveProject = false;
+      try {
+        hasActiveProject = !!(await fetchActiveProject());
+      } catch {
+        // If the project check races the fresh session, let the protected app
+        // route decide. The loading screen still prevents the login-page flash.
+      }
+
+      navigate({ to: hasActiveProject ? "/app" : "/app/projects", replace: true });
+    },
+    [fetchActiveProject, navigate],
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    let fallbackTimer: number | undefined;
+    const hasPendingOAuth = sessionStorage.getItem("oauth_pending") === "1";
+
+    if (hasPendingOAuth) {
+      setAuthStatus("checking");
+      setLoading(true);
     }
+
+    const handleAuthenticatedUser = (user: NonNullable<Awaited<ReturnType<typeof supabase.auth.getUser>>["data"]["user"]>) => {
+      if (!cancelled) void routeAuthenticatedUser(user);
+    };
 
     // Check existing session immediately.
     supabase.auth.getSession().then(({ data }) => {
+      if (cancelled) return;
       if (data.session?.user) handleAuthenticatedUser(data.session.user);
+      else if (hasPendingOAuth) {
+        fallbackTimer = window.setTimeout(async () => {
+          if (cancelled) return;
+          const latest = await supabase.auth.getSession();
+          if (latest.data.session?.user) {
+            handleAuthenticatedUser(latest.data.session.user);
+            return;
+          }
+          sessionStorage.removeItem("oauth_pending");
+          setAuthStatus("idle");
+          setLoading(false);
+        }, 3500);
+      }
     });
 
     // Also react to sign-in events (e.g. Google OAuth completing after redirect).
@@ -70,25 +131,28 @@ function AuthPage() {
 
     return () => {
       cancelled = true;
+      if (fallbackTimer) window.clearTimeout(fallbackTimer);
       sub.subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [routeAuthenticatedUser]);
 
   async function handleEmail(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
+    setAuthStatus("checking");
     try {
       if (mode === "signup") {
         const { allowed } = await checkEmailAllowed({ data: { email } });
         if (!allowed) {
           toast.error("Atlas is invite-only right now. Join the waitlist on the homepage.");
+          setAuthStatus("idle");
           setLoading(false);
           return;
         }
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: window.location.origin + "/app" },
+          options: { emailRedirectTo: window.location.origin + "/auth-callback" },
         });
         if (error) throw error;
         // Supabase returns success with an empty identities array when the
@@ -96,39 +160,56 @@ function AuthPage() {
         if (data.user && data.user.identities && data.user.identities.length === 0) {
           toast.error("That email is already registered. Sign in instead.");
           setMode("signin");
+          setAuthStatus("idle");
           setLoading(false);
           return;
         }
         toast.success("Account created. You're in.");
+        if (data.user) {
+          await routeAuthenticatedUser(data.user);
+          return;
+        }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        if (data.user) {
+          await routeAuthenticatedUser(data.user);
+          return;
+        }
       }
-      navigate({ to: "/app" });
+      navigate({ to: "/app/projects", replace: true });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Authentication failed");
-    } finally {
+      setAuthStatus("idle");
+      routingRef.current = false;
       setLoading(false);
+    } finally {
+      if (!routingRef.current) setLoading(false);
     }
   }
 
   async function handleGoogle() {
     setLoading(true);
+    setAuthStatus("redirecting");
+    sessionStorage.setItem("oauth_pending", "1");
     if (mode === "signup") {
       sessionStorage.setItem("oauth_intent", "signup");
     } else {
       sessionStorage.removeItem("oauth_intent");
     }
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin + "/auth",
+      redirect_uri: window.location.origin + "/auth-callback",
     });
     if (result.error) {
       toast.error(result.error.message ?? "Google sign-in failed");
+      sessionStorage.removeItem("oauth_pending");
+      setAuthStatus("idle");
       setLoading(false);
       return;
     }
     if (result.redirected) return;
-    navigate({ to: "/app" });
+    const { data } = await supabase.auth.getUser();
+    if (data.user) await routeAuthenticatedUser(data.user);
   }
 
   async function handleSSO() {
@@ -140,33 +221,48 @@ function AuthPage() {
       return;
     }
     setLoading(true);
+    setAuthStatus("redirecting");
     try {
       const { data, error } = await supabase.auth.signInWithSSO({ domain });
       if (error) throw error;
       if (data?.url) window.location.href = data.url;
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "SSO not configured for that domain.");
+      setAuthStatus("idle");
       setLoading(false);
     }
   }
 
   async function handleApple() {
     setLoading(true);
+    setAuthStatus("redirecting");
+    sessionStorage.setItem("oauth_pending", "1");
     if (mode === "signup") {
       sessionStorage.setItem("oauth_intent", "signup");
     } else {
       sessionStorage.removeItem("oauth_intent");
     }
     const result = await lovable.auth.signInWithOAuth("apple", {
-      redirect_uri: window.location.origin + "/auth",
+      redirect_uri: window.location.origin + "/auth-callback",
     });
     if (result.error) {
       toast.error(result.error.message ?? "Apple sign-in failed");
+      sessionStorage.removeItem("oauth_pending");
+      setAuthStatus("idle");
       setLoading(false);
       return;
     }
     if (result.redirected) return;
-    navigate({ to: "/app" });
+    const { data } = await supabase.auth.getUser();
+    if (data.user) await routeAuthenticatedUser(data.user);
+  }
+
+  if (authStatus !== "idle") {
+    return (
+      <AuthTransition
+        message={authStatus === "redirecting" ? "Opening secure sign-in…" : "Preparing your workspace…"}
+      />
+    );
   }
 
   return (
@@ -266,6 +362,20 @@ function AuthPage() {
           <Link to="/" className="underline underline-offset-2 hover:text-foreground">Privacy Policy</Link>.
         </p>
       </main>
+    </div>
+  );
+}
+
+function AuthTransition({ message }: { message: string }) {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background paper-texture px-6 text-center">
+      <div className="w-full max-w-sm">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-primary/30 bg-primary/10">
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        </div>
+        <h1 className="mt-6 font-display text-3xl font-semibold tracking-tight text-foreground">Atlas</h1>
+        <p className="mt-2 text-sm text-muted-foreground">{message}</p>
+      </div>
     </div>
   );
 }
