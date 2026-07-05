@@ -92,9 +92,6 @@ export function AutoDemo() {
   // Active "act" label
   const act = !showTasks ? 1 : !showScores ? 2 : 3;
 
-  // Progress bar
-  const progress = Math.min(100, (t / LOOP_MS) * 100);
-
   return (
     <section id="demo" className="relative border-y border-border/60 bg-gradient-to-b from-background via-card/30 to-background py-20">
       <div className="mx-auto max-w-6xl px-6 lg:px-10">
