@@ -13,7 +13,7 @@ export const Route = createFileRoute("/api/public/tts")({
         if (!apiKey) {
           return new Response("TTS not configured", { status: 500 });
         }
-        let payload: { text?: string; voice?: string; speed?: number };
+        let payload: { text?: string; voice?: string; speed?: number; instructions?: string };
         try {
           payload = await request.json();
         } catch {
