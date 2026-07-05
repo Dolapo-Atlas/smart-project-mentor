@@ -1,13 +1,40 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/auth/callback")({
-  beforeLoad: () => {
-    throw redirect({ to: "/auth" });
-  },
   component: AuthCallback,
 });
 
 function AuthCallback() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    sessionStorage.setItem("oauth_pending", "1");
+    let done = false;
+
+    const continueToAuth = () => {
+      if (done) return;
+      done = true;
+      navigate({ to: "/auth", replace: true });
+    };
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) continueToAuth();
+    });
+
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && session) continueToAuth();
+    });
+
+    const timer = window.setTimeout(continueToAuth, 5000);
+    return () => {
+      done = true;
+      window.clearTimeout(timer);
+      sub.subscription.unsubscribe();
+    };
+  }, [navigate]);
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background paper-texture px-6 text-center">
       <div className="w-full max-w-sm">
