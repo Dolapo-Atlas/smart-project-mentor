@@ -27,6 +27,7 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [authStatus, setAuthStatus] = useState<"idle" | "redirecting" | "checking">(() =>
     typeof window !== "undefined" && sessionStorage.getItem("oauth_pending") === "1" ? "checking" : "idle",
@@ -138,11 +139,12 @@ function AuthPage() {
 
   async function handleEmail(e: React.FormEvent) {
     e.preventDefault();
+    const normalizedEmail = email.trim().toLowerCase();
     setLoading(true);
     setAuthStatus("checking");
     try {
       if (mode === "signup") {
-        const { allowed } = await checkEmailAllowed({ data: { email } });
+        const { allowed } = await checkEmailAllowed({ data: { email: normalizedEmail } });
         if (!allowed) {
           toast.error("Atlas is invite-only right now. Join the waitlist on the homepage.");
           setAuthStatus("idle");
@@ -150,7 +152,7 @@ function AuthPage() {
           return;
         }
         const { data, error } = await supabase.auth.signUp({
-          email,
+          email: normalizedEmail,
           password,
           options: { emailRedirectTo: window.location.origin + "/auth-callback" },
         });
@@ -158,7 +160,7 @@ function AuthPage() {
         // Supabase returns success with an empty identities array when the
         // email is already registered (to prevent enumeration). Detect it.
         if (data.user && data.user.identities && data.user.identities.length === 0) {
-          toast.error("That email is already registered. Sign in instead.");
+          toast.error("That email already has an account. Use Set password if you first joined with Google.");
           setMode("signin");
           setAuthStatus("idle");
           setLoading(false);
@@ -170,7 +172,7 @@ function AuthPage() {
           return;
         }
       } else {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
         if (error) throw error;
         if (data.user) {
           await routeAuthenticatedUser(data.user);
@@ -179,12 +181,37 @@ function AuthPage() {
       }
       navigate({ to: "/app/projects", replace: true });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Authentication failed");
+      const message = err instanceof Error ? err.message : "Authentication failed";
+      toast.error(
+        message.toLowerCase().includes("invalid login credentials")
+          ? "Wrong password, or this Google account does not have a password yet. Tap Set password."
+          : message,
+      );
       setAuthStatus("idle");
       routingRef.current = false;
       setLoading(false);
     } finally {
       if (!routingRef.current) setLoading(false);
+    }
+  }
+
+  async function handlePasswordReset() {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) {
+      toast.error("Enter your email first.");
+      return;
+    }
+    setResetLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast.success("Check your email for a secure password setup link.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not send the password setup email.");
+    } finally {
+      setResetLoading(false);
     }
   }
 
@@ -354,6 +381,15 @@ function AuthPage() {
             {loading ? "..." : "Continue"}
           </Button>
         </form>
+
+        <button
+          type="button"
+          onClick={handlePasswordReset}
+          disabled={resetLoading || loading}
+          className="text-center text-sm font-medium text-primary underline-offset-4 hover:underline disabled:opacity-50"
+        >
+          {resetLoading ? "Sending password link…" : "Set or reset email password"}
+        </button>
 
         <p className="text-center text-xs text-muted-foreground">
           By continuing, you agree to Atlas's{" "}
