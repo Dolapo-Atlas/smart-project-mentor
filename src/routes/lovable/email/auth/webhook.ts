@@ -31,7 +31,7 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "smart-project-mentor"
+const SITE_NAME = "Atlas"
 const SENDER_DOMAIN = "notify.atlassim.co"
 const ROOT_DOMAIN = "atlassim.co"
 const FROM_DOMAIN = "atlassim.co"
