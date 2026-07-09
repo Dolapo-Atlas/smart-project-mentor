@@ -3,7 +3,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
-import { checkEmailAllowed } from "@/lib/signup.functions";
 import { getActiveProject } from "@/lib/projects.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,29 +47,7 @@ function AuthPage() {
         const createdAt = new Date(user.created_at ?? 0).getTime();
         const isNew = Date.now() - createdAt < 60_000;
         if (!isNew) {
-          await supabase.auth.signOut();
-          sessionStorage.removeItem("oauth_intent");
-          sessionStorage.removeItem("oauth_pending");
-          toast.error("That Google account is already registered. Sign in instead.");
-          setMode("signin");
-          setAuthStatus("idle");
-          setLoading(false);
-          routingRef.current = false;
-          return;
-        }
-
-        const userEmail = user.email ?? "";
-        const { allowed } = await checkEmailAllowed({ data: { email: userEmail } });
-        if (!allowed) {
-          await supabase.auth.signOut();
-          sessionStorage.removeItem("oauth_intent");
-          sessionStorage.removeItem("oauth_pending");
-          toast.error("Atlas is invite-only right now. Join the waitlist on the homepage.");
-          setMode("signin");
-          setAuthStatus("idle");
-          setLoading(false);
-          routingRef.current = false;
-          return;
+          // Not a new account — just sign them in.
         }
       }
 
@@ -144,13 +121,6 @@ function AuthPage() {
     setAuthStatus("checking");
     try {
       if (mode === "signup") {
-        const { allowed } = await checkEmailAllowed({ data: { email: normalizedEmail } });
-        if (!allowed) {
-          toast.error("Atlas is invite-only right now. Join the waitlist on the homepage.");
-          setAuthStatus("idle");
-          setLoading(false);
-          return;
-        }
         const { data, error } = await supabase.auth.signUp({
           email: normalizedEmail,
           password,
