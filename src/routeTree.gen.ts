@@ -48,7 +48,6 @@ import { Route as AuthenticatedAppCompletedRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppCommsRouteImport } from './routes/_authenticated/app.comms'
 import { Route as AuthenticatedAppChangesRouteImport } from './routes/_authenticated/app.changes'
 import { Route as AuthenticatedAppBudgetRouteImport } from './routes/_authenticated/app.budget'
-import { Route as AuthenticatedAdminSignupsRouteImport } from './routes/_authenticated/admin.signups'
 import { Route as AuthenticatedAdminMarketingRouteImport } from './routes/_authenticated/admin.marketing'
 import { Route as AuthenticatedAdminEvalsRouteImport } from './routes/_authenticated/admin.evals'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
@@ -261,12 +260,6 @@ const AuthenticatedAppBudgetRoute = AuthenticatedAppBudgetRouteImport.update({
   path: '/budget',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
-const AuthenticatedAdminSignupsRoute =
-  AuthenticatedAdminSignupsRouteImport.update({
-    id: '/admin/signups',
-    path: '/admin/signups',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedAdminMarketingRoute =
   AuthenticatedAdminMarketingRouteImport.update({
     id: '/admin/marketing',
@@ -321,7 +314,6 @@ export interface FileRoutesByFullPath {
   '/invite/$code': typeof InviteCodeRoute
   '/admin/evals': typeof AuthenticatedAdminEvalsRoute
   '/admin/marketing': typeof AuthenticatedAdminMarketingRoute
-  '/admin/signups': typeof AuthenticatedAdminSignupsRoute
   '/app/budget': typeof AuthenticatedAppBudgetRoute
   '/app/changes': typeof AuthenticatedAppChangesRoute
   '/app/comms': typeof AuthenticatedAppCommsRoute
@@ -368,7 +360,6 @@ export interface FileRoutesByTo {
   '/invite/$code': typeof InviteCodeRoute
   '/admin/evals': typeof AuthenticatedAdminEvalsRoute
   '/admin/marketing': typeof AuthenticatedAdminMarketingRoute
-  '/admin/signups': typeof AuthenticatedAdminSignupsRoute
   '/app/budget': typeof AuthenticatedAppBudgetRoute
   '/app/changes': typeof AuthenticatedAppChangesRoute
   '/app/comms': typeof AuthenticatedAppCommsRoute
@@ -418,7 +409,6 @@ export interface FileRoutesById {
   '/invite/$code': typeof InviteCodeRoute
   '/_authenticated/admin/evals': typeof AuthenticatedAdminEvalsRoute
   '/_authenticated/admin/marketing': typeof AuthenticatedAdminMarketingRoute
-  '/_authenticated/admin/signups': typeof AuthenticatedAdminSignupsRoute
   '/_authenticated/app/budget': typeof AuthenticatedAppBudgetRoute
   '/_authenticated/app/changes': typeof AuthenticatedAppChangesRoute
   '/_authenticated/app/comms': typeof AuthenticatedAppCommsRoute
@@ -468,7 +458,6 @@ export interface FileRouteTypes {
     | '/invite/$code'
     | '/admin/evals'
     | '/admin/marketing'
-    | '/admin/signups'
     | '/app/budget'
     | '/app/changes'
     | '/app/comms'
@@ -515,7 +504,6 @@ export interface FileRouteTypes {
     | '/invite/$code'
     | '/admin/evals'
     | '/admin/marketing'
-    | '/admin/signups'
     | '/app/budget'
     | '/app/changes'
     | '/app/comms'
@@ -564,7 +552,6 @@ export interface FileRouteTypes {
     | '/invite/$code'
     | '/_authenticated/admin/evals'
     | '/_authenticated/admin/marketing'
-    | '/_authenticated/admin/signups'
     | '/_authenticated/app/budget'
     | '/_authenticated/app/changes'
     | '/_authenticated/app/comms'
@@ -895,13 +882,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppBudgetRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
-    '/_authenticated/admin/signups': {
-      id: '/_authenticated/admin/signups'
-      path: '/admin/signups'
-      fullPath: '/admin/signups'
-      preLoaderRoute: typeof AuthenticatedAdminSignupsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/admin/marketing': {
       id: '/_authenticated/admin/marketing'
       path: '/admin/marketing'
@@ -1013,7 +993,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedWelcomeRoute: typeof AuthenticatedWelcomeRoute
   AuthenticatedAdminEvalsRoute: typeof AuthenticatedAdminEvalsRoute
   AuthenticatedAdminMarketingRoute: typeof AuthenticatedAdminMarketingRoute
-  AuthenticatedAdminSignupsRoute: typeof AuthenticatedAdminSignupsRoute
   AuthenticatedProjectIntroTemplateIdRoute: typeof AuthenticatedProjectIntroTemplateIdRoute
 }
 
@@ -1023,7 +1002,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedWelcomeRoute: AuthenticatedWelcomeRoute,
   AuthenticatedAdminEvalsRoute: AuthenticatedAdminEvalsRoute,
   AuthenticatedAdminMarketingRoute: AuthenticatedAdminMarketingRoute,
-  AuthenticatedAdminSignupsRoute: AuthenticatedAdminSignupsRoute,
   AuthenticatedProjectIntroTemplateIdRoute:
     AuthenticatedProjectIntroTemplateIdRoute,
 }
