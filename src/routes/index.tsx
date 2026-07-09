@@ -98,7 +98,6 @@ function Landing() {
         <Experience />
         <WhyAtlas />
         <Founder />
-        <EarlyAccess />
         <Faq />
       </main>
       <SiteFooter />
@@ -192,13 +191,13 @@ function Nav({ scrolled }: { scrolled: boolean }) {
           >
             Sign in
           </Link>
-          <a
-            href="#early-access"
+          <Link
+            to="/auth"
             className="group inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-[0_1px_0_rgba(255,255,255,0.25)_inset,0_8px_24px_-12px_rgba(217,119,6,0.6)] transition-all hover:-translate-y-0.5 hover:shadow-[0_1px_0_rgba(255,255,255,0.3)_inset,0_12px_28px_-12px_rgba(217,119,6,0.7)]"
           >
-            Request Early Access
+            Get started
             <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-          </a>
+          </Link>
         </div>
       </div>
     </header>
@@ -283,13 +282,13 @@ function Hero() {
           </Reveal>
           <Reveal delay={240}>
             <div className="mt-9 flex flex-wrap items-center gap-3">
-              <a
-                href="#early-access"
+              <Link
+                to="/auth"
                 className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground shadow-[0_1px_0_rgba(255,255,255,0.25)_inset,0_12px_30px_-12px_rgba(217,119,6,0.6)] transition-all hover:-translate-y-0.5 hover:shadow-[0_1px_0_rgba(255,255,255,0.3)_inset,0_18px_36px_-12px_rgba(217,119,6,0.7)]"
               >
                 Start your first project
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-              </a>
+              </Link>
               <a
                 href="#demo"
                 className="group inline-flex items-center gap-2 rounded-full border border-border bg-card/70 px-6 py-3 text-sm font-medium text-foreground backdrop-blur transition-all hover:-translate-y-0.5 hover:bg-card"
