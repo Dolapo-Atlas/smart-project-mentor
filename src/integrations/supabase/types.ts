@@ -838,54 +838,69 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
           career_goal: string | null
           company: string
           country: string | null
           created_at: string
           current_project_instance_id: string | null
           display_name: string | null
+          email: string | null
           first_name: string | null
           id: string
+          last_active_at: string | null
+          last_login_at: string | null
           last_name: string | null
           manager: string
           onboarded: boolean
           preferred_name: string | null
           project_name: string
           role: string
+          sign_up_at: string
           start_date: string | null
         }
         Insert: {
+          avatar_url?: string | null
           career_goal?: string | null
           company?: string
           country?: string | null
           created_at?: string
           current_project_instance_id?: string | null
           display_name?: string | null
+          email?: string | null
           first_name?: string | null
           id: string
+          last_active_at?: string | null
+          last_login_at?: string | null
           last_name?: string | null
           manager?: string
           onboarded?: boolean
           preferred_name?: string | null
           project_name?: string
           role?: string
+          sign_up_at?: string
           start_date?: string | null
         }
         Update: {
+          avatar_url?: string | null
           career_goal?: string | null
           company?: string
           country?: string | null
           created_at?: string
           current_project_instance_id?: string | null
           display_name?: string | null
+          email?: string | null
           first_name?: string | null
           id?: string
+          last_active_at?: string | null
+          last_login_at?: string | null
           last_name?: string | null
           manager?: string
           onboarded?: boolean
           preferred_name?: string | null
           project_name?: string
           role?: string
+          sign_up_at?: string
           start_date?: string | null
         }
         Relationships: [
@@ -1688,6 +1703,27 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       workplace_skills: {
         Row: {
           created_at: string
@@ -1790,6 +1826,13 @@ export type Database = {
         Returns: number
       }
       gen_referral_code: { Args: never; Returns: string }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_email_allowed: { Args: { _email: string }; Returns: boolean }
       move_to_dlq: {
         Args: {
@@ -1811,6 +1854,7 @@ export type Database = {
       referral_stats: { Args: { code: string }; Returns: number }
     }
     Enums: {
+      app_role: "admin" | "beta_tester"
       budget_kind: "planned" | "actual" | "invoice" | "forecast"
       cr_risk: "low" | "medium" | "high"
       cr_status: "draft" | "submitted" | "approved" | "rejected"
@@ -1958,6 +2002,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "beta_tester"],
       budget_kind: ["planned", "actual", "invoice", "forecast"],
       cr_risk: ["low", "medium", "high"],
       cr_status: ["draft", "submitted", "approved", "rejected"],
