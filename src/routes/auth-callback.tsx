@@ -2,7 +2,6 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { checkEmailAllowed } from "@/lib/signup.functions";
 import { getActiveProject } from "@/lib/projects.functions";
 
 export const Route = createFileRoute("/auth-callback")({
@@ -28,20 +27,6 @@ function AuthCallback() {
     ) => {
       if (done) return;
       done = true;
-
-      const intent = sessionStorage.getItem("oauth_intent");
-      if (intent === "signup") {
-        const createdAt = new Date(user.created_at ?? 0).getTime();
-        const isNew = Date.now() - createdAt < 60_000;
-        const { allowed } = await checkEmailAllowed({ data: { email: user.email ?? "" } });
-        if (!isNew || !allowed) {
-          await supabase.auth.signOut();
-          sessionStorage.removeItem("oauth_intent");
-          sessionStorage.removeItem("oauth_pending");
-          navigate({ to: "/auth", replace: true });
-          return;
-        }
-      }
 
       sessionStorage.removeItem("oauth_intent");
       sessionStorage.removeItem("oauth_pending");

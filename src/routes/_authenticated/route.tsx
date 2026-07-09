@@ -1,5 +1,8 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
+import { recordSession } from "@/lib/session.functions";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -28,5 +31,13 @@ export const Route = createFileRoute("/_authenticated")({
     }
     return { user: data.user };
   },
-  component: () => <Outlet />,
+  component: AuthenticatedLayout,
 });
+
+function AuthenticatedLayout() {
+  const record = useServerFn(recordSession);
+  useEffect(() => {
+    record().catch(() => {});
+  }, [record]);
+  return <Outlet />;
+}

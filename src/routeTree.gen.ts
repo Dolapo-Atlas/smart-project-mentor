@@ -48,9 +48,9 @@ import { Route as AuthenticatedAppCompletedRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppCommsRouteImport } from './routes/_authenticated/app.comms'
 import { Route as AuthenticatedAppChangesRouteImport } from './routes/_authenticated/app.changes'
 import { Route as AuthenticatedAppBudgetRouteImport } from './routes/_authenticated/app.budget'
-import { Route as AuthenticatedAdminSignupsRouteImport } from './routes/_authenticated/admin.signups'
 import { Route as AuthenticatedAdminMarketingRouteImport } from './routes/_authenticated/admin.marketing'
 import { Route as AuthenticatedAdminEvalsRouteImport } from './routes/_authenticated/admin.evals'
+import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin.analytics'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
@@ -261,12 +261,6 @@ const AuthenticatedAppBudgetRoute = AuthenticatedAppBudgetRouteImport.update({
   path: '/budget',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
-const AuthenticatedAdminSignupsRoute =
-  AuthenticatedAdminSignupsRouteImport.update({
-    id: '/admin/signups',
-    path: '/admin/signups',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedAdminMarketingRoute =
   AuthenticatedAdminMarketingRouteImport.update({
     id: '/admin/marketing',
@@ -278,6 +272,12 @@ const AuthenticatedAdminEvalsRoute = AuthenticatedAdminEvalsRouteImport.update({
   path: '/admin/evals',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminAnalyticsRoute =
+  AuthenticatedAdminAnalyticsRouteImport.update({
+    id: '/admin/analytics',
+    path: '/admin/analytics',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const LovableEmailTransactionalSendRoute =
   LovableEmailTransactionalSendRouteImport.update({
     id: '/lovable/email/transactional/send',
@@ -319,9 +319,9 @@ export interface FileRoutesByFullPath {
   '/cert/$slug': typeof CertSlugRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/invite/$code': typeof InviteCodeRoute
+  '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/evals': typeof AuthenticatedAdminEvalsRoute
   '/admin/marketing': typeof AuthenticatedAdminMarketingRoute
-  '/admin/signups': typeof AuthenticatedAdminSignupsRoute
   '/app/budget': typeof AuthenticatedAppBudgetRoute
   '/app/changes': typeof AuthenticatedAppChangesRoute
   '/app/comms': typeof AuthenticatedAppCommsRoute
@@ -366,9 +366,9 @@ export interface FileRoutesByTo {
   '/cert/$slug': typeof CertSlugRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/invite/$code': typeof InviteCodeRoute
+  '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/evals': typeof AuthenticatedAdminEvalsRoute
   '/admin/marketing': typeof AuthenticatedAdminMarketingRoute
-  '/admin/signups': typeof AuthenticatedAdminSignupsRoute
   '/app/budget': typeof AuthenticatedAppBudgetRoute
   '/app/changes': typeof AuthenticatedAppChangesRoute
   '/app/comms': typeof AuthenticatedAppCommsRoute
@@ -416,9 +416,9 @@ export interface FileRoutesById {
   '/cert/$slug': typeof CertSlugRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/invite/$code': typeof InviteCodeRoute
+  '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/_authenticated/admin/evals': typeof AuthenticatedAdminEvalsRoute
   '/_authenticated/admin/marketing': typeof AuthenticatedAdminMarketingRoute
-  '/_authenticated/admin/signups': typeof AuthenticatedAdminSignupsRoute
   '/_authenticated/app/budget': typeof AuthenticatedAppBudgetRoute
   '/_authenticated/app/changes': typeof AuthenticatedAppChangesRoute
   '/_authenticated/app/comms': typeof AuthenticatedAppCommsRoute
@@ -466,9 +466,9 @@ export interface FileRouteTypes {
     | '/cert/$slug'
     | '/email/unsubscribe'
     | '/invite/$code'
+    | '/admin/analytics'
     | '/admin/evals'
     | '/admin/marketing'
-    | '/admin/signups'
     | '/app/budget'
     | '/app/changes'
     | '/app/comms'
@@ -513,9 +513,9 @@ export interface FileRouteTypes {
     | '/cert/$slug'
     | '/email/unsubscribe'
     | '/invite/$code'
+    | '/admin/analytics'
     | '/admin/evals'
     | '/admin/marketing'
-    | '/admin/signups'
     | '/app/budget'
     | '/app/changes'
     | '/app/comms'
@@ -562,9 +562,9 @@ export interface FileRouteTypes {
     | '/cert/$slug'
     | '/email/unsubscribe'
     | '/invite/$code'
+    | '/_authenticated/admin/analytics'
     | '/_authenticated/admin/evals'
     | '/_authenticated/admin/marketing'
-    | '/_authenticated/admin/signups'
     | '/_authenticated/app/budget'
     | '/_authenticated/app/changes'
     | '/_authenticated/app/comms'
@@ -895,13 +895,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppBudgetRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
-    '/_authenticated/admin/signups': {
-      id: '/_authenticated/admin/signups'
-      path: '/admin/signups'
-      fullPath: '/admin/signups'
-      preLoaderRoute: typeof AuthenticatedAdminSignupsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/admin/marketing': {
       id: '/_authenticated/admin/marketing'
       path: '/admin/marketing'
@@ -914,6 +907,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/evals'
       fullPath: '/admin/evals'
       preLoaderRoute: typeof AuthenticatedAdminEvalsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/analytics': {
+      id: '/_authenticated/admin/analytics'
+      path: '/admin/analytics'
+      fullPath: '/admin/analytics'
+      preLoaderRoute: typeof AuthenticatedAdminAnalyticsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/lovable/email/transactional/send': {
@@ -1011,9 +1011,9 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppRoute: typeof AuthenticatedAppRouteWithChildren
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedWelcomeRoute: typeof AuthenticatedWelcomeRoute
+  AuthenticatedAdminAnalyticsRoute: typeof AuthenticatedAdminAnalyticsRoute
   AuthenticatedAdminEvalsRoute: typeof AuthenticatedAdminEvalsRoute
   AuthenticatedAdminMarketingRoute: typeof AuthenticatedAdminMarketingRoute
-  AuthenticatedAdminSignupsRoute: typeof AuthenticatedAdminSignupsRoute
   AuthenticatedProjectIntroTemplateIdRoute: typeof AuthenticatedProjectIntroTemplateIdRoute
 }
 
@@ -1021,9 +1021,9 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppRoute: AuthenticatedAppRouteWithChildren,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedWelcomeRoute: AuthenticatedWelcomeRoute,
+  AuthenticatedAdminAnalyticsRoute: AuthenticatedAdminAnalyticsRoute,
   AuthenticatedAdminEvalsRoute: AuthenticatedAdminEvalsRoute,
   AuthenticatedAdminMarketingRoute: AuthenticatedAdminMarketingRoute,
-  AuthenticatedAdminSignupsRoute: AuthenticatedAdminSignupsRoute,
   AuthenticatedProjectIntroTemplateIdRoute:
     AuthenticatedProjectIntroTemplateIdRoute,
 }
