@@ -1130,6 +1130,15 @@ ${excerpt || "(non-text document — judge based on the title; assume minimal co
     // Trigger a follow-up stakeholder reply reacting to this specific review, not a canned repeat.
     let reaction: z.infer<typeof ReviewReactionSchema>;
     try {
+      const reactRoster = await loadRoster(supabase, userId);
+      const byRole = rosterByRole(reactRoster);
+      const pm = byRole.pm;
+      const sponsor = byRole.sponsor;
+      const governor = byRole.clinical ?? byRole.admin ?? byRole.tech ?? byRole.finance;
+      const senders = [pm, governor, sponsor].filter(Boolean) as typeof reactRoster;
+      const senderList = senders
+        .map((s) => `${s.name} (${s.title})`)
+        .join(" · ") || "the project manager";
       const res = await generateObject({
         model: getModel(),
         schema: ReviewReactionSchema,
@@ -1144,7 +1153,7 @@ Recommendations: ${JSON.stringify(output.recommendations)}
 Detected current-document signals: ${JSON.stringify(signals)}
 Recent inbox messages to avoid repeating: ${JSON.stringify(recentInbox ?? [])}
 
-Choose the most plausible sender from Sarah Williams (Project Manager), Rachel Stone (Clinical Governance Lead), or David Okafor (Executive Sponsor). If Rachel writes, focus on clinical governance and safety assurance. If Sarah writes, focus on delivery process and next steps. If David writes, focus on sponsor confidence and decision readiness.
+Choose the most plausible sender from: ${senderList}. Use their EXACT name and title in sender_name / sender_role. The PM focuses on delivery process and next steps; the governance/technical lead focuses on assurance and control; the sponsor focuses on confidence and decision readiness. ${pctx.domainGuard}
 
 Do not use the same wording as any recent inbox message. Do not write a generic "Thanks for the note" response. Mention at least one concrete thing that changed or still needs action. 2 short paragraphs plus sign-off.`,
       });
