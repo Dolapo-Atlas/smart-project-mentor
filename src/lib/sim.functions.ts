@@ -902,31 +902,39 @@ function buildEvidenceBasedReaction(
   title: string,
   feedback: z.infer<typeof FeedbackSchema>,
   previousCount: number,
+  pm?: { name: string; title: string },
+  governor?: { name: string; title: string },
 ): z.infer<typeof ReviewReactionSchema> {
+  const pmName = pm?.name ?? "Sarah Williams";
+  const pmTitle = pm?.title ?? "Project Manager";
+  const govName = governor?.name ?? pmName;
+  const govTitle = governor?.title ?? pmTitle;
+  const govFirst = govName.split(" ")[0];
+  const pmFirst = pmName.split(" ")[0];
   if (feedback.score >= 78) {
-    const sender = previousCount % 2 === 0 ? "Sarah Williams" : "Rachel Stone";
-    return sender === "Sarah Williams"
+    const senderIsPm = previousCount % 2 === 0 || !governor;
+    return senderIsPm
       ? {
-          sender_name: "Sarah Williams",
-          sender_role: "Project Manager, Atlas Enterprise",
+          sender_name: pmName,
+          sender_role: pmTitle,
           subject: `Re: ${title}`,
           tone: "supportive",
-          body: `${title} is now in much better shape. I can see the project dates, decision rights, change control route, governance board, and success criteria, so this no longer reads like the first draft.\n\nPlease turn the remaining RAID points into named actions with owners, mitigations, and review dates so I can brief David with confidence.\n\nThanks,\nSarah`,
+          body: `${title} is now in much better shape. I can see the project dates, decision rights, change control route, governance board, and success criteria, so this no longer reads like the first draft.\n\nPlease turn the remaining RAID points into named actions with owners, mitigations, and review dates so I can brief the sponsor with confidence.\n\nThanks,\n${pmFirst}`,
         }
       : {
-          sender_name: "Rachel Stone",
-          sender_role: "Clinical Governance Lead",
+          sender_name: govName,
+          sender_role: govTitle,
           subject: `Re: ${title}`,
           tone: "supportive",
-          body: `This version addresses the governance gap I was worried about: the approval route, escalation path, change control, and decision rights are now visible.\n\nFrom a clinical governance point of view, the next improvement is to make each rollout risk traceable to a mitigation owner and review date before the board pack goes out.\n\nRachel Stone`,
+          body: `This version addresses the governance gap I was worried about: the approval route, escalation path, change control, and decision rights are now visible.\n\nFrom a ${govTitle.toLowerCase()} point of view, the next improvement is to make each rollout risk traceable to a mitigation owner and review date before the board pack goes out.\n\n${govName}`,
         };
   }
   return {
-    sender_name: "Rachel Stone",
-    sender_role: "Clinical Governance Lead",
+    sender_name: govName,
+    sender_role: govTitle,
     subject: `Re: ${title}`,
     tone: feedback.score >= 50 ? "curious" : "frustrated",
-    body: `I can see progress in ${title}, but the latest review still leaves some assurance gaps.\n\nPlease address the open recommendations directly and show who owns each action, when it is due, and when it escalates.\n\nRachel Stone`,
+    body: `I can see progress in ${title}, but the latest review still leaves some assurance gaps.\n\nPlease address the open recommendations directly and show who owns each action, when it is due, and when it escalates.\n\n${govName}`,
   };
 }
 
