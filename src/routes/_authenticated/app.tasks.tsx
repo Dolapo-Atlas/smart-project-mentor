@@ -64,6 +64,12 @@ type RichTask = {
   blocked_by: { id: string; title: string }[];
 };
 
+const COMPLETED_TASK_STATUSES = ["done", "approved", "completed", "closed"];
+
+function isCompletedTaskStatus(status: string) {
+  return COMPLETED_TASK_STATUSES.includes(status);
+}
+
 function Tasks() {
   const qc = useQueryClient();
   const fetchTasks = useServerFn(listTasksRich);
@@ -168,7 +174,7 @@ function Tasks() {
     in_progress: tasks?.filter((t) => t.status === "in_progress") ?? [],
     blocked: tasks?.filter((t) => t.status === "blocked") ?? [],
     submitted: tasks?.filter((t) => t.status === "submitted") ?? [],
-    done: tasks?.filter((t) => t.status === "done" || t.status === "approved") ?? [],
+    done: tasks?.filter((t) => isCompletedTaskStatus(t.status)) ?? [],
   };
 
   const columnLabels: Record<keyof typeof grouped, string> = {
