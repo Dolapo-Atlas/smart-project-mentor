@@ -342,9 +342,9 @@ function TaskCard({
   onDelete: () => void;
   busy: boolean;
 }) {
-  const isBlocked = t.blocked_by.length > 0 && !["done", "approved"].includes(t.status);
-  const overdue = t.due_at && +new Date(t.due_at) < Date.now() && !["done", "approved"].includes(t.status);
-  const isComplete = t.status === "done" || t.status === "approved";
+  const isComplete = isCompletedTaskStatus(t.status);
+  const isBlocked = t.blocked_by.length > 0 && !isComplete;
+  const overdue = t.due_at && +new Date(t.due_at) < Date.now() && !isComplete;
 
   if (isComplete) {
     const score = typeof t.feedback?.score !== "undefined" ? `${t.feedback.score}/5` : null;
