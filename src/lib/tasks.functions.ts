@@ -97,7 +97,7 @@ export const listTasksRich = createServerFn({ method: "GET" })
       const deps = (t.depends_on ?? []) as string[];
       const blockedBy = deps
         .map((id) => byId.get(id))
-        .filter((d) => d && !["done", "approved"].includes(d.status))
+        .filter((d) => d && !["done", "approved", "completed", "closed"].includes(d.status))
         .map((d) => ({ id: d!.id, title: d!.title }));
       return { ...t, blocked_by: blockedBy };
     });
@@ -121,7 +121,7 @@ export const listWhatsNext = createServerFn({ method: "GET" })
         .from("tasks")
         .select("id,status")
         .eq("user_id", context.userId)
-        .in("status", ["done", "approved"])).data?.map((t) => t.id) ?? [],
+        .in("status", ["done", "approved", "completed", "closed"])).data?.map((t) => t.id) ?? [],
     );
     const ready = all
       .filter((t) => ((t.depends_on ?? []) as string[]).every((id) => doneSet.has(id)))
@@ -527,7 +527,7 @@ export const listCompletedWork = createServerFn({ method: "GET" })
       .from("tasks")
       .select("*")
       .eq("user_id", context.userId)
-      .in("status", ["approved", "done"])
+      .in("status", ["approved", "done", "completed", "closed"])
       .order("completed_at", { ascending: false });
     if (error) throw error;
     return data ?? [];

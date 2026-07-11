@@ -64,6 +64,12 @@ type RichTask = {
   blocked_by: { id: string; title: string }[];
 };
 
+const COMPLETED_TASK_STATUSES = ["done", "approved", "completed", "closed"];
+
+function isCompletedTaskStatus(status: string) {
+  return COMPLETED_TASK_STATUSES.includes(status);
+}
+
 function Tasks() {
   const qc = useQueryClient();
   const fetchTasks = useServerFn(listTasksRich);
@@ -168,7 +174,7 @@ function Tasks() {
     in_progress: tasks?.filter((t) => t.status === "in_progress") ?? [],
     blocked: tasks?.filter((t) => t.status === "blocked") ?? [],
     submitted: tasks?.filter((t) => t.status === "submitted") ?? [],
-    done: tasks?.filter((t) => t.status === "done" || t.status === "approved") ?? [],
+    done: tasks?.filter((t) => isCompletedTaskStatus(t.status)) ?? [],
   };
 
   const columnLabels: Record<keyof typeof grouped, string> = {
@@ -336,9 +342,39 @@ function TaskCard({
   onDelete: () => void;
   busy: boolean;
 }) {
-  const isBlocked = t.blocked_by.length > 0 && !["done", "approved"].includes(t.status);
-  const overdue = t.due_at && +new Date(t.due_at) < Date.now() && !["done", "approved"].includes(t.status);
-  const isComplete = t.status === "done" || t.status === "approved";
+  const isComplete = isCompletedTaskStatus(t.status);
+  const isBlocked = t.blocked_by.length > 0 && !isComplete;
+  const overdue = t.due_at && +new Date(t.due_at) < Date.now() && !isComplete;
+
+  if (isComplete) {
+    const score = typeof t.feedback?.score !== "undefined" ? `${t.feedback.score}/5` : null;
+
+    return (
+      <li className="rounded-md border border-border bg-background px-2.5 py-2">
+        <div className="flex items-start gap-2">
+          <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+          <div className="min-w-0 flex-1">
+            <div className="line-clamp-2 text-xs font-medium leading-snug text-muted-foreground line-through">
+              {t.title}
+            </div>
+            {score && (
+              <span className="mt-1 inline-flex rounded-sm border border-emerald-500/25 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-emerald-700 dark:text-emerald-400">
+                {score}
+              </span>
+            )}
+          </div>
+          <button
+            onClick={onDelete}
+            className="shrink-0 text-muted-foreground hover:text-destructive"
+            aria-label="Delete completed task"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </li>
+    );
+  }
+
   return (
     <li className="rounded-md border border-border bg-background p-3">
       <div className="flex items-start gap-2">
@@ -455,7 +491,7 @@ function TaskCard({
                 </button>
               </>
             )}
-            {!["done", "approved", "submitted"].includes(t.status) && (
+            {!isComplete && t.status !== "submitted" && (
               <details className="relative">
                 <summary className="cursor-pointer list-none rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground">
                   <ShieldAlert className="mr-1 inline h-3 w-3" /> Escalate
