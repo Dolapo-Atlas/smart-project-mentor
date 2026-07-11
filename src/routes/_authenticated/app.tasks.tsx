@@ -36,7 +36,6 @@ import {
   Send,
   Sparkles,
   Ban,
-  ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import { TimeControls } from "@/components/time-controls";
@@ -340,8 +339,6 @@ function TaskCard({
   const isBlocked = t.blocked_by.length > 0 && !["done", "approved"].includes(t.status);
   const overdue = t.due_at && +new Date(t.due_at) < Date.now() && !["done", "approved"].includes(t.status);
   const isComplete = t.status === "done" || t.status === "approved";
-  const [expanded, setExpanded] = useState(false);
-  const hasDetails = Boolean(t.completion_action || t.description);
   return (
     <li className="rounded-md border border-border bg-background p-3">
       <div className="flex items-start gap-2">
@@ -373,30 +370,25 @@ function TaskCard({
               )}
             </div>
           )}
-          <button
-            type="button"
-            onClick={() => setExpanded(true)}
-            className={`block w-full truncate text-left text-sm font-medium hover:underline ${isComplete ? "text-muted-foreground line-through" : "mt-1"}`}
-            title={t.title}
-          >
+          <div className={`text-sm font-medium break-words ${isComplete ? "text-muted-foreground line-through" : "mt-1"}`}>
             {t.title}
-          </button>
-          {(hasDetails || t.feedback || isBlocked) && (
-            <div className="mt-1 flex min-w-0 flex-wrap items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => setExpanded(true)}
-                className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
-              >
-                <ChevronDown className="h-3 w-3" />
-                Details
-              </button>
-              {isComplete && t.feedback && (
-                <span className="inline-flex items-center gap-1 rounded-md border border-emerald-500/25 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">
-                  <Sparkles className="h-3 w-3" />
-                  {typeof t.feedback.score !== "undefined" ? `${t.feedback.score}/5` : "Reviewed"}
-                </span>
-              )}
+          </div>
+          {!isComplete && t.completion_action && (
+            <div className="mt-1 text-[11px] leading-snug text-muted-foreground break-words">
+              → {t.completion_action}
+            </div>
+          )}
+          {!isComplete && t.description && (
+            <div className="mt-1 line-clamp-3 text-[11px] leading-snug text-muted-foreground break-words">
+              {t.description}
+            </div>
+          )}
+          {isComplete && t.feedback && (
+            <div className="mt-1">
+              <span className="inline-flex items-center gap-1 rounded-md border border-emerald-500/25 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">
+                <Sparkles className="h-3 w-3" />
+                {typeof t.feedback.score !== "undefined" ? `${t.feedback.score}/5` : "Reviewed"}
+              </span>
             </div>
           )}
           {t.linked_stakeholder && !isComplete && (
@@ -509,49 +501,6 @@ function TaskCard({
           />
         )}
       </div>
-      <Dialog open={expanded} onOpenChange={setExpanded}>
-        <DialogContent className="max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="pr-6">{t.title}</DialogTitle>
-            <DialogDescription className="flex flex-wrap gap-1.5 pt-1">
-              {t.category && (
-                <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] uppercase tracking-wider">{t.category}</span>
-              )}
-              <span className={`rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wider ${PRIORITY_STYLE[t.priority] ?? PRIORITY_STYLE.medium}`}>
-                {t.priority}
-              </span>
-              {t.linked_stakeholder && <span className="text-[11px]">for {t.linked_stakeholder}</span>}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 text-sm">
-            {t.completion_action && (
-              <div><span className="font-medium">Completion action:</span> <span className="text-muted-foreground">{t.completion_action}</span></div>
-            )}
-            {t.description && (
-              <div className="whitespace-pre-wrap text-muted-foreground">{t.description}</div>
-            )}
-            {isBlocked && (
-              <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-800 dark:text-amber-300">
-                <div className="flex items-center gap-1 font-medium"><Lock className="h-3 w-3" /> Blocked by</div>
-                <ul className="mt-1 list-disc pl-4">
-                  {t.blocked_by.map((d) => <li key={d.id}>{d.title}</li>)}
-                </ul>
-              </div>
-            )}
-            {t.feedback && (
-              <div className="rounded-md border border-emerald-500/30 bg-emerald-500/5 p-3 text-xs">
-                <div className="font-semibold text-emerald-700 dark:text-emerald-400">
-                  <Sparkles className="mr-1 inline h-3 w-3" />
-                  {t.feedback.skill} · {t.feedback.score}/5
-                </div>
-                <div className="mt-1"><span className="font-medium">Did well:</span> {t.feedback.did_well}</div>
-                <div className="mt-1"><span className="font-medium">Improve:</span> {t.feedback.improve}</div>
-                <div className="mt-1 italic text-muted-foreground">{t.feedback.real_world}</div>
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
     </li>
   );
 }
