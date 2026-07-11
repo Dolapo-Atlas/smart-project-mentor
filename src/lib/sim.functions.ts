@@ -407,23 +407,20 @@ export const generateStakeholderMessage = createServerFn({ method: "POST" })
       .order("created_at", { ascending: false })
       .limit(3);
 
-    const prompt = `You are simulating stakeholders on the "${state?.project_name ?? "Digital Care Records Rollout"}" project at ${state?.company ?? "Atlas Enterprise"}.
-Project: move 12 care homes from paper-based records to a digital care record platform. Budget £500,000. Timeline 6 months. The project is currently behind schedule.
+    const pctx = await getProjectCtx(supabase, userId);
+    const roster = await loadRoster(supabase, userId);
+    const castList = roster.map((r) => `- ${r.name}, ${r.title}`).join("\n");
+    const prompt = `You are simulating stakeholders on the "${pctx.name}" project at ${state?.company ?? "Atlas Enterprise"}${pctx.description ? ` — ${pctx.description}` : ""}.
+${pctx.domainGuard}
 Current chapter: ${state?.chapter}. Project health: ${state?.health}. ${roleTitle} reputation: ${state?.reputation}/100. Progress: ${state?.progress}/100.
 Recent documents from the ${roleTitle}: ${JSON.stringify(recentDocs ?? [])}.
 
 The ${roleTitle}'s first name is "${firstName}". Address them by this first name in the email body (e.g. "Hi ${firstName},", "Thanks ${firstName}", "${firstName}, I need…"). Do not use generic salutations like "Hi there" or "Hi team".
 
-Write ONE realistic, professional workplace email to ${firstName} (the ${roleTitle} on this project) from ONE of these stakeholders — pick whichever is most plausible given the state:
-- Sarah Williams, Project Manager (${firstName}'s line manager)
-- David Okafor, Executive Sponsor (Director of Transformation)
-- Priya Anand, Finance Lead
-- James Lin, Technical Lead (digital records platform vendor liaison)
-- CareSoft Ltd (the vendor implementing the platform)
-- Margaret Hollis, Care Home Manager — Oakwood House
-- Rachel Stone, Clinical Governance Lead
+Write ONE realistic, professional workplace email to ${firstName} (the ${roleTitle} on this project) from ONE of these stakeholders — pick whichever is most plausible given the state. Use their EXACT name and title in sender_name / sender_role:
+${castList}
 
-Style: like a real workplace email. No game-y language. Reference the rollout, RAID items, status reports, governance, change requests, vendor delays, care-home readiness, or training — whatever fits. Ask a pointed question, request a deliverable, raise a risk, or escalate. 2–4 short paragraphs. Sign off with the sender's name and role.
+Style: like a real workplace email using the technical jargon of this domain. No game-y language. Reference project-appropriate artefacts (RAID items, status reports, governance, change requests, vendor delays, integrations, adoption, forecast, cutover — whatever fits the project). Ask a pointed question, request a deliverable, raise a risk, or escalate. 2–4 short paragraphs. Sign off with the sender's name and role.
 
 About half the time, this email should put ${firstName} (the ${roleTitle}) in an awkward position: contradict another stakeholder's recent message, push back on a sponsor decision, escalate over the PM's head, miss a deadline and ask for cover, or demand something Finance/Clinical will object to. Real projects are political — don't make every email supportive.`;
 
@@ -445,11 +442,12 @@ About half the time, this email should put ${firstName} (the ${roleTitle}) in an
         });
         output = res.object;
       } catch {
+        const pmFallback = rosterByRole(roster).pm ?? DEFAULT_ROSTER.find((r) => r.role === "pm")!;
         output = {
-          sender_name: "Sarah Williams",
-          sender_role: "Project Manager, Atlas Enterprise",
+          sender_name: pmFallback.name,
+          sender_role: pmFallback.title,
           subject: "Quick check-in on the rollout",
-          body: `Hi ${firstName},\n\nCan you send me a short status update on where we are with the rollout? Particularly the RAID log and any vendor blockers.\n\nThanks,\nSarah`,
+          body: `Hi ${firstName},\n\nCan you send me a short status update on where we are on ${pctx.name}? Particularly the RAID log and any vendor blockers.\n\nThanks,\n${pmFallback.name.split(" ")[0]}`,
           tone: "neutral",
         };
       }
