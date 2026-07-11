@@ -491,7 +491,7 @@ function TaskCard({
                 </button>
               </>
             )}
-            {!["done", "approved", "submitted"].includes(t.status) && (
+            {!isComplete && t.status !== "submitted" && (
               <details className="relative">
                 <summary className="cursor-pointer list-none rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground">
                   <ShieldAlert className="mr-1 inline h-3 w-3" /> Escalate
