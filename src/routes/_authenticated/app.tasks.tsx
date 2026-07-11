@@ -339,6 +339,7 @@ function TaskCard({
 }) {
   const isBlocked = t.blocked_by.length > 0 && !["done", "approved"].includes(t.status);
   const overdue = t.due_at && +new Date(t.due_at) < Date.now() && !["done", "approved"].includes(t.status);
+  const isComplete = t.status === "done" || t.status === "approved";
   const [expanded, setExpanded] = useState(false);
   const hasDetails = Boolean(t.completion_action || t.description);
   return (
@@ -349,46 +350,56 @@ function TaskCard({
           {t.status === "in_progress" && <CircleDot className="h-4 w-4 text-primary" />}
           {t.status === "blocked" && <Ban className="h-4 w-4 text-amber-700" />}
           {t.status === "submitted" && <Inbox className="h-4 w-4 text-amber-600" />}
-          {(t.status === "done" || t.status === "approved") && <Check className="h-4 w-4 text-emerald-600" />}
+          {isComplete && <Check className="h-4 w-4 text-emerald-600" />}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-1.5">
-            {t.category && (
-              <span className="max-w-full truncate rounded-full bg-muted px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
-                {t.category}
+          {!isComplete && (
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+              {t.category && (
+                <span className="max-w-full truncate rounded-full bg-muted px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+                  {t.category}
+                </span>
+              )}
+              <span className={`rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wider ${PRIORITY_STYLE[t.priority] ?? PRIORITY_STYLE.medium}`}>
+                {t.priority}
               </span>
-            )}
-            <span className={`rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wider ${PRIORITY_STYLE[t.priority] ?? PRIORITY_STYLE.medium}`}>
-              {t.priority}
-            </span>
-            {overdue && (
-              <span className="rounded-full bg-red-500/15 px-2 py-0.5 text-[10px] uppercase tracking-wider text-red-700 dark:text-red-400">
-                overdue
-              </span>
-            )}
-            {t.source === "email" && (
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">from email</span>
-            )}
-          </div>
+              {overdue && (
+                <span className="rounded-full bg-red-500/15 px-2 py-0.5 text-[10px] uppercase tracking-wider text-red-700 dark:text-red-400">
+                  overdue
+                </span>
+              )}
+              {t.source === "email" && (
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">from email</span>
+              )}
+            </div>
+          )}
           <button
             type="button"
             onClick={() => setExpanded(true)}
-            className={`mt-1 block w-full truncate text-left text-sm font-medium hover:underline ${t.status === "approved" || t.status === "done" ? "text-muted-foreground line-through" : ""}`}
+            className={`block w-full truncate text-left text-sm font-medium hover:underline ${isComplete ? "text-muted-foreground line-through" : "mt-1"}`}
             title={t.title}
           >
             {t.title}
           </button>
           {(hasDetails || t.feedback || isBlocked) && (
-            <button
-              type="button"
-              onClick={() => setExpanded(true)}
-              className="mt-1 inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
-            >
-              <ChevronDown className="h-3 w-3" />
-              Details
-            </button>
+            <div className="mt-1 flex min-w-0 flex-wrap items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setExpanded(true)}
+                className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
+              >
+                <ChevronDown className="h-3 w-3" />
+                Details
+              </button>
+              {isComplete && t.feedback && (
+                <span className="inline-flex items-center gap-1 rounded-md border border-emerald-500/25 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">
+                  <Sparkles className="h-3 w-3" />
+                  {typeof t.feedback.score !== "undefined" ? `${t.feedback.score}/5` : "Reviewed"}
+                </span>
+              )}
+            </div>
           )}
-          {t.linked_stakeholder && (
+          {t.linked_stakeholder && !isComplete && (
             <div className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
               <StakeholderAvatar name={t.linked_stakeholder} size="sm" />
               {t.linked_stakeholder}
@@ -399,7 +410,7 @@ function TaskCard({
               <Lock className="h-3 w-3" /> Blocked by {t.blocked_by.length}
             </div>
           )}
-          {t.feedback && (
+          {t.feedback && !isComplete && (
             <div className="mt-2 inline-flex max-w-full items-center gap-1 rounded-md border border-emerald-500/25 px-2 py-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
               <Sparkles className="h-3 w-3 shrink-0" />
               <span>Reviewed</span>
@@ -408,7 +419,7 @@ function TaskCard({
           )}
 
           <div className="mt-2 flex flex-wrap gap-1.5">
-            {t.linked_module_route && (
+            {t.linked_module_route && !isComplete && (
               <Link
                 to={t.linked_module_route}
                 className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] hover:bg-accent"
@@ -484,17 +495,19 @@ function TaskCard({
             </button>
           </div>
         </div>
-        <MentorTriggerButton
-          task={{
-            id: t.id,
-            title: t.title,
-            description: t.description,
-            priority: t.priority,
-            category: t.category,
-            stakeholder: t.linked_stakeholder,
-          }}
-          className="ml-1 shrink-0"
-        />
+        {!isComplete && (
+          <MentorTriggerButton
+            task={{
+              id: t.id,
+              title: t.title,
+              description: t.description,
+              priority: t.priority,
+              category: t.category,
+              stakeholder: t.linked_stakeholder,
+            }}
+            className="ml-1 shrink-0"
+          />
+        )}
       </div>
       <Dialog open={expanded} onOpenChange={setExpanded}>
         <DialogContent className="max-h-[85vh] overflow-y-auto">
