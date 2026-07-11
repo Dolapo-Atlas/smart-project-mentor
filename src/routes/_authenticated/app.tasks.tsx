@@ -36,6 +36,7 @@ import {
   Send,
   Sparkles,
   Ban,
+  ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import { TimeControls } from "@/components/time-controls";
@@ -338,6 +339,8 @@ function TaskCard({
 }) {
   const isBlocked = t.blocked_by.length > 0 && !["done", "approved"].includes(t.status);
   const overdue = t.due_at && +new Date(t.due_at) < Date.now() && !["done", "approved"].includes(t.status);
+  const [expanded, setExpanded] = useState(false);
+  const hasDetails = Boolean(t.completion_action || t.description);
   return (
     <li className="rounded-md border border-border bg-background p-3">
       <div className="flex items-start gap-2">
@@ -367,14 +370,30 @@ function TaskCard({
               <span className="text-[10px] uppercase tracking-wider text-muted-foreground">from email</span>
             )}
           </div>
-          <div className={`mt-1 text-sm font-medium ${t.status === "approved" || t.status === "done" ? "text-muted-foreground line-through" : ""}`}>
+          <div className={`mt-1 text-sm font-medium line-clamp-2 ${t.status === "approved" || t.status === "done" ? "text-muted-foreground line-through" : ""}`}>
             {t.title}
           </div>
-          {t.completion_action && (
-            <div className="mt-1 text-xs text-muted-foreground">→ {t.completion_action}</div>
-          )}
-          {t.description && (
-            <div className="mt-1 text-xs text-muted-foreground whitespace-pre-wrap line-clamp-3">{t.description}</div>
+          {hasDetails && (
+            <>
+              <button
+                type="button"
+                onClick={() => setExpanded((v) => !v)}
+                className="mt-1 inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
+              >
+                <ChevronDown className={`h-3 w-3 transition-transform ${expanded ? "rotate-180" : ""}`} />
+                {expanded ? "Hide details" : "Show details"}
+              </button>
+              {expanded && (
+                <div className="mt-1 space-y-1">
+                  {t.completion_action && (
+                    <div className="text-xs text-muted-foreground">→ {t.completion_action}</div>
+                  )}
+                  {t.description && (
+                    <div className="text-xs text-muted-foreground whitespace-pre-wrap">{t.description}</div>
+                  )}
+                </div>
+              )}
+            </>
           )}
           {t.linked_stakeholder && (
             <div className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
