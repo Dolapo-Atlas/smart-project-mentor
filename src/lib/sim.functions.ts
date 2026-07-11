@@ -1012,7 +1012,9 @@ export const reviewDocument = createServerFn({ method: "POST" })
     }
     const signals = scoreSignals(excerpt);
     const evidenceFeedback = fallbackFeedback(doc.title, excerpt);
-    const prompt = `You are a senior PMO reviewer at ${state?.company ?? "Atlas Enterprise"} assessing a project coordinator's deliverable on the "${state?.project_name}" project (chapter: ${state?.chapter}; phase: ${state?.phase}). Budget £500,000, 6-month timeline, currently behind schedule. The 12-care-home digital records rollout is the context.
+    const pctx = await getProjectCtx(supabase, userId);
+    const prompt = `You are a senior PMO reviewer at ${state?.company ?? "Atlas Enterprise"} assessing a project coordinator's deliverable on the "${pctx.name}" project (chapter: ${state?.chapter}; phase: ${state?.phase})${pctx.description ? `. Context: ${pctx.description}` : ""}.
+${pctx.domainGuard}
 
 Document title: "${doc.title}". Treat this as a workplace deliverable (e.g. Project Charter, Stakeholder Register, RAID Log, Status Report, Meeting Minutes, Change Request) and review it the way a sponsor or governance board would.
 
@@ -1166,17 +1168,25 @@ Do not use the same wording as any recent inbox message. Do not write a generic 
     // Update stakeholder sentiment based on document quality. Each
     // stakeholder reacts to the slice of the score that matters to them.
     try {
-      const { ARCHETYPE_SENTIMENT } = await import("./pm.functions");
+      const { ARCHETYPE_SENTIMENT_BY_ROLE } = await import("./pm.functions");
+      const roster = await loadRoster(supabase, userId);
       const cs = output.category_scores;
-      const perStakeholder: Array<{ name: string; role: string; signal: number }> = [
-        { name: "David Okafor", role: "Executive Sponsor", signal: output.score },
-        { name: "Sarah Williams", role: "Project Manager (peer / mentor)", signal: Math.round((cs.completeness + cs.professionalism) / 2) },
-        { name: "Priya Anand", role: "Finance Business Partner", signal: cs.completeness },
-        { name: "James Lin", role: "Technical Lead", signal: cs.completeness },
-        { name: "Margaret Hollis", role: "Care Home Manager", signal: cs.clarity },
-        { name: "Rachel Stone", role: "Clinical Governance Lead", signal: cs.governance },
-        { name: "CareSoft Ltd", role: "Vendor – CareSoft Ltd", signal: cs.professionalism },
-      ];
+      const signalByRole: Record<string, number> = {
+        sponsor:    output.score,
+        pm:         Math.round((cs.completeness + cs.professionalism) / 2),
+        finance:    cs.completeness,
+        tech:       cs.completeness,
+        operations: cs.clarity,
+        care_home:  cs.clarity,
+        admin:      cs.governance,
+        clinical:   cs.governance,
+        vendor:     cs.professionalism,
+      };
+      const perStakeholder = roster.map((r) => ({
+        name: r.name,
+        role: r.title,
+        signal: signalByRole[r.role] ?? Math.round((cs.completeness + cs.clarity) / 2),
+      }));
       for (const s of perStakeholder) {
         const delta = Math.max(-8, Math.min(8, Math.round((s.signal - 60) / 5)));
         const { data: existing } = await supabase
@@ -1185,7 +1195,8 @@ Do not use the same wording as any recent inbox message. Do not write a generic 
           .eq("user_id", userId)
           .eq("stakeholder_name", s.name)
           .maybeSingle();
-        const baseline = ARCHETYPE_SENTIMENT[s.name] ?? 0;
+        const rosterMember = roster.find((r) => r.name === s.name);
+        const baseline = rosterMember ? (ARCHETYPE_SENTIMENT_BY_ROLE[rosterMember.role] ?? 0) : 0;
         const next = Math.max(-100, Math.min(100, (existing?.sentiment ?? baseline) + delta));
         await supabase.from("stakeholder_relationships").upsert(
           {
