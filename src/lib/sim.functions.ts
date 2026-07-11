@@ -6,6 +6,8 @@ import { createLovableAiGatewayProvider } from "./ai-gateway.server";
 import { unzipSync, strFromU8 } from "fflate";
 import { applyDocumentReview } from "./learning.functions";
 import { generateTasksFromEmail } from "./tasks.functions";
+import { loadRoster, rosterByRole, DEFAULT_ROSTER } from "./roster";
+import { getProjectCtx } from "./pm.functions";
 
 const MODEL = "google/gemini-3-flash-preview";
 
@@ -405,23 +407,20 @@ export const generateStakeholderMessage = createServerFn({ method: "POST" })
       .order("created_at", { ascending: false })
       .limit(3);
 
-    const prompt = `You are simulating stakeholders on the "${state?.project_name ?? "Digital Care Records Rollout"}" project at ${state?.company ?? "Atlas Enterprise"}.
-Project: move 12 care homes from paper-based records to a digital care record platform. Budget £500,000. Timeline 6 months. The project is currently behind schedule.
+    const pctx = await getProjectCtx(supabase, userId);
+    const roster = await loadRoster(supabase, userId);
+    const castList = roster.map((r) => `- ${r.name}, ${r.title}`).join("\n");
+    const prompt = `You are simulating stakeholders on the "${pctx.name}" project at ${state?.company ?? "Atlas Enterprise"}${pctx.description ? ` — ${pctx.description}` : ""}.
+${pctx.domainGuard}
 Current chapter: ${state?.chapter}. Project health: ${state?.health}. ${roleTitle} reputation: ${state?.reputation}/100. Progress: ${state?.progress}/100.
 Recent documents from the ${roleTitle}: ${JSON.stringify(recentDocs ?? [])}.
 
 The ${roleTitle}'s first name is "${firstName}". Address them by this first name in the email body (e.g. "Hi ${firstName},", "Thanks ${firstName}", "${firstName}, I need…"). Do not use generic salutations like "Hi there" or "Hi team".
 
-Write ONE realistic, professional workplace email to ${firstName} (the ${roleTitle} on this project) from ONE of these stakeholders — pick whichever is most plausible given the state:
-- Sarah Williams, Project Manager (${firstName}'s line manager)
-- David Okafor, Executive Sponsor (Director of Transformation)
-- Priya Anand, Finance Lead
-- James Lin, Technical Lead (digital records platform vendor liaison)
-- CareSoft Ltd (the vendor implementing the platform)
-- Margaret Hollis, Care Home Manager — Oakwood House
-- Rachel Stone, Clinical Governance Lead
+Write ONE realistic, professional workplace email to ${firstName} (the ${roleTitle} on this project) from ONE of these stakeholders — pick whichever is most plausible given the state. Use their EXACT name and title in sender_name / sender_role:
+${castList}
 
-Style: like a real workplace email. No game-y language. Reference the rollout, RAID items, status reports, governance, change requests, vendor delays, care-home readiness, or training — whatever fits. Ask a pointed question, request a deliverable, raise a risk, or escalate. 2–4 short paragraphs. Sign off with the sender's name and role.
+Style: like a real workplace email using the technical jargon of this domain. No game-y language. Reference project-appropriate artefacts (RAID items, status reports, governance, change requests, vendor delays, integrations, adoption, forecast, cutover — whatever fits the project). Ask a pointed question, request a deliverable, raise a risk, or escalate. 2–4 short paragraphs. Sign off with the sender's name and role.
 
 About half the time, this email should put ${firstName} (the ${roleTitle}) in an awkward position: contradict another stakeholder's recent message, push back on a sponsor decision, escalate over the PM's head, miss a deadline and ask for cover, or demand something Finance/Clinical will object to. Real projects are political — don't make every email supportive.`;
 
@@ -443,11 +442,12 @@ About half the time, this email should put ${firstName} (the ${roleTitle}) in an
         });
         output = res.object;
       } catch {
+        const pmFallback = rosterByRole(roster).pm ?? DEFAULT_ROSTER.find((r) => r.role === "pm")!;
         output = {
-          sender_name: "Sarah Williams",
-          sender_role: "Project Manager, Atlas Enterprise",
+          sender_name: pmFallback.name,
+          sender_role: pmFallback.title,
           subject: "Quick check-in on the rollout",
-          body: `Hi ${firstName},\n\nCan you send me a short status update on where we are with the rollout? Particularly the RAID log and any vendor blockers.\n\nThanks,\nSarah`,
+          body: `Hi ${firstName},\n\nCan you send me a short status update on where we are on ${pctx.name}? Particularly the RAID log and any vendor blockers.\n\nThanks,\n${pmFallback.name.split(" ")[0]}`,
           tone: "neutral",
         };
       }
@@ -516,7 +516,7 @@ export const updateTaskStatus = createServerFn({ method: "POST" })
       .eq("user_id", context.userId);
     // Stakeholder reacts when work is submitted for review
     if (data.status === "submitted") {
-      const [{ data: task }, { data: profile }, { data: docs }] = await Promise.all([
+      const [{ data: task }, { data: profile }, { data: docs }, roster] = await Promise.all([
         context.supabase
           .from("tasks")
           .select("title")
@@ -534,7 +534,14 @@ export const updateTaskStatus = createServerFn({ method: "POST" })
           .eq("user_id", context.userId)
           .order("created_at", { ascending: false })
           .limit(5),
+        loadRoster(context.supabase, context.userId),
       ]);
+      const byRole = rosterByRole(roster);
+      const pm = byRole.pm ?? DEFAULT_ROSTER.find((r) => r.role === "pm")!;
+      const governor = byRole.clinical ?? byRole.admin ?? byRole.tech ?? byRole.finance;
+      const routeLine = governor
+        ? ` If anything is governance-sensitive I'll loop in ${governor.name.split(" ")[0]} before we finalise.`
+        : "";
       const firstName =
         profile?.preferred_name?.trim() || profile?.first_name || "there";
       const title = task?.title ?? "the deliverable";
@@ -548,19 +555,19 @@ export const updateTaskStatus = createServerFn({ method: "POST" })
 
 Thanks for marking "${title}" as submitted. I can't see the artefact attached yet — please upload the document under Documents so the review panel and I can give you proper feedback.
 
-Once it's in, I'll come back with comments and route anything clinical through Rachel.
+Once it's in, I'll come back with comments${governor ? ` and route anything ${governor.role === "clinical" ? "clinical" : "governance-sensitive"} through ${governor.name.split(" ")[0]}` : ""}.
 
 Thanks,
-Sarah`
+${pm.name.split(" ")[0]}`
         : `Hi ${firstName},
 
-Thanks — I can see "${title}" is in for review. I'll work through it today and come back with comments. If anything is governance-sensitive I'll loop in Rachel before we finalise.
+Thanks — I can see "${title}" is in for review. I'll work through it today and come back with comments.${routeLine}
 
-Sarah`;
+${pm.name.split(" ")[0]}`;
       await context.supabase.from("inbox_messages").insert({
         user_id: context.userId,
-        sender_name: "Sarah Williams",
-        sender_role: "Project Manager, Atlas Enterprise",
+        sender_name: pm.name,
+        sender_role: pm.title,
         subject: `Re: ${title} — submitted`,
         tone: "neutral",
         body,
@@ -635,7 +642,7 @@ export const runEscalations = createServerFn({ method: "POST" })
 Original message body:
 ${orig.body}
 
-Style: a real chase email. Reference how long it's been. Be professional but show appropriate impatience — sponsors get blunt, finance/clinical sound concerned, vendors deflect, care home managers sound stressed about floor reality. 2-3 short paragraphs max. Sign off with name & role.`;
+Style: a real chase email. Reference how long it's been. Be professional but show appropriate impatience — sponsors get blunt, finance/technical leads sound concerned, vendors deflect, operations/site leads sound stressed about the frontline reality. Stay in the technical language of THIS project (do not invent unrelated domain content). 2-3 short paragraphs max. Sign off with name & role.`;
 
       let out: z.infer<typeof EscalationSchema>;
       try {
@@ -895,31 +902,39 @@ function buildEvidenceBasedReaction(
   title: string,
   feedback: z.infer<typeof FeedbackSchema>,
   previousCount: number,
+  pm?: { name: string; title: string },
+  governor?: { name: string; title: string },
 ): z.infer<typeof ReviewReactionSchema> {
+  const pmName = pm?.name ?? "Sarah Williams";
+  const pmTitle = pm?.title ?? "Project Manager";
+  const govName = governor?.name ?? pmName;
+  const govTitle = governor?.title ?? pmTitle;
+  const govFirst = govName.split(" ")[0];
+  const pmFirst = pmName.split(" ")[0];
   if (feedback.score >= 78) {
-    const sender = previousCount % 2 === 0 ? "Sarah Williams" : "Rachel Stone";
-    return sender === "Sarah Williams"
+    const senderIsPm = previousCount % 2 === 0 || !governor;
+    return senderIsPm
       ? {
-          sender_name: "Sarah Williams",
-          sender_role: "Project Manager, Atlas Enterprise",
+          sender_name: pmName,
+          sender_role: pmTitle,
           subject: `Re: ${title}`,
           tone: "supportive",
-          body: `${title} is now in much better shape. I can see the project dates, decision rights, change control route, governance board, and success criteria, so this no longer reads like the first draft.\n\nPlease turn the remaining RAID points into named actions with owners, mitigations, and review dates so I can brief David with confidence.\n\nThanks,\nSarah`,
+          body: `${title} is now in much better shape. I can see the project dates, decision rights, change control route, governance board, and success criteria, so this no longer reads like the first draft.\n\nPlease turn the remaining RAID points into named actions with owners, mitigations, and review dates so I can brief the sponsor with confidence.\n\nThanks,\n${pmFirst}`,
         }
       : {
-          sender_name: "Rachel Stone",
-          sender_role: "Clinical Governance Lead",
+          sender_name: govName,
+          sender_role: govTitle,
           subject: `Re: ${title}`,
           tone: "supportive",
-          body: `This version addresses the governance gap I was worried about: the approval route, escalation path, change control, and decision rights are now visible.\n\nFrom a clinical governance point of view, the next improvement is to make each rollout risk traceable to a mitigation owner and review date before the board pack goes out.\n\nRachel Stone`,
+          body: `This version addresses the governance gap I was worried about: the approval route, escalation path, change control, and decision rights are now visible.\n\nFrom a ${govTitle.toLowerCase()} point of view, the next improvement is to make each rollout risk traceable to a mitigation owner and review date before the board pack goes out.\n\n${govName}`,
         };
   }
   return {
-    sender_name: "Rachel Stone",
-    sender_role: "Clinical Governance Lead",
+    sender_name: govName,
+    sender_role: govTitle,
     subject: `Re: ${title}`,
     tone: feedback.score >= 50 ? "curious" : "frustrated",
-    body: `I can see progress in ${title}, but the latest review still leaves some assurance gaps.\n\nPlease address the open recommendations directly and show who owns each action, when it is due, and when it escalates.\n\nRachel Stone`,
+    body: `I can see progress in ${title}, but the latest review still leaves some assurance gaps.\n\nPlease address the open recommendations directly and show who owns each action, when it is due, and when it escalates.\n\n${govName}`,
   };
 }
 
@@ -1005,7 +1020,9 @@ export const reviewDocument = createServerFn({ method: "POST" })
     }
     const signals = scoreSignals(excerpt);
     const evidenceFeedback = fallbackFeedback(doc.title, excerpt);
-    const prompt = `You are a senior PMO reviewer at ${state?.company ?? "Atlas Enterprise"} assessing a project coordinator's deliverable on the "${state?.project_name}" project (chapter: ${state?.chapter}; phase: ${state?.phase}). Budget £500,000, 6-month timeline, currently behind schedule. The 12-care-home digital records rollout is the context.
+    const pctx = await getProjectCtx(supabase, userId);
+    const prompt = `You are a senior PMO reviewer at ${state?.company ?? "Atlas Enterprise"} assessing a project coordinator's deliverable on the "${pctx.name}" project (chapter: ${state?.chapter}; phase: ${state?.phase})${pctx.description ? `. Context: ${pctx.description}` : ""}.
+${pctx.domainGuard}
 
 Document title: "${doc.title}". Treat this as a workplace deliverable (e.g. Project Charter, Stakeholder Register, RAID Log, Status Report, Meeting Minutes, Change Request) and review it the way a sponsor or governance board would.
 
@@ -1119,8 +1136,17 @@ ${excerpt || "(non-text document — judge based on the title; assume minimal co
     }
 
     // Trigger a follow-up stakeholder reply reacting to this specific review, not a canned repeat.
+    const reactRoster = await loadRoster(supabase, userId);
+    const reactByRole = rosterByRole(reactRoster);
+    const reactPm = reactByRole.pm;
+    const reactGov = reactByRole.clinical ?? reactByRole.admin ?? reactByRole.tech ?? reactByRole.finance;
     let reaction: z.infer<typeof ReviewReactionSchema>;
     try {
+      const sponsor = reactByRole.sponsor;
+      const senders = [reactPm, reactGov, sponsor].filter(Boolean) as typeof reactRoster;
+      const senderList = senders
+        .map((s) => `${s.name} (${s.title})`)
+        .join(" · ") || "the project manager";
       const res = await generateObject({
         model: getModel(),
         schema: ReviewReactionSchema,
@@ -1135,17 +1161,17 @@ Recommendations: ${JSON.stringify(output.recommendations)}
 Detected current-document signals: ${JSON.stringify(signals)}
 Recent inbox messages to avoid repeating: ${JSON.stringify(recentInbox ?? [])}
 
-Choose the most plausible sender from Sarah Williams (Project Manager), Rachel Stone (Clinical Governance Lead), or David Okafor (Executive Sponsor). If Rachel writes, focus on clinical governance and safety assurance. If Sarah writes, focus on delivery process and next steps. If David writes, focus on sponsor confidence and decision readiness.
+Choose the most plausible sender from: ${senderList}. Use their EXACT name and title in sender_name / sender_role. The PM focuses on delivery process and next steps; the governance/technical lead focuses on assurance and control; the sponsor focuses on confidence and decision readiness. ${pctx.domainGuard}
 
 Do not use the same wording as any recent inbox message. Do not write a generic "Thanks for the note" response. Mention at least one concrete thing that changed or still needs action. 2 short paragraphs plus sign-off.`,
       });
       reaction = res.object;
     } catch {
-      reaction = buildEvidenceBasedReaction(doc.title, output, previousFeedback?.length ?? 0);
+      reaction = buildEvidenceBasedReaction(doc.title, output, previousFeedback?.length ?? 0, reactPm, reactGov);
     }
     const recentBodies = new Set((recentInbox ?? []).map((m) => m.body.trim().toLowerCase()));
     if (recentBodies.has(reaction.body.trim().toLowerCase())) {
-      reaction = buildEvidenceBasedReaction(doc.title, output, (previousFeedback?.length ?? 0) + 1);
+      reaction = buildEvidenceBasedReaction(doc.title, output, (previousFeedback?.length ?? 0) + 1, reactPm, reactGov);
     }
     await supabase.from("inbox_messages").insert({
       user_id: userId,
@@ -1159,17 +1185,25 @@ Do not use the same wording as any recent inbox message. Do not write a generic 
     // Update stakeholder sentiment based on document quality. Each
     // stakeholder reacts to the slice of the score that matters to them.
     try {
-      const { ARCHETYPE_SENTIMENT } = await import("./pm.functions");
+      const { ARCHETYPE_SENTIMENT_BY_ROLE } = await import("./pm.functions");
+      const roster = await loadRoster(supabase, userId);
       const cs = output.category_scores;
-      const perStakeholder: Array<{ name: string; role: string; signal: number }> = [
-        { name: "David Okafor", role: "Executive Sponsor", signal: output.score },
-        { name: "Sarah Williams", role: "Project Manager (peer / mentor)", signal: Math.round((cs.completeness + cs.professionalism) / 2) },
-        { name: "Priya Anand", role: "Finance Business Partner", signal: cs.completeness },
-        { name: "James Lin", role: "Technical Lead", signal: cs.completeness },
-        { name: "Margaret Hollis", role: "Care Home Manager", signal: cs.clarity },
-        { name: "Rachel Stone", role: "Clinical Governance Lead", signal: cs.governance },
-        { name: "CareSoft Ltd", role: "Vendor – CareSoft Ltd", signal: cs.professionalism },
-      ];
+      const signalByRole: Record<string, number> = {
+        sponsor:    output.score,
+        pm:         Math.round((cs.completeness + cs.professionalism) / 2),
+        finance:    cs.completeness,
+        tech:       cs.completeness,
+        operations: cs.clarity,
+        care_home:  cs.clarity,
+        admin:      cs.governance,
+        clinical:   cs.governance,
+        vendor:     cs.professionalism,
+      };
+      const perStakeholder = roster.map((r) => ({
+        name: r.name,
+        role: r.title,
+        signal: signalByRole[r.role] ?? Math.round((cs.completeness + cs.clarity) / 2),
+      }));
       for (const s of perStakeholder) {
         const delta = Math.max(-8, Math.min(8, Math.round((s.signal - 60) / 5)));
         const { data: existing } = await supabase
@@ -1178,7 +1212,8 @@ Do not use the same wording as any recent inbox message. Do not write a generic 
           .eq("user_id", userId)
           .eq("stakeholder_name", s.name)
           .maybeSingle();
-        const baseline = ARCHETYPE_SENTIMENT[s.name] ?? 0;
+        const rosterMember = roster.find((r) => r.name === s.name);
+        const baseline = rosterMember ? (ARCHETYPE_SENTIMENT_BY_ROLE[rosterMember.role] ?? 0) : 0;
         const next = Math.max(-100, Math.min(100, (existing?.sentiment ?? baseline) + delta));
         await supabase.from("stakeholder_relationships").upsert(
           {
