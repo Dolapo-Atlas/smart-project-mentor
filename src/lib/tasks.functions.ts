@@ -4,6 +4,8 @@ import { z } from "zod";
 import { generateObject } from "ai";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
 import { ARCHETYPE_SENTIMENT } from "./pm.functions";
+import { getProjectCtx } from "./pm.functions";
+import { loadRoster, rosterByRole, DEFAULT_ROSTER } from "./roster";
 
 const MODEL = "google/gemini-3-flash-preview";
 function getModel() {
@@ -406,14 +408,16 @@ export async function generateTasksFromEmail(
   userId: string,
   message: { id: string; sender_name: string; sender_role: string; subject: string; body: string; tone: string },
 ): Promise<number> {
-  const prompt = `A stakeholder just emailed the project coordinator on the "Digital Care Records Rollout" at Atlas Enterprise.
+  const pctx = await getProjectCtx(supabase, userId);
+  const prompt = `A stakeholder just emailed the project coordinator on the "${pctx.name}" project${pctx.description ? ` — ${pctx.description}` : ""}.
+${pctx.domainGuard}
 From: ${message.sender_name} (${message.sender_role})
 Tone: ${message.tone}
 Subject: ${message.subject}
 Body:
 ${message.body}
 
-Generate 2 to 4 concrete project-coordinator tasks the coordinator must complete to actually resolve the underlying issue (not just reply by email). Each task should be the kind of work a real PC does: update RAID log, draft cost-to-complete forecast, schedule a meeting, prepare steering pack, chase a vendor, etc.
+Generate 2 to 4 concrete project-coordinator tasks the coordinator must complete to actually resolve the underlying issue (not just reply by email). Each task should be the kind of work a real PC does on THIS project — use the technical jargon relevant to the domain (e.g. update RAID log, draft cost-to-complete forecast, schedule a meeting, prepare steering pack, chase the vendor, run a data-cleanse sprint, publish a permission-set matrix, etc. — pick what fits).
 
 For each task, set:
 - category: one of ${TASK_CATEGORIES.join(", ")}
@@ -476,9 +480,13 @@ export const escalateTask = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!task) throw new Error("Task not found");
 
+    const roster = await loadRoster(supabase, userId);
+    const byRole = rosterByRole(roster);
+    const pmName = byRole.pm?.name ?? DEFAULT_ROSTER.find((r) => r.role === "pm")!.name;
+    const sponsorName = byRole.sponsor?.name ?? DEFAULT_ROSTER.find((r) => r.role === "sponsor")!.name;
     const ownerMap: Record<string, string> = {
-      ask_pm: "Sarah Williams",
-      escalate_sponsor: "David Okafor",
+      ask_pm: pmName,
+      escalate_sponsor: sponsorName,
       assign_lead: task.linked_stakeholder ?? "Functional Lead",
       add_to_raid: task.linked_stakeholder ?? "RAID owner",
     };
