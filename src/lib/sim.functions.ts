@@ -1136,14 +1136,14 @@ ${excerpt || "(non-text document — judge based on the title; assume minimal co
     }
 
     // Trigger a follow-up stakeholder reply reacting to this specific review, not a canned repeat.
+    const reactRoster = await loadRoster(supabase, userId);
+    const reactByRole = rosterByRole(reactRoster);
+    const reactPm = reactByRole.pm;
+    const reactGov = reactByRole.clinical ?? reactByRole.admin ?? reactByRole.tech ?? reactByRole.finance;
     let reaction: z.infer<typeof ReviewReactionSchema>;
     try {
-      const reactRoster = await loadRoster(supabase, userId);
-      const byRole = rosterByRole(reactRoster);
-      const pm = byRole.pm;
-      const sponsor = byRole.sponsor;
-      const governor = byRole.clinical ?? byRole.admin ?? byRole.tech ?? byRole.finance;
-      const senders = [pm, governor, sponsor].filter(Boolean) as typeof reactRoster;
+      const sponsor = reactByRole.sponsor;
+      const senders = [reactPm, reactGov, sponsor].filter(Boolean) as typeof reactRoster;
       const senderList = senders
         .map((s) => `${s.name} (${s.title})`)
         .join(" · ") || "the project manager";
@@ -1167,11 +1167,11 @@ Do not use the same wording as any recent inbox message. Do not write a generic 
       });
       reaction = res.object;
     } catch {
-      reaction = buildEvidenceBasedReaction(doc.title, output, previousFeedback?.length ?? 0);
+      reaction = buildEvidenceBasedReaction(doc.title, output, previousFeedback?.length ?? 0, reactPm, reactGov);
     }
     const recentBodies = new Set((recentInbox ?? []).map((m) => m.body.trim().toLowerCase()));
     if (recentBodies.has(reaction.body.trim().toLowerCase())) {
-      reaction = buildEvidenceBasedReaction(doc.title, output, (previousFeedback?.length ?? 0) + 1);
+      reaction = buildEvidenceBasedReaction(doc.title, output, (previousFeedback?.length ?? 0) + 1, reactPm, reactGov);
     }
     await supabase.from("inbox_messages").insert({
       user_id: userId,
