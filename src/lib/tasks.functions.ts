@@ -3,8 +3,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { generateObject } from "ai";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
-import { ARCHETYPE_SENTIMENT } from "./pm.functions";
-import { getProjectCtx } from "./pm.functions";
+import { ARCHETYPE_SENTIMENT, getProjectCtx } from "./pm.functions";
 import { loadRoster, rosterByRole, DEFAULT_ROSTER } from "./roster";
 
 const MODEL = "google/gemini-3-flash-preview";
