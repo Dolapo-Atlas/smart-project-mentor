@@ -249,7 +249,7 @@ function Tasks() {
         />
       </form>
 
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-5">
+      <div className="grid gap-6 lg:grid-cols-2">
         {(["todo", "in_progress", "blocked", "submitted", "done"] as const).map((status) => (
           <div key={status} className="rounded-lg border border-border bg-card p-4">
             <div className="mb-3 flex items-center justify-between">
