@@ -354,7 +354,7 @@ function TaskCard({
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-1.5">
             {t.category && (
-              <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+              <span className="max-w-full truncate rounded-full bg-muted px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
                 {t.category}
               </span>
             )}
@@ -400,9 +400,10 @@ function TaskCard({
             </div>
           )}
           {t.feedback && (
-            <div className="mt-2 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
-              <Sparkles className="mr-1 inline h-3 w-3" />
-              {t.feedback.skill} · {t.feedback.score}/5
+            <div className="mt-2 inline-flex max-w-full items-center gap-1 rounded-md border border-emerald-500/25 px-2 py-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
+              <Sparkles className="h-3 w-3 shrink-0" />
+              <span>Reviewed</span>
+              {typeof t.feedback.score !== "undefined" && <span>· {t.feedback.score}/5</span>}
             </div>
           )}
 
