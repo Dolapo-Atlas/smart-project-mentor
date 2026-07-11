@@ -6,6 +6,8 @@ import { createLovableAiGatewayProvider } from "./ai-gateway.server";
 import { unzipSync, strFromU8 } from "fflate";
 import { applyDocumentReview } from "./learning.functions";
 import { generateTasksFromEmail } from "./tasks.functions";
+import { loadRoster, rosterByRole, DEFAULT_ROSTER } from "./roster";
+import { getProjectCtx } from "./pm.functions";
 
 const MODEL = "google/gemini-3-flash-preview";
 
@@ -516,7 +518,7 @@ export const updateTaskStatus = createServerFn({ method: "POST" })
       .eq("user_id", context.userId);
     // Stakeholder reacts when work is submitted for review
     if (data.status === "submitted") {
-      const [{ data: task }, { data: profile }, { data: docs }] = await Promise.all([
+      const [{ data: task }, { data: profile }, { data: docs }, roster] = await Promise.all([
         context.supabase
           .from("tasks")
           .select("title")
@@ -534,7 +536,14 @@ export const updateTaskStatus = createServerFn({ method: "POST" })
           .eq("user_id", context.userId)
           .order("created_at", { ascending: false })
           .limit(5),
+        loadRoster(context.supabase, context.userId),
       ]);
+      const byRole = rosterByRole(roster);
+      const pm = byRole.pm ?? DEFAULT_ROSTER.find((r) => r.role === "pm")!;
+      const governor = byRole.clinical ?? byRole.admin ?? byRole.tech ?? byRole.finance;
+      const routeLine = governor
+        ? ` If anything is governance-sensitive I'll loop in ${governor.name.split(" ")[0]} before we finalise.`
+        : "";
       const firstName =
         profile?.preferred_name?.trim() || profile?.first_name || "there";
       const title = task?.title ?? "the deliverable";
@@ -548,19 +557,19 @@ export const updateTaskStatus = createServerFn({ method: "POST" })
 
 Thanks for marking "${title}" as submitted. I can't see the artefact attached yet — please upload the document under Documents so the review panel and I can give you proper feedback.
 
-Once it's in, I'll come back with comments and route anything clinical through Rachel.
+Once it's in, I'll come back with comments${governor ? ` and route anything ${governor.role === "clinical" ? "clinical" : "governance-sensitive"} through ${governor.name.split(" ")[0]}` : ""}.
 
 Thanks,
-Sarah`
+${pm.name.split(" ")[0]}`
         : `Hi ${firstName},
 
-Thanks — I can see "${title}" is in for review. I'll work through it today and come back with comments. If anything is governance-sensitive I'll loop in Rachel before we finalise.
+Thanks — I can see "${title}" is in for review. I'll work through it today and come back with comments.${routeLine}
 
-Sarah`;
+${pm.name.split(" ")[0]}`;
       await context.supabase.from("inbox_messages").insert({
         user_id: context.userId,
-        sender_name: "Sarah Williams",
-        sender_role: "Project Manager, Atlas Enterprise",
+        sender_name: pm.name,
+        sender_role: pm.title,
         subject: `Re: ${title} — submitted`,
         tone: "neutral",
         body,
