@@ -642,7 +642,7 @@ export const runEscalations = createServerFn({ method: "POST" })
 Original message body:
 ${orig.body}
 
-Style: a real chase email. Reference how long it's been. Be professional but show appropriate impatience — sponsors get blunt, finance/clinical sound concerned, vendors deflect, care home managers sound stressed about floor reality. 2-3 short paragraphs max. Sign off with name & role.`;
+Style: a real chase email. Reference how long it's been. Be professional but show appropriate impatience — sponsors get blunt, finance/technical leads sound concerned, vendors deflect, operations/site leads sound stressed about the frontline reality. Stay in the technical language of THIS project (do not invent unrelated domain content). 2-3 short paragraphs max. Sign off with name & role.`;
 
       let out: z.infer<typeof EscalationSchema>;
       try {
