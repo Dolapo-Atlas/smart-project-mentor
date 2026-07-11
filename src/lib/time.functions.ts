@@ -324,13 +324,17 @@ export const advanceTime = createServerFn({ method: "POST" })
       // non-fatal
     }
 
-    // ---- Generate at least one stakeholder email per advance ----
+    // ---- Generate stakeholder email(s) per advance ----
+    // Each generateStakeholderMessage() does 2+ AI calls (message + auto-tasks).
+    // Running several sequentially blows past edge timeouts on Sprint / SteerCo /
+    // Go-Live and the client fetch aborts with "Load failed". Cap to 1 email and
+    // race it against a hard timeout so the handler always returns quickly; if the
+    // AI is slow, the message will simply show up on the next inbox refresh.
     try {
-      const emailCount = data.mode === "day" ? 1 : data.mode === "week" ? 2 : 3;
-      for (let i = 0; i < emailCount; i++) {
-        const msg = await generateStakeholderMessage();
-        if (msg) newEmails.push(`${msg.sender_name}: ${msg.subject}`);
-      }
+      const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 8000));
+      const gen = generateStakeholderMessage().catch(() => null);
+      const msg = (await Promise.race([gen, timeout])) as { sender_name: string; subject: string } | null;
+      if (msg) newEmails.push(`${msg.sender_name}: ${msg.subject}`);
     } catch {
       // non-fatal
     }
