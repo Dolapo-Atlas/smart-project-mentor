@@ -19,7 +19,7 @@ function getModel() {
  * grounded in the right project (CRM, Website, EV Charging, etc.) instead of
  * defaulting to "Digital Care Records Rollout".
  */
-async function getProjectCtx(supabase: any, userId: string) {
+export async function getProjectCtx(supabase: any, userId: string) {
   const { data: profile } = await supabase
     .from("profiles")
     .select("current_project_instance_id")
@@ -39,11 +39,23 @@ async function getProjectCtx(supabase: any, userId: string) {
   const description: string = tpl.description ?? "";
   const category: string = tpl.category ?? "";
   const skills: string[] = Array.isArray(tpl.key_skills) ? tpl.key_skills : [];
-  const isHealth = /care|health|clinical|patient|nhs/i.test(`${name} ${category} ${description}`);
+  const blob = `${name} ${category} ${description}`.toLowerCase();
+  const isHealth = /care|health|clinical|patient|nhs/.test(blob);
+  const isCrm = /crm|salesforce|helio|pipeline|sales ops|revenue/.test(blob);
+  const isEcom = /ecommerce|e-commerce|shopify|retail|storefront/.test(blob);
+  const isEv = /ev|charger|charging|energy|grid/.test(blob);
+  let jargon = "";
+  if (isCrm) {
+    jargon = `Use CRM/sales-ops jargon: pipeline, opportunities, leads, accounts, contacts, deal stages, forecast accuracy, adoption, data quality, dedupe, migration cutover, integrations (ERP/marketing automation), sandbox, UAT, rep enablement, CRO, revenue operations, MQL/SQL, territories, quota, playbooks, dashboards, permission sets. Vendor = Helio CRM.`;
+  } else if (isEcom) {
+    jargon = `Use e-commerce jargon: conversion rate, checkout funnel, PIM, PDP, cart abandonment, SKUs, payment gateway, fulfilment, returns, storefront theme, Core Web Vitals, A/B tests, cohort LTV.`;
+  } else if (isEv) {
+    jargon = `Use EV/energy jargon: DC fast charging, OCPP, grid connection, load balancing, kW/kWh, back-office / CPO platform, site commissioning, DNO approvals, uptime SLAs.`;
+  }
   const domainGuard = isHealth
     ? ""
-    : `IMPORTANT: This is a "${name}" project. Do NOT reference healthcare, care homes, patients, clinical governance, "Digital Care Records", or NHS unless the project title above explicitly says so. Speak only in terms relevant to ${name}.`;
-  return { name, description, category, skills, domainGuard };
+    : `IMPORTANT: This is the "${name}" project. Do NOT reference healthcare, care homes, patients, clinical governance, "Digital Care Records", CareSoft, Oakwood, or NHS. Speak only in language relevant to ${name}. ${jargon}`.trim();
+  return { name, description, category, skills, domainGuard, jargon, isHealth };
 }
 
 /* ============= ROSTER HELPERS ============= */
@@ -485,7 +497,14 @@ export const submitGate = createServerFn({ method: "POST" })
       conditions: z.array(z.string()),
     });
 
-    const prompt = `You are the governance board (Sponsor + PMO Head + Finance Lead + Clinical Lead) holding the ${data.phase.toUpperCase()} phase gate review for the Digital Care Records Rollout.
+    const pctx = await getProjectCtx(supabase, userId);
+    const roster = await loadRoster(supabase, userId);
+    const boardRoles = roster
+      .filter((r) => ["sponsor", "pm", "finance", "tech", "operations", "clinical", "admin"].includes(r.role))
+      .map((r) => `${r.name} (${r.title})`)
+      .join(", ") || "Sponsor, PM, Finance Lead";
+    const prompt = `You are the governance board (${boardRoles}) holding the ${data.phase.toUpperCase()} phase gate review for the "${pctx.name}" project${pctx.description ? ` — ${pctx.description}` : ""}.
+${pctx.domainGuard}
 
 Coordinator's defence:
 ${data.defence}
