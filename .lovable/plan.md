@@ -1,93 +1,101 @@
+# CRM Simulation — Milestone Plan
 
-# Flagship: Digital Care Records — End-to-End Polish
+Build the CRM simulation as a standalone Atlas track, following the DCR template pattern (route under `_authenticated/`, chapters + progress, AI feedback, admin evals).
 
-Turn Digital Care Records (DCR) into Atlas's flagship template. Other templates stay listed but are marked "Coming soon" until DCR is fully polished. One project, one cast, one arc — finishable in 8–12 hours with a clear win/loss and a shareable certificate.
+---
 
-## 1. Lock the 12-chapter arc
+## Milestone 1 — Scaffolding & Data Model
 
-A scripted spine of chapters in `project_templates.chapters jsonb`. Each chapter has: title, phase (Initiation / Planning / Execution / Monitoring / Closure), unlock trigger, completion criteria, and 1–3 seed events (emails, tasks, meetings) injected when the chapter opens.
+**Goal:** Create the shell of the CRM simulation so a user can enter it, see chapters, and progress state persists.
 
-```text
-1.  Day One — Welcome & Brief
-2.  Stakeholder Mapping
-3.  Project Charter Approval
-4.  Vendor Kickoff (CareSoft)
-5.  Requirements & Clinical Sign-off
-6.  Risk Register & Mitigation
-7.  Budget Lock & Change Control
-8.  Pilot Site Go-Live (Oakwood)
-9.  Frontline Pushback
-10. Mid-Programme Status Report
-11. Rollout Decision Gate
-12. Closure, Handover & Lessons Learned
-```
+- New route: `src/routes/_authenticated/simulations/crm.tsx` (+ chapter child routes)
+- Register CRM as a `project_template` (kind = `crm`) with metadata (title, description, duration, competencies)
+- Reuse existing tables: `project_instances`, `project_chapters`, `chapter_progress`, `simulation_state`
+- Seed CRM chapter list (e.g. Discovery → Segmentation → Pipeline Setup → Outreach → Deal Management → Renewal/Retention)
+- Landing card on `/simulations` linking into CRM
+- Wire "Start CRM Simulation" → creates `project_instance` + initial `simulation_state`
 
-Chapter progression is driven by `chapter_state` on `simulation_state` (advances when criteria met). Each chapter opens with a seeded inbox message + 1 task; closing it stamps a chapter completion row used by scoring.
+**Deliverable:** User can launch CRM, sees chapters, progress saves.
 
-## 2. Win/loss + certificate
+---
 
-New table `project_outcomes` (user_id, instance_id, score breakdown, grade, completed_at, certificate_id).
+## Milestone 2 — Core Simulation Mechanics
 
-Score = weighted sum of:
-- Stakeholder sentiment average at closure (30%)
-- Tasks completed on time vs late vs skipped (25%)
-- Budget variance (15%)
-- RAID hygiene — risks logged before they fire (15%)
-- Status reports submitted on cadence (15%)
+**Goal:** Interactive gameplay loop per chapter (the "real" simulation logic).
 
-Grades: Distinction ≥85 / Pass ≥60 / Conditional 40–59 / Did Not Pass <40.
+- Fake CRM UI: contacts, accounts, deals, pipeline stages (kanban), activity timeline
+- Chapter scripts: scenario prompts, decisions, branching outcomes
+- State machine: decisions update `simulation_state` (pipeline health, relationship scores, forecast accuracy)
+- Scoring rubric per chapter (accuracy, prioritization, communication quality)
+- Task/RAID/stakeholder integration reused from existing tables where relevant
 
-On reaching Chapter 12 completion, generate a PDF certificate ("Atlas Certificate of Completion — Digital Care Records, Grade: X") via existing PDF flow used in reports, stored at `/mnt/documents`-style download. Show a Results screen at `/app/results` with breakdown, replayable highlights, and a share link.
+**Deliverable:** User can complete all chapters end-to-end with meaningful state changes and a score.
 
-## 3. AI dialogue quality bar
+---
 
-- **Cast lockdown**: DCR roster (Sarah, David, Priya, James, Margaret, Rachel, CareSoft) becomes canonical. Strip the generic "stakeholder X" fallbacks from prompts; always inject the cast block + project context block.
-- **Eval set**: `src/lib/evals/dcr.ts` — 25 golden prompt→expected-traits pairs (e.g. "Margaret reacts to delayed pilot" → expects: in-character, mentions Oakwood residents, frustrated tone, asks for revised date). Add `bun run eval:dcr` that runs them through the gateway and scores with a judge model. Threshold ≥80% pass to ship.
-- **Prompt hardening**: shared `dcrSystemPrompt()` builder enforces domain guard (no CRM/website lingo), persona voice per role, length caps, and "never invent new stakeholders" rule.
-- **Regression hook**: log every generated message into `ai_feedback` with chapter + persona so we can spot drift.
+## Milestone 3 — AI Coaching & Feedback
 
-## 4. Sidebar cut to 6
+**Goal:** LLM-driven realism and per-decision coaching.
 
-Hide modules that don't pull weight in DCR. Final nav:
+- Server function calling Lovable AI Gateway for:
+  - Stakeholder replies (email/message simulation via `comms_messages`)
+  - Chapter debrief + coaching (writes to `ai_feedback`)
+  - Change-request / objection generation
+- Prompt library per chapter, versioned
+- Cost guardrails (token caps, model selection: `google/gemini-2.5-flash` default)
 
-```text
-Home · Inbox · Tasks · Stakeholders · RAID · Reports
-```
+**Deliverable:** Every chapter ends with tailored AI feedback; stakeholder comms feel dynamic.
 
-Moved into secondary surfaces (not sidebar items):
-- Meetings → entered from Inbox/Tasks when a meeting event fires
-- Budget, Changes, Gates, Health, Progress, Documents → grouped under a single "Project" panel on Home
-- Learning, Completed, Reviews, Comms, Settings → user menu
+---
 
-Admin/Signups stays admin-only.
+## Milestone 4 — Polish & UX
 
-## 5. Template gating
+**Goal:** Ship-quality experience.
 
-`project_templates.status` column: `flagship` | `coming_soon`. Project picker still shows all six but only DCR is selectable; others get a "Coming soon — vote for next" tile that increments a counter in `template_interest`.
+- Empty states, loading skeletons, error boundaries on all CRM routes
+- Mobile layout pass (kanban → stacked list on small screens)
+- Micro-animations on stage transitions, deal wins
+- Accessibility: keyboard nav on pipeline, ARIA on drag targets
+- Onboarding tour for first-time CRM users
+- Head metadata + OG image for CRM landing
 
-## 6. Out of scope (this pass)
+**Deliverable:** Feels as polished as DCR.
 
-- Building the other 5 templates' content
-- Multiplayer / co-op rooms
-- Mobile-specific layouts beyond what already works
-- Re-recording TTS briefings for new chapters (existing voice flow reused)
+---
 
-## Technical sketch
+## Milestone 5 — Admin Evals & Analytics
 
-- **Migration**: add `chapters jsonb`, `status text` to `project_templates`; create `project_outcomes`, `template_interest`; seed DCR chapters; mark other 5 `coming_soon`.
-- **Server fns** (`src/lib/`):
-  - `chapters.functions.ts` — `getCurrentChapter`, `advanceChapter`, `seedChapterEvents`
-  - `outcomes.functions.ts` — `computeScore`, `finalizeRun`, `generateCertificate`
-  - Update `pm.functions.ts`, `comms.functions.ts`, `sim.functions.ts` to inject DCR cast + chapter context into every prompt.
-- **UI**:
-  - `src/components/app-sidebar.tsx` — trimmed to 6 items, gated by active template
-  - `src/routes/_authenticated/app.index.tsx` — chapter progress strip, current-chapter card, "Project" accordion with budget/gates/health/etc.
-  - `src/routes/_authenticated/app.results.$instanceId.tsx` — results + certificate download
-  - `src/routes/_authenticated/app.projects.tsx` — flagship badge on DCR, "Coming soon + vote" on others
-- **Evals**: `src/lib/evals/dcr.ts`, `scripts/eval-dcr.ts`, npm script `eval:dcr`. Manual gate, not CI-blocking.
+**Goal:** Admin can measure quality and iterate.
 
-## Risks
+- Extend `admin.evals` with CRM eval suite (`ai_eval_runs` / `ai_eval_results`)
+- Golden-path traces per chapter for regression testing
+- CRM-specific metrics on `admin.analytics`: starts, completions, avg score, drop-off per chapter
+- Feedback triage view for `ai_feedback` entries flagged low quality
 
-- Existing in-flight runs on other templates will be paused (shown as "Paused — template under development"). We won't delete their data.
-- Score formula is a v1 and will need tuning after first 10 real playthroughs.
-- Cert PDF rendering on Workers — reuse the same HTML→PDF path already used for status reports to avoid native deps.
+**Deliverable:** Admin can spot regressions and prioritize prompt fixes.
+
+---
+
+## Milestone 6 — QA & Launch
+
+**Goal:** Confidence to open to beta users.
+
+- Playwright happy-path per chapter
+- Manual playtest pass (2–3 rounds with prompt tuning between)
+- Copy edit pass across all scenarios
+- Enable CRM in the simulations catalog
+
+**Deliverable:** CRM simulation live for all beta testers.
+
+---
+
+## Technical Notes
+
+- Reuse patterns from DCR: same route structure, same hooks (`useChapterProgress`, `useSimulationState`), same feedback pipeline
+- All server functions under `src/lib/crm.functions.ts`, guarded by `requireSupabaseAuth`
+- No new tables unless a CRM-specific concept doesn't fit existing schema — if needed (e.g. `crm_pipeline_snapshots`), migrate with GRANTs + RLS in one migration
+- Admin routes stay guarded by existing `user_roles` check
+
+## Cost Control
+
+Suggest treating each milestone as its own build session, review before starting the next. Milestones 2 and 3 are the largest; 1, 4, 5, 6 are lighter.
