@@ -9,34 +9,39 @@ const TILES: Array<{
   icon: typeof Circle;
   statuses: string[];
   accent: string;
+  bar: string;
 }> = [
   {
     key: "todo",
     label: "To do",
     icon: Circle,
     statuses: ["todo"],
-    accent: "text-muted-foreground",
+    accent: "text-navy",
+    bar: "bg-navy",
   },
   {
     key: "in_progress",
     label: "In progress",
     icon: CircleDot,
     statuses: ["in_progress"],
-    accent: "text-primary",
+    accent: "text-accent-orange",
+    bar: "bg-accent-orange",
   },
   {
     key: "pending",
     label: "Pending review",
     icon: Clock,
     statuses: ["submitted"],
-    accent: "text-orange-600 dark:text-orange-400",
+    accent: "text-warning-foreground",
+    bar: "bg-warning",
   },
   {
     key: "completed",
     label: "Completed",
     icon: CheckCircle2,
     statuses: ["done", "approved", "completed", "closed"],
-    accent: "text-emerald-600 dark:text-emerald-400",
+    accent: "text-success",
+    bar: "bg-success",
   },
 ];
 
@@ -55,13 +60,20 @@ export function TaskSummaryStrip() {
         return (
           <div
             key={t.key}
-            className="rounded-xl border border-border bg-card p-4 shadow-sm"
+            className="relative overflow-hidden rounded-xl border border-border bg-card p-4 shadow-sm"
           >
-            <div className={`flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider ${t.accent}`}>
-              <Icon className="h-3.5 w-3.5" />
-              {t.label}
+            <span className={`absolute left-0 top-0 h-full w-1 ${t.bar}`} aria-hidden />
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                  {t.label}
+                </div>
+                <div className="mt-1.5 font-display text-2xl font-semibold text-foreground">
+                  {count}
+                </div>
+              </div>
+              <Icon className={`h-4 w-4 ${t.accent}`} />
             </div>
-            <div className="mt-1.5 font-display text-2xl font-semibold">{count}</div>
           </div>
         );
       })}
