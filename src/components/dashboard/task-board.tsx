@@ -29,16 +29,16 @@ type Task = {
 };
 
 const COLUMNS: Array<{ key: string; label: string; statuses: string[]; tone: string }> = [
-  { key: "todo", label: "To do", statuses: ["todo", "blocked"], tone: "text-muted-foreground" },
-  { key: "in_progress", label: "In progress", statuses: ["in_progress"], tone: "text-primary" },
-  { key: "pending", label: "Pending review", statuses: ["submitted"], tone: "text-orange-600 dark:text-orange-400" },
-  { key: "completed", label: "Completed", statuses: ["done", "approved", "completed", "closed"], tone: "text-emerald-600 dark:text-emerald-400" },
+  { key: "todo", label: "To do", statuses: ["todo", "blocked"], tone: "text-navy" },
+  { key: "in_progress", label: "In progress", statuses: ["in_progress"], tone: "text-accent-orange" },
+  { key: "pending", label: "Pending review", statuses: ["submitted"], tone: "text-warning-foreground" },
+  { key: "completed", label: "Completed", statuses: ["done", "approved", "completed", "closed"], tone: "text-success" },
 ];
 
 const PRIORITY_DOT: Record<string, string> = {
   critical: "bg-destructive",
-  high: "bg-orange-500",
-  medium: "bg-primary",
+  high: "bg-accent-orange",
+  medium: "bg-navy",
   low: "bg-muted-foreground/50",
 };
 
