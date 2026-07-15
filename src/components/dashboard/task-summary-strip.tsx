@@ -3,7 +3,13 @@ import { useServerFn } from "@tanstack/react-start";
 import { listTasksRich } from "@/lib/tasks.functions";
 import { Circle, CircleDot, Clock, CheckCircle2 } from "lucide-react";
 
-const TILES = [
+const TILES: Array<{
+  key: string;
+  label: string;
+  icon: typeof Circle;
+  statuses: string[];
+  accent: string;
+}> = [
   {
     key: "todo",
     label: "To do",
@@ -32,7 +38,7 @@ const TILES = [
     statuses: ["done", "approved", "completed", "closed"],
     accent: "text-emerald-600 dark:text-emerald-400",
   },
-] as const;
+];
 
 export function TaskSummaryStrip() {
   const fetchTasks = useServerFn(listTasksRich);
