@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, AlertTriangle, Sparkles } from "lucide-react";
 
 const PRIORITY_STYLE: Record<string, string> = {
-  critical: "bg-destructive/15 text-destructive border-destructive/30",
-  high: "bg-orange-500/15 text-orange-700 dark:text-orange-400 border-orange-500/30",
-  medium: "bg-primary/10 text-primary border-primary/20",
-  low: "bg-muted text-muted-foreground border-border",
+  critical: "bg-destructive/20 text-destructive-foreground border-destructive/40",
+  high: "bg-accent-orange/20 text-accent-orange-foreground border-accent-orange/40",
+  medium: "bg-white/10 text-white/90 border-white/20",
+  low: "bg-white/5 text-white/70 border-white/15",
 };
 
 // "Continue where you left off"
@@ -47,18 +47,26 @@ export function ContinueCard() {
   const route = primary?.linked_module_route ?? "/app/tasks";
 
   return (
-    <section className="relative overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm md:p-8">
-      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-primary/60 to-transparent" />
-      <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+    <section className="relative overflow-hidden rounded-2xl border border-navy/30 bg-navy p-6 text-navy-foreground shadow-lg md:p-8">
+      {/* soft decorative glow */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-accent-orange/20 blur-3xl"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -bottom-32 -left-16 h-64 w-64 rounded-full bg-white/5 blur-3xl"
+      />
+      <div className="relative flex items-center gap-2 text-xs font-medium uppercase tracking-[0.18em] text-white/60">
         {isResume ? <Play className="h-3.5 w-3.5" /> : <Sparkles className="h-3.5 w-3.5" />}
         {label}
       </div>
 
       {primary ? (
         <>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
+          <div className="relative mt-3 flex flex-wrap items-center gap-2">
             {primary.category && (
-              <span className="rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wider text-white/80">
                 {primary.category}
               </span>
             )}
@@ -70,56 +78,69 @@ export function ContinueCard() {
               {primary.priority}
             </span>
             {activeChapter && (
-              <span className="rounded-full border border-border bg-background px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              <span className="rounded-full border border-white/20 bg-white/5 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wider text-white/70">
                 Ch. {activeChapter.chapter_number}
               </span>
             )}
           </div>
 
-          <h2 className="mt-3 font-display text-2xl font-semibold leading-tight md:text-3xl">
+          <h2 className="relative mt-3 font-display text-2xl font-semibold leading-tight text-white md:text-3xl">
             {primary.title}
           </h2>
           {primary.completion_action && (
-            <p className="mt-2 max-w-2xl text-sm text-muted-foreground md:text-base">
+            <p className="relative mt-2 max-w-2xl text-sm text-white/70 md:text-base">
               → {primary.completion_action}
             </p>
           )}
 
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-6 text-sm text-muted-foreground">
-              <div>
-                <div className="text-[11px] uppercase tracking-wider">Actions remaining</div>
-                <div className="mt-0.5 font-display text-xl font-medium text-foreground">
-                  {remaining}
-                  <span className="ml-1 text-xs text-muted-foreground">of {required}</span>
-                </div>
-              </div>
-              {primary.linked_stakeholder && (
-                <div>
-                  <div className="text-[11px] uppercase tracking-wider">For</div>
-                  <div className="mt-0.5 text-sm font-medium text-foreground">
-                    {primary.linked_stakeholder}
-                  </div>
-                </div>
-              )}
+          {/* Orange progress bar */}
+          <div className="relative mt-6">
+            <div className="flex items-center justify-between text-[11px] uppercase tracking-wider text-white/60">
+              <span>Actions remaining</span>
+              <span className="font-medium text-white/80">
+                {remaining} <span className="text-white/50">of {required}</span>
+              </span>
             </div>
-            <Button asChild size="lg" className="shrink-0">
+            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+              <div
+                className="h-full rounded-full bg-accent-orange transition-all"
+                style={{
+                  width: `${required > 0 ? Math.min(100, Math.max(4, ((required - remaining) / required) * 100)) : 0}%`,
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="relative mt-6 flex flex-wrap items-center justify-between gap-4">
+            {primary.linked_stakeholder ? (
+              <div className="text-sm text-white/70">
+                <span className="text-[11px] uppercase tracking-wider text-white/50">For</span>
+                <span className="ml-2 font-medium text-white">{primary.linked_stakeholder}</span>
+              </div>
+            ) : (
+              <span />
+            )}
+            <Button
+              asChild
+              size="lg"
+              className="shrink-0 bg-white text-navy shadow-sm hover:bg-white/90"
+            >
               <Link to={route}>
                 {isResume ? "Resume task" : "Start task"}
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <ArrowRight className="ml-2 h-4 w-4 text-navy" />
               </Link>
             </Button>
           </div>
 
           {next?.criticalOverdue && (
-            <div className="mt-5 flex items-center gap-2 rounded-md border border-destructive/30 bg-destructive/10 p-2.5 text-xs text-destructive">
+            <div className="relative mt-5 flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/20 p-2.5 text-xs text-white">
               <AlertTriangle className="h-3.5 w-3.5" />
               A critical task is overdue. Handle it before advancing time.
             </div>
           )}
         </>
       ) : (
-        <div className="mt-4 rounded-md border border-dashed border-border bg-background p-6 text-center text-sm text-muted-foreground">
+        <div className="relative mt-4 rounded-md border border-dashed border-white/20 bg-white/5 p-6 text-center text-sm text-white/70">
           No open tasks. Summon a stakeholder email or advance time to generate work.
         </div>
       )}
