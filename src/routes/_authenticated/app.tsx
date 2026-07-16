@@ -204,8 +204,6 @@ function AppLayout() {
   const navTos = new Set(NAV.map((n) => n.to));
   const MORE_LINKS = ALL_OVERFLOW.filter((n) => !navTos.has(n.to));
 
-  const phaseProgress = overview?.state?.progress ?? 0;
-
   return (
     <div className="min-h-screen bg-background text-foreground paper-texture">
       <div className="mx-auto grid min-h-screen max-w-[1400px] grid-cols-1 md:grid-cols-[260px_1fr]">
