@@ -9,7 +9,7 @@ import {
 } from "@/lib/pm.functions";
 import { listTasksRich, submitTaskWithWork } from "@/lib/tasks.functions";
 import { TaskSubmissionDialog } from "@/components/tasks/task-submission-dialog";
-import { encodeSubmission, TEMPLATES } from "@/lib/templates";
+import { encodeSubmission, evaluateGenericTemplate, TEMPLATES } from "@/lib/templates";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -429,6 +429,7 @@ function Changes() {
         kind: "template",
         template: "change_request",
         values: templateValues,
+        readiness: evaluateGenericTemplate("change_request", templateValues),
       })} />
     </div>
   );
