@@ -59,14 +59,24 @@ function fmt(d: string | null | undefined) {
 
 function RaidPage() {
   const qc = useQueryClient();
+  const search = useSearch({ from: "/_authenticated/app/raid" });
+  const navigate = useNavigate();
   const fetchRaid = useServerFn(listRaid);
   const addRaid = useServerFn(createRaid);
   const setStatusFn = useServerFn(updateRaidStatus);
   const delRaidFn = useServerFn(deleteRaid);
   const submitRaidFn = useServerFn(submitRaidLog);
+  const fetchTasks = useServerFn(listTasksRich);
+  const submitTaskFn = useServerFn(submitTaskWithWork);
   const roster = useRoster();
 
   const { data: raid } = useQuery({ queryKey: ["raid"], queryFn: () => fetchRaid() });
+  const { data: allTasks } = useQuery({
+    queryKey: ["tasks"],
+    queryFn: () => fetchTasks() as Promise<any[]>,
+    enabled: !!search.task,
+  });
+  const linkedTask = (allTasks ?? []).find((t: any) => t.id === search.task) ?? null;
 
   const [tab, setTab] = useState<Kind>("risk");
 
@@ -80,6 +90,8 @@ function RaidPage() {
   }, []);
 
   const [showForm, setShowForm] = useState(false);
+  const formRef = useRef<HTMLDivElement>(null);
+  const [submitOpen, setSubmitOpen] = useState(false);
   const [form, setForm] = useState({
     kind: "risk" as Kind,
     title: "",
@@ -92,6 +104,26 @@ function RaidPage() {
     target_date: "",
     comments: "",
   });
+
+  // Task deep-link: prefill form and auto-open.
+  const prefillAppliedRef = useRef(false);
+  useEffect(() => {
+    if (prefillAppliedRef.current) return;
+    if (!search.task && !search.prefill_title && !search.kind) return;
+    prefillAppliedRef.current = true;
+    const kind = (search.kind ?? "risk") as Kind;
+    setTab(kind);
+    setForm((f) => ({
+      ...f,
+      kind,
+      title: search.prefill_title ?? f.title,
+      description: search.prefill_desc ?? f.description,
+    }));
+    setShowForm(true);
+    requestAnimationFrame(() => {
+      formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, [search.task, search.kind, search.prefill_title, search.prefill_desc]);
 
   const create = useMutation({
     mutationFn: () => addRaid({ data: {
@@ -114,6 +146,24 @@ function RaidPage() {
       setForm({ ...form, title: "", description: "", owner: "", mitigation: "", target_date: "", comments: "" });
       setShowForm(false);
       toast.success("Logged to RAID register.");
+      // If a task deep-linked us here, open submission dialog for that task.
+      if (search.task) {
+        setSubmitOpen(true);
+      }
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+
+  const submitLinkedTask = useMutation({
+    mutationFn: (v: { id: string; submission: string }) => submitTaskFn({ data: v }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tasks"] });
+      qc.invalidateQueries({ queryKey: ["overview"] });
+      qc.invalidateQueries({ queryKey: ["whats-next"] });
+      toast.success("Submitted for review");
+      setSubmitOpen(false);
+      // Clear query params so re-open of page is clean.
+      navigate({ to: "/app/raid", search: {}, replace: true });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
