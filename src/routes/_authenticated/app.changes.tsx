@@ -1,15 +1,34 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useSearch, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { listChangeRequests, generateChangeRequest, decideChangeRequest } from "@/lib/pm.functions";
-import { useState } from "react";
+import {
+  listChangeRequests,
+  generateChangeRequest,
+  decideChangeRequest,
+  createChangeRequest,
+} from "@/lib/pm.functions";
+import { listTasksRich } from "@/lib/tasks.functions";
+import { TaskSubmissionDialog } from "@/components/tasks/task-submission-dialog";
+import { encodeSubmission, TEMPLATES } from "@/lib/templates";
+import { useEffect, useMemo, useState } from "react";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Sparkles, Check, X } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sparkles, Check, X, Download, FilePlus2, Send } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import jsPDF from "jspdf";
+
+const changesSearchSchema = z.object({
+  task: z.string().uuid().optional(),
+  create: z.coerce.boolean().optional(),
+  prefill_title: z.string().optional(),
+});
 
 export const Route = createFileRoute("/_authenticated/app/changes")({
+  validateSearch: changesSearchSchema,
   component: Changes,
 });
 
