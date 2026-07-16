@@ -32,7 +32,18 @@ export const checkSubmissionReadiness = createServerFn({ method: "POST" })
     z
       .object({
         task_id: z.string().uuid(),
-        template: z.enum(["raid_log", "project_charter", "status_report"]).optional(),
+        template: z
+          .enum([
+            "raid_log",
+            "project_charter",
+            "status_report",
+            "resource_plan",
+            "change_request",
+            "stakeholder_register",
+            "meeting_agenda",
+            "lessons_learned",
+          ])
+          .optional(),
         kind: z.enum(["template", "upload"]),
         values: z.record(z.string(), z.string()).optional(),
         upload_note: z.string().max(2000).optional(),
