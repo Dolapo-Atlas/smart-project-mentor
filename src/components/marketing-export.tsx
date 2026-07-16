@@ -396,11 +396,24 @@ function drawPhone(ctx: CanvasRenderingContext2D, src: HTMLCanvasElement, cw: nu
 
 /* --------------------------------- component -------------------------------- */
 
-export function MarketingExport() {
+export function MarketingExport({
+  open: openProp,
+  onOpenChange: onOpenChangeProp,
+  floating = true,
+}: {
+  open?: boolean;
+  onOpenChange?: (o: boolean) => void;
+  floating?: boolean;
+} = {}) {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
-  const [open, setOpen] = useState(false);
+  const [openInternal, setOpenInternal] = useState(false);
+  const open = openProp ?? openInternal;
+  const setOpen = (o: boolean) => {
+    if (onOpenChangeProp) onOpenChangeProp(o);
+    else setOpenInternal(o);
+  };
   const [busy, setBusy] = useState(false);
   const [aspect, setAspect] = useState<AspectKey>("native");
   const [variants, setVariants] = useState<Record<VariantKey, boolean>>({
