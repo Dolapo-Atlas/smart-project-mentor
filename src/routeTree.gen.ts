@@ -47,6 +47,7 @@ import { Route as AuthenticatedAppGatesRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAppDocumentsRouteImport } from './routes/_authenticated/app.documents'
 import { Route as AuthenticatedAppCompletedRouteImport } from './routes/_authenticated/app.completed'
 import { Route as AuthenticatedAppCommsRouteImport } from './routes/_authenticated/app.comms'
+import { Route as AuthenticatedAppCharterRouteImport } from './routes/_authenticated/app.charter'
 import { Route as AuthenticatedAppChangesRouteImport } from './routes/_authenticated/app.changes'
 import { Route as AuthenticatedAppBudgetRouteImport } from './routes/_authenticated/app.budget'
 import { Route as AuthenticatedAdminMarketingRouteImport } from './routes/_authenticated/admin.marketing'
@@ -258,6 +259,11 @@ const AuthenticatedAppCommsRoute = AuthenticatedAppCommsRouteImport.update({
   path: '/comms',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppCharterRoute = AuthenticatedAppCharterRouteImport.update({
+  id: '/charter',
+  path: '/charter',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const AuthenticatedAppChangesRoute = AuthenticatedAppChangesRouteImport.update({
   id: '/changes',
   path: '/changes',
@@ -331,6 +337,7 @@ export interface FileRoutesByFullPath {
   '/admin/marketing': typeof AuthenticatedAdminMarketingRoute
   '/app/budget': typeof AuthenticatedAppBudgetRoute
   '/app/changes': typeof AuthenticatedAppChangesRoute
+  '/app/charter': typeof AuthenticatedAppCharterRoute
   '/app/comms': typeof AuthenticatedAppCommsRoute
   '/app/completed': typeof AuthenticatedAppCompletedRoute
   '/app/documents': typeof AuthenticatedAppDocumentsRoute
@@ -379,6 +386,7 @@ export interface FileRoutesByTo {
   '/admin/marketing': typeof AuthenticatedAdminMarketingRoute
   '/app/budget': typeof AuthenticatedAppBudgetRoute
   '/app/changes': typeof AuthenticatedAppChangesRoute
+  '/app/charter': typeof AuthenticatedAppCharterRoute
   '/app/comms': typeof AuthenticatedAppCommsRoute
   '/app/completed': typeof AuthenticatedAppCompletedRoute
   '/app/documents': typeof AuthenticatedAppDocumentsRoute
@@ -430,6 +438,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/marketing': typeof AuthenticatedAdminMarketingRoute
   '/_authenticated/app/budget': typeof AuthenticatedAppBudgetRoute
   '/_authenticated/app/changes': typeof AuthenticatedAppChangesRoute
+  '/_authenticated/app/charter': typeof AuthenticatedAppCharterRoute
   '/_authenticated/app/comms': typeof AuthenticatedAppCommsRoute
   '/_authenticated/app/completed': typeof AuthenticatedAppCompletedRoute
   '/_authenticated/app/documents': typeof AuthenticatedAppDocumentsRoute
@@ -481,6 +490,7 @@ export interface FileRouteTypes {
     | '/admin/marketing'
     | '/app/budget'
     | '/app/changes'
+    | '/app/charter'
     | '/app/comms'
     | '/app/completed'
     | '/app/documents'
@@ -529,6 +539,7 @@ export interface FileRouteTypes {
     | '/admin/marketing'
     | '/app/budget'
     | '/app/changes'
+    | '/app/charter'
     | '/app/comms'
     | '/app/completed'
     | '/app/documents'
@@ -579,6 +590,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/marketing'
     | '/_authenticated/app/budget'
     | '/_authenticated/app/changes'
+    | '/_authenticated/app/charter'
     | '/_authenticated/app/comms'
     | '/_authenticated/app/completed'
     | '/_authenticated/app/documents'
@@ -901,6 +913,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppCommsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/charter': {
+      id: '/_authenticated/app/charter'
+      path: '/charter'
+      fullPath: '/app/charter'
+      preLoaderRoute: typeof AuthenticatedAppCharterRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/changes': {
       id: '/_authenticated/app/changes'
       path: '/changes'
@@ -977,6 +996,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedAppRouteChildren {
   AuthenticatedAppBudgetRoute: typeof AuthenticatedAppBudgetRoute
   AuthenticatedAppChangesRoute: typeof AuthenticatedAppChangesRoute
+  AuthenticatedAppCharterRoute: typeof AuthenticatedAppCharterRoute
   AuthenticatedAppCommsRoute: typeof AuthenticatedAppCommsRoute
   AuthenticatedAppCompletedRoute: typeof AuthenticatedAppCompletedRoute
   AuthenticatedAppDocumentsRoute: typeof AuthenticatedAppDocumentsRoute
@@ -1003,6 +1023,7 @@ interface AuthenticatedAppRouteChildren {
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppBudgetRoute: AuthenticatedAppBudgetRoute,
   AuthenticatedAppChangesRoute: AuthenticatedAppChangesRoute,
+  AuthenticatedAppCharterRoute: AuthenticatedAppCharterRoute,
   AuthenticatedAppCommsRoute: AuthenticatedAppCommsRoute,
   AuthenticatedAppCompletedRoute: AuthenticatedAppCompletedRoute,
   AuthenticatedAppDocumentsRoute: AuthenticatedAppDocumentsRoute,

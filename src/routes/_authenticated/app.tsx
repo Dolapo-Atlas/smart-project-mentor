@@ -59,13 +59,13 @@ const PINNED: NavItem[] = [
 const PHASE_NAV: Record<string, NavItem[]> = {
   initiation: [
     { to: "/app/stakeholders", label: "People", icon: Contact, tour: "stakeholders" },
-    { to: "/app/documents", label: "Charter", icon: FileText, tour: "documents" },
+    { to: "/app/charter", label: "Charter", icon: FileText, tour: "documents" },
     { to: "/app/gates", label: "Kick-off gate", icon: Gavel },
   ],
   planning: [
     { to: "/app/raid", label: "RAID", icon: ShieldAlert },
     { to: "/app/budget", label: "Budget", icon: Wallet },
-    { to: "/app/stakeholders", label: "People", icon: Contact, tour: "stakeholders" },
+    { to: "/app/charter", label: "Charter", icon: FileText },
   ],
   execution: [
     { to: "/app/raid", label: "RAID", icon: ShieldAlert },
@@ -89,6 +89,7 @@ const PHASE_NAV: Record<string, NavItem[]> = {
 const ALL_OVERFLOW: NavItem[] = [
   { to: "/app/results", label: "Final review & certificate", icon: Award },
   { to: "/app/templates", label: "Templates", icon: LayoutTemplate },
+  { to: "/app/charter", label: "Project charter", icon: FileText },
   { to: "/app/gemini", label: "Gemini AI features", icon: Sparkles },
   { to: "/app/stakeholders", label: "People", icon: Contact },
   { to: "/app/meetings", label: "Meetings", icon: Users },
