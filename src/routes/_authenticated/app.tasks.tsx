@@ -470,7 +470,7 @@ function TaskCard({
 
           <div className="mt-2 flex flex-wrap gap-1.5">
             {t.linked_module_route && !isComplete && (
-              <OpenModuleLink task={t} />
+              <OpenModuleLink t={t} />
             )}
             {t.status === "todo" && (
               <button
