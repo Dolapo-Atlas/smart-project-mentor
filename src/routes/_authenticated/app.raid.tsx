@@ -1,19 +1,30 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useSearch, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   listRaid, createRaid, updateRaidStatus, deleteRaid, submitRaidLog,
 } from "@/lib/raid.functions";
-import { useEffect, useState } from "react";
+import { listTasksRich, submitTaskWithWork } from "@/lib/tasks.functions";
+import { TaskSubmissionDialog } from "@/components/tasks/task-submission-dialog";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Trash2, Plus, Paperclip, ShieldAlert, AlertOctagon, Link2, HelpCircle, LayoutTemplate } from "lucide-react";
+import { Trash2, Plus, Paperclip, ShieldAlert, AlertOctagon, Link2, HelpCircle, LayoutTemplate, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { useRoster } from "@/lib/roster";
 import { format } from "date-fns";
+import { z } from "zod";
+
+const raidSearchSchema = z.object({
+  task: z.string().uuid().optional(),
+  kind: z.enum(["risk", "assumption", "issue", "dependency"]).optional(),
+  prefill_title: z.string().max(200).optional(),
+  prefill_desc: z.string().max(2000).optional(),
+});
 
 export const Route = createFileRoute("/_authenticated/app/raid")({
+  validateSearch: raidSearchSchema,
   component: RaidPage,
 });
 
@@ -48,14 +59,24 @@ function fmt(d: string | null | undefined) {
 
 function RaidPage() {
   const qc = useQueryClient();
+  const search = useSearch({ from: "/_authenticated/app/raid" });
+  const navigate = useNavigate();
   const fetchRaid = useServerFn(listRaid);
   const addRaid = useServerFn(createRaid);
   const setStatusFn = useServerFn(updateRaidStatus);
   const delRaidFn = useServerFn(deleteRaid);
   const submitRaidFn = useServerFn(submitRaidLog);
+  const fetchTasks = useServerFn(listTasksRich);
+  const submitTaskFn = useServerFn(submitTaskWithWork);
   const roster = useRoster();
 
   const { data: raid } = useQuery({ queryKey: ["raid"], queryFn: () => fetchRaid() });
+  const { data: allTasks } = useQuery({
+    queryKey: ["tasks"],
+    queryFn: () => fetchTasks() as Promise<any[]>,
+    enabled: !!search.task,
+  });
+  const linkedTask = (allTasks ?? []).find((t: any) => t.id === search.task) ?? null;
 
   const [tab, setTab] = useState<Kind>("risk");
 
@@ -69,6 +90,8 @@ function RaidPage() {
   }, []);
 
   const [showForm, setShowForm] = useState(false);
+  const formRef = useRef<HTMLDivElement>(null);
+  const [submitOpen, setSubmitOpen] = useState(false);
   const [form, setForm] = useState({
     kind: "risk" as Kind,
     title: "",
@@ -81,6 +104,26 @@ function RaidPage() {
     target_date: "",
     comments: "",
   });
+
+  // Task deep-link: prefill form and auto-open.
+  const prefillAppliedRef = useRef(false);
+  useEffect(() => {
+    if (prefillAppliedRef.current) return;
+    if (!search.task && !search.prefill_title && !search.kind) return;
+    prefillAppliedRef.current = true;
+    const kind = (search.kind ?? "risk") as Kind;
+    setTab(kind);
+    setForm((f) => ({
+      ...f,
+      kind,
+      title: search.prefill_title ?? f.title,
+      description: search.prefill_desc ?? f.description,
+    }));
+    setShowForm(true);
+    requestAnimationFrame(() => {
+      formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, [search.task, search.kind, search.prefill_title, search.prefill_desc]);
 
   const create = useMutation({
     mutationFn: () => addRaid({ data: {
@@ -103,6 +146,24 @@ function RaidPage() {
       setForm({ ...form, title: "", description: "", owner: "", mitigation: "", target_date: "", comments: "" });
       setShowForm(false);
       toast.success("Logged to RAID register.");
+      // If a task deep-linked us here, open submission dialog for that task.
+      if (search.task) {
+        setSubmitOpen(true);
+      }
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+
+  const submitLinkedTask = useMutation({
+    mutationFn: (v: { id: string; submission: string }) => submitTaskFn({ data: v }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tasks"] });
+      qc.invalidateQueries({ queryKey: ["overview"] });
+      qc.invalidateQueries({ queryKey: ["whats-next"] });
+      toast.success("Submitted for review");
+      setSubmitOpen(false);
+      // Clear query params so re-open of page is clean.
+      navigate({ to: "/app/raid", search: {}, replace: true });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
@@ -176,8 +237,27 @@ function RaidPage() {
 
       <p className="text-xs text-muted-foreground">{activeTab.help}</p>
 
+      {search.task && linkedTask && (
+        <div className="rounded-lg border border-primary/40 bg-primary/5 p-3 text-sm">
+          <div className="flex items-start gap-2">
+            <CheckCircle2 className="mt-0.5 h-4 w-4 text-primary" />
+            <div className="min-w-0 flex-1">
+              <div className="font-medium">Completing task: {linkedTask.title}</div>
+              {linkedTask.completion_action && (
+                <div className="mt-0.5 text-xs text-muted-foreground">
+                  → {linkedTask.completion_action}
+                </div>
+              )}
+              <div className="mt-1 text-[11px] text-muted-foreground">
+                Log the entry below. When you save, Atlas will open the submission dialog so the linked task closes as part of the same action.
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showForm && (
-        <div className="rounded-lg border border-border bg-card p-5">
+        <div ref={formRef} className="rounded-lg border border-border bg-card p-5">
           <div className="mb-3 font-display text-lg">New {tab}</div>
           <div className="grid gap-3 sm:grid-cols-2">
             <Input placeholder="Title…" value={form.title}
@@ -298,6 +378,24 @@ function RaidPage() {
           </tbody>
         </table>
       </div>
+
+      <TaskSubmissionDialog
+        task={linkedTask ? {
+          id: linkedTask.id,
+          title: linkedTask.title,
+          description: linkedTask.description,
+          category: linkedTask.category,
+          linked_area: linkedTask.linked_area,
+          completion_action: linkedTask.completion_action,
+        } : null}
+        open={submitOpen && !!linkedTask}
+        onOpenChange={(o) => setSubmitOpen(o)}
+        submitting={submitLinkedTask.isPending}
+        onSubmit={(encoded) => {
+          if (!linkedTask) return;
+          submitLinkedTask.mutate({ id: linkedTask.id, submission: encoded });
+        }}
+      />
     </div>
   );
 }

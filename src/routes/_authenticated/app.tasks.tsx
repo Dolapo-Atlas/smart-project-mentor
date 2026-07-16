@@ -62,6 +62,50 @@ function isCompletedTaskStatus(status: string) {
   return COMPLETED_TASK_STATUSES.includes(status);
 }
 
+function inferRaidKind(t: { title?: string | null; description?: string | null; category?: string | null }):
+  "risk" | "assumption" | "issue" | "dependency" {
+  const s = `${t.title ?? ""} ${t.description ?? ""} ${t.category ?? ""}`.toLowerCase();
+  if (/\bassumption/.test(s)) return "assumption";
+  if (/\bissue|incident|blocker/.test(s)) return "issue";
+  if (/\bdependenc/.test(s)) return "dependency";
+  return "risk";
+}
+
+function OpenModuleLink({ t }: { t: RichTask }) {
+  const base = t.linked_module_route!;
+  if (base === "/app/raid") {
+    const kind = inferRaidKind(t);
+    return (
+      <Link
+        to="/app/raid"
+        search={{ task: t.id, kind, prefill_title: t.title }}
+        className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] hover:bg-accent"
+      >
+        Open module <ArrowUpRight className="h-3 w-3" />
+      </Link>
+    );
+  }
+  if (base === "/app/charter") {
+    return (
+      <Link
+        to="/app/charter"
+        search={{ task: t.id }}
+        className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] hover:bg-accent"
+      >
+        Open module <ArrowUpRight className="h-3 w-3" />
+      </Link>
+    );
+  }
+  return (
+    <Link
+      to={base}
+      className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] hover:bg-accent"
+    >
+      Open module <ArrowUpRight className="h-3 w-3" />
+    </Link>
+  );
+}
+
 function Tasks() {
   const qc = useQueryClient();
   const fetchTasks = useServerFn(listTasksRich);
@@ -426,12 +470,7 @@ function TaskCard({
 
           <div className="mt-2 flex flex-wrap gap-1.5">
             {t.linked_module_route && !isComplete && (
-              <Link
-                to={t.linked_module_route}
-                className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] hover:bg-accent"
-              >
-                Open module <ArrowUpRight className="h-3 w-3" />
-              </Link>
+              <OpenModuleLink t={t} />
             )}
             {t.status === "todo" && (
               <button
