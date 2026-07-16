@@ -3,7 +3,15 @@
 // function complements it for contextual quality. Both feed the same
 // { score, status, checks } shape so the UI is unchanged either way.
 
-export type TemplateKind = "raid_log" | "project_charter" | "status_report";
+export type TemplateKind =
+  | "raid_log"
+  | "project_charter"
+  | "status_report"
+  | "resource_plan"
+  | "change_request"
+  | "stakeholder_register"
+  | "meeting_agenda"
+  | "lessons_learned";
 
 export type FieldSpec = {
   key: string;
