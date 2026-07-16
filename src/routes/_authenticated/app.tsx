@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
-import { Mail, ListChecks, LayoutDashboard, LogOut, ArrowLeft, ShieldAlert, FileBarChart2, Contact, FolderKanban, MoreHorizontal, FileText, Users, Wallet, Activity, Gauge, Gavel, Award, Send, GitPullRequest, CheckCircle2, Compass, Settings, Shield, UserCheck, Megaphone, Sparkles, PauseCircle, Camera } from "lucide-react";
+import { Mail, ListChecks, LayoutDashboard, LogOut, ArrowLeft, ShieldAlert, FileBarChart2, Contact, FolderKanban, MoreHorizontal, FileText, Users, Wallet, Activity, Gauge, Gavel, Award, Send, GitPullRequest, CheckCircle2, Compass, Settings, Shield, UserCheck, Megaphone, Sparkles, PauseCircle, Camera, LayoutTemplate } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -88,6 +88,7 @@ const PHASE_NAV: Record<string, NavItem[]> = {
 // active phase row are removed so we don't show duplicates.
 const ALL_OVERFLOW: NavItem[] = [
   { to: "/app/results", label: "Final review & certificate", icon: Award },
+  { to: "/app/templates", label: "Templates", icon: LayoutTemplate },
   { to: "/app/gemini", label: "Gemini AI features", icon: Sparkles },
   { to: "/app/stakeholders", label: "People", icon: Contact },
   { to: "/app/meetings", label: "Meetings", icon: Users },
