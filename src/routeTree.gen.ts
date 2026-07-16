@@ -39,6 +39,7 @@ import { Route as AuthenticatedAppRaidRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedAppProjectsRouteImport } from './routes/_authenticated/app.projects'
 import { Route as AuthenticatedAppProgressRouteImport } from './routes/_authenticated/app.progress'
 import { Route as AuthenticatedAppMeetingsRouteImport } from './routes/_authenticated/app.meetings'
+import { Route as AuthenticatedAppLessonsRouteImport } from './routes/_authenticated/app.lessons'
 import { Route as AuthenticatedAppLearningRouteImport } from './routes/_authenticated/app.learning'
 import { Route as AuthenticatedAppInboxRouteImport } from './routes/_authenticated/app.inbox'
 import { Route as AuthenticatedAppHealthRouteImport } from './routes/_authenticated/app.health'
@@ -216,6 +217,11 @@ const AuthenticatedAppMeetingsRoute =
     path: '/meetings',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppLessonsRoute = AuthenticatedAppLessonsRouteImport.update({
+  id: '/lessons',
+  path: '/lessons',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const AuthenticatedAppLearningRoute =
   AuthenticatedAppLearningRouteImport.update({
     id: '/learning',
@@ -346,6 +352,7 @@ export interface FileRoutesByFullPath {
   '/app/health': typeof AuthenticatedAppHealthRoute
   '/app/inbox': typeof AuthenticatedAppInboxRoute
   '/app/learning': typeof AuthenticatedAppLearningRoute
+  '/app/lessons': typeof AuthenticatedAppLessonsRoute
   '/app/meetings': typeof AuthenticatedAppMeetingsRoute
   '/app/progress': typeof AuthenticatedAppProgressRoute
   '/app/projects': typeof AuthenticatedAppProjectsRoute
@@ -395,6 +402,7 @@ export interface FileRoutesByTo {
   '/app/health': typeof AuthenticatedAppHealthRoute
   '/app/inbox': typeof AuthenticatedAppInboxRoute
   '/app/learning': typeof AuthenticatedAppLearningRoute
+  '/app/lessons': typeof AuthenticatedAppLessonsRoute
   '/app/meetings': typeof AuthenticatedAppMeetingsRoute
   '/app/progress': typeof AuthenticatedAppProgressRoute
   '/app/projects': typeof AuthenticatedAppProjectsRoute
@@ -447,6 +455,7 @@ export interface FileRoutesById {
   '/_authenticated/app/health': typeof AuthenticatedAppHealthRoute
   '/_authenticated/app/inbox': typeof AuthenticatedAppInboxRoute
   '/_authenticated/app/learning': typeof AuthenticatedAppLearningRoute
+  '/_authenticated/app/lessons': typeof AuthenticatedAppLessonsRoute
   '/_authenticated/app/meetings': typeof AuthenticatedAppMeetingsRoute
   '/_authenticated/app/progress': typeof AuthenticatedAppProgressRoute
   '/_authenticated/app/projects': typeof AuthenticatedAppProjectsRoute
@@ -499,6 +508,7 @@ export interface FileRouteTypes {
     | '/app/health'
     | '/app/inbox'
     | '/app/learning'
+    | '/app/lessons'
     | '/app/meetings'
     | '/app/progress'
     | '/app/projects'
@@ -548,6 +558,7 @@ export interface FileRouteTypes {
     | '/app/health'
     | '/app/inbox'
     | '/app/learning'
+    | '/app/lessons'
     | '/app/meetings'
     | '/app/progress'
     | '/app/projects'
@@ -599,6 +610,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/health'
     | '/_authenticated/app/inbox'
     | '/_authenticated/app/learning'
+    | '/_authenticated/app/lessons'
     | '/_authenticated/app/meetings'
     | '/_authenticated/app/progress'
     | '/_authenticated/app/projects'
@@ -857,6 +869,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppMeetingsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/lessons': {
+      id: '/_authenticated/app/lessons'
+      path: '/lessons'
+      fullPath: '/app/lessons'
+      preLoaderRoute: typeof AuthenticatedAppLessonsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/learning': {
       id: '/_authenticated/app/learning'
       path: '/learning'
@@ -1005,6 +1024,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppHealthRoute: typeof AuthenticatedAppHealthRoute
   AuthenticatedAppInboxRoute: typeof AuthenticatedAppInboxRoute
   AuthenticatedAppLearningRoute: typeof AuthenticatedAppLearningRoute
+  AuthenticatedAppLessonsRoute: typeof AuthenticatedAppLessonsRoute
   AuthenticatedAppMeetingsRoute: typeof AuthenticatedAppMeetingsRoute
   AuthenticatedAppProgressRoute: typeof AuthenticatedAppProgressRoute
   AuthenticatedAppProjectsRoute: typeof AuthenticatedAppProjectsRoute
@@ -1032,6 +1052,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppHealthRoute: AuthenticatedAppHealthRoute,
   AuthenticatedAppInboxRoute: AuthenticatedAppInboxRoute,
   AuthenticatedAppLearningRoute: AuthenticatedAppLearningRoute,
+  AuthenticatedAppLessonsRoute: AuthenticatedAppLessonsRoute,
   AuthenticatedAppMeetingsRoute: AuthenticatedAppMeetingsRoute,
   AuthenticatedAppProgressRoute: AuthenticatedAppProgressRoute,
   AuthenticatedAppProjectsRoute: AuthenticatedAppProjectsRoute,

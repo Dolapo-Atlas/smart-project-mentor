@@ -79,7 +79,7 @@ const PHASE_NAV: Record<string, NavItem[]> = {
   ],
   closure: [
     { to: "/app/reports", label: "Reports", icon: FileBarChart2 },
-    { to: "/app/completed", label: "Completed", icon: CheckCircle2 },
+    { to: "/app/lessons", label: "Lessons", icon: Sparkles },
     { to: "/app/results", label: "Close out", icon: Award },
   ],
 };
@@ -90,6 +90,7 @@ const ALL_OVERFLOW: NavItem[] = [
   { to: "/app/results", label: "Final review & certificate", icon: Award },
   { to: "/app/templates", label: "Templates", icon: LayoutTemplate },
   { to: "/app/charter", label: "Project charter", icon: FileText },
+  { to: "/app/lessons", label: "Lessons learned", icon: Sparkles },
   { to: "/app/gemini", label: "Gemini AI features", icon: Sparkles },
   { to: "/app/stakeholders", label: "People", icon: Contact },
   { to: "/app/meetings", label: "Meetings", icon: Users },
