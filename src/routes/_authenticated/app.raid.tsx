@@ -237,8 +237,27 @@ function RaidPage() {
 
       <p className="text-xs text-muted-foreground">{activeTab.help}</p>
 
+      {search.task && linkedTask && (
+        <div className="rounded-lg border border-primary/40 bg-primary/5 p-3 text-sm">
+          <div className="flex items-start gap-2">
+            <CheckCircle2 className="mt-0.5 h-4 w-4 text-primary" />
+            <div className="min-w-0 flex-1">
+              <div className="font-medium">Completing task: {linkedTask.title}</div>
+              {linkedTask.completion_action && (
+                <div className="mt-0.5 text-xs text-muted-foreground">
+                  → {linkedTask.completion_action}
+                </div>
+              )}
+              <div className="mt-1 text-[11px] text-muted-foreground">
+                Log the entry below. When you save, Atlas will open the submission dialog so the linked task closes as part of the same action.
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showForm && (
-        <div className="rounded-lg border border-border bg-card p-5">
+        <div ref={formRef} className="rounded-lg border border-border bg-card p-5">
           <div className="mb-3 font-display text-lg">New {tab}</div>
           <div className="grid gap-3 sm:grid-cols-2">
             <Input placeholder="Title…" value={form.title}
@@ -359,6 +378,24 @@ function RaidPage() {
           </tbody>
         </table>
       </div>
+
+      <TaskSubmissionDialog
+        task={linkedTask ? {
+          id: linkedTask.id,
+          title: linkedTask.title,
+          description: linkedTask.description,
+          category: linkedTask.category,
+          linked_area: linkedTask.linked_area,
+          completion_action: linkedTask.completion_action,
+        } : null}
+        open={submitOpen && !!linkedTask}
+        onOpenChange={(o) => setSubmitOpen(o)}
+        submitting={submitLinkedTask.isPending}
+        onSubmit={(encoded) => {
+          if (!linkedTask) return;
+          submitLinkedTask.mutate({ id: linkedTask.id, submission: encoded });
+        }}
+      />
     </div>
   );
 }
