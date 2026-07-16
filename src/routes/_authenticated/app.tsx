@@ -203,23 +203,23 @@ function AppLayout() {
   return (
     <div className="min-h-screen bg-background text-foreground paper-texture">
       <div className="mx-auto grid min-h-screen max-w-[1400px] grid-cols-1 md:grid-cols-[260px_1fr]">
-        <aside className="border-b border-border bg-sidebar/60 px-5 py-6 md:border-b-0 md:border-r">
-          <Link to="/app" className="font-display text-2xl font-semibold tracking-tight">
-            Atlas <span className="text-primary">/</span>
+        <aside className="border-b border-sidebar-border bg-sidebar text-sidebar-foreground px-5 py-6 shadow-[1px_0_0_0_rgba(0,0,0,0.08)] md:border-b-0 md:border-r md:border-r-black/20">
+          <Link to="/app" className="font-display text-2xl font-semibold tracking-tight text-sidebar-foreground">
+            Atlas <span className="text-accent-orange">/</span>
           </Link>
-          <div className="mt-1 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+          <div className="mt-1 text-xs uppercase tracking-[0.18em] text-sidebar-foreground/70">
             {overview?.state?.project_name ?? "Loading…"}
           </div>
 
-          <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/50 px-2.5 py-1 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-            <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+          <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-[10px] uppercase tracking-[0.16em] text-sidebar-foreground/85">
+            <span className="h-1.5 w-1.5 rounded-full bg-accent-orange" />
             Phase · {phaseLabel}
           </div>
 
           <div className="mt-3 flex items-center gap-2">
             <Link
               to="/app/projects"
-              className="flex flex-1 items-center justify-between gap-2 rounded-md border border-dashed border-border bg-card/60 px-3 py-2 text-xs text-foreground/80 transition hover:border-primary hover:text-foreground"
+              className="flex flex-1 items-center justify-between gap-2 rounded-md border border-dashed border-white/25 bg-white/5 px-3 py-2 text-xs text-sidebar-foreground/90 transition hover:border-accent-orange hover:text-sidebar-foreground"
             >
               <span className="flex items-center gap-1.5">
                 <FolderKanban className="h-3.5 w-3.5" /> Switch project
@@ -245,19 +245,17 @@ function AppLayout() {
                   key={to}
                   to={to}
                   data-tour={NAV.find((n) => n.to === to)?.tour}
-                  className={`relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-md p-2 text-center text-[11px] leading-tight transition ${
+                  className={`relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-md p-2 text-center text-[11px] font-medium leading-tight transition ${
                     active
-                      ? "bg-foreground text-background"
-                      : "text-foreground/80 hover:bg-accent hover:text-foreground"
+                      ? "bg-sidebar-accent text-white shadow-[inset_0_-2px_0_0_var(--accent-orange)]"
+                      : "text-sidebar-foreground/90 hover:bg-white/10 hover:text-white"
                   }`}
                 >
-                  <Icon className="h-5 w-5 shrink-0" />
+                  <Icon className="h-5 w-5 shrink-0" strokeWidth={2.25} />
                   <span className="line-clamp-2">{label}</span>
                   {badge ? (
                     <span
-                      className={`absolute right-1 top-1 min-w-[18px] rounded-full px-1.5 py-0.5 text-center text-[10px] font-medium ${
-                        active ? "bg-background/20 text-background" : "bg-primary/15 text-primary"
-                      }`}
+                      className="absolute right-1 top-1 min-w-[18px] rounded-full bg-accent-orange px-1.5 py-0.5 text-center text-[10px] font-semibold text-white shadow"
                     >
                       {badge}
                     </span>
@@ -269,9 +267,9 @@ function AppLayout() {
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-md p-2 text-center text-[11px] leading-tight text-foreground/80 transition hover:bg-accent hover:text-foreground"
+                  className="relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-md p-2 text-center text-[11px] font-medium leading-tight text-sidebar-foreground/90 transition hover:bg-white/10 hover:text-white"
                 >
-                  <MoreHorizontal className="h-5 w-5 shrink-0" />
+                  <MoreHorizontal className="h-5 w-5 shrink-0" strokeWidth={2.25} />
                   <span className="line-clamp-2">More</span>
                 </button>
               </DropdownMenuTrigger>
@@ -304,19 +302,19 @@ function AppLayout() {
             </DropdownMenu>
           </nav>
 
-          <div className="mt-10 rounded-md border border-border bg-card p-4">
-            <div className="text-xs uppercase tracking-widest text-muted-foreground">Phase</div>
-            <div className="mt-1 font-display text-lg capitalize">
+          <div className="mt-10 rounded-md border border-transparent bg-white p-4 text-navy shadow-sm">
+            <div className="text-xs uppercase tracking-widest text-navy/60">Phase</div>
+            <div className="mt-1 font-display text-lg capitalize text-navy">
               {overview?.state?.phase ?? "—"}
             </div>
-            <div className="mt-3 text-xs text-muted-foreground">Progress</div>
-            <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-muted">
+            <div className="mt-3 text-xs text-navy/60">Progress</div>
+            <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-navy/10">
               <div
-                className="h-full bg-primary transition-all"
+                className="h-full bg-accent-orange transition-all"
                 style={{ width: `${overview?.state?.progress ?? 0}%` }}
               />
             </div>
-            <div className="mt-1 text-right text-xs text-muted-foreground">
+            <div className="mt-1 text-right text-xs text-navy/70">
               {overview?.state?.progress ?? 0}%
             </div>
           </div>
@@ -325,17 +323,17 @@ function AppLayout() {
             variant="ghost"
             size="sm"
             onClick={signOut}
-            className="mt-6 w-full justify-start text-muted-foreground"
+            className="mt-6 w-full justify-start text-sidebar-foreground/85 hover:bg-white/10 hover:text-white"
           >
             <LogOut className="mr-2 h-4 w-4" /> Sign out
           </Button>
 
           <Link
             to="/app/gemini"
-            className="mt-4 flex items-center justify-center gap-1.5 rounded-md border border-border/60 bg-card/40 px-2 py-1.5 text-[10px] uppercase tracking-[0.14em] text-muted-foreground transition hover:border-primary/50 hover:text-foreground"
+            className="mt-4 flex items-center justify-center gap-1.5 rounded-md border border-white/15 bg-white/5 px-2 py-1.5 text-[10px] uppercase tracking-[0.14em] text-sidebar-foreground/80 transition hover:border-accent-orange/60 hover:text-white"
             title="Learn how Atlas uses Google Gemini"
           >
-            <Sparkles className="h-3 w-3 text-primary" />
+            <Sparkles className="h-3 w-3 text-accent-orange" />
             Powered by Google Gemini
           </Link>
         </aside>
