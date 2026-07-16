@@ -507,6 +507,69 @@ export function evaluateRaid(counts: RaidCounts): Readiness {
   return { score, status: bucket(score), checks, source: "rules" };
 }
 
+/**
+ * Generic evaluator for field-based templates without bespoke rules.
+ * Awards weighted credit for required + min-char fields, plus small
+ * bonuses for project references, named people and dated milestones.
+ */
+export function evaluateGenericTemplate(
+  kind: TemplateKind,
+  values: Record<string, string>,
+  ctx: ProjectContext = {},
+): Readiness {
+  const spec = TEMPLATES[kind].fields;
+  const checks: ReadinessCheck[] = [];
+  const totalWeight = spec.reduce((s, f) => s + (f.required ? 2 : 1), 0) || 1;
+  let earned = 0;
+  for (const f of spec) {
+    const raw = (values[f.key] ?? "").trim();
+    const weight = f.required ? 2 : 1;
+    const min = f.minChars ?? 0;
+    const ok = raw.length >= min && (!f.required || raw.length > 0);
+    if (ok) earned += weight;
+    if (f.required || min > 0) {
+      checks.push({
+        label: f.label,
+        ok,
+        hint: ok
+          ? undefined
+          : raw.length === 0
+          ? "Add content for this section."
+          : `Add more detail — at least ${min} characters of specifics.`,
+      });
+    }
+  }
+  let score = Math.round((earned / totalWeight) * 75);
+
+  const blob = Object.values(values).join(" ");
+  const projectMentioned = ctx.projectName ? blob.toLowerCase().includes(ctx.projectName.toLowerCase()) : true;
+  checks.push({
+    label: "References the current project scenario",
+    ok: projectMentioned,
+    hint: projectMentioned ? undefined : `Mention "${ctx.projectName}" or a specific detail from the brief.`,
+  });
+  if (projectMentioned) score += 10;
+
+  const hasDate = DATE_RX.test(blob);
+  checks.push({
+    label: "Includes at least one concrete date",
+    ok: hasDate,
+    hint: hasDate ? undefined : "Anchor commitments to specific dates.",
+  });
+  if (hasDate) score += 8;
+
+  const hasNamedPerson = /\b[A-Z][a-z]+\s+[A-Z][a-z]+\b/.test(blob);
+  checks.push({
+    label: "Names at least one person (first + last)",
+    ok: hasNamedPerson,
+    hint: hasNamedPerson ? undefined : "Assign owners by name, not by team.",
+  });
+  if (hasNamedPerson) score += 7;
+
+  score = Math.max(0, Math.min(100, score));
+  return { score, status: bucket(score), checks, source: "rules" };
+}
+
 /* ---------- Submission payload (encoded into tasks.submission TEXT) ---------- */
 
 export type SubmissionPayload =
