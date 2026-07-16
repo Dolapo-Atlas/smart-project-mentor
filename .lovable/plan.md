@@ -1,101 +1,49 @@
-# CRM Simulation — Milestone Plan
+# Templates-in-Modules Build Plan
 
-Build the CRM simulation as a standalone Atlas track, following the DCR template pattern (route under `_authenticated/`, chapters + progress, AI feedback, admin evals).
+Goal: task → correct in-module template opens → learner completes real work → work persists in the module → readiness check → submit → stakeholder reacts. No duplicate template pages. Reuse `TaskSubmissionDialog`, readiness engine, upload flow, task linkage.
 
----
+## Shared architecture (built once, reused everywhere)
 
-## Milestone 1 — Scaffolding & Data Model
+- **Data model per artefact**: one table per artefact type (charter, status_report, resource_plan, change_request, stakeholder_register, meeting, lessons_learned). Each row is versioned, scoped to `project_instance_id + user_id`, with `status` (draft | submitted | approved), `linked_task_id`, `payload jsonb`, `version int`, `submitted_at`.
+- **Version history**: snapshot on Submit only (per your choice). New `*_versions` sibling tables store an immutable copy of `payload` per submission.
+- **Reusable pieces**:
+  - `useArtefact(kind)` hook — load current draft for active project.
+  - `<ArtefactSectionField>` component — label, guidance placeholder, min-length hint, live completion signal.
+  - `<ArtefactActions>` — Save draft · Edit · Preview · Submit · Export PDF (client-side via `jsPDF`) · Upload PDF.
+  - Readiness reuses existing `TEMPLATES` field registry + `evaluateGenericTemplate` from `src/lib/templates.ts`; the "Submit" button inside each module opens the existing `TaskSubmissionDialog` prefilled with the artefact's current fields when a `linked_task_id` is set.
+- **Task → module routing**: `resolveTaskArtefactRoute(task)` maps a task to a module URL with `?task=<id>` param (e.g. `/app/charter?task=…`). The module reads the param, loads/creates a draft linked to that task, and scrolls to the first empty required section. RAID single-risk tasks open the RAID entry form with the correct kind/severity pre-selected.
+- **On submit**: writes version snapshot → updates task status via existing `submitTaskWithReadiness` → recomputes phase progress (existing `phase.functions.ts`) → posts a stakeholder inbox message using existing comms pipeline.
 
-**Goal:** Create the shell of the CRM simulation so a user can enter it, see chapters, and progress state persists.
+## Stage 1 — Project Charter (this turn's build after approval)
 
-- New route: `src/routes/_authenticated/simulations/crm.tsx` (+ chapter child routes)
-- Register CRM as a `project_template` (kind = `crm`) with metadata (title, description, duration, competencies)
-- Reuse existing tables: `project_instances`, `project_chapters`, `chapter_progress`, `simulation_state`
-- Seed CRM chapter list (e.g. Discovery → Segmentation → Pipeline Setup → Outreach → Deal Management → Renewal/Retention)
-- Landing card on `/simulations` linking into CRM
-- Wire "Start CRM Simulation" → creates `project_instance` + initial `simulation_state`
+1. **DB migration**: `project_charters` + `project_charter_versions` with all 17 charter sections in a `payload jsonb`, `completion_pct` generated, `approval_status`, `sponsor_comment`. RLS scoped to owner; GRANTs to `authenticated` + `service_role`.
+2. **Server fns** `src/lib/charter.functions.ts`: `getCharter`, `upsertCharterDraft`, `submitCharter`, `listCharterVersions`, `approveCharter` (sponsor sim).
+3. **Route** `src/routes/_authenticated/app.charter.tsx`: sectioned form (title, background, business need, purpose, objectives, success criteria, in/out of scope, deliverables, milestones, budget summary, key stakeholders, sponsor, PM, assumptions, constraints, initial risks, governance). Each section shows guidance placeholder — never auto-fills. Right rail: completion %, version history list, approval status pill, Export PDF, Upload PDF, Submit for sponsor approval.
+4. **Task linkage**: charter-category tasks route to `/app/charter?task=…` and the Submit action in the charter reuses `TaskSubmissionDialog` with `values` pre-populated from `payload`.
+5. **Sidebar nav**: add "Charter" under Planning.
+6. **PDF export**: client-side `jsPDF` renders the sections; installed with `bun add jspdf`.
 
-**Deliverable:** User can launch CRM, sees chapters, progress saves.
+## Stage 2 — RAID linkage polish
 
----
+- Individual RAID tasks (`Log the vendor delivery risk`, etc.) open `/app/raid?kind=risk&task=…&prefill_title=…` and auto-scroll to the entry form with fields prefilled.
+- On saving that specific entry, mark the task ready and auto-open the existing submission dialog scoped to just that entry (not the whole log).
+- Keep the existing "Submit log for review" workflow untouched.
 
-## Milestone 2 — Core Simulation Mechanics
+## Stage 3 — Status Report module
 
-**Goal:** Interactive gameplay loop per chapter (the "real" simulation logic).
+- New route `/app/status-report` using the same shared architecture. Live-populated fields: reporting period (auto), RAG (from `simulation_state.health`), schedule/budget status (from `phase.functions` + `budget_lines`). Narrative fields blank with guidance.
+- Version snapshots on Submit; PDF export; upload alternative; task linkage identical to Charter.
 
-- Fake CRM UI: contacts, accounts, deals, pipeline stages (kanban), activity timeline
-- Chapter scripts: scenario prompts, decisions, branching outcomes
-- State machine: decisions update `simulation_state` (pipeline health, relationship scores, forecast accuracy)
-- Scoring rubric per chapter (accuracy, prioritization, communication quality)
-- Task/RAID/stakeholder integration reused from existing tables where relevant
+## Stages 4–8 (future turns, same pattern)
 
-**Deliverable:** User can complete all chapters end-to-end with meaningful state changes and a score.
+Resource Plan (extend `budget_lines` or new `resource_plan_items`), Change Request (Create vs Review split inside existing `app.changes.tsx`), Stakeholder Register with influence×interest matrix (extend existing stakeholder module), Meetings agenda+minutes with auto-task creation from action items, Lessons Learned inside Closure. Each reuses the artefact hook, section field, actions bar, readiness engine, PDF export, and task linkage.
 
----
+## Non-goals for this build
 
-## Milestone 3 — AI Coaching & Feedback
+- No redesign of Atlas visual identity.
+- No new duplicate `/templates` pages — the existing reference index at `/app/templates` stays as a directory; the working templates are the module pages themselves.
+- No AI auto-completion of sections.
 
-**Goal:** LLM-driven realism and per-decision coaching.
+## Approval needed
 
-- Server function calling Lovable AI Gateway for:
-  - Stakeholder replies (email/message simulation via `comms_messages`)
-  - Chapter debrief + coaching (writes to `ai_feedback`)
-  - Change-request / objection generation
-- Prompt library per chapter, versioned
-- Cost guardrails (token caps, model selection: `google/gemini-2.5-flash` default)
-
-**Deliverable:** Every chapter ends with tailored AI feedback; stakeholder comms feel dynamic.
-
----
-
-## Milestone 4 — Polish & UX
-
-**Goal:** Ship-quality experience.
-
-- Empty states, loading skeletons, error boundaries on all CRM routes
-- Mobile layout pass (kanban → stacked list on small screens)
-- Micro-animations on stage transitions, deal wins
-- Accessibility: keyboard nav on pipeline, ARIA on drag targets
-- Onboarding tour for first-time CRM users
-- Head metadata + OG image for CRM landing
-
-**Deliverable:** Feels as polished as DCR.
-
----
-
-## Milestone 5 — Admin Evals & Analytics
-
-**Goal:** Admin can measure quality and iterate.
-
-- Extend `admin.evals` with CRM eval suite (`ai_eval_runs` / `ai_eval_results`)
-- Golden-path traces per chapter for regression testing
-- CRM-specific metrics on `admin.analytics`: starts, completions, avg score, drop-off per chapter
-- Feedback triage view for `ai_feedback` entries flagged low quality
-
-**Deliverable:** Admin can spot regressions and prioritize prompt fixes.
-
----
-
-## Milestone 6 — QA & Launch
-
-**Goal:** Confidence to open to beta users.
-
-- Playwright happy-path per chapter
-- Manual playtest pass (2–3 rounds with prompt tuning between)
-- Copy edit pass across all scenarios
-- Enable CRM in the simulations catalog
-
-**Deliverable:** CRM simulation live for all beta testers.
-
----
-
-## Technical Notes
-
-- Reuse patterns from DCR: same route structure, same hooks (`useChapterProgress`, `useSimulationState`), same feedback pipeline
-- All server functions under `src/lib/crm.functions.ts`, guarded by `requireSupabaseAuth`
-- No new tables unless a CRM-specific concept doesn't fit existing schema — if needed (e.g. `crm_pipeline_snapshots`), migrate with GRANTs + RLS in one migration
-- Admin routes stay guarded by existing `user_roles` check
-
-## Cost Control
-
-Suggest treating each milestone as its own build session, review before starting the next. Milestones 2 and 3 are the largest; 1, 4, 5, 6 are lighter.
+Confirm and I'll ship **Stage 1 (Project Charter)** end-to-end: migration → server fns → route → task routing → PDF export → sidebar nav. Stages 2 and 3 follow in the next turns after you validate the Charter flow.
