@@ -1,19 +1,30 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useSearch, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   listRaid, createRaid, updateRaidStatus, deleteRaid, submitRaidLog,
 } from "@/lib/raid.functions";
-import { useEffect, useState } from "react";
+import { listTasksRich, submitTaskWithWork } from "@/lib/tasks.functions";
+import { TaskSubmissionDialog } from "@/components/tasks/task-submission-dialog";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Trash2, Plus, Paperclip, ShieldAlert, AlertOctagon, Link2, HelpCircle, LayoutTemplate } from "lucide-react";
+import { Trash2, Plus, Paperclip, ShieldAlert, AlertOctagon, Link2, HelpCircle, LayoutTemplate, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { useRoster } from "@/lib/roster";
 import { format } from "date-fns";
+import { z } from "zod";
+
+const raidSearchSchema = z.object({
+  task: z.string().uuid().optional(),
+  kind: z.enum(["risk", "assumption", "issue", "dependency"]).optional(),
+  prefill_title: z.string().max(200).optional(),
+  prefill_desc: z.string().max(2000).optional(),
+});
 
 export const Route = createFileRoute("/_authenticated/app/raid")({
+  validateSearch: raidSearchSchema,
   component: RaidPage,
 });
 
