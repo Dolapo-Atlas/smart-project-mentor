@@ -88,7 +88,7 @@ function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <header className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:flex-wrap sm:items-end sm:justify-between">
+      <header className="atlas-rise grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:flex-wrap sm:items-end sm:justify-between">
         <div className="min-w-0">
           <div className="truncate text-xs uppercase tracking-[0.2em] text-muted-foreground">
             {projectTitle} · Day {state?.current_day ?? 1} · Week {state?.current_week ?? 1}
@@ -110,15 +110,19 @@ function Dashboard() {
         </div>
       </header>
 
-      <TimeControls />
+      <div className="atlas-rise atlas-rise-1">
+        <TimeControls />
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="min-w-0 space-y-6">
-          <ContinueCard />
-          <TaskSummaryStrip />
-          <TaskBoard />
+          <div className="atlas-rise atlas-rise-2"><ContinueCard /></div>
+          <div className="atlas-rise atlas-rise-3"><TaskSummaryStrip /></div>
+          <div className="atlas-rise atlas-rise-4"><TaskBoard /></div>
         </div>
-        <ProjectSidePanel />
+        <div className="atlas-rise atlas-rise-2">
+          <ProjectSidePanel />
+        </div>
       </div>
     </div>
   );
