@@ -247,12 +247,12 @@ ${pmRole}`;
         const objectives = [
           {
             title: "Draft the Project Charter",
-            description: "There isn't a charter on file yet — that's your first deliverable. Capture scope, objectives, success criteria, assumptions, constraints and governance, then upload it in Documents.",
+            description: "There isn't a charter on file yet — that's your first deliverable. Capture scope, objectives, success criteria, assumptions, constraints and governance in the Charter module, then submit it for sponsor approval.",
             priority: "high" as const,
             category: "Documentation",
             linked_area: "charter",
-            linked_module_route: "/app/documents",
-            completion_action: "Open Documents → New document → Project Charter, draft it and upload.",
+            linked_module_route: "/app/charter",
+            completion_action: "Open Charter, fill each section, then Submit for sponsor approval.",
           },
           {
             title: "Meet your key stakeholders",
