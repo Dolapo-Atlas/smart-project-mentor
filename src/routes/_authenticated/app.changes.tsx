@@ -50,16 +50,44 @@ function fmt(n: number) {
 
 function Changes() {
   const qc = useQueryClient();
+  const search = useSearch({ from: "/_authenticated/app/changes" });
+  const navigate = useNavigate();
   const fetchCRs = useServerFn(listChangeRequests);
   const genFn = useServerFn(generateChangeRequest);
   const decideFn = useServerFn(decideChangeRequest);
+  const createFn = useServerFn(createChangeRequest);
+  const fetchTasks = useServerFn(listTasksRich);
   const { data: crs } = useQuery({ queryKey: ["change_requests"], queryFn: () => fetchCRs() });
+  const { data: tasks } = useQuery({ queryKey: ["tasks"], queryFn: () => fetchTasks() });
+  const linkedTask = useMemo(
+    () => (search.task ? (tasks ?? []).find((t: any) => t.id === search.task) : undefined),
+    [tasks, search.task],
+  );
+  const authorMode = Boolean(search.create || search.task);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected = crs?.find((c) => c.id === selectedId) ?? crs?.[0];
 
   const [assessment, setAssessment] = useState("");
   const [notes, setNotes] = useState("");
+
+  // Authoring form state
+  const [aTitle, setATitle] = useState(search.prefill_title ?? "");
+  const [aRequester, setARequester] = useState("");
+  const [aDescription, setADescription] = useState("");
+  const [aCost, setACost] = useState<string>("0");
+  const [aDays, setADays] = useState<string>("0");
+  const [aRisk, setARisk] = useState<"low" | "medium" | "high">("medium");
+  const [aOptions, setAOptions] = useState("");
+  const [aRecommendation, setARecommendation] = useState("");
+  const [aImpact, setAImpact] = useState("");
+  const [aDecisionBy, setADecisionBy] = useState("");
+  const [submitOpen, setSubmitOpen] = useState(false);
+  const [lastCreatedId, setLastCreatedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (search.prefill_title && !aTitle) setATitle(search.prefill_title);
+  }, [search.prefill_title]);
 
   const gen = useMutation({
     mutationFn: () => genFn(),
@@ -82,6 +110,77 @@ function Changes() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
 
+  const create = useMutation({
+    mutationFn: () =>
+      createFn({
+        data: {
+          title: aTitle,
+          description: aDescription,
+          requested_by: aRequester,
+          cost_impact: Number(aCost) || 0,
+          schedule_impact_days: Math.trunc(Number(aDays) || 0),
+          risk_impact: aRisk,
+          impact_assessment: aImpact,
+          linked_task_id: search.task ?? undefined,
+        },
+      }),
+    onSuccess: (row: any) => {
+      qc.invalidateQueries({ queryKey: ["change_requests"] });
+      qc.invalidateQueries({ queryKey: ["inbox"] });
+      qc.invalidateQueries({ queryKey: ["tasks"] });
+      setLastCreatedId(row?.id ?? null);
+      toast.success("Change request submitted to the change board.");
+      if (linkedTask) {
+        setSubmitOpen(true);
+      } else {
+        // reset
+        setATitle(""); setADescription(""); setARequester("");
+        setACost("0"); setADays("0"); setAOptions(""); setARecommendation(""); setAImpact(""); setADecisionBy("");
+      }
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+
+  const templateValues = useMemo(
+    () => ({
+      summary: aDescription,
+      reason: aDescription,
+      impact_scope: aImpact,
+      impact_schedule: `${aDays} days`,
+      impact_cost: `£${aCost}`,
+      options: aOptions,
+      recommendation: aRecommendation,
+      requester: aRequester,
+      decision_by: aDecisionBy,
+    }),
+    [aDescription, aImpact, aDays, aCost, aOptions, aRecommendation, aRequester, aDecisionBy],
+  );
+
+  const canSubmitAuthor = aTitle.length >= 3 && aRequester.length >= 2 && aDescription.length >= 10 && aImpact.length >= 10;
+
+  function exportPdf(cr: any) {
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    const margin = 48;
+    let y = margin;
+    doc.setFont("times", "bold"); doc.setFontSize(18);
+    doc.text(`Change Request — ${cr.title}`, margin, y); y += 24;
+    doc.setFont("times", "normal"); doc.setFontSize(10);
+    doc.text(`Requested by: ${cr.requested_by}  ·  Status: ${cr.status}  ·  Origin: ${cr.origin ?? "received"}`, margin, y); y += 18;
+    doc.text(`Cost impact: £${Number(cr.cost_impact).toLocaleString()}   Schedule: ${cr.schedule_impact_days >= 0 ? "+" : ""}${cr.schedule_impact_days} days   Risk: ${cr.risk_impact}`, margin, y); y += 22;
+    const write = (label: string, body: string | null | undefined) => {
+      if (!body) return;
+      doc.setFont("times", "bold"); doc.setFontSize(12); doc.text(label, margin, y); y += 16;
+      doc.setFont("times", "normal"); doc.setFontSize(11);
+      const lines = doc.splitTextToSize(body, 500);
+      lines.forEach((ln: string) => { if (y > 780) { doc.addPage(); y = margin; } doc.text(ln, margin, y); y += 14; });
+      y += 6;
+    };
+    write("Description", cr.description);
+    write("Impact assessment", cr.impact_assessment);
+    write("Decision notes", cr.decision_notes);
+    doc.save(`change-request-${cr.id.slice(0, 8)}.pdf`);
+  }
+
   return (
     <div className="space-y-8">
       <header className="flex flex-wrap items-end justify-between gap-3">
@@ -89,14 +188,86 @@ function Changes() {
           <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Governance</div>
           <h1 className="font-display text-4xl font-medium">Change requests</h1>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            Stakeholders raise CRs. You write an impact assessment (cost / schedule / risk) and approve or reject.
-            Approved CRs post to the budget automatically.
+            Author a change request when a task requires one, or review CRs raised by stakeholders. Approved CRs post to the budget automatically.
           </p>
         </div>
-        <Button onClick={() => gen.mutate()} disabled={gen.isPending}>
-          <Sparkles className="mr-2 h-4 w-4" /> {gen.isPending ? "Drafting…" : "Receive a new CR"}
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => navigate({ to: "/app/changes", search: { create: true } })}>
+            <FilePlus2 className="mr-2 h-4 w-4" /> Author a CR
+          </Button>
+          <Button onClick={() => gen.mutate()} disabled={gen.isPending}>
+            <Sparkles className="mr-2 h-4 w-4" /> {gen.isPending ? "Drafting…" : "Receive a new CR"}
+          </Button>
+        </div>
       </header>
+
+      {authorMode && (
+        <section className="rounded-lg border border-border bg-card p-6">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Author</div>
+              <h2 className="font-display text-2xl font-medium">Draft a change request</h2>
+              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+                {linkedTask
+                  ? <>Linked to task <span className="font-medium">{linkedTask.title}</span>. Submitting will file the CR and complete the task.</>
+                  : "Fill every section. The change board rejects vague asks with no options or quantified impact."}
+              </p>
+            </div>
+            <Button variant="ghost" onClick={() => navigate({ to: "/app/changes", search: {} })}>Close</Button>
+          </div>
+
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <Field label="CR title">
+              <Input value={aTitle} onChange={(e) => setATitle(e.target.value)} placeholder="e.g. Add vendor integration to Phase 2" />
+            </Field>
+            <Field label="Requested by (named)">
+              <Input value={aRequester} onChange={(e) => setARequester(e.target.value)} placeholder="Full name and role" />
+            </Field>
+            <Field label="Cost impact (£)">
+              <Input type="number" value={aCost} onChange={(e) => setACost(e.target.value)} placeholder="0" />
+            </Field>
+            <Field label="Schedule impact (days)">
+              <Input type="number" value={aDays} onChange={(e) => setADays(e.target.value)} placeholder="0" />
+            </Field>
+            <Field label="Risk impact">
+              <Select value={aRisk} onValueChange={(v) => setARisk(v as any)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field label="Decision needed by">
+              <Input value={aDecisionBy} onChange={(e) => setADecisionBy(e.target.value)} placeholder="e.g. 24 Oct — before sprint planning" />
+            </Field>
+          </div>
+          <div className="mt-4 grid gap-4">
+            <Field label="Change summary & reason">
+              <Textarea value={aDescription} onChange={(e) => setADescription(e.target.value)} placeholder="What is changing, why now, and what triggered it?" className="min-h-[100px]" />
+            </Field>
+            <Field label="Options considered (min. two, with pros/cons)">
+              <Textarea value={aOptions} onChange={(e) => setAOptions(e.target.value)} placeholder="Option A — … / Option B — …" className="min-h-[90px]" />
+            </Field>
+            <Field label="Recommendation">
+              <Textarea value={aRecommendation} onChange={(e) => setARecommendation(e.target.value)} placeholder="Which option and why." className="min-h-[70px]" />
+            </Field>
+            <Field label="Impact assessment (scope / schedule / cost / risk / stakeholders)">
+              <Textarea value={aImpact} onChange={(e) => setAImpact(e.target.value)} placeholder="Be specific — this is what the change board evaluates." className="min-h-[110px]" />
+            </Field>
+          </div>
+
+          <div className="mt-5 flex flex-wrap items-center justify-end gap-2">
+            <Button
+              onClick={() => create.mutate()}
+              disabled={!canSubmitAuthor || create.isPending}
+            >
+              <Send className="mr-2 h-4 w-4" /> {create.isPending ? "Submitting…" : linkedTask ? "Submit CR & close task" : "Submit CR to change board"}
+            </Button>
+          </div>
+        </section>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
         <ul className="space-y-2">
@@ -117,7 +288,10 @@ function Changes() {
                     <span className="truncate text-sm font-semibold">{c.title}</span>
                     <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wider ${statusStyle[c.status]}`}>{c.status}</span>
                   </div>
-                  <div className="mt-1 text-xs text-muted-foreground">From {c.requested_by}</div>
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    From {c.requested_by}
+                    {(c as any).origin === "authored" && <span className="ml-1 rounded bg-muted px-1 text-[10px] uppercase tracking-wider">you</span>}
+                  </div>
                   <div className="mt-1 flex items-center justify-between text-xs">
                     <span className={Number(c.cost_impact) < 0 ? "text-emerald-700" : "text-foreground"}>{fmt(Number(c.cost_impact))}</span>
                     <span className="text-muted-foreground">{c.schedule_impact_days >= 0 ? "+" : ""}{c.schedule_impact_days}d</span>
@@ -138,7 +312,12 @@ function Changes() {
                   </div>
                   <h2 className="mt-1 font-display text-2xl font-medium">{selected.title}</h2>
                 </div>
-                <span className={`rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wider ${statusStyle[selected.status]}`}>{selected.status}</span>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={() => exportPdf(selected)}>
+                    <Download className="mr-2 h-4 w-4" /> PDF
+                  </Button>
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wider ${statusStyle[selected.status]}`}>{selected.status}</span>
+                </div>
               </div>
 
               <div className="mt-4 grid gap-3 sm:grid-cols-3">
@@ -158,6 +337,11 @@ function Changes() {
               </div>
 
               {selected.status === "submitted" ? (
+                (selected as any).origin === "authored" ? (
+                  <div className="mt-6 rounded-md border border-border bg-background p-4 text-sm text-muted-foreground">
+                    Awaiting the change board's decision. Sponsor confirmation is in your inbox.
+                  </div>
+                ) : (
                 <div className="mt-6 space-y-3 rounded-md border border-border bg-background p-4">
                   <div>
                     <div className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Your impact assessment</div>
@@ -185,6 +369,7 @@ function Changes() {
                     </Button>
                   </div>
                 </div>
+                )
               ) : (
                 <div className="mt-6 space-y-3 rounded-md border border-border bg-background p-4 text-sm">
                   <div>
@@ -205,7 +390,39 @@ function Changes() {
           )}
         </article>
       </div>
+
+      {linkedTask && (
+        <TaskSubmissionDialog
+          open={submitOpen}
+          onOpenChange={setSubmitOpen}
+          task={{
+            id: linkedTask.id,
+            title: linkedTask.title,
+            category: linkedTask.category ?? null,
+            linked_area: linkedTask.linked_area ?? null,
+            completion_action: linkedTask.completion_action ?? null,
+          }}
+          initialSubmission={encodeSubmission("change_request", templateValues)}
+          onSubmitted={() => {
+            qc.invalidateQueries({ queryKey: ["tasks"] });
+            qc.invalidateQueries({ queryKey: ["overview"] });
+            qc.invalidateQueries({ queryKey: ["whats-next"] });
+            qc.invalidateQueries({ queryKey: ["phase-progress"] });
+            setSubmitOpen(false);
+            navigate({ to: "/app/tasks" });
+          }}
+        />
+      )}
     </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <div className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">{label}</div>
+      {children}
+    </label>
   );
 }
 
