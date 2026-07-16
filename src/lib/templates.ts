@@ -176,6 +176,92 @@ export const TEMPLATES: Record<TemplateKind, TemplateDef> = {
   },
 };
 
+// ---------- Additional MVP+ templates (reuse renderer + generic evaluator) ----------
+
+const EXTRA_TEMPLATES: Record<
+  Exclude<TemplateKind, "raid_log" | "project_charter" | "status_report">,
+  TemplateDef
+> = {
+  resource_plan: {
+    kind: "resource_plan",
+    label: "Resource Plan",
+    intro:
+      "Lay out the people, skills and time you need to deliver this phase. Be specific — name roles, allocations and dates rather than generic teams.",
+    fields: [
+      { key: "objectives", label: "What this plan must enable", kind: "textarea", required: true, minChars: 60, placeholder: "Which outcomes or milestones does this resourcing support?" },
+      { key: "roles", label: "Roles & named people", kind: "textarea", required: true, minChars: 80, placeholder: "e.g. Sarah Williams — Delivery Lead (0.6 FTE, Sep–Dec)" },
+      { key: "skills", label: "Critical skills / gaps", kind: "textarea", required: true, minChars: 40, guidance: "Call out where you are short and how you'll close the gap." },
+      { key: "allocation", label: "Time allocation & timeline", kind: "textarea", required: true, minChars: 40, placeholder: "FTE %, start/end dates, ramp-up." },
+      { key: "dependencies", label: "External dependencies", kind: "textarea", minChars: 30, placeholder: "Vendors, shared services, procurement lead times." },
+      { key: "cost", label: "Cost impact", kind: "textarea", minChars: 30, placeholder: "Rough £ impact vs. budget line." },
+      { key: "risks", label: "Resource risks", kind: "textarea", minChars: 30, placeholder: "Key-person risk, holidays, competing priorities." },
+    ],
+  },
+  change_request: {
+    kind: "change_request",
+    label: "Change Request",
+    intro:
+      "Formal request to change scope, schedule or budget. The change board needs enough context to decide — no vague 'improvements'.",
+    fields: [
+      { key: "summary", label: "Change summary", kind: "textarea", required: true, minChars: 60, placeholder: "One paragraph: what is changing and why now." },
+      { key: "reason", label: "Reason / trigger", kind: "textarea", required: true, minChars: 60, placeholder: "What event, risk or finding triggered this?" },
+      { key: "impact_scope", label: "Impact on scope", kind: "textarea", required: true, minChars: 40 },
+      { key: "impact_schedule", label: "Impact on schedule", kind: "textarea", required: true, minChars: 30, placeholder: "New dates or slippage in days/weeks." },
+      { key: "impact_cost", label: "Impact on cost", kind: "textarea", required: true, minChars: 30, placeholder: "Quantify £ / effort delta." },
+      { key: "options", label: "Options considered", kind: "textarea", required: true, minChars: 60, guidance: "At least two options with pros/cons — never single-option asks." },
+      { key: "recommendation", label: "Recommendation", kind: "textarea", required: true, minChars: 40 },
+      { key: "requester", label: "Requested by (named)", kind: "text", required: true, placeholder: "Full name and role" },
+      { key: "decision_by", label: "Decision needed by", kind: "text", required: true, placeholder: "e.g. 24 Oct — before sprint planning" },
+    ],
+  },
+  stakeholder_register: {
+    kind: "stakeholder_register",
+    label: "Stakeholder Register",
+    intro:
+      "Map the people who can make or break this project. Every entry needs a name, interest, influence and an engagement plan — not job titles alone.",
+    fields: [
+      { key: "sponsor", label: "Sponsor (named)", kind: "text", required: true, placeholder: "Full name and role" },
+      { key: "key_stakeholders", label: "Key stakeholders", kind: "textarea", required: true, minChars: 120, placeholder: "Name · Role · Interest · Influence (H/M/L) · Attitude", guidance: "One person per line. Cover at least 4–6 people." },
+      { key: "engagement_plan", label: "Engagement plan", kind: "textarea", required: true, minChars: 80, placeholder: "Who is briefed how often, by which channel, by whom." },
+      { key: "communications", label: "Communication cadence", kind: "textarea", required: true, minChars: 40, placeholder: "Weekly digest, monthly steerco, ad-hoc 1:1s…" },
+      { key: "resistance", label: "Resistance & mitigations", kind: "textarea", minChars: 40, guidance: "Name likely blockers and how you will handle them." },
+      { key: "owner", label: "Register owner", kind: "text", required: true, placeholder: "Who keeps this register current?" },
+    ],
+  },
+  meeting_agenda: {
+    kind: "meeting_agenda",
+    label: "Meeting Agenda",
+    intro:
+      "A working agenda that respects attendees' time. Every item needs a purpose, owner and time-box — decisions, not status theatre.",
+    fields: [
+      { key: "meeting_title", label: "Meeting title", kind: "text", required: true, placeholder: "e.g. Steering Committee — October" },
+      { key: "datetime", label: "Date & time", kind: "text", required: true, placeholder: "e.g. Tue 15 Oct · 14:00–15:00 BST" },
+      { key: "attendees", label: "Attendees (named)", kind: "textarea", required: true, minChars: 40, placeholder: "Name · Role · Required or Optional" },
+      { key: "objectives", label: "Meeting objectives", kind: "textarea", required: true, minChars: 60, placeholder: "What must be true when this meeting ends?" },
+      { key: "agenda_items", label: "Agenda items (owner, time-box)", kind: "textarea", required: true, minChars: 120, placeholder: "1. Portfolio update — Sarah — 10 min\n2. RAID review — James — 15 min\n3. Decision: budget uplift — Sponsor — 10 min", guidance: "At least 3 items with owners and durations." },
+      { key: "decisions_needed", label: "Decisions requested", kind: "textarea", required: true, minChars: 40 },
+      { key: "prereads", label: "Pre-reads", kind: "textarea", minChars: 20, placeholder: "Links or documents attendees should read first." },
+    ],
+  },
+  lessons_learned: {
+    kind: "lessons_learned",
+    label: "Lessons Learned",
+    intro:
+      "Honest retrospective. Capture what worked, what didn't, and — most important — concrete actions the next project will inherit.",
+    fields: [
+      { key: "context", label: "Project / phase context", kind: "textarea", required: true, minChars: 60, placeholder: "What was delivered, over what period, with which team." },
+      { key: "went_well", label: "What went well", kind: "textarea", required: true, minChars: 80, placeholder: "Practices, tools, people to repeat. Be specific." },
+      { key: "went_poorly", label: "What did not go well", kind: "textarea", required: true, minChars: 80, guidance: "No blame — describe the pattern, not the person." },
+      { key: "root_causes", label: "Root causes", kind: "textarea", required: true, minChars: 60, placeholder: "Ask 'why' at least twice per issue." },
+      { key: "actions", label: "Recommended actions (owner + date)", kind: "textarea", required: true, minChars: 80, placeholder: "Action · Owner · Target date", guidance: "Actions without an owner and a date will not land." },
+      { key: "reusable_assets", label: "Reusable assets / knowledge", kind: "textarea", minChars: 30 },
+      { key: "facilitator", label: "Facilitator (named)", kind: "text", required: true, placeholder: "Who ran the retro?" },
+    ],
+  },
+};
+
+Object.assign(TEMPLATES, EXTRA_TEMPLATES);
+
 /* ---------- Detection: pick the template for a task ---------- */
 
 export function detectTemplateKind(task: {
@@ -187,6 +273,11 @@ export function detectTemplateKind(task: {
   if (/\braid\b|risk log|risk register/.test(s)) return "raid_log";
   if (/charter/.test(s)) return "project_charter";
   if (/status report|weekly (status|report)|status update/.test(s)) return "status_report";
+  if (/change request|change control|scope change|cr\b/.test(s)) return "change_request";
+  if (/stakeholder (register|map|matrix|analysis)/.test(s)) return "stakeholder_register";
+  if (/resource plan|resourcing|capacity plan|staffing plan/.test(s)) return "resource_plan";
+  if (/meeting agenda|steerco agenda|kick[- ]?off (agenda|prep)|agenda\b/.test(s)) return "meeting_agenda";
+  if (/lessons learned|retrospective|retro\b|post[- ]?mortem/.test(s)) return "lessons_learned";
   return null;
 }
 
