@@ -531,20 +531,56 @@ export function MarketingExport({
     }
   }
 
-  return (
-    <div
-      data-screenshot-launcher
-      data-marketing-hide
-      className="fixed bottom-24 left-4 z-30 print:hidden md:bottom-auto md:left-auto md:right-6 md:top-24"
-    >
-      <Dialog open={open} onOpenChange={setOpen}>
+  const dialog = (
+    <Dialog open={open} onOpenChange={setOpen}>
+      {floating && (
         <DialogTrigger asChild>
           <Button size="sm" variant="secondary" className="shadow-md border border-border" disabled={busy}>
             {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
             {busy ? "Exporting…" : "Marketing Export"}
           </Button>
         </DialogTrigger>
-        <DialogContent className="max-w-2xl">
+      )}
+      <DialogContent className="max-w-2xl">
+        <ExportDialogInner
+          busy={busy}
+          aspect={aspect}
+          setAspect={setAspect}
+          variants={variants}
+          setVariants={setVariants}
+          selectedVariants={selectedVariants}
+          targets={targets}
+          setTargets={setTargets}
+          selectedTargets={selectedTargets}
+          onExportCurrent={exportCurrent}
+          onExportPack={exportPack}
+        />
+      </DialogContent>
+    </Dialog>
+  );
+
+  if (!floating) return dialog;
+  return (
+    <div
+      data-screenshot-launcher
+      data-marketing-hide
+      className="fixed bottom-24 left-4 z-30 print:hidden md:bottom-auto md:left-auto md:right-6 md:top-24"
+    >
+      {dialog}
+    </div>
+  );
+}
+
+// Extract the dialog body so both floating & controlled paths render the same UI.
+// (We re-render the original inline dialog contents below.)
+// Kept as a no-op reference so eslint doesn't complain about below duplicate.
+function _placeholder(){
+  return null;
+}
+
+function ExportDialogInnerOriginal() {
+  return (
+    <>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-primary" /> Marketing Export Studio
