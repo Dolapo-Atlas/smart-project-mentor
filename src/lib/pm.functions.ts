@@ -1114,6 +1114,93 @@ export const sendMinutesToAttendees = createServerFn({ method: "POST" })
     return { ok: true, recipients: attendees.length, sent_at: sentAt, closed_tasks: closed.length, meeting: row };
   });
 
+/* ============= MEETING ACTION ITEMS → TASKS ============= */
+
+const ActionItemSchema = z.object({
+  title: z.string().min(3).max(120),
+  description: z.string().max(400).optional().default(""),
+  owner: z.string().max(80).optional().default(""),
+  due_hint: z.string().max(60).optional().default(""),
+  linked_area: z
+    .enum(["risk", "budget", "documents", "meetings", "gates", "comms", "stakeholders", "reports", "changes", "charter", "vendors"])
+    .optional(),
+  priority: z.enum(["low", "medium", "high", "critical"]).default("medium"),
+});
+const ActionsSchema = z.object({ actions: z.array(ActionItemSchema).max(8) });
+
+const AREA_TO_ROUTE_LOCAL: Record<string, string> = {
+  budget: "/app/budget",
+  risk: "/app/raid",
+  documents: "/app/documents",
+  meetings: "/app/meetings",
+  gates: "/app/gates",
+  comms: "/app/comms",
+  charter: "/app/charter",
+  vendors: "/app/comms",
+  stakeholders: "/app/stakeholders",
+  reports: "/app/reports",
+  changes: "/app/changes",
+};
+
+export const extractMeetingActionItems = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const meeting = await loadMeeting(supabase, userId, data.id);
+    const transcript = transcriptOf(meeting);
+    const src =
+      (meeting.decisions ? `DECISIONS:\n${meeting.decisions}\n\n` : "") +
+      (meeting.minutes ? `MINUTES:\n${meeting.minutes}\n\n` : "") +
+      (transcript.length
+        ? `TRANSCRIPT:\n${transcript
+            .map((t) => (t.kind === "system" ? `[Note] ${t.body}` : `${t.speaker_name}: ${t.body}`))
+            .join("\n")}`
+        : "");
+    if (!src.trim()) throw new Error("Nothing to extract — capture minutes first.");
+
+    const pctx = await getProjectCtx(supabase, userId);
+    const prompt = `You are the project coordinator turning meeting output into concrete tasks for the "${pctx.name}" project.
+${pctx.domainGuard}
+
+Meeting: ${meeting.title} (${meeting.kind})
+
+Source:
+${src}
+
+Extract 1–6 concrete action items. Each MUST be a real doable next step (not "discuss further"). For each:
+- title: imperative, <= 90 chars
+- description: one sentence of context; include what "done" looks like
+- owner: person named in the meeting who owns it (empty string if none)
+- due_hint: any timing said aloud ("by Friday", "before steerco"), empty if none
+- linked_area: pick the most relevant Atlas module
+- priority: default medium; use high when the meeting called it urgent
+
+Return only the JSON.`;
+
+    const { object } = await generateObject({ model: getModel(), schema: ActionsSchema, prompt });
+    const actions = object.actions ?? [];
+    if (actions.length === 0) return { created: 0, tasks: [] };
+
+    const rows = actions.map((a) => ({
+      user_id: userId,
+      title: a.title,
+      description: [a.description, a.owner ? `Owner: ${a.owner}` : null, a.due_hint ? `Due: ${a.due_hint}` : null]
+        .filter(Boolean)
+        .join(" · "),
+      priority: a.priority,
+      category: "Meetings" as const,
+      linked_area: a.linked_area ?? "meetings",
+      linked_module_route: AREA_TO_ROUTE_LOCAL[a.linked_area ?? "meetings"] ?? "/app/meetings",
+      completion_action: `From meeting "${meeting.title}"`,
+      source: "meeting" as const,
+    }));
+
+    const { data: inserted, error } = await supabase.from("tasks").insert(rows).select();
+    if (error) throw error;
+    return { created: inserted?.length ?? 0, tasks: inserted ?? [] };
+  });
+
 /* ============= CONFLICTING STAKEHOLDER ============= */
 
 export const summonConflict = createServerFn({ method: "POST" })

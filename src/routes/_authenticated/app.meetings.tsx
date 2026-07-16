@@ -14,12 +14,13 @@ import {
   removeMeetingAttendee,
   autoMinutes,
   sendMinutesToAttendees,
+  extractMeetingActionItems,
 } from "@/lib/pm.functions";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Users, CheckCircle2, Sparkles, Mic, MessageSquare, NotebookPen, PlayCircle, UserPlus, X, Wand2, Send } from "lucide-react";
+import { Plus, Users, CheckCircle2, Sparkles, Mic, MessageSquare, NotebookPen, PlayCircle, UserPlus, X, Wand2, Send, ListChecks } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { TimeControls } from "@/components/time-controls";
@@ -109,6 +110,7 @@ function Meetings() {
   const removeAttFn = useServerFn(removeMeetingAttendee);
   const autoMinutesFn = useServerFn(autoMinutes);
   const sendMinutesFn = useServerFn(sendMinutesToAttendees);
+  const extractFn = useServerFn(extractMeetingActionItems);
   const { data: meetings } = useQuery({ queryKey: ["meetings"], queryFn: () => fetchM() });
   const { data: roster } = useQuery({ queryKey: ["attendee-roster"], queryFn: () => rosterFn() });
 
@@ -203,6 +205,16 @@ function Meetings() {
         `Minutes sent to ${res.recipients} attendee${res.recipients === 1 ? "" : "s"}.` +
           (res.closed_tasks ? ` ${res.closed_tasks} task closed.` : ""),
       );
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+
+  const extractActions = useMutation({
+    mutationFn: () => extractFn({ data: { id: selected!.id } }),
+    onSuccess: (res) => {
+      qc.invalidateQueries({ queryKey: ["tasks"] });
+      qc.invalidateQueries({ queryKey: ["whats-next"] });
+      toast.success(res.created ? `Created ${res.created} action task${res.created === 1 ? "" : "s"}.` : "No action items found.");
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
@@ -566,6 +578,24 @@ function Meetings() {
                       </Button>
                     </div>
                   </div>
+                  {selected.held && (
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-background p-4">
+                      <div>
+                        <div className="text-sm font-semibold">Turn decisions into tasks</div>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          Extract action items from the minutes and file them on your task board with owners and priorities.
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        onClick={() => extractActions.mutate()}
+                        disabled={extractActions.isPending || (!selected.minutes && !selected.decisions && !selected.ai_summary)}
+                      >
+                        <ListChecks className="mr-2 h-4 w-4" />
+                        {extractActions.isPending ? "Extracting…" : "Extract action items"}
+                      </Button>
+                    </div>
+                  )}
                   {selected.held && (
                     <PostMeetingActions
                       hasMinutes={!!selected.minutes || !!selected.ai_summary || !!selected.decisions}
