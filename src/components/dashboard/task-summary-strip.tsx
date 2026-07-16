@@ -60,7 +60,7 @@ export function TaskSummaryStrip() {
         return (
           <div
             key={t.key}
-            className="relative overflow-hidden rounded-xl border border-border bg-card p-4 shadow-sm"
+            className="hover-lift relative overflow-hidden rounded-xl border border-border bg-card p-4 shadow-sm"
           >
             <span className={`absolute left-0 top-0 h-full w-1 ${t.bar}`} aria-hidden />
             <div className="flex items-start justify-between">
