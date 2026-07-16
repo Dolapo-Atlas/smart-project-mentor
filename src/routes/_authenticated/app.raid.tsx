@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import {
   listRaid, createRaid, updateRaidStatus, deleteRaid, submitRaidLog,
 } from "@/lib/raid.functions";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -58,6 +58,16 @@ function RaidPage() {
   const { data: raid } = useQuery({ queryKey: ["raid"], queryFn: () => fetchRaid() });
 
   const [tab, setTab] = useState<Kind>("risk");
+
+  // Deep-link support: /app/raid#risk|assumption|issue|dependency
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const h = window.location.hash.replace("#", "").toLowerCase();
+    if (h === "risk" || h === "assumption" || h === "issue" || h === "dependency") {
+      setTab(h as Kind);
+    }
+  }, []);
+
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
     kind: "risk" as Kind,

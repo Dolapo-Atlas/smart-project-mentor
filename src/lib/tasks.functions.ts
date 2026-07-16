@@ -5,6 +5,7 @@ import { generateObject } from "ai";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
 import { ARCHETYPE_SENTIMENT, getProjectCtx } from "./pm.functions";
 import { loadRoster, rosterByRole, DEFAULT_ROSTER } from "./roster";
+import { decodeSubmission, payloadToNarrative, TEMPLATES } from "./templates";
 
 const MODEL = "google/gemini-3-flash-preview";
 function getModel() {
@@ -187,7 +188,9 @@ export const submitTaskWithWork = createServerFn({ method: "POST" })
     z
       .object({
         id: z.string().uuid(),
-        submission: z.string().min(5).max(4000),
+        // Length cap covers both free-text and encoded template payloads
+        // (JSON string produced by src/lib/templates.ts:encodeSubmission).
+        submission: z.string().min(5).max(20000),
       })
       .parse(d),
   )
@@ -334,12 +337,24 @@ export const closeTaskWithReview = createServerFn({ method: "POST" })
     // Generate feedback
     let feedback: z.infer<typeof FeedbackSchema> | null = null;
     try {
+      const payload = decodeSubmission(task.submission ?? null);
+      const templateLabel = payload && payload.kind !== "free_text" && payload.template
+        ? TEMPLATES[payload.template].label
+        : "free-form submission";
+      const submissionForAi = payload
+        ? payloadToNarrative(payload, templateLabel)
+        : task.submission ?? "(no detail provided)";
+      const readinessLine = payload && payload.kind !== "free_text"
+        ? `\nAtlas readiness (rules): ${payload.readiness.score}/100 (${payload.readiness.status})${
+            payload.ai_readiness ? ` · AI review: ${payload.ai_readiness.score}/100` : ""
+          }`
+        : "";
       const prompt = `You are a Project Management mentor reviewing a Project Coordinator's submission.
 Task: ${task.title}
 Category: ${task.category ?? "general"}
-What good looks like: ${task.completion_action ?? "Complete the action thoroughly."}
+What good looks like: ${task.completion_action ?? "Complete the action thoroughly."}${readinessLine}
 Submission:
-${task.submission ?? "(no detail provided)"}
+${submissionForAi}
 
 Return strict JSON. Be specific and tied to the submission. Skill = the project-coordinator competency demonstrated (e.g. "Governance documentation", "RAID management", "Cost control"). Score 1-5 (3 = competent).`;
       const res = await generateObject({ model: getModel(), prompt, schema: FeedbackSchema });
