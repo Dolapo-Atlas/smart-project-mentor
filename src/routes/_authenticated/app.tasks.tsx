@@ -33,6 +33,7 @@ import { TimeControls } from "@/components/time-controls";
 import { StakeholderHoverAvatar as StakeholderAvatar } from "@/components/stakeholder-card";
 import { MentorTriggerButton } from "@/components/mentor/task-mentor";
 import { TaskSubmissionDialog } from "@/components/tasks/task-submission-dialog";
+import { detectTemplateKind } from "@/lib/templates";
 
 export const Route = createFileRoute("/_authenticated/app/tasks")({
   component: Tasks,
@@ -72,7 +73,15 @@ function inferRaidKind(t: { title?: string | null; description?: string | null; 
 }
 
 function OpenModuleLink({ t }: { t: RichTask }) {
-  const base = t.linked_module_route!;
+  const detected = detectTemplateKind({
+    title: t.title,
+    category: t.category,
+    linked_area: t.linked_area,
+  });
+  const base =
+    t.linked_module_route ??
+    (detected === "lessons_learned" ? "/app/lessons" : null);
+  if (!base) return null;
   if (base === "/app/raid") {
     const kind = inferRaidKind(t);
     return (
@@ -122,6 +131,17 @@ function OpenModuleLink({ t }: { t: RichTask }) {
     return (
       <Link
         to="/app/stakeholders"
+        search={{ task: t.id }}
+        className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] hover:bg-accent"
+      >
+        Open module <ArrowUpRight className="h-3 w-3" />
+      </Link>
+    );
+  }
+  if (base === "/app/lessons") {
+    return (
+      <Link
+        to="/app/lessons"
         search={{ task: t.id }}
         className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] hover:bg-accent"
       >
@@ -502,7 +522,12 @@ function TaskCard({
           )}
 
           <div className="mt-2 flex flex-wrap gap-1.5">
-            {t.linked_module_route && !isComplete && (
+            {(t.linked_module_route ||
+              detectTemplateKind({
+                title: t.title,
+                category: t.category,
+                linked_area: t.linked_area,
+              }) === "lessons_learned") && !isComplete && (
               <OpenModuleLink t={t} />
             )}
             {t.status === "todo" && (

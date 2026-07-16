@@ -621,6 +621,95 @@ export type Database = {
           },
         ]
       }
+      lessons_learned_docs: {
+        Row: {
+          approval_status: string
+          approved_at: string | null
+          completion_pct: number
+          created_at: string
+          id: string
+          linked_task_id: string | null
+          payload: Json
+          project_instance_id: string | null
+          sponsor_comment: string | null
+          status: string
+          submitted_at: string | null
+          updated_at: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          approval_status?: string
+          approved_at?: string | null
+          completion_pct?: number
+          created_at?: string
+          id?: string
+          linked_task_id?: string | null
+          payload?: Json
+          project_instance_id?: string | null
+          sponsor_comment?: string | null
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id: string
+          version?: number
+        }
+        Update: {
+          approval_status?: string
+          approved_at?: string | null
+          completion_pct?: number
+          created_at?: string
+          id?: string
+          linked_task_id?: string | null
+          payload?: Json
+          project_instance_id?: string | null
+          sponsor_comment?: string | null
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id?: string
+          version?: number
+        }
+        Relationships: []
+      }
+      lessons_learned_versions: {
+        Row: {
+          completion_pct: number
+          doc_id: string
+          id: string
+          payload: Json
+          submitted_at: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          completion_pct: number
+          doc_id: string
+          id?: string
+          payload: Json
+          submitted_at?: string
+          user_id: string
+          version: number
+        }
+        Update: {
+          completion_pct?: number
+          doc_id?: string
+          id?: string
+          payload?: Json
+          submitted_at?: string
+          user_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lessons_learned_versions_doc_id_fkey"
+            columns: ["doc_id"]
+            isOneToOne: false
+            referencedRelation: "lessons_learned_docs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketing_assets: {
         Row: {
           asset_type: string | null
