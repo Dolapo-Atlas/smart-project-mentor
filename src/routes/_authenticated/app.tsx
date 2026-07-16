@@ -247,11 +247,14 @@ function AppLayout() {
                   data-tour={NAV.find((n) => n.to === to)?.tour}
                   className={`relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-md p-2 text-center text-[11px] font-medium leading-tight transition ${
                     active
-                      ? "bg-sidebar-accent text-white shadow-[inset_0_-2px_0_0_var(--accent-orange)]"
-                      : "text-sidebar-foreground/90 hover:bg-white/10 hover:text-white"
+                      ? "bg-white text-navy shadow-[0_2px_0_0_var(--accent-orange)] ring-1 ring-accent-orange/60"
+                      : "bg-white/95 text-navy hover:bg-white hover:-translate-y-0.5"
                   }`}
                 >
-                  <Icon className="h-5 w-5 shrink-0" strokeWidth={2.25} />
+                  <Icon
+                    className={`h-5 w-5 shrink-0 ${active ? "text-accent-orange" : "text-navy"}`}
+                    strokeWidth={2.25}
+                  />
                   <span className="line-clamp-2">{label}</span>
                   {badge ? (
                     <span
@@ -267,9 +270,9 @@ function AppLayout() {
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-md p-2 text-center text-[11px] font-medium leading-tight text-sidebar-foreground/90 transition hover:bg-white/10 hover:text-white"
+                  className="relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-md bg-white/95 p-2 text-center text-[11px] font-medium leading-tight text-navy transition hover:bg-white hover:-translate-y-0.5"
                 >
-                  <MoreHorizontal className="h-5 w-5 shrink-0" strokeWidth={2.25} />
+                  <MoreHorizontal className="h-5 w-5 shrink-0 text-accent-orange" strokeWidth={2.25} />
                   <span className="line-clamp-2">More</span>
                 </button>
               </DropdownMenuTrigger>
