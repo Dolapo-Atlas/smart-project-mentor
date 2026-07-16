@@ -1,14 +1,25 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useSearch, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listStatusReports, upsertStatusReport } from "@/lib/pm.functions";
-import { useState } from "react";
+import { getOverview } from "@/lib/sim.functions";
+import { listTasksRich, submitTaskWithWork } from "@/lib/tasks.functions";
+import { TaskSubmissionDialog } from "@/components/tasks/task-submission-dialog";
+import { encodeSubmission, evaluateStatusReport } from "@/lib/templates";
+import { useEffect, useMemo, useState } from "react";
+import jsPDF from "jspdf";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Send, Save, Download, FileText } from "lucide-react";
+import { Send, Save, Download, FileText, CheckCircle2 } from "lucide-react";
+
+const reportsSearchSchema = z.object({
+  task: z.string().uuid().optional(),
+});
 
 export const Route = createFileRoute("/_authenticated/app/reports")({
+  validateSearch: reportsSearchSchema,
   component: Reports,
 });
 
