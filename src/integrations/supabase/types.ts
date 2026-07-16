@@ -1480,6 +1480,107 @@ export type Database = {
           },
         ]
       }
+      stakeholder_register_versions: {
+        Row: {
+          completion_pct: number
+          created_at: string
+          id: string
+          payload: Json
+          register_id: string
+          submitted_at: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          completion_pct?: number
+          created_at?: string
+          id?: string
+          payload: Json
+          register_id: string
+          submitted_at?: string
+          user_id: string
+          version: number
+        }
+        Update: {
+          completion_pct?: number
+          created_at?: string
+          id?: string
+          payload?: Json
+          register_id?: string
+          submitted_at?: string
+          user_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stakeholder_register_versions_register_id_fkey"
+            columns: ["register_id"]
+            isOneToOne: false
+            referencedRelation: "stakeholder_registers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stakeholder_registers: {
+        Row: {
+          approval_status: string
+          completion_pct: number
+          created_at: string
+          id: string
+          linked_task_id: string | null
+          payload: Json
+          project_instance_id: string | null
+          sponsor_comment: string | null
+          submitted_at: string | null
+          updated_at: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          approval_status?: string
+          completion_pct?: number
+          created_at?: string
+          id?: string
+          linked_task_id?: string | null
+          payload?: Json
+          project_instance_id?: string | null
+          sponsor_comment?: string | null
+          submitted_at?: string | null
+          updated_at?: string
+          user_id: string
+          version?: number
+        }
+        Update: {
+          approval_status?: string
+          completion_pct?: number
+          created_at?: string
+          id?: string
+          linked_task_id?: string | null
+          payload?: Json
+          project_instance_id?: string | null
+          sponsor_comment?: string | null
+          submitted_at?: string | null
+          updated_at?: string
+          user_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stakeholder_registers_linked_task_id_fkey"
+            columns: ["linked_task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stakeholder_registers_project_instance_id_fkey"
+            columns: ["project_instance_id"]
+            isOneToOne: false
+            referencedRelation: "project_instances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stakeholder_relationships: {
         Row: {
           concerns: string[]
