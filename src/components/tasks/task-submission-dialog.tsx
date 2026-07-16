@@ -32,6 +32,7 @@ import {
   evaluateCharter,
   evaluateRaid,
   evaluateStatusReport,
+  evaluateGenericTemplate,
   encodeSubmission,
   type Readiness,
   type ReadinessStatus,
@@ -295,6 +296,7 @@ export function TaskSubmissionDialog({
     if (templateKind === "project_charter") return evaluateCharter(values, projectCtx);
     if (templateKind === "status_report") return evaluateStatusReport(values, projectCtx);
     if (templateKind === "raid_log") return evaluateRaid(raidCounts);
+    if (templateKind) return evaluateGenericTemplate(templateKind, values, projectCtx);
     return { score: 0, status: "not_ready", checks: [], source: "rules" };
   }, [mode, templateKind, values, uploadState, uploadNote, freeText, raidCounts, projectCtx]);
 
