@@ -41,6 +41,7 @@ import { toast } from "sonner";
 import { TimeControls } from "@/components/time-controls";
 import { StakeholderHoverAvatar as StakeholderAvatar } from "@/components/stakeholder-card";
 import { MentorTriggerButton } from "@/components/mentor/task-mentor";
+import { TaskSubmissionDialog } from "@/components/tasks/task-submission-dialog";
 
 export const Route = createFileRoute("/_authenticated/app/tasks")({
   component: Tasks,
@@ -283,35 +284,21 @@ function Tasks() {
         ))}
       </div>
 
-      <Dialog open={!!submitTaskId} onOpenChange={(o) => !o && setSubmitTaskId(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Submit "{submitTask?.title}"</DialogTitle>
-            <DialogDescription>
-              {submitTask?.completion_action ??
-                "Describe what you produced and where it lives (e.g. RAID log updated with 4 risks, document uploaded as PDF)."}
-            </DialogDescription>
-          </DialogHeader>
-          <Textarea
-            placeholder="What did you do? Paste a summary, link, or excerpt of your work…"
-            value={submission}
-            onChange={(e) => setSubmission(e.target.value)}
-            rows={7}
-          />
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setSubmitTaskId(null)}>Cancel</Button>
-            <Button
-              onClick={() =>
-                submitTask && submit.mutate({ id: submitTask.id, submission: submission.trim() })
-              }
-              disabled={submission.trim().length < 5 || submit.isPending}
-            >
-              <Send className="mr-2 h-4 w-4" />
-              {submit.isPending ? "Submitting…" : "Submit for review"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <TaskSubmissionDialog
+        task={submitTask}
+        open={!!submitTaskId}
+        onOpenChange={(o) => {
+          if (!o) {
+            setSubmitTaskId(null);
+            setSubmission("");
+          }
+        }}
+        submitting={submit.isPending}
+        onSubmit={(encoded) => {
+          if (!submitTask) return;
+          submit.mutate({ id: submitTask.id, submission: encoded });
+        }}
+      />
     </div>
   );
 }
