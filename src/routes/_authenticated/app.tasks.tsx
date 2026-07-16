@@ -426,12 +426,7 @@ function TaskCard({
 
           <div className="mt-2 flex flex-wrap gap-1.5">
             {t.linked_module_route && !isComplete && (
-              <Link
-                to={t.linked_module_route}
-                className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] hover:bg-accent"
-              >
-                Open module <ArrowUpRight className="h-3 w-3" />
-              </Link>
+              <OpenModuleLink task={t} />
             )}
             {t.status === "todo" && (
               <button
