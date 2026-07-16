@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { listTasksRich, listWhatsNext } from "@/lib/tasks.functions";
+import { listTasksRich } from "@/lib/tasks.functions";
 import { listChapters } from "@/lib/chapters.functions";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, AlertTriangle, Sparkles } from "lucide-react";
@@ -18,35 +18,56 @@ const PRIORITY_STYLE: Record<string, string> = {
 // Reads live data — no placeholder/seed rows.
 export function ContinueCard() {
   const fetchTasks = useServerFn(listTasksRich);
-  const fetchNext = useServerFn(listWhatsNext);
   const fetchChapters = useServerFn(listChapters);
 
-  const { data: tasks } = useQuery<any[]>({
+  const { data: tasks, isLoading: tasksLoading } = useQuery<any[]>({
     queryKey: ["tasks"],
     queryFn: () => fetchTasks() as Promise<any[]>,
   });
-  const { data: next } = useQuery({ queryKey: ["whats-next"], queryFn: () => fetchNext() });
   const { data: chapters } = useQuery({ queryKey: ["chapters"], queryFn: () => fetchChapters() });
 
-  const inProgress = (tasks ?? []).find((t) => t.status === "in_progress");
-  const suggestion = next?.tasks?.[0];
-  const primary = inProgress ?? suggestion ?? null;
+  // Canonical status buckets — must match task-board / task-summary-strip.
+  const DONE = ["done", "approved", "completed", "closed"];
+  const PRIORITY_RANK: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
+  const rows = tasks ?? [];
 
-  // Actions remaining in the current chapter (option b): required completed
-  // tasks for the active chapter minus what's already done.
+  const doneTasks = rows.filter((t) => DONE.includes(t.status));
+  const inProgress = rows.find((t) => t.status === "in_progress");
+  const readyTodo = rows
+    .filter((t) => t.status === "todo")
+    .sort((a, b) => {
+      const pr = (PRIORITY_RANK[b.priority] ?? 0) - (PRIORITY_RANK[a.priority] ?? 0);
+      if (pr !== 0) return pr;
+      const ad = a.due_at ? +new Date(a.due_at) : Infinity;
+      const bd = b.due_at ? +new Date(b.due_at) : Infinity;
+      return ad - bd;
+    });
+  const pendingReview = rows.find((t) => t.status === "submitted");
+  const primary = inProgress ?? readyTodo[0] ?? pendingReview ?? null;
+
+  // Progress reflects the actual task list — the same dataset the board uses.
+  const total = rows.length;
+  const completed = doneTasks.length;
+  const remaining = Math.max(0, total - completed);
+  const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+  const allDone = total > 0 && remaining === 0;
+
   const activeChapter = chapters?.chapters.find((c) => c.status === "active");
-  const chapterNumber = activeChapter?.chapter_number ?? 1;
-  const required = Math.max(2, chapterNumber * 2);
-  const doneCount = (tasks ?? []).filter((t) =>
-    ["done", "approved", "completed", "closed"].includes(t.status),
-  ).length;
-  const remaining = Math.max(0, required - doneCount);
-
   const isResume = !!inProgress;
-  const completed = Math.min(required, required - remaining);
-  const pct = required > 0 ? Math.round((completed / required) * 100) : 0;
-  const label = isResume ? "Resume where you left off" : "Recommended next step";
+  const label = isResume
+    ? "Resume where you left off"
+    : allDone
+      ? "Milestone ready"
+      : "Recommended next step";
   const route = primary?.linked_module_route ?? "/app/tasks";
+
+  const criticalOverdue = rows.some(
+    (t) =>
+      t.priority === "critical" &&
+      t.due_at &&
+      +new Date(t.due_at) < Date.now() &&
+      !DONE.includes(t.status),
+  );
 
   return (
     <section className="relative overflow-hidden rounded-2xl border border-navy/30 bg-navy p-6 text-navy-foreground shadow-lg md:p-8">
@@ -64,7 +85,9 @@ export function ContinueCard() {
         {label}
       </div>
 
-      {primary ? (
+      {tasksLoading ? (
+        <div className="relative mt-4 h-40 animate-pulse rounded-md border border-white/10 bg-white/5" />
+      ) : primary ? (
         <>
           <div className="relative mt-3 flex flex-wrap items-center gap-2">
             {primary.category && (
@@ -99,10 +122,10 @@ export function ContinueCard() {
           <div className="relative mt-6">
             <div className="flex items-center justify-between text-[11px] uppercase tracking-wider text-white/60">
               <span className="font-medium text-white/85">
-                {remaining === 1 ? "1 action remaining" : `${remaining} actions remaining`}
+                {remaining === 1 ? "1 task remaining" : `${remaining} tasks remaining`}
               </span>
               <span className="text-white/60">
-                {completed} of {required} completed
+                {completed} of {total} completed
               </span>
             </div>
             <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/10 progress-smooth">
@@ -135,13 +158,17 @@ export function ContinueCard() {
             </Button>
           </div>
 
-          {next?.criticalOverdue && (
+          {criticalOverdue && (
             <div className="relative mt-5 flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/20 p-2.5 text-xs text-white">
               <AlertTriangle className="h-3.5 w-3.5" />
               A critical task is overdue. Handle it before advancing time.
             </div>
           )}
         </>
+      ) : allDone ? (
+        <div className="relative mt-4 rounded-md border border-white/20 bg-white/5 p-6 text-center text-sm text-white/80">
+          All {total} tasks completed. Continue to the next milestone.
+        </div>
       ) : (
         <div className="relative mt-4 rounded-md border border-dashed border-white/20 bg-white/5 p-6 text-center text-sm text-white/70">
           No open tasks. Summon a stakeholder email or advance time to generate work.

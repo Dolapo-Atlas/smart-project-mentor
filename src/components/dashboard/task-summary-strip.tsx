@@ -15,7 +15,7 @@ const TILES: Array<{
     key: "todo",
     label: "To do",
     icon: Circle,
-    statuses: ["todo"],
+    statuses: ["todo", "blocked"],
     accent: "text-navy",
     bar: "bg-navy",
   },
