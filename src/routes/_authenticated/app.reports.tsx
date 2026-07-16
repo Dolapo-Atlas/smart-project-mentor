@@ -1,14 +1,25 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useSearch, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listStatusReports, upsertStatusReport } from "@/lib/pm.functions";
-import { useState } from "react";
+import { getOverview } from "@/lib/sim.functions";
+import { listTasksRich, submitTaskWithWork } from "@/lib/tasks.functions";
+import { TaskSubmissionDialog } from "@/components/tasks/task-submission-dialog";
+import { encodeSubmission, evaluateStatusReport } from "@/lib/templates";
+import { useEffect, useMemo, useRef, useState } from "react";
+import jsPDF from "jspdf";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Send, Save, Download, FileText } from "lucide-react";
+import { Send, Save, Download, FileText, CheckCircle2 } from "lucide-react";
+
+const reportsSearchSchema = z.object({
+  task: z.string().uuid().optional(),
+});
 
 export const Route = createFileRoute("/_authenticated/app/reports")({
+  validateSearch: reportsSearchSchema,
   component: Reports,
 });
 
@@ -97,17 +108,44 @@ function downloadReport(r: ReportRow, format: "doc" | "pdf") {
 
 function Reports() {
   const qc = useQueryClient();
+  const search = useSearch({ from: "/_authenticated/app/reports" });
+  const navigate = useNavigate();
   const fetchReports = useServerFn(listStatusReports);
   const upsert = useServerFn(upsertStatusReport);
+  const fetchOverview = useServerFn(getOverview);
+  const fetchTasks = useServerFn(listTasksRich);
+  const submitTaskFn = useServerFn(submitTaskWithWork);
   const { data: reports } = useQuery({ queryKey: ["status_reports"], queryFn: () => fetchReports() });
+  const { data: overview } = useQuery({ queryKey: ["overview"], queryFn: () => fetchOverview() });
+  const { data: allTasks } = useQuery({
+    queryKey: ["tasks"],
+    queryFn: () => fetchTasks() as Promise<any[]>,
+    enabled: !!search.task,
+  });
+  const linkedTask = (allTasks ?? []).find((t: any) => t.id === search.task) ?? null;
+  const [submitOpen, setSubmitOpen] = useState(false);
 
   const thisWeek = mondayOf();
   const current = reports?.find((r) => r.week_start === thisWeek);
+  const suggestedRag = ((overview as any)?.state?.health as Rag | undefined) ?? "amber";
 
-  const [rag, setRag] = useState<Rag>((current?.rag_summary as Rag) ?? "amber");
+  const [rag, setRag] = useState<Rag>((current?.rag_summary as Rag) ?? suggestedRag);
   const [ach, setAch] = useState(current?.achievements ?? "");
   const [next, setNext] = useState(current?.next_week ?? "");
   const [risks, setRisks] = useState(current?.risks_blockers ?? "");
+
+  // When live data arrives (or task-link mode swaps overview), sync RAG default
+  // once, without stomping the user's manual choice on this render.
+  const hydratedRef = useRef(false);
+  useEffect(() => {
+    if (hydratedRef.current) return;
+    if (!current && overview) {
+      hydratedRef.current = true;
+      setRag(suggestedRag);
+    } else if (current) {
+      hydratedRef.current = true;
+    }
+  }, [current, overview, suggestedRag]);
 
   const save = useMutation({
     mutationFn: (submit: boolean) =>
@@ -116,9 +154,75 @@ function Reports() {
       qc.invalidateQueries({ queryKey: ["status_reports"] });
       qc.invalidateQueries({ queryKey: ["inbox"] });
       toast.success(submit ? "Submitted to sponsor." : "Draft saved.");
+      // If a task deep-linked us here, open the shared submission dialog so
+      // the linked task closes through the existing feedback pipeline.
+      if (submit && search.task && linkedTask) {
+        setSubmitOpen(true);
+      }
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
+
+  const submitLinkedTask = useMutation({
+    mutationFn: (v: { id: string; submission: string }) => submitTaskFn({ data: v }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tasks"] });
+      qc.invalidateQueries({ queryKey: ["overview"] });
+      qc.invalidateQueries({ queryKey: ["whats-next"] });
+      qc.invalidateQueries({ queryKey: ["phase-progress"] });
+      toast.success("Submitted for review");
+      setSubmitOpen(false);
+      navigate({ to: "/app/reports", search: {}, replace: true });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+
+  const templateValues = useMemo(() => ({
+    period: `Week of ${thisWeek}`,
+    rag,
+    achievements: ach,
+    next_week: next,
+    risks_blockers: risks,
+    decisions_needed: "",
+    budget_note: "",
+  }), [thisWeek, rag, ach, next, risks]);
+
+  function exportPdf() {
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    const margin = 48;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const maxWidth = pageWidth - margin * 2;
+    let y = margin;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(20);
+    doc.text("Weekly Status Report", margin, y); y += 24;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(90);
+    doc.text(`Week of ${thisWeek} · RAG: ${rag.toUpperCase()} · Exported ${new Date().toLocaleDateString()}`, margin, y);
+    y += 20;
+    doc.setTextColor(20);
+    const sections: [string, string][] = [
+      ["Achievements this week", ach],
+      ["Plan for next week", next],
+      ["Risks & blockers", risks],
+    ];
+    for (const [label, body] of sections) {
+      if (!body?.trim()) continue;
+      if (y > pageHeight - margin - 60) { doc.addPage(); y = margin; }
+      doc.setFont("helvetica", "bold"); doc.setFontSize(12);
+      doc.text(label, margin, y); y += 16;
+      doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+      const lines = doc.splitTextToSize(body, maxWidth) as string[];
+      for (const line of lines) {
+        if (y > pageHeight - margin) { doc.addPage(); y = margin; }
+        doc.text(line, margin, y); y += 13;
+      }
+      y += 8;
+    }
+    doc.save(`status-report-${thisWeek}.pdf`);
+  }
 
   const past = (reports ?? []).filter((r) => r.week_start !== thisWeek);
   const submitted = (reports ?? []).filter((r) => r.submitted_at);
@@ -131,6 +235,20 @@ function Reports() {
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
           Every Monday, send a status report to the sponsor. The AI panel scores it and Mr Okafor reacts in your inbox.
         </p>
+        {search.task && linkedTask && (
+          <div className="mt-3 inline-flex items-start gap-2 rounded-md border border-primary/40 bg-primary/5 px-3 py-2 text-xs">
+            <CheckCircle2 className="mt-0.5 h-4 w-4 text-primary" />
+            <div>
+              <div className="font-medium">Completing task: {linkedTask.title}</div>
+              {linkedTask.completion_action && (
+                <div className="mt-0.5 text-muted-foreground">→ {linkedTask.completion_action}</div>
+              )}
+              <div className="mt-1 text-muted-foreground">
+                Submit the report below — Atlas will open the submission dialog to close the linked task.
+              </div>
+            </div>
+          </div>
+        )}
       </header>
 
       <section className="rounded-lg border border-border bg-card p-6">
@@ -161,6 +279,9 @@ function Reports() {
         </div>
 
         <div className="mt-5 flex flex-wrap justify-end gap-2">
+          <Button variant="ghost" onClick={exportPdf}>
+            <Download className="mr-2 h-4 w-4" /> Export PDF
+          </Button>
           <Button variant="outline" onClick={() => save.mutate(false)} disabled={save.isPending}>
             <Save className="mr-2 h-4 w-4" /> Save draft
           </Button>
@@ -214,6 +335,32 @@ function Reports() {
           ))}
         </ul>
       </section>
+
+      <TaskSubmissionDialog
+        task={linkedTask ? {
+          id: linkedTask.id,
+          title: linkedTask.title,
+          description: linkedTask.description,
+          category: linkedTask.category,
+          linked_area: linkedTask.linked_area,
+          completion_action: linkedTask.completion_action,
+        } : null}
+        open={submitOpen && !!linkedTask}
+        onOpenChange={(o) => setSubmitOpen(o)}
+        submitting={submitLinkedTask.isPending}
+        onSubmit={(encoded) => {
+          if (!linkedTask) return;
+          submitLinkedTask.mutate({ id: linkedTask.id, submission: encoded });
+        }}
+      />
+
+      {/* Reference: template payload derived from live report fields (used by the dialog when prefilled). */}
+      <input type="hidden" data-status-report-payload value={encodeSubmission({
+        kind: "template",
+        template: "status_report",
+        values: templateValues,
+        readiness: evaluateStatusReport(templateValues, { projectName: (overview as any)?.state?.project_name ?? null }),
+      })} />
     </div>
   );
 }

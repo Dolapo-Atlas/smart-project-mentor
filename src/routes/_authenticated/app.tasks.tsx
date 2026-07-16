@@ -96,6 +96,17 @@ function OpenModuleLink({ t }: { t: RichTask }) {
       </Link>
     );
   }
+  if (base === "/app/reports") {
+    return (
+      <Link
+        to="/app/reports"
+        search={{ task: t.id }}
+        className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] hover:bg-accent"
+      >
+        Open module <ArrowUpRight className="h-3 w-3" />
+      </Link>
+    );
+  }
   return (
     <Link
       to={base}
