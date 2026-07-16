@@ -466,6 +466,7 @@ export function evaluateStatusReport(values: StatusValues, ctx: ProjectContext =
 }
 
 export function evaluateRaid(counts: RaidCounts): Readiness {
+  // (see below)
   const checks: ReadinessCheck[] = [];
   let score = 0;
 
