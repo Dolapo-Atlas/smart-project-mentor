@@ -441,6 +441,57 @@ export const decideChangeRequest = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const createChangeRequest = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      title: z.string().min(3).max(140),
+      description: z.string().min(10),
+      requested_by: z.string().min(2).max(80),
+      cost_impact: z.number(),
+      schedule_impact_days: z.number().int(),
+      risk_impact: z.enum(["low", "medium", "high"]),
+      impact_assessment: z.string().min(10),
+      linked_task_id: z.string().uuid().optional(),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: row, error } = await context.supabase
+      .from("change_requests")
+      .insert({
+        user_id: context.userId,
+        title: data.title,
+        description: data.description,
+        requested_by: data.requested_by,
+        cost_impact: data.cost_impact,
+        schedule_impact_days: data.schedule_impact_days,
+        risk_impact: data.risk_impact,
+        impact_assessment: data.impact_assessment,
+        status: "submitted",
+        origin: "authored",
+        linked_task_id: data.linked_task_id ?? null,
+      })
+      .select()
+      .single();
+    if (error) throw error;
+
+    // Sponsor acknowledges the CR the learner authored.
+    const roster = await loadRoster(context.supabase, context.userId);
+    const byRole = rosterByRole(roster);
+    const sponsor = byRole.sponsor ?? roster[0];
+    if (sponsor) {
+      await context.supabase.from("inbox_messages").insert({
+        user_id: context.userId,
+        sender_name: sponsor.name,
+        sender_role: sponsor.title,
+        subject: `Received: CR — ${data.title}`,
+        body: `Thanks — I've received your change request and impact assessment. I'll bring this to the change board and come back with a decision.`,
+        tone: "neutral",
+      });
+    }
+    return row;
+  });
+
 /* ============= PHASE GATES ============= */
 
 
