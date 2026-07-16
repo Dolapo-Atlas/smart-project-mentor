@@ -63,7 +63,7 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
       supabase.from("simulation_state").select("phase").eq("user_id", userId).maybeSingle(),
       supabase.from("documents").select("title,status,quality_score").eq("user_id", userId),
       supabase.from("raid_items").select("kind,status,owner,mitigation,updated_at").eq("user_id", userId),
-      supabase.from("stakeholder_relationships").select("stakeholder_name,influence,interest").eq("user_id", userId),
+      supabase.from("stakeholder_relationships").select("stakeholder_name,role,interaction_count").eq("user_id", userId),
       supabase.from("meetings").select("kind,title,agenda,attendees,held,minutes").eq("user_id", userId),
       supabase.from("tasks").select("status,category").eq("user_id", userId),
       supabase.from("status_reports").select("submitted_at").eq("user_id", userId),
@@ -104,8 +104,8 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
     if (phase === "initiation") {
       // Charter
       const charter = docPct(/charter/i);
-      // Stakeholder mapping — target 5 mapped stakeholders
-      const mapped = S.filter((s) => (s.influence ?? 0) + (s.interest ?? 0) > 0).length || S.length;
+      // Stakeholder mapping — target 5 stakeholders with a role captured
+      const mapped = S.filter((s) => (s.role ?? "").trim().length > 0).length || S.length;
       const stakeholderPct = pct(mapped, 5);
       // RAID setup — need at least one of each kind (R,A,I,D)
       const kinds = new Set(R.map((r) => String(r.kind).toLowerCase()));
