@@ -48,7 +48,7 @@ const AREA_TO_ROUTE: Record<string, string> = {
   meetings: "/app/meetings",
   gates: "/app/gates",
   comms: "/app/comms",
-  charter: "/app/documents",
+  charter: "/app/charter",
   vendors: "/app/comms",
   stakeholders: "/app/stakeholders",
   reports: "/app/reports",
