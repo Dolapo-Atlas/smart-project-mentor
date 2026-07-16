@@ -260,7 +260,10 @@ const EXTRA_TEMPLATES: Record<
   },
 };
 
-Object.assign(TEMPLATES, EXTRA_TEMPLATES);
+export const TEMPLATES: Record<TemplateKind, TemplateDef> = {
+  ...(CORE_TEMPLATES as Record<"project_charter" | "status_report" | "raid_log", TemplateDef>),
+  ...EXTRA_TEMPLATES,
+};
 
 /* ---------- Detection: pick the template for a task ---------- */
 
