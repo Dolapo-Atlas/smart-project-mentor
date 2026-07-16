@@ -165,7 +165,7 @@ export function AutoDemo() {
               {showEmail && (
                 <div
                   className={`rounded-lg border bg-background transition-all duration-500 ${
-                    emailOpen ? "border-primary/40 shadow-[0_0_0_3px_rgba(217,119,6,0.08)]" : "border-border"
+                    emailOpen ? "border-accent-orange/40 shadow-[0_0_0_3px_rgba(217,119,6,0.08)]" : "border-border"
                   }`}
                   style={{
                     transform: showEmail ? "translateY(0)" : "translateY(8px)",
@@ -237,7 +237,7 @@ export function AutoDemo() {
                       <div
                         key={task.title}
                         className={`flex items-start gap-3 rounded-lg border bg-background p-3 transition-all duration-500 ${
-                          isFocus ? "border-primary/50 shadow-[0_0_0_3px_rgba(217,119,6,0.08)]" : "border-border"
+                          isFocus ? "border-accent-orange/50 shadow-[0_0_0_3px_rgba(217,119,6,0.08)]" : "border-border"
                         }`}
                         style={{
                           transform: visible ? "translateY(0)" : "translateY(8px)",
@@ -314,7 +314,7 @@ export function AutoDemo() {
           <div className="relative h-1 w-full overflow-hidden bg-muted">
             <div
               ref={progressRef}
-              className="h-full bg-primary"
+              className="h-full bg-accent-orange"
               style={{ width: "0%" }}
             />
           </div>
@@ -353,7 +353,7 @@ function ScoreBar({ label, value, prev, delay, animate }: { label: string; value
       </div>
       <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
         <div
-          className="h-full rounded-full bg-primary transition-[width] duration-700 ease-out"
+          className="h-full rounded-full bg-accent-orange transition-[width] duration-700 ease-out"
           style={{ width: animate ? `${value}%` : `${prev}%`, transitionDelay: `${delay}ms` }}
         />
       </div>

@@ -193,7 +193,7 @@ function Nav({ scrolled }: { scrolled: boolean }) {
           </Link>
           <Link
             to="/auth"
-            className="group inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-[0_1px_0_rgba(255,255,255,0.25)_inset,0_8px_24px_-12px_rgba(217,119,6,0.6)] transition-all hover:-translate-y-0.5 hover:shadow-[0_1px_0_rgba(255,255,255,0.3)_inset,0_12px_28px_-12px_rgba(217,119,6,0.7)]"
+            className="group inline-flex items-center gap-1.5 rounded-full bg-accent-orange px-4 py-2 text-sm font-medium text-accent-orange-foreground shadow-[0_1px_0_rgba(255,255,255,0.25)_inset,0_8px_24px_-12px_rgba(217,119,6,0.6)] transition-all hover:-translate-y-0.5 hover:shadow-[0_1px_0_rgba(255,255,255,0.3)_inset,0_12px_28px_-12px_rgba(217,119,6,0.7)]"
           >
             Get started
             <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
@@ -255,7 +255,7 @@ function Hero() {
         className="pointer-events-none absolute inset-0 -z-10"
         style={{
           background:
-            "radial-gradient(60% 50% at 80% 0%, color-mix(in oklab, var(--primary) 14%, transparent), transparent 70%), radial-gradient(40% 35% at 0% 30%, color-mix(in oklab, var(--primary) 8%, transparent), transparent 70%)",
+            "radial-gradient(60% 50% at 80% 0%, color-mix(in oklab, var(--accent-orange) 14%, transparent), transparent 70%), radial-gradient(40% 35% at 0% 30%, color-mix(in oklab, var(--accent-orange) 8%, transparent), transparent 70%)",
         }}
       />
       <div className="mx-auto grid max-w-7xl items-center gap-14 px-5 sm:px-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:gap-20 lg:px-10">
@@ -263,8 +263,8 @@ function Hero() {
           <Reveal>
             <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card/70 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur">
               <span className="relative flex h-1.5 w-1.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
-                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent-orange opacity-60" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent-orange" />
               </span>
               Now accepting Founder Access
             </span>
@@ -272,7 +272,7 @@ function Hero() {
           <Reveal delay={80}>
             <h1 className="mt-6 font-display text-[clamp(2.6rem,6.2vw,5.25rem)] font-medium leading-[1.02] tracking-[-0.02em] text-foreground">
               Experience the workplace before you&rsquo;re{" "}
-              <span className="italic text-primary">in it</span>.
+              <span className="italic text-accent-orange">in it</span>.
             </h1>
           </Reveal>
           <Reveal delay={160}>
@@ -284,7 +284,7 @@ function Hero() {
             <div className="mt-9 flex flex-wrap items-center gap-3">
               <Link
                 to="/auth"
-                className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground shadow-[0_1px_0_rgba(255,255,255,0.25)_inset,0_12px_30px_-12px_rgba(217,119,6,0.6)] transition-all hover:-translate-y-0.5 hover:shadow-[0_1px_0_rgba(255,255,255,0.3)_inset,0_18px_36px_-12px_rgba(217,119,6,0.7)]"
+                className="group inline-flex items-center gap-2 rounded-full bg-accent-orange px-6 py-3 text-sm font-medium text-accent-orange-foreground shadow-[0_1px_0_rgba(255,255,255,0.25)_inset,0_12px_30px_-12px_rgba(217,119,6,0.6)] transition-all hover:-translate-y-0.5 hover:shadow-[0_1px_0_rgba(255,255,255,0.3)_inset,0_18px_36px_-12px_rgba(217,119,6,0.7)]"
               >
                 Start your first project
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -293,22 +293,22 @@ function Hero() {
                 href="#demo"
                 className="group inline-flex items-center gap-2 rounded-full border border-border bg-card/70 px-6 py-3 text-sm font-medium text-foreground backdrop-blur transition-all hover:-translate-y-0.5 hover:bg-card"
               >
-                <PlayCircle className="h-4 w-4 text-primary" />
+                <PlayCircle className="h-4 w-4 text-accent-orange" />
                 Experience Atlas
               </a>
             </div>
           </Reveal>
           <Reveal delay={320}>
             <div className="mt-10 flex flex-wrap items-center gap-4">
-              <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-semibold text-foreground shadow-[0_8px_24px_-12px_color-mix(in_oklab,var(--primary)_50%,transparent)]">
-                <ShieldCheck className="h-4 w-4 text-primary" />
+              <div className="inline-flex items-center gap-2 rounded-full border border-accent-orange/30 bg-accent-orange/10 px-4 py-2 text-sm font-semibold text-foreground shadow-[0_8px_24px_-12px_color-mix(in_oklab,var(--accent-orange)_50%,transparent)]">
+                <ShieldCheck className="h-4 w-4 text-accent-orange" />
                 <span>
                   Learn by doing.{" "}
-                  <span className="italic text-primary">Not by watching.</span>
+                  <span className="italic text-accent-orange">Not by watching.</span>
                 </span>
               </div>
               <div className="hidden items-center gap-2 text-xs text-muted-foreground sm:flex">
-                <Sparkles className="h-3.5 w-3.5 text-primary" /> First 100 get Founder Access
+                <Sparkles className="h-3.5 w-3.5 text-accent-orange" /> First 100 get Founder Access
               </div>
             </div>
           </Reveal>
@@ -332,7 +332,7 @@ function HeroInbox() {
   ];
   const badge: Record<string, string> = {
     high: "bg-[oklch(0.62_0.18_25)]/12 text-[oklch(0.45_0.18_25)] border-[oklch(0.62_0.18_25)]/25",
-    medium: "bg-primary/10 text-primary border-primary/25",
+    medium: "bg-accent-orange/10 text-accent-orange border-accent-orange/25",
     low: "bg-[oklch(0.55_0.12_160)]/12 text-[oklch(0.4_0.12_160)] border-[oklch(0.55_0.12_160)]/25",
   };
   const label: Record<string, string> = { high: "Urgent", medium: "Action", low: "FYI" };
@@ -345,7 +345,7 @@ function HeroInbox() {
         className="absolute -inset-6 -z-10 rounded-[28px]"
         style={{
           background:
-            "linear-gradient(180deg, color-mix(in oklab, var(--primary) 8%, transparent), transparent 70%)",
+            "linear-gradient(180deg, color-mix(in oklab, var(--accent-orange) 8%, transparent), transparent 70%)",
         }}
       />
       <div className="overflow-hidden rounded-2xl border border-border bg-card/90 shadow-[0_30px_80px_-30px_rgba(40,30,15,0.25)] backdrop-blur animate-[float_8s_ease-in-out_infinite]">
@@ -566,7 +566,7 @@ function Features() {
         <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map(({ icon: Icon, tag, title, body, preview }, i) => (
             <Reveal key={title} delay={i * 60}>
-              <article className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card/70 backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-[0_28px_70px_-30px_rgba(40,30,15,0.3)]">
+              <article className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card/70 backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-accent-orange/30 hover:shadow-[0_28px_70px_-30px_rgba(40,30,15,0.3)]">
                 <div className="border-b border-border/60 bg-background/40 px-4 py-2.5">
                   <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
                     <span className="h-1.5 w-1.5 rounded-full bg-[oklch(0.65_0.18_25)]/70" />
@@ -577,7 +577,7 @@ function Features() {
                 </div>
                 <div className="relative px-5 pt-5 pb-1">{preview}</div>
                 <div className="mt-auto px-6 pb-6 pt-5">
-                  <div className="flex items-center gap-2 text-primary">
+                  <div className="flex items-center gap-2 text-accent-orange">
                     <Icon className="h-4 w-4" />
                     <span className="text-xs uppercase tracking-[0.16em]">{tag}</span>
                   </div>
@@ -598,7 +598,7 @@ function Features() {
 function PreviewInbox() {
   const items = [
     { who: "MC", from: "Margaret Chen", sub: "Friday Status Report", tone: "Urgent", color: "bg-[oklch(0.62_0.18_25)]/15 text-[oklch(0.45_0.18_25)]" },
-    { who: "RP", from: "Raj Patel", sub: "RAID log overdue", tone: "Action", color: "bg-primary/15 text-primary" },
+    { who: "RP", from: "Raj Patel", sub: "RAID log overdue", tone: "Action", color: "bg-accent-orange/15 text-accent-orange" },
     { who: "PA", from: "Priya Anand", sub: "Budget variance", tone: "FYI", color: "bg-[oklch(0.55_0.12_160)]/15 text-[oklch(0.4_0.12_160)]" },
   ];
   return (
@@ -628,7 +628,7 @@ function PreviewCharter() {
     <div className="space-y-1.5">
       <div className="flex items-center justify-between rounded-lg border border-border/60 bg-background/60 px-3 py-1.5 text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
         <span>Charter · v0.4</span>
-        <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] text-primary">in review</span>
+        <span className="rounded-full bg-accent-orange/15 px-1.5 py-0.5 text-[9px] text-accent-orange">in review</span>
       </div>
       {rows.map((r) => (
         <div key={r.k} className="flex items-baseline justify-between rounded-lg border border-border/60 bg-background/60 px-3 py-1.5">
@@ -655,7 +655,7 @@ function PreviewAiReview() {
             <span className="tabular-nums text-foreground">{s.v}</span>
           </div>
           <div className="h-1 w-full overflow-hidden rounded-full bg-border/60">
-            <div className="h-full bg-primary" style={{ width: `${s.v}%` }} />
+            <div className="h-full bg-accent-orange" style={{ width: `${s.v}%` }} />
           </div>
         </div>
       ))}
@@ -706,7 +706,7 @@ function PreviewStakeholders() {
             <span className="tabular-nums text-[10px] text-muted-foreground">{p.s}/100</span>
           </div>
           <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-border/60">
-            <div className="h-full bg-primary" style={{ width: `${p.s}%` }} />
+            <div className="h-full bg-accent-orange" style={{ width: `${p.s}%` }} />
           </div>
         </li>
       ))}
@@ -728,10 +728,10 @@ function PreviewGate() {
           g.state === "done"
             ? "bg-[oklch(0.55_0.12_160)]/12 text-[oklch(0.4_0.12_160)] border-[oklch(0.55_0.12_160)]/30"
             : g.state === "now"
-              ? "bg-primary/15 text-primary border-primary/30"
+              ? "bg-accent-orange/15 text-accent-orange border-accent-orange/30"
               : "bg-background/60 text-muted-foreground border-border/60";
         const dot =
-          g.state === "done" ? "bg-[oklch(0.55_0.12_160)]" : g.state === "now" ? "bg-primary animate-pulse" : "bg-border";
+          g.state === "done" ? "bg-[oklch(0.55_0.12_160)]" : g.state === "now" ? "bg-accent-orange animate-pulse" : "bg-border";
         return (
           <li key={g.k} className={`flex items-center gap-3 rounded-lg border px-3 py-1.5 text-[12px] ${cls}`}>
             <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
@@ -771,18 +771,18 @@ function HowItWorks() {
             className="pointer-events-none absolute left-6 right-6 top-[34px] hidden h-px md:block"
             style={{
               background:
-                "linear-gradient(90deg, transparent, color-mix(in oklab, var(--primary) 40%, transparent), transparent)",
+                "linear-gradient(90deg, transparent, color-mix(in oklab, var(--accent-orange) 40%, transparent), transparent)",
             }}
           />
           <ol className="grid gap-6 md:grid-cols-4">
             {steps.map((s, i) => (
               <Reveal key={s.title} delay={i * 80}>
-                <li className="group relative h-full rounded-2xl border border-border bg-card/70 p-6 backdrop-blur transition-all hover:-translate-y-1 hover:border-primary/30 hover:shadow-[0_20px_50px_-25px_rgba(40,30,15,0.25)]">
+                <li className="group relative h-full rounded-2xl border border-border bg-card/70 p-6 backdrop-blur transition-all hover:-translate-y-1 hover:border-accent-orange/30 hover:shadow-[0_20px_50px_-25px_rgba(40,30,15,0.25)]">
                   <div className="flex items-center gap-3">
-                    <span className="grid h-9 w-9 place-items-center rounded-full bg-primary text-primary-foreground text-sm font-semibold shadow-[0_6px_20px_-6px_rgba(217,119,6,0.7)]">
+                    <span className="grid h-9 w-9 place-items-center rounded-full bg-accent-orange text-accent-orange-foreground text-sm font-semibold shadow-[0_6px_20px_-6px_rgba(217,119,6,0.7)]">
                       {i + 1}
                     </span>
-                    <s.icon className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-primary" />
+                    <s.icon className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-accent-orange" />
                   </div>
                   <h3 className="mt-5 font-display text-lg font-medium">{s.title}</h3>
                   <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{s.body}</p>
@@ -894,7 +894,7 @@ function Experience() {
                     className={[
                       "rounded-full border px-3 py-1 text-xs transition-all",
                       i === index
-                        ? "border-primary/40 bg-primary/10 text-primary"
+                        ? "border-accent-orange/40 bg-accent-orange/10 text-accent-orange"
                         : "border-border bg-card/60 text-muted-foreground hover:text-foreground",
                     ].join(" ")}
                   >
@@ -952,7 +952,7 @@ function ExperienceCard({
       </div>
       <div className="grid gap-0 md:grid-cols-[1fr_1.3fr]">
         <div className="border-b border-border/60 p-7 md:border-b-0 md:border-r">
-          <p className="text-xs uppercase tracking-[0.18em] text-primary">{tag}</p>
+          <p className="text-xs uppercase tracking-[0.18em] text-accent-orange">{tag}</p>
           <h3 className="mt-3 font-display text-2xl font-medium tracking-tight">{title}</h3>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
             Real surfaces, real artefacts. Atlas mirrors the tools your first PM job will hand you on day one.
@@ -1007,7 +1007,7 @@ function RaidSlide() {
         <tbody className="divide-y divide-border/60">
           {rows.map((r) => (
             <tr key={r.t}>
-              <td className="px-3 py-2 text-primary">{r.k}</td>
+              <td className="px-3 py-2 text-accent-orange">{r.k}</td>
               <td className="px-3 py-2">{r.t}</td>
               <td className="px-3 py-2 text-muted-foreground">{r.o}</td>
               <td className="px-3 py-2">{r.s}</td>
@@ -1028,7 +1028,7 @@ function StatusSlide() {
   ];
   const color: Record<string, string> = {
     Green: "bg-[oklch(0.7_0.14_160)]/15 text-[oklch(0.4_0.12_160)]",
-    Amber: "bg-primary/15 text-primary",
+    Amber: "bg-accent-orange/15 text-accent-orange",
     Red: "bg-[oklch(0.62_0.18_25)]/15 text-[oklch(0.45_0.18_25)]",
   };
   return (
@@ -1066,7 +1066,7 @@ function StakeholderSlide() {
             <span className="tabular-nums text-xs text-muted-foreground">{p.s}/100</span>
           </div>
           <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-border/60">
-            <div className="h-full bg-primary transition-all" style={{ width: `${p.s}%` }} />
+            <div className="h-full bg-accent-orange transition-all" style={{ width: `${p.s}%` }} />
           </div>
         </li>
       ))}
@@ -1125,8 +1125,8 @@ function ChatSlide() {
       </div>
       {msgs.map((m, i) => (
         <div key={i} className={`flex ${m.side === "right" ? "justify-end" : "justify-start"}`}>
-          <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${m.side === "right" ? "rounded-br-sm bg-primary text-primary-foreground" : "rounded-bl-sm border border-border/60 bg-background/70"}`}>
-            <div className={`mb-0.5 text-[10px] uppercase tracking-wider ${m.side === "right" ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
+          <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${m.side === "right" ? "rounded-br-sm bg-accent-orange text-accent-orange-foreground" : "rounded-bl-sm border border-border/60 bg-background/70"}`}>
+            <div className={`mb-0.5 text-[10px] uppercase tracking-wider ${m.side === "right" ? "text-accent-orange-foreground/80" : "text-muted-foreground"}`}>
               {m.who} · {m.role} · {m.time}
             </div>
             <p className="leading-snug">{m.text}</p>
@@ -1157,7 +1157,7 @@ function GanttSlide() {
             r.state === "done"
               ? "bg-[oklch(0.55_0.12_160)]/70"
               : r.state === "now"
-                ? "bg-primary"
+                ? "bg-accent-orange"
                 : "bg-border";
           return (
             <div key={r.k} className="grid grid-cols-[110px_1fr] items-center gap-2">
@@ -1187,7 +1187,7 @@ function ApprovalSlide() {
     <div className="space-y-2">
       <div className="flex items-center justify-between rounded-lg border border-border/60 bg-background/60 px-3 py-1.5 text-[11px]">
         <span className="text-muted-foreground">Change Request · CR-014</span>
-        <span className="rounded-full bg-primary/15 px-2 py-0.5 text-primary">In review</span>
+        <span className="rounded-full bg-accent-orange/15 px-2 py-0.5 text-accent-orange">In review</span>
       </div>
       <ol className="space-y-1.5">
         {steps.map((s, i) => {
@@ -1195,7 +1195,7 @@ function ApprovalSlide() {
             s.state === "done"
               ? "border-[oklch(0.55_0.12_160)]/30 bg-[oklch(0.55_0.12_160)]/10 text-[oklch(0.4_0.12_160)]"
               : s.state === "now"
-                ? "border-primary/30 bg-primary/10 text-primary"
+                ? "border-accent-orange/30 bg-accent-orange/10 text-accent-orange"
                 : "border-border/60 bg-background/60 text-muted-foreground";
           return (
             <li key={i} className={`flex items-center justify-between rounded-lg border px-3 py-2 text-[12px] ${cls}`}>
@@ -1246,24 +1246,24 @@ function WhyAtlas() {
               </ul>
             </article>
 
-            <article className="relative overflow-hidden rounded-2xl border border-primary/30 bg-card p-7 shadow-[0_30px_80px_-40px_rgba(217,119,6,0.45)] md:scale-[1.02]">
+            <article className="relative overflow-hidden rounded-2xl border border-accent-orange/30 bg-card p-7 shadow-[0_30px_80px_-40px_rgba(217,119,6,0.45)] md:scale-[1.02]">
               <div
                 aria-hidden
                 className="pointer-events-none absolute inset-0"
                 style={{
                   background:
-                    "radial-gradient(60% 50% at 50% 0%, color-mix(in oklab, var(--primary) 12%, transparent), transparent 70%)",
+                    "radial-gradient(60% 50% at 50% 0%, color-mix(in oklab, var(--accent-orange) 12%, transparent), transparent 70%)",
                 }}
               />
               <div className="relative">
-                <p className="inline-flex items-center gap-2 rounded-full bg-primary/12 px-3 py-1 text-xs font-medium text-primary">
+                <p className="inline-flex items-center gap-2 rounded-full bg-accent-orange/12 px-3 py-1 text-xs font-medium text-accent-orange">
                   Atlas
                 </p>
                 <h3 className="mt-3 font-display text-xl font-medium">Live the work.</h3>
                 <ul className="mt-5 space-y-3">
                   {rows.map((r) => (
                     <li key={r.good} className="flex items-start gap-3 text-sm text-foreground">
-                      <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground">
+                      <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-accent-orange text-accent-orange-foreground">
                         <Check className="h-3 w-3" />
                       </span>
                       {r.good}
@@ -1280,7 +1280,7 @@ function WhyAtlas() {
                 Atlas graduates have already lived the cadence of a real project — the inbox, the artefacts, the awkward Friday calls. The first day at work feels familiar.
               </p>
               <div className="mt-6 flex items-center gap-2 text-xs text-muted-foreground">
-                <Sparkles className="h-3.5 w-3.5 text-primary" />
+                <Sparkles className="h-3.5 w-3.5 text-accent-orange" />
                 Built with PMI, APM and PRINCE2 in mind.
               </div>
             </article>
@@ -1316,7 +1316,7 @@ function Founder() {
         </Reveal>
         <Reveal delay={200}>
           <div className="mx-auto mt-10 inline-flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-full bg-primary text-primary-foreground font-display text-sm font-semibold">
+            <span className="grid h-10 w-10 place-items-center rounded-full bg-accent-orange text-accent-orange-foreground font-display text-sm font-semibold">
               DR
             </span>
             <div className="text-left">
@@ -1494,12 +1494,12 @@ function EarlyAccess() {
               className="pointer-events-none absolute inset-0 -z-10"
               style={{
                 background:
-                  "radial-gradient(50% 80% at 90% 0%, color-mix(in oklab, var(--primary) 12%, transparent), transparent 70%)",
+                  "radial-gradient(50% 80% at 90% 0%, color-mix(in oklab, var(--accent-orange) 12%, transparent), transparent 70%)",
               }}
             />
             <div className="grid gap-10 lg:grid-cols-[1fr_1.05fr] lg:gap-16">
               <div className="flex flex-col justify-center">
-                <p className="inline-flex w-fit items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                <p className="inline-flex w-fit items-center gap-2 rounded-full border border-accent-orange/30 bg-accent-orange/10 px-3 py-1 text-xs font-medium text-accent-orange">
                   <Sparkles className="h-3.5 w-3.5" /> Early access
                 </p>
                 <h2 className="mt-5 font-display text-[clamp(2rem,4vw,3rem)] font-medium leading-[1.05] tracking-[-0.02em]">
@@ -1508,7 +1508,7 @@ function EarlyAccess() {
                 <p className="mt-4 max-w-md text-[15px] leading-relaxed text-muted-foreground">
                   We're onboarding aspiring and early-career professionals — coordinators, PMOs, business analysts, scrum masters, delivery and change managers — in small cohorts. Tell us where you're heading and we'll send your invitation.
                 </p>
-                <p className="mt-5 inline-flex items-center gap-2 text-xs font-medium text-primary">
+                <p className="mt-5 inline-flex items-center gap-2 text-xs font-medium text-accent-orange">
                   <ShieldCheck className="h-3.5 w-3.5" />
                   Join the Atlas Founder Cohort — the first 100 professionals shaping Atlas.
                 </p>
@@ -1635,7 +1635,7 @@ function WelcomeCard({
     <div className="flex flex-col gap-6 rounded-2xl border border-border bg-background/70 p-7 sm:p-8">
       {/* Welcome */}
       <div>
-        <p className="text-xs font-medium uppercase tracking-[0.22em] text-primary">
+        <p className="text-xs font-medium uppercase tracking-[0.22em] text-accent-orange">
           🎉 Congratulations
         </p>
         <h3 className="mt-3 font-display text-[clamp(1.6rem,3vw,2rem)] font-medium leading-[1.1] tracking-[-0.01em]">
@@ -1662,7 +1662,7 @@ function WelcomeCard({
         <ul className="mt-4 space-y-2.5">
           {firstWeek.map((item) => (
             <li key={item} className="flex items-start gap-3 text-sm text-foreground">
-              <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
+              <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-accent-orange/15 text-accent-orange">
                 <Check className="h-3 w-3" />
               </span>
               {item}
@@ -1673,22 +1673,22 @@ function WelcomeCard({
 
       {/* Founder Cohort badge */}
       <div
-        className="relative overflow-hidden rounded-xl border border-primary/30 bg-card p-5 shadow-[0_20px_60px_-30px_rgba(217,119,6,0.45)]"
+        className="relative overflow-hidden rounded-xl border border-accent-orange/30 bg-card p-5 shadow-[0_20px_60px_-30px_rgba(217,119,6,0.45)]"
       >
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0"
           style={{
             background:
-              "radial-gradient(70% 70% at 0% 0%, color-mix(in oklab, var(--primary) 14%, transparent), transparent 70%)",
+              "radial-gradient(70% 70% at 0% 0%, color-mix(in oklab, var(--accent-orange) 14%, transparent), transparent 70%)",
           }}
         />
         <div className="relative flex items-start gap-4">
-          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground text-xl shadow-[0_8px_20px_-8px_rgba(217,119,6,0.6)]">
+          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-accent-orange text-accent-orange-foreground text-xl shadow-[0_8px_20px_-8px_rgba(217,119,6,0.6)]">
             🏅
           </div>
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-accent-orange">
               Founder Cohort
             </p>
             <p className="mt-1.5 text-sm leading-relaxed text-foreground">
@@ -1731,7 +1731,7 @@ function WelcomeCard({
         <Button
           type="button"
           onClick={onShare}
-          className="mt-4 w-full rounded-full bg-primary px-5 py-5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          className="mt-4 w-full rounded-full bg-accent-orange px-5 py-5 text-sm font-medium text-accent-orange-foreground hover:bg-accent-orange/90"
         >
           {copied ? (
             "Link copied!"
@@ -1743,7 +1743,7 @@ function WelcomeCard({
         </Button>
 
         <p className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
-          <Users className="h-3.5 w-3.5 text-primary" />
+          <Users className="h-3.5 w-3.5 text-accent-orange" />
           {referralCount && referralCount > 0
             ? `${referralCount} professional${referralCount === 1 ? "" : "s"} joined through your invitation.`
             : "You're helping build the first Atlas community."}
@@ -1886,7 +1886,7 @@ function SectionHeader({
   return (
     <div className={centered ? "mx-auto max-w-2xl text-center" : "max-w-2xl"}>
       <Reveal>
-        <p className="text-xs uppercase tracking-[0.22em] text-primary">{eyebrow}</p>
+        <p className="text-xs uppercase tracking-[0.22em] text-accent-orange">{eyebrow}</p>
       </Reveal>
       <Reveal delay={100}>
         <h2 className="mt-4 font-display text-[clamp(1.85rem,3.6vw,2.75rem)] font-medium leading-[1.1] tracking-[-0.02em]">
