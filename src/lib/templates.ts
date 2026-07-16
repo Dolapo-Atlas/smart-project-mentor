@@ -31,7 +31,7 @@ export type TemplateDef = {
   fields: FieldSpec[];
 };
 
-export const TEMPLATES: Record<TemplateKind, TemplateDef> = {
+const CORE_TEMPLATES = {
   project_charter: {
     kind: "project_charter",
     label: "Project Charter",
