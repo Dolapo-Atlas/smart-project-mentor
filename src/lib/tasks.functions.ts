@@ -187,7 +187,9 @@ export const submitTaskWithWork = createServerFn({ method: "POST" })
     z
       .object({
         id: z.string().uuid(),
-        submission: z.string().min(5).max(4000),
+        // Length cap covers both free-text and encoded template payloads
+        // (JSON string produced by src/lib/templates.ts:encodeSubmission).
+        submission: z.string().min(5).max(20000),
       })
       .parse(d),
   )
