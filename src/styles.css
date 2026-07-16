@@ -216,4 +216,46 @@
   .ink-rule {
     background-image: linear-gradient(to right, transparent, var(--color-border), transparent);
   }
+  /* Premium motion — restrained, professional, respects reduced motion. */
+  @keyframes atlas-fade-rise {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .atlas-rise {
+    animation: atlas-fade-rise 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .atlas-rise-1 { animation-delay: 40ms; }
+  .atlas-rise-2 { animation-delay: 100ms; }
+  .atlas-rise-3 { animation-delay: 160ms; }
+  .atlas-rise-4 { animation-delay: 220ms; }
+  .atlas-rise-5 { animation-delay: 280ms; }
+
+  .hover-lift {
+    transition:
+      transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 180ms cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 180ms ease;
+  }
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px -12px oklch(0.18 0.03 260 / 0.25);
+  }
+  .hover-lift:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px -4px oklch(0.18 0.03 260 / 0.25);
+  }
+
+  .progress-smooth > div {
+    transition: width 600ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .atlas-rise,
+    .atlas-rise-1, .atlas-rise-2, .atlas-rise-3, .atlas-rise-4, .atlas-rise-5 {
+      animation: none !important;
+    }
+    .hover-lift { transition: none !important; }
+    .hover-lift:hover, .hover-lift:active { transform: none !important; }
+    .progress-smooth > div { transition: none !important; }
+  }
 }
