@@ -213,6 +213,8 @@ export type Database = {
           description: string
           id: string
           impact_assessment: string | null
+          linked_task_id: string | null
+          origin: string
           project_instance_id: string | null
           requested_by: string
           risk_impact: Database["public"]["Enums"]["cr_risk"]
@@ -230,6 +232,8 @@ export type Database = {
           description: string
           id?: string
           impact_assessment?: string | null
+          linked_task_id?: string | null
+          origin?: string
           project_instance_id?: string | null
           requested_by: string
           risk_impact?: Database["public"]["Enums"]["cr_risk"]
@@ -247,6 +251,8 @@ export type Database = {
           description?: string
           id?: string
           impact_assessment?: string | null
+          linked_task_id?: string | null
+          origin?: string
           project_instance_id?: string | null
           requested_by?: string
           risk_impact?: Database["public"]["Enums"]["cr_risk"]
@@ -257,6 +263,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "change_requests_linked_task_id_fkey"
+            columns: ["linked_task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "change_requests_project_instance_id_fkey"
             columns: ["project_instance_id"]
