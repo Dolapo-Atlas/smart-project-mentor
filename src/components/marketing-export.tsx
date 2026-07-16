@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type React from "react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import html2canvas from "html2canvas-pro";
 import JSZip from "jszip";
