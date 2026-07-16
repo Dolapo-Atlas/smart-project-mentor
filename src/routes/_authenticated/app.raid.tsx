@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Trash2, Plus, Paperclip, ShieldAlert, AlertOctagon, Link2, HelpCircle } from "lucide-react";
+import { Trash2, Plus, Paperclip, ShieldAlert, AlertOctagon, Link2, HelpCircle, LayoutTemplate } from "lucide-react";
 import { toast } from "sonner";
 import { useRoster } from "@/lib/roster";
 import { format } from "date-fns";
@@ -141,6 +141,11 @@ function RaidPage() {
           <p className="mt-1 text-sm text-muted-foreground">Risks · Assumptions · Issues · Dependencies</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/app/templates">
+              <LayoutTemplate className="mr-2 h-4 w-4" /> Templates
+            </Link>
+          </Button>
           {(raid ?? []).length >= 3 && (
             <Button variant="outline" onClick={() => submit.mutate()} disabled={submit.isPending}>
               Submit log for review
