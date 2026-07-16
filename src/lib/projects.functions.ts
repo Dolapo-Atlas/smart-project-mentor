@@ -390,3 +390,36 @@ export const archiveProject = createServerFn({ method: "POST" })
     }
     return { ok: true, wasActive: profile?.current_project_instance_id === data.instanceId };
   });
+
+// Pause the active project: mark the instance as paused and clear the profile
+// pointer so the dashboard prompts the user to pick a project. All progress,
+// drafts, tasks, chapter/day/week state, documents and simulation_state rows
+// stay untouched — resuming (via the Projects screen / setActiveProject) puts
+// the user back exactly where they were.
+export const pauseActiveProject = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("current_project_instance_id")
+      .eq("id", userId)
+      .maybeSingle();
+    const instanceId = profile?.current_project_instance_id;
+    if (!instanceId) return { ok: true, paused: false };
+
+    const { error: uErr } = await supabase
+      .from("project_instances")
+      .update({ status: "paused", last_active_at: new Date().toISOString() })
+      .eq("id", instanceId)
+      .eq("user_id", userId);
+    if (uErr) throw uErr;
+
+    const { error: pErr } = await supabase
+      .from("profiles")
+      .update({ current_project_instance_id: null })
+      .eq("id", userId);
+    if (pErr) throw pErr;
+
+    return { ok: true, paused: true, instanceId };
+  });
