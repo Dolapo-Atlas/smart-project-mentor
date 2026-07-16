@@ -966,6 +966,110 @@ export type Database = {
           },
         ]
       }
+      project_charter_versions: {
+        Row: {
+          charter_id: string
+          completion_pct: number
+          id: string
+          payload: Json
+          submitted_at: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          charter_id: string
+          completion_pct?: number
+          id?: string
+          payload: Json
+          submitted_at?: string
+          user_id: string
+          version: number
+        }
+        Update: {
+          charter_id?: string
+          completion_pct?: number
+          id?: string
+          payload?: Json
+          submitted_at?: string
+          user_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_charter_versions_charter_id_fkey"
+            columns: ["charter_id"]
+            isOneToOne: false
+            referencedRelation: "project_charters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_charters: {
+        Row: {
+          approval_status: string
+          approved_at: string | null
+          completion_pct: number
+          created_at: string
+          id: string
+          linked_task_id: string | null
+          payload: Json
+          project_instance_id: string | null
+          sponsor_comment: string | null
+          status: string
+          submitted_at: string | null
+          updated_at: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          approval_status?: string
+          approved_at?: string | null
+          completion_pct?: number
+          created_at?: string
+          id?: string
+          linked_task_id?: string | null
+          payload?: Json
+          project_instance_id?: string | null
+          sponsor_comment?: string | null
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id: string
+          version?: number
+        }
+        Update: {
+          approval_status?: string
+          approved_at?: string | null
+          completion_pct?: number
+          created_at?: string
+          id?: string
+          linked_task_id?: string | null
+          payload?: Json
+          project_instance_id?: string | null
+          sponsor_comment?: string | null
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_charters_linked_task_id_fkey"
+            columns: ["linked_task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_charters_project_instance_id_fkey"
+            columns: ["project_instance_id"]
+            isOneToOne: false
+            referencedRelation: "project_instances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_instances: {
         Row: {
           completed_at: string | null
