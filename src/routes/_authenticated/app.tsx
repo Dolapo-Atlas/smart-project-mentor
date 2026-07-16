@@ -23,6 +23,7 @@ import { MarketingExport } from "@/components/marketing-export";
 import { PauseProjectDialog } from "@/components/pause-project-dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useRef } from "react";
+import { PhaseProgressCard } from "@/components/dashboard/phase-progress-card";
 
 export const Route = createFileRoute("/_authenticated/app")({
   component: AppLayout,
@@ -203,8 +204,6 @@ function AppLayout() {
   const navTos = new Set(NAV.map((n) => n.to));
   const MORE_LINKS = ALL_OVERFLOW.filter((n) => !navTos.has(n.to));
 
-  const phaseProgress = overview?.state?.progress ?? 0;
-
   return (
     <div className="min-h-screen bg-background text-foreground paper-texture">
       <div className="mx-auto grid min-h-screen max-w-[1400px] grid-cols-1 md:grid-cols-[260px_1fr]">
@@ -305,24 +304,9 @@ function AppLayout() {
             </DropdownMenu>
           </nav>
 
-          {/* Integrated phase card — lighter navy surface inside the sidebar. */}
-          <div className="mt-8 rounded-lg border border-white/10 bg-white/[0.06] p-4 shadow-inner">
-            <div className="flex items-center justify-between text-[10px] font-medium uppercase tracking-[0.16em] text-white/60">
-              <span>Current phase</span>
-              <span className="font-semibold text-white/85">{phaseProgress}%</span>
-            </div>
-            <div className="mt-1 font-display text-base capitalize text-white">
-              {overview?.state?.phase ?? "—"}
-            </div>
-            <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-white/10 progress-smooth">
-              <div
-                className="h-full rounded-full bg-accent-orange"
-                style={{ width: `${phaseProgress}%` }}
-              />
-            </div>
-            <div className="mt-2 text-[10px] uppercase tracking-wider text-white/50">
-              Progress
-            </div>
+          {/* Live phase progress card — dynamic items per phase. */}
+          <div className="mt-8">
+            <PhaseProgressCard compact={isMobile} />
           </div>
 
           {/* Bottom controls: Pause · Switch · Sign out — visually quieter. */}
