@@ -43,6 +43,8 @@ export function ContinueCard() {
   const remaining = Math.max(0, required - doneCount);
 
   const isResume = !!inProgress;
+  const completed = Math.min(required, required - remaining);
+  const pct = required > 0 ? Math.round((completed / required) * 100) : 0;
   const label = isResume ? "Resume where you left off" : "Recommended next step";
   const route = primary?.linked_module_route ?? "/app/tasks";
 
@@ -93,20 +95,20 @@ export function ContinueCard() {
             </p>
           )}
 
-          {/* Orange progress bar */}
+          {/* Orange progress bar — bar reflects completed / required. */}
           <div className="relative mt-6">
             <div className="flex items-center justify-between text-[11px] uppercase tracking-wider text-white/60">
-              <span>Actions remaining</span>
-              <span className="font-medium text-white/80">
-                {remaining} <span className="text-white/50">of {required}</span>
+              <span className="font-medium text-white/85">
+                {remaining === 1 ? "1 action remaining" : `${remaining} actions remaining`}
+              </span>
+              <span className="text-white/60">
+                {completed} of {required} completed
               </span>
             </div>
-            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/10 progress-smooth">
               <div
-                className="h-full rounded-full bg-accent-orange transition-all"
-                style={{
-                  width: `${required > 0 ? Math.min(100, Math.max(4, ((required - remaining) / required) * 100)) : 0}%`,
-                }}
+                className="h-full rounded-full bg-accent-orange"
+                style={{ width: `${pct}%` }}
               />
             </div>
           </div>
@@ -123,11 +125,12 @@ export function ContinueCard() {
             <Button
               asChild
               size="lg"
-              className="shrink-0 bg-white text-navy shadow-sm hover:bg-white/90"
+              className="hover-lift shrink-0 bg-white px-7 py-6 text-base font-semibold text-navy shadow-md ring-1 ring-black/5 hover:bg-white active:translate-y-0"
             >
               <Link to={route}>
+                {isResume ? <Play className="mr-2 h-5 w-5 fill-navy text-navy" /> : <ArrowRight className="mr-2 h-5 w-5 text-navy" />}
                 {isResume ? "Resume task" : "Start task"}
-                <ArrowRight className="ml-2 h-4 w-4 text-navy" />
+                <ArrowRight className="ml-2 h-5 w-5 text-navy" />
               </Link>
             </Button>
           </div>

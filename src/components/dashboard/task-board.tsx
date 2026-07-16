@@ -91,7 +91,7 @@ export function TaskBoard() {
                       <button
                         type="button"
                         onClick={() => setSelected(t)}
-                        className="w-full rounded-md border border-border bg-card p-3 text-left transition hover:border-primary/40 hover:shadow-sm"
+                        className="hover-lift w-full rounded-md border border-border bg-card p-3 text-left hover:border-primary/40"
                       >
                         <div className="flex items-start gap-2">
                           <span

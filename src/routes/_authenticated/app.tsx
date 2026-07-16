@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
-import { Mail, ListChecks, LayoutDashboard, LogOut, ArrowLeft, ShieldAlert, FileBarChart2, Contact, FolderKanban, MoreHorizontal, FileText, Users, Wallet, Activity, Gauge, Gavel, Award, Send, GitPullRequest, CheckCircle2, Compass, Settings, Shield, UserCheck, Megaphone, Sparkles } from "lucide-react";
+import { Mail, ListChecks, LayoutDashboard, LogOut, ArrowLeft, ShieldAlert, FileBarChart2, Contact, FolderKanban, MoreHorizontal, FileText, Users, Wallet, Activity, Gauge, Gavel, Award, Send, GitPullRequest, CheckCircle2, Compass, Settings, Shield, UserCheck, Megaphone, Sparkles, PauseCircle, Camera } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -20,6 +20,7 @@ import { GuidedTour } from "@/components/guided-tour";
 import { LearningDrawer } from "@/components/learning-drawer";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { MarketingExport } from "@/components/marketing-export";
+import { PauseProjectDialog } from "@/components/pause-project-dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useRef } from "react";
 
@@ -124,6 +125,8 @@ function AppLayout() {
   const mainRef = useRef<HTMLElement | null>(null);
   const isFirstRender = useRef(true);
   const [signingOut, setSigningOut] = useState(false);
+  const [pauseOpen, setPauseOpen] = useState(false);
+  const [marketingOpen, setMarketingOpen] = useState(false);
 
   // Scroll to top on route change without re-triggering animations or
   // multiple deferred scrolls (which caused a visible "snap back" flicker
@@ -200,10 +203,12 @@ function AppLayout() {
   const navTos = new Set(NAV.map((n) => n.to));
   const MORE_LINKS = ALL_OVERFLOW.filter((n) => !navTos.has(n.to));
 
+  const phaseProgress = overview?.state?.progress ?? 0;
+
   return (
     <div className="min-h-screen bg-background text-foreground paper-texture">
       <div className="mx-auto grid min-h-screen max-w-[1400px] grid-cols-1 md:grid-cols-[260px_1fr]">
-        <aside className="border-b border-sidebar-border bg-sidebar text-sidebar-foreground px-5 py-6 shadow-[1px_0_0_0_rgba(0,0,0,0.08)] md:border-b-0 md:border-r md:border-r-black/20">
+        <aside className="flex flex-col border-b border-sidebar-border bg-sidebar text-sidebar-foreground px-5 py-6 shadow-[1px_0_0_0_rgba(0,0,0,0.08)] md:border-b-0 md:border-r md:border-r-black/20">
           <Link to="/app" className="font-display text-2xl font-semibold tracking-tight text-sidebar-foreground">
             Atlas <span className="text-accent-orange">/</span>
           </Link>
@@ -216,20 +221,11 @@ function AppLayout() {
             Phase · {phaseLabel}
           </div>
 
-          <div className="mt-3 flex items-center gap-2">
-            <Link
-              to="/app/projects"
-              className="flex flex-1 items-center justify-between gap-2 rounded-md border border-dashed border-white/25 bg-white/5 px-3 py-2 text-xs text-sidebar-foreground/90 transition hover:border-accent-orange hover:text-sidebar-foreground"
-            >
-              <span className="flex items-center gap-1.5">
-                <FolderKanban className="h-3.5 w-3.5" /> Switch project
-              </span>
-              <ArrowLeft className="h-3 w-3 rotate-180 opacity-50" />
-            </Link>
+          <div className="mt-3 flex justify-end">
             <NotificationsBell />
           </div>
 
-          <nav className="mt-8 grid grid-cols-3 gap-2">
+          <nav className="mt-6 grid grid-cols-3 gap-2">
             {NAV.map(({ to, label, icon: Icon, exact }) => {
               const active = isActive(to, exact);
               const badge =
@@ -245,14 +241,14 @@ function AppLayout() {
                   key={to}
                   to={to}
                   data-tour={NAV.find((n) => n.to === to)?.tour}
-                  className={`relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-md p-2 text-center text-[11px] font-medium leading-tight transition ${
+                  className={`relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-md p-2 text-center text-[11px] font-medium leading-tight transition duration-200 ${
                     active
                       ? "bg-white text-navy shadow-[0_2px_0_0_var(--accent-orange)] ring-1 ring-accent-orange/60"
-                      : "bg-white/95 text-navy hover:bg-white hover:-translate-y-0.5"
+                      : "bg-white/5 text-white/85 hover:bg-white/10 hover:text-white hover:-translate-y-0.5"
                   }`}
                 >
                   <Icon
-                    className={`h-5 w-5 shrink-0 ${active ? "text-accent-orange" : "text-navy"}`}
+                    className={`h-5 w-5 shrink-0 ${active ? "text-accent-orange" : "text-white/90"}`}
                     strokeWidth={2.25}
                   />
                   <span className="line-clamp-2">{label}</span>
@@ -270,9 +266,9 @@ function AppLayout() {
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-md bg-white/95 p-2 text-center text-[11px] font-medium leading-tight text-navy transition hover:bg-white hover:-translate-y-0.5"
+                  className="relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-md bg-white/5 p-2 text-center text-[11px] font-medium leading-tight text-white/85 transition duration-200 hover:bg-white/10 hover:text-white hover:-translate-y-0.5"
                 >
-                  <MoreHorizontal className="h-5 w-5 shrink-0 text-accent-orange" strokeWidth={2.25} />
+                  <MoreHorizontal className="h-5 w-5 shrink-0 text-white/90" strokeWidth={2.25} />
                   <span className="line-clamp-2">More</span>
                 </button>
               </DropdownMenuTrigger>
@@ -286,6 +282,10 @@ function AppLayout() {
                     <Link to={m.to}>{m.label}</Link>
                   </DropdownMenuItem>
                 ))}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setMarketingOpen(true); }}>
+                  <Camera className="mr-2 h-3.5 w-3.5" /> Marketing export
+                </DropdownMenuItem>
                 {isAdmin && (
                   <>
                     <DropdownMenuSeparator />
@@ -305,40 +305,60 @@ function AppLayout() {
             </DropdownMenu>
           </nav>
 
-          <div className="mt-10 rounded-md border border-transparent bg-white p-4 text-navy shadow-sm">
-            <div className="text-xs uppercase tracking-widest text-navy/60">Phase</div>
-            <div className="mt-1 font-display text-lg capitalize text-navy">
+          {/* Integrated phase card — lighter navy surface inside the sidebar. */}
+          <div className="mt-8 rounded-lg border border-white/10 bg-white/[0.06] p-4 shadow-inner">
+            <div className="flex items-center justify-between text-[10px] font-medium uppercase tracking-[0.16em] text-white/60">
+              <span>Current phase</span>
+              <span className="font-semibold text-white/85">{phaseProgress}%</span>
+            </div>
+            <div className="mt-1 font-display text-base capitalize text-white">
               {overview?.state?.phase ?? "—"}
             </div>
-            <div className="mt-3 text-xs text-navy/60">Progress</div>
-            <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-navy/10">
+            <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-white/10 progress-smooth">
               <div
-                className="h-full bg-accent-orange transition-all"
-                style={{ width: `${overview?.state?.progress ?? 0}%` }}
+                className="h-full rounded-full bg-accent-orange"
+                style={{ width: `${phaseProgress}%` }}
               />
             </div>
-            <div className="mt-1 text-right text-xs text-navy/70">
-              {overview?.state?.progress ?? 0}%
+            <div className="mt-2 text-[10px] uppercase tracking-wider text-white/50">
+              Progress
             </div>
           </div>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={signOut}
-            className="mt-6 w-full justify-start text-sidebar-foreground/85 hover:bg-white/10 hover:text-white"
-          >
-            <LogOut className="mr-2 h-4 w-4" /> Sign out
-          </Button>
+          {/* Bottom controls: Pause · Switch · Sign out — visually quieter. */}
+          <div className="mt-auto pt-6">
+            <div className="space-y-1 border-t border-white/10 pt-4">
+              <button
+                type="button"
+                onClick={() => setPauseOpen(true)}
+                className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-xs text-white/70 transition hover:bg-white/10 hover:text-white"
+              >
+                <PauseCircle className="h-3.5 w-3.5" /> Pause project
+              </button>
+              <Link
+                to="/app/projects"
+                className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-xs text-white/70 transition hover:bg-white/10 hover:text-white"
+              >
+                <FolderKanban className="h-3.5 w-3.5" /> Switch project
+              </Link>
+              <button
+                type="button"
+                onClick={signOut}
+                className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-xs text-white/70 transition hover:bg-white/10 hover:text-white"
+              >
+                <LogOut className="h-3.5 w-3.5" /> Sign out
+              </button>
+            </div>
 
-          <Link
-            to="/app/gemini"
-            className="mt-4 flex items-center justify-center gap-1.5 rounded-md border border-white/15 bg-white/5 px-2 py-1.5 text-[10px] uppercase tracking-[0.14em] text-sidebar-foreground/80 transition hover:border-accent-orange/60 hover:text-white"
-            title="Learn how Atlas uses Google Gemini"
-          >
-            <Sparkles className="h-3 w-3 text-accent-orange" />
-            Powered by Google Gemini
-          </Link>
+            <Link
+              to="/app/gemini"
+              className="mt-3 flex items-center justify-center gap-1 rounded px-2 py-1 text-[9px] uppercase tracking-[0.14em] text-white/45 transition hover:text-white/70"
+              title="Learn how Atlas uses Google Gemini"
+            >
+              <Sparkles className="h-2.5 w-2.5 text-accent-orange/80" />
+              Powered by Google Gemini
+            </Link>
+          </div>
         </aside>
 
         <main
@@ -369,7 +389,10 @@ function AppLayout() {
         />
       )}
       {active && <LearningDrawer />}
-      {active && <MarketingExport />}
+      {active && (
+        <MarketingExport open={marketingOpen} onOpenChange={setMarketingOpen} floating={false} />
+      )}
+      <PauseProjectDialog open={pauseOpen} onOpenChange={setPauseOpen} />
     </div>
   );
 }

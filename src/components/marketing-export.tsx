@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type React from "react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import html2canvas from "html2canvas-pro";
 import JSZip from "jszip";
@@ -396,11 +397,24 @@ function drawPhone(ctx: CanvasRenderingContext2D, src: HTMLCanvasElement, cw: nu
 
 /* --------------------------------- component -------------------------------- */
 
-export function MarketingExport() {
+export function MarketingExport({
+  open: openProp,
+  onOpenChange: onOpenChangeProp,
+  floating = true,
+}: {
+  open?: boolean;
+  onOpenChange?: (o: boolean) => void;
+  floating?: boolean;
+} = {}) {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
-  const [open, setOpen] = useState(false);
+  const [openInternal, setOpenInternal] = useState(false);
+  const open = openProp ?? openInternal;
+  const setOpen = (o: boolean) => {
+    if (onOpenChangeProp) onOpenChangeProp(o);
+    else setOpenInternal(o);
+  };
   const [busy, setBusy] = useState(false);
   const [aspect, setAspect] = useState<AspectKey>("native");
   const [variants, setVariants] = useState<Record<VariantKey, boolean>>({
@@ -518,19 +532,30 @@ export function MarketingExport() {
     }
   }
 
+  const Wrap: React.FC<{ children: React.ReactNode }> = ({ children }) =>
+    floating ? (
+      <div
+        data-screenshot-launcher
+        data-marketing-hide
+        className="fixed bottom-24 left-4 z-30 print:hidden md:bottom-auto md:left-auto md:right-6 md:top-24"
+      >
+        {children}
+      </div>
+    ) : (
+      <>{children}</>
+    );
+
   return (
-    <div
-      data-screenshot-launcher
-      data-marketing-hide
-      className="fixed bottom-24 left-4 z-30 print:hidden md:bottom-auto md:left-auto md:right-6 md:top-24"
-    >
+    <Wrap>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          <Button size="sm" variant="secondary" className="shadow-md border border-border" disabled={busy}>
-            {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-            {busy ? "Exporting…" : "Marketing Export"}
-          </Button>
-        </DialogTrigger>
+        {floating && (
+          <DialogTrigger asChild>
+            <Button size="sm" variant="secondary" className="shadow-md border border-border" disabled={busy}>
+              {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+              {busy ? "Exporting…" : "Marketing Export"}
+            </Button>
+          </DialogTrigger>
+        )}
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -635,7 +660,7 @@ export function MarketingExport() {
           </Tabs>
         </DialogContent>
       </Dialog>
-    </div>
+    </Wrap>
   );
 }
 
