@@ -7,7 +7,7 @@ import {
   decideChangeRequest,
   createChangeRequest,
 } from "@/lib/pm.functions";
-import { listTasksRich } from "@/lib/tasks.functions";
+import { listTasksRich, submitTaskWithWork } from "@/lib/tasks.functions";
 import { TaskSubmissionDialog } from "@/components/tasks/task-submission-dialog";
 import { encodeSubmission, TEMPLATES } from "@/lib/templates";
 import { useEffect, useMemo, useState } from "react";
@@ -57,6 +57,7 @@ function Changes() {
   const decideFn = useServerFn(decideChangeRequest);
   const createFn = useServerFn(createChangeRequest);
   const fetchTasks = useServerFn(listTasksRich);
+  const submitFn = useServerFn(submitTaskWithWork);
   const { data: crs } = useQuery({ queryKey: ["change_requests"], queryFn: () => fetchCRs() });
   const { data: tasks } = useQuery({ queryKey: ["tasks"], queryFn: () => fetchTasks() });
   const linkedTask = useMemo(
@@ -155,6 +156,20 @@ function Changes() {
     }),
     [aDescription, aImpact, aDays, aCost, aOptions, aRecommendation, aRequester, aDecisionBy],
   );
+
+  const submitLinkedTask = useMutation({
+    mutationFn: (v: { id: string; submission: string }) => submitFn({ data: v }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tasks"] });
+      qc.invalidateQueries({ queryKey: ["overview"] });
+      qc.invalidateQueries({ queryKey: ["whats-next"] });
+      qc.invalidateQueries({ queryKey: ["phase-progress"] });
+      setSubmitOpen(false);
+      toast.success("Task completed.");
+      navigate({ to: "/app/tasks" });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
 
   const canSubmitAuthor = aTitle.length >= 3 && aRequester.length >= 2 && aDescription.length >= 10 && aImpact.length >= 10;
 
@@ -391,28 +406,30 @@ function Changes() {
         </article>
       </div>
 
-      {linkedTask && (
-        <TaskSubmissionDialog
-          open={submitOpen}
-          onOpenChange={setSubmitOpen}
-          task={{
-            id: linkedTask.id,
-            title: linkedTask.title,
-            category: linkedTask.category ?? null,
-            linked_area: linkedTask.linked_area ?? null,
-            completion_action: linkedTask.completion_action ?? null,
-          }}
-          initialSubmission={encodeSubmission("change_request", templateValues)}
-          onSubmitted={() => {
-            qc.invalidateQueries({ queryKey: ["tasks"] });
-            qc.invalidateQueries({ queryKey: ["overview"] });
-            qc.invalidateQueries({ queryKey: ["whats-next"] });
-            qc.invalidateQueries({ queryKey: ["phase-progress"] });
-            setSubmitOpen(false);
-            navigate({ to: "/app/tasks" });
-          }}
-        />
-      )}
+      <TaskSubmissionDialog
+        task={linkedTask ? {
+          id: linkedTask.id,
+          title: linkedTask.title,
+          description: linkedTask.description,
+          category: linkedTask.category,
+          linked_area: linkedTask.linked_area,
+          completion_action: linkedTask.completion_action,
+        } : null}
+        open={submitOpen && !!linkedTask}
+        onOpenChange={(o) => setSubmitOpen(o)}
+        submitting={submitLinkedTask.isPending}
+        onSubmit={(encoded) => {
+          if (!linkedTask) return;
+          submitLinkedTask.mutate({ id: linkedTask.id, submission: encoded });
+        }}
+      />
+
+      {/* Reference: template payload derived from CR fields (used by the dialog when prefilled). */}
+      <input type="hidden" data-cr-payload value={encodeSubmission({
+        kind: "template",
+        template: "change_request",
+        values: templateValues,
+      })} />
     </div>
   );
 }
