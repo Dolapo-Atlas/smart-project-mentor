@@ -6,7 +6,7 @@ import { getOverview } from "@/lib/sim.functions";
 import { listTasksRich, submitTaskWithWork } from "@/lib/tasks.functions";
 import { TaskSubmissionDialog } from "@/components/tasks/task-submission-dialog";
 import { encodeSubmission, evaluateStatusReport } from "@/lib/templates";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import jsPDF from "jspdf";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
