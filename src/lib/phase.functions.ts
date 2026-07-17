@@ -124,8 +124,8 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
       }
       items = [
         { key: "charter", label: "Project Charter", pct: charter, route: "/app/documents" },
-        { key: "stakeholders", label: "Stakeholder Mapping", pct: stakeholderPct, route: "/app/stakeholders", hint: `${mapped}/5 mapped` },
-        { key: "raid", label: "RAID Log Setup", pct: raidPct, route: "/app/raid", hint: `${kinds.size}/4 kinds` },
+        { key: "stakeholders", label: "Stakeholder Mapping", pct: stakeholderPct, route: "/app/stakeholders", hint: `${Math.min(mapped, 5)}/5 mapped` },
+        { key: "raid", label: "RAID Log Setup", pct: raidPct, route: "/app/raid", hint: `${Math.min(kinds.size, 4)}/4 kinds (risks, assumptions, issues, dependencies)` },
         { key: "kickoff", label: "Kick-off Preparation", pct: kickPct, route: "/app/meetings" },
       ];
     } else if (phase === "planning") {
