@@ -155,6 +155,19 @@ export const upsertStatusReport = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const week_start = data.week_start ?? mondayOf(new Date());
+    // Batch 2: block empty submissions. Weak-but-genuine attempts still pass.
+    if (data.submit) {
+      const missing: string[] = [];
+      const wc = (s?: string) => (s ?? "").trim().split(/\s+/).filter(Boolean).length;
+      if (wc(data.achievements) < 5) missing.push("Achievements this week");
+      if (wc(data.next_week) < 5) missing.push("Plan for next week");
+      if (wc(data.risks_blockers) < 3) missing.push("Risks or blockers");
+      if (missing.length > 0) {
+        throw new Error(
+          `This report is not ready to submit. Please complete: ${missing.join(", ")}.`,
+        );
+      }
+    }
     const base = {
       user_id: context.userId,
       week_start,
