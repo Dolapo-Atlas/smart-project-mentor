@@ -137,9 +137,8 @@ export function ProjectBriefSheet({ open, onOpenChange }: Props) {
           <Section icon={UserCircle2} label="Your role">
             <p>
               You are the <span className="font-medium text-foreground">{roleTitle}</span>{" "}
-              supporting {title}. You coordinate work across the team, keep
-              stakeholders aligned, and make the calls that keep the project
-              moving.
+              supporting {title}. Coordinate work, keep stakeholders aligned, and
+              make the calls that keep the project moving.
             </p>
           </Section>
 
