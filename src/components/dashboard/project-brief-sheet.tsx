@@ -96,7 +96,7 @@ export function ProjectBriefSheet({ open, onOpenChange }: Props) {
   const mission =
     tpl?.welcome_intro ??
     tpl?.description ??
-    "Support this project through initiation, planning, delivery and closure while managing communication, documentation, stakeholders, risks, issues and competing priorities.";
+    "Guide this project from initiation to closure, managing stakeholders, risks, issues and competing priorities.";
   const roleTitle = "Project Coordinator";
   const phaseKey = normalisePhase(overview?.state?.phase as string | undefined);
   const phaseLabel = PHASE_LABEL[phaseKey] ?? "In progress";
