@@ -217,7 +217,13 @@ ${data.next_week || "(none)"}
 Risks / blockers:
 ${data.risks_blockers || "(none)"}
 
-Score 0-100. A good status report has: concrete achievements with evidence, named risks with owners and mitigations, a credible plan for next week, and an RAG that matches the narrative. Push back hard on vague language, missing owners, or RAG that contradicts the content.`;
+Decisions needed from sponsor:
+${data.decisions_needed || "(none)"}
+
+Budget note:
+${data.budget_note || "(none)"}
+
+Score 0-100. A good status report has: concrete achievements with evidence, named risks with owners and mitigations, a credible plan for next week, decisions clearly framed for the sponsor, an honest budget line, and an RAG that matches the narrative. Push back hard on vague language, missing owners, or RAG that contradicts the content.`;
         const { object } = await generateObject({
           model: getModel(),
           schema: Schema,
