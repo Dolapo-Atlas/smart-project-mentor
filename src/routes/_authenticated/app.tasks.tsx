@@ -198,6 +198,9 @@ function Tasks() {
       qc.invalidateQueries({ queryKey: ["tasks"] });
       qc.invalidateQueries({ queryKey: ["overview"] });
       qc.invalidateQueries({ queryKey: ["whats-next"] });
+      qc.invalidateQueries({ queryKey: ["phase-progress"] });
+      qc.invalidateQueries({ queryKey: ["chapters"] });
+      qc.invalidateQueries({ queryKey: ["next-action"] });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
@@ -208,6 +211,9 @@ function Tasks() {
       qc.invalidateQueries({ queryKey: ["tasks"] });
       qc.invalidateQueries({ queryKey: ["overview"] });
       qc.invalidateQueries({ queryKey: ["whats-next"] });
+      qc.invalidateQueries({ queryKey: ["phase-progress"] });
+      qc.invalidateQueries({ queryKey: ["chapters"] });
+      qc.invalidateQueries({ queryKey: ["next-action"] });
     },
   });
 
@@ -222,6 +228,9 @@ function Tasks() {
       qc.invalidateQueries({ queryKey: ["tasks"] });
       qc.invalidateQueries({ queryKey: ["overview"] });
       qc.invalidateQueries({ queryKey: ["whats-next"] });
+      qc.invalidateQueries({ queryKey: ["phase-progress"] });
+      qc.invalidateQueries({ queryKey: ["chapters"] });
+      qc.invalidateQueries({ queryKey: ["next-action"] });
       toast.success("Submitted for review");
       setSubmitTaskId(null);
       setSubmission("");
@@ -236,6 +245,9 @@ function Tasks() {
       qc.invalidateQueries({ queryKey: ["overview"] });
       qc.invalidateQueries({ queryKey: ["whats-next"] });
       qc.invalidateQueries({ queryKey: ["stakeholders"] });
+      qc.invalidateQueries({ queryKey: ["phase-progress"] });
+      qc.invalidateQueries({ queryKey: ["chapters"] });
+      qc.invalidateQueries({ queryKey: ["next-action"] });
       if (res?.decision === "approved") {
         toast.success(
           res?.impact_summary?.length ? `Closed. ${res.impact_summary.join(" · ")}` : "Closed",
@@ -253,6 +265,9 @@ function Tasks() {
     onSuccess: (res: any) => {
       qc.invalidateQueries({ queryKey: ["tasks"] });
       qc.invalidateQueries({ queryKey: ["overview"] });
+      qc.invalidateQueries({ queryKey: ["phase-progress"] });
+      qc.invalidateQueries({ queryKey: ["chapters"] });
+      qc.invalidateQueries({ queryKey: ["raid"] });
       toast.success(`${res?.owner} has taken ownership`);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),

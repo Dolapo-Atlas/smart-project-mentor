@@ -25,6 +25,8 @@ type Task = {
   linked_module_route: string | null;
   completion_action: string | null;
   due_at: string | null;
+  source?: string | null;
+  source_ref?: string | null;
   blocked_by: { id: string; title: string }[];
 };
 
@@ -184,6 +186,21 @@ export function TaskBoard() {
                         <li key={b.id}>{b.title}</li>
                       ))}
                     </ul>
+                  </div>
+                )}
+                {selected.source === "change_request" && selected.source_ref && (
+                  <div className="rounded-md border border-primary/30 bg-primary/5 p-3">
+                    <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                      Source change request
+                    </div>
+                    <Link
+                      to="/app/changes"
+                      search={{ cr: selected.source_ref } as any}
+                      className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                      onClick={() => setSelected(null)}
+                    >
+                      View CR <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
                   </div>
                 )}
               </div>
