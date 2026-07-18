@@ -80,6 +80,8 @@ function Budget() {
     } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["budget"] });
+      qc.invalidateQueries({ queryKey: ["budget-briefing"] });
+      qc.invalidateQueries({ queryKey: ["reporting-pack"] });
       setForm({ ...form, description: "", amount: "", vendor: "" });
       toast.success("Posted.");
     },
@@ -88,7 +90,11 @@ function Budget() {
 
   const del = useMutation({
     mutationFn: (id: string) => delFn({ data: { id } }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["budget"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["budget"] });
+      qc.invalidateQueries({ queryKey: ["budget-briefing"] });
+      qc.invalidateQueries({ queryKey: ["reporting-pack"] });
+    },
   });
 
   const overBudget = remaining < 0;
