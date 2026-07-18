@@ -21,6 +21,7 @@ import { LearningDrawer } from "@/components/learning-drawer";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { MarketingExport } from "@/components/marketing-export";
 import { PauseProjectDialog } from "@/components/pause-project-dialog";
+import { ProjectBriefSheet } from "@/components/dashboard/project-brief-sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useRef } from "react";
 import { PhaseProgressCard } from "@/components/dashboard/phase-progress-card";
@@ -131,6 +132,7 @@ function AppLayout() {
   const [signingOut, setSigningOut] = useState(false);
   const [pauseOpen, setPauseOpen] = useState(false);
   const [marketingOpen, setMarketingOpen] = useState(false);
+  const [briefOpen, setBriefOpen] = useState(false);
 
   // Scroll to top on route change without re-triggering animations or
   // multiple deferred scrolls (which caused a visible "snap back" flicker
@@ -288,6 +290,9 @@ function AppLayout() {
                 <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setMarketingOpen(true); }}>
                   <Camera className="mr-2 h-3.5 w-3.5" /> Marketing export
                 </DropdownMenuItem>
+                <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setBriefOpen(true); }}>
+                  <Compass className="mr-2 h-3.5 w-3.5" /> Project brief
+                </DropdownMenuItem>
                 {isAdmin && (
                   <>
                     <DropdownMenuSeparator />
@@ -380,6 +385,7 @@ function AppLayout() {
         <MarketingExport open={marketingOpen} onOpenChange={setMarketingOpen} floating={false} />
       )}
       <PauseProjectDialog open={pauseOpen} onOpenChange={setPauseOpen} />
+      <ProjectBriefSheet open={briefOpen} onOpenChange={setBriefOpen} />
     </div>
   );
 }
