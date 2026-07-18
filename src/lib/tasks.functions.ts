@@ -477,12 +477,22 @@ Return strict JSON. Be specific and tied to the submission. Skill = the project-
         user_id: userId,
         prompt: `What did you take away from "${task.title}"?`,
         answer: `${feedback.did_well}\n\nTo improve: ${feedback.improve}\n\nReal-world: ${feedback.real_world}`,
+        task_id: task.id,
+        tags: ["auto", feedback.skill].filter(Boolean) as string[],
+        trigger_kind: "auto_review",
       });
     } catch {
       // table may have different shape — non-fatal
     }
 
-    return { ok: true, decision: "approved" as const, feedback, impact_summary: summary };
+    return {
+      ok: true,
+      decision: "approved" as const,
+      feedback,
+      impact_summary: summary,
+      task: { id: task.id, title: task.title },
+      reflection_prompt: `Looking back at "${task.title}", what will you take into your next task? What worked, what would you do differently?`,
+    };
   });
 
 /* ---------- GENERATE TASKS FROM EMAIL ---------- */
