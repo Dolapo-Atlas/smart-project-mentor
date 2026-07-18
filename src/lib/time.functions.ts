@@ -27,7 +27,7 @@ export const getReadiness = createServerFn({ method: "GET" })
         .from("tasks")
         .select("id,title,status,priority")
         .eq("user_id", userId)
-        .neq("status", "done"),
+        .in("status", ["todo", "in_progress", "blocked", "submitted"]),
       supabase
         .from("inbox_messages")
         .select("id,subject,sender_name")

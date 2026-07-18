@@ -438,6 +438,36 @@ export const decideChangeRequest = createServerFn({ method: "POST" })
       tone: data.decision === "approved" ? "neutral" : "frustrated",
     });
 
+    // If approved, generate a follow-up implementation task tied back to this CR
+    // so it shows up on the board/hero with a clear link to the source CR.
+    if (data.decision === "approved" && !cr.linked_task_id) {
+      const { data: newTask } = await context.supabase
+        .from("tasks")
+        .insert({
+          user_id: context.userId,
+          title: `Implement CR: ${cr.title}`,
+          description: `Approved change request from ${cr.requested_by}.\n\n${cr.description}\n\nCost impact: £${cr.cost_impact}. Schedule impact: ${cr.schedule_impact_days} day(s). Risk: ${cr.risk_impact}.`,
+          completion_action:
+            "Update the plan, budget and RAID to reflect this approved change, then notify affected stakeholders.",
+          category: "planning",
+          linked_area: "budget",
+          linked_stakeholder: cr.requested_by,
+          linked_module_route: "/app/changes",
+          priority: cr.risk_impact === "high" ? "high" : "medium",
+          status: "todo",
+          source: "change_request",
+          source_ref: cr.id,
+        })
+        .select("id")
+        .maybeSingle();
+      if (newTask?.id) {
+        await context.supabase
+          .from("change_requests")
+          .update({ linked_task_id: newTask.id })
+          .eq("id", data.id);
+      }
+    }
+
     return { ok: true };
   });
 
