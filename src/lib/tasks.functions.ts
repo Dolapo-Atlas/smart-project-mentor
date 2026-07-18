@@ -55,6 +55,31 @@ const AREA_TO_ROUTE: Record<string, string> = {
   changes: "/app/changes",
 };
 
+// Some tasks (esp. AI-generated or older seeded rows) were stored with a
+// generic linked_area like "documents" even when the deliverable clearly
+// belongs in a dedicated module (Charter, RAID, Reports, etc.). Rather than
+// backfilling the DB, we infer the correct destination from the task's own
+// title/description at read time. This keeps existing rows intact and lets
+// the dashboard "Start task" button open the right working module.
+function inferModuleRoute<T extends { title?: string | null; description?: string | null; linked_module_route?: string | null; linked_area?: string | null }>(
+  t: T,
+): string | null {
+  const text = `${t.title ?? ""} ${t.description ?? ""}`.toLowerCase();
+  const rules: Array<[RegExp, string]> = [
+    [/\bproject charter\b|\bcharter\b/, "/app/charter"],
+    [/\bstakeholder register\b|\bstakeholder map|\bstakeholders?\b/, "/app/stakeholders"],
+    [/\braid\b|\brisk log\b|risks?, ?assumption/, "/app/raid"],
+    [/\bchange request\b|\bcr\b/, "/app/changes"],
+    [/\bstatus report\b|\bweekly (?:status|report)\b/, "/app/reports"],
+    [/\blessons learned\b|\bretrospective\b|\bpost[- ]?mortem\b/, "/app/lessons"],
+    [/\bmeeting\b|\bagenda\b|\bminutes\b/, "/app/meetings"],
+    [/\bbudget\b|\bforecast\b|\bspend\b/, "/app/budget"],
+    [/\bresource plan\b/, "/app/documents"],
+  ];
+  for (const [re, route] of rules) if (re.test(text)) return route;
+  return t.linked_module_route ?? (t.linked_area ? AREA_TO_ROUTE[t.linked_area] ?? null : null);
+}
+
 const ImpactSchema = z
   .object({
     health: z.number().int().min(-2).max(2).optional(),
@@ -101,7 +126,7 @@ export const listTasksRich = createServerFn({ method: "GET" })
         .map((id) => byId.get(id))
         .filter((d) => d && !["done", "approved", "completed", "closed"].includes(d.status))
         .map((d) => ({ id: d!.id, title: d!.title }));
-      return { ...t, blocked_by: blockedBy };
+      return { ...t, blocked_by: blockedBy, linked_module_route: inferModuleRoute(t) };
     });
   });
 
@@ -135,10 +160,11 @@ export const listWhatsNext = createServerFn({ method: "GET" })
         return ad - bd;
       })
       .slice(0, 3);
+    const readyRouted = ready.map((t) => ({ ...t, linked_module_route: inferModuleRoute(t) }));
     const criticalOverdue = all.some(
       (t) => t.priority === "critical" && t.due_at && +new Date(t.due_at) < Date.now() && t.status !== "done",
     );
-    return { tasks: ready, criticalOverdue };
+    return { tasks: readyRouted, criticalOverdue };
   });
 
 /* ---------- CREATE / UPDATE / SUBMIT / CLOSE ---------- */
