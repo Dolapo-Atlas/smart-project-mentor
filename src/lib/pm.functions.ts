@@ -1550,3 +1550,145 @@ export const repairStakeholderRelationship = createServerFn({ method: "POST" })
 
     return { ok: true, stakeholder: row, subject: template.subject };
   });
+
+/* ============= BATCH 2: BUDGET BRIEFING & REPORTING PACK ============= */
+
+function _weekWindow() {
+  const now = new Date();
+  const monday = new Date(now);
+  const day = monday.getDay();
+  monday.setDate(monday.getDate() + (day === 0 ? -6 : 1 - day));
+  monday.setHours(0, 0, 0, 0);
+  return { start: monday, iso: monday.toISOString().slice(0, 10) };
+}
+
+/**
+ * Live budget briefing derived from `budget_lines` for the active project.
+ * Baseline = sum(planned), Actual = sum(actual+invoice), Forecast = sum(forecast).
+ * EAC = actual + forecast. Variance = EAC - baseline. Contingency = 10% of baseline
+ * (project convention) minus overspend.
+ */
+export const getBudgetBriefing = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const projectCtx = await getProjectCtx(supabase, userId);
+    const { data: lines } = await supabase
+      .from("budget_lines")
+      .select("category,amount,kind,vendor,description,line_date")
+      .eq("user_id", userId)
+      .order("line_date", { ascending: false });
+    const rows = lines ?? [];
+    let baseline = 0, actual = 0, forecast = 0;
+    for (const l of rows) {
+      const amt = Number(l.amount) || 0;
+      if (l.kind === "planned") baseline += amt;
+      else if (l.kind === "forecast") forecast += amt;
+      else actual += amt; // actual, invoice
+    }
+    const eac = actual + forecast;
+    const variance = eac - baseline;
+    const contingency = Math.max(0, baseline * 0.1 - Math.max(0, variance));
+    const recent = rows.slice(0, 3).map((l) => ({
+      category: l.category, amount: Number(l.amount), kind: l.kind,
+      vendor: l.vendor, description: l.description, line_date: l.line_date,
+    }));
+    // Latest open budget-related task
+    const { data: openTask } = await supabase
+      .from("tasks")
+      .select("id,title,completion_action,priority,due_at,linked_stakeholder,source_ref,linked_area")
+      .eq("user_id", userId)
+      .in("status", ["todo", "in_progress", "blocked"])
+      .or("linked_area.eq.finance,category.ilike.%budget%,title.ilike.%budget%,title.ilike.%cost%,title.ilike.%forecast%")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    return {
+      project: projectCtx.name,
+      baseline, actual, forecast, eac, variance, contingency,
+      recent,
+      open_task: openTask ?? null,
+    };
+  });
+
+/**
+ * Live reporting pack: evidence for the current status-report week.
+ * Users must interpret this and write their own report — Atlas does NOT
+ * auto-generate the report body from it.
+ */
+export const getReportingPack = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { iso: weekStart } = _weekWindow();
+
+    const [tasksRes, raidRes, crRes, milestonesRes, budgetRes, commsRes] = await Promise.all([
+      supabase.from("tasks")
+        .select("id,title,status,priority,updated_at,linked_stakeholder,completion_action,due_at")
+        .eq("user_id", userId),
+      supabase.from("raid_items")
+        .select("id,kind,title,severity,status")
+        .eq("user_id", userId)
+        .in("status", ["open", "active", "monitoring"]),
+      supabase.from("change_requests")
+        .select("id,title,status,cost_impact,schedule_impact_days")
+        .eq("user_id", userId)
+        .in("status", ["submitted", "under_review", "approved"]),
+      supabase.from("phase_gates")
+        .select("phase,status,updated_at")
+        .eq("user_id", userId),
+      supabase.from("budget_lines").select("amount,kind").eq("user_id", userId),
+      supabase.from("inbox_messages")
+        .select("subject,sender_name,tone,created_at")
+        .eq("user_id", userId)
+        .in("tone", ["frustrated", "concerned", "urgent"])
+        .order("created_at", { ascending: false })
+        .limit(5),
+    ]);
+
+    const tasks = tasksRes.data ?? [];
+    const completedThisWeek = tasks.filter((t) =>
+      ["done", "approved", "completed", "closed"].includes(t.status) &&
+      t.updated_at && t.updated_at.slice(0, 10) >= weekStart,
+    );
+    const openTasks = tasks.filter((t) =>
+      ["todo", "in_progress", "blocked", "submitted"].includes(t.status),
+    );
+
+    let baseline = 0, spent = 0, forecast = 0;
+    for (const l of (budgetRes.data ?? [])) {
+      const amt = Number(l.amount) || 0;
+      if (l.kind === "planned") baseline += amt;
+      else if (l.kind === "forecast") forecast += amt;
+      else spent += amt;
+    }
+
+    return {
+      week_start: weekStart,
+      completed_this_week: completedThisWeek.map((t) => ({
+        id: t.id, title: t.title, priority: t.priority, stakeholder: t.linked_stakeholder,
+      })),
+      open_tasks_count: openTasks.length,
+      top_open_tasks: openTasks
+        .sort((a, b) => {
+          const rank: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
+          return (rank[b.priority] ?? 0) - (rank[a.priority] ?? 0);
+        })
+        .slice(0, 5)
+        .map((t) => ({ id: t.id, title: t.title, priority: t.priority, due_at: t.due_at })),
+      raid: (raidRes.data ?? []).map((r) => ({
+        id: r.id, title: r.title, kind: r.kind, severity: r.severity, status: r.status,
+      })),
+      change_requests: (crRes.data ?? []).map((c) => ({
+        id: c.id, title: c.title, status: c.status,
+        cost_impact: c.cost_impact, schedule_impact_days: c.schedule_impact_days,
+      })),
+      milestones: (milestonesRes.data ?? []).map((g) => ({
+        phase: g.phase, status: g.status, updated_at: g.updated_at,
+      })),
+      budget: { baseline, spent, forecast, eac: spent + forecast, variance: (spent + forecast) - baseline },
+      concerns: (commsRes.data ?? []).map((m) => ({
+        subject: m.subject, sender_name: m.sender_name, tone: m.tone, created_at: m.created_at,
+      })),
+    };
+  });
