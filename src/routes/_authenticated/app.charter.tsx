@@ -28,6 +28,7 @@ import {
 } from "@/lib/charter.functions";
 import { TEMPLATES, evaluateCharter } from "@/lib/templates";
 import { getOverview } from "@/lib/sim.functions";
+import { TaskContextPanel } from "@/components/mentor/task-context-panel";
 
 const searchSchema = z.object({
   task: z.string().uuid().optional(),
@@ -240,6 +241,8 @@ function CharterPage() {
             </Button>
           </div>
         </header>
+
+        <TaskContextPanel taskId={search.task} />
 
         {mode === "edit" ? (
           <div className="space-y-4">

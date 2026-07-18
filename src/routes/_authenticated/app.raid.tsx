@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useSearch, useNavigate } from "@tanstack/react-router";
+import { TaskContextPanel } from "@/components/mentor/task-context-panel";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -236,6 +237,8 @@ function RaidPage() {
           </Button>
         </div>
       </header>
+
+      <TaskContextPanel taskId={search.task} />
 
       <section aria-label="RAID summary" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {KIND_TABS.map(({ key, label }) => {
