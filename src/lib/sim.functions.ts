@@ -592,7 +592,85 @@ export const deleteTask = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
+    // Only user-created ("manual") tasks may be permanently deleted.
+    // System-generated tasks (onboarding/email/change_request/meeting…) must
+    // be dismissed or archived so chapter/scoring state stays consistent.
+    const { data: t, error } = await context.supabase
+      .from("tasks")
+      .select("id, source")
+      .eq("id", data.id)
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (error) throw error;
+    if (!t) throw new Error("Task not found");
+    if (t.source !== "manual") {
+      throw new Error(
+        "System-generated tasks can't be deleted. Dismiss the task (optional) or ask an admin to archive it.",
+      );
+    }
     await context.supabase.from("tasks").delete().eq("id", data.id).eq("user_id", context.userId);
+    return { ok: true };
+  });
+
+const DISMISS_REASONS = ["not_relevant", "duplicate", "deferred", "other"] as const;
+
+export const dismissTask = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        reason: z.enum(DISMISS_REASONS),
+        note: z.string().max(400).optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: t, error } = await context.supabase
+      .from("tasks")
+      .select("id, source, status")
+      .eq("id", data.id)
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (error) throw error;
+    if (!t) throw new Error("Task not found");
+    if (t.source === "manual") {
+      throw new Error("Personal tasks can be deleted directly instead of dismissed.");
+    }
+    if (t.source === "onboarding") {
+      throw new Error(
+        "This is a required simulation task and can't be dismissed. Complete or escalate it instead.",
+      );
+    }
+    const reason = data.note ? `${data.reason}: ${data.note}` : data.reason;
+    const { error: upErr } = await context.supabase
+      .from("tasks")
+      .update({
+        status: "dismissed",
+        dismissal_reason: reason,
+        dismissed_at: new Date().toISOString(),
+      })
+      .eq("id", data.id)
+      .eq("user_id", context.userId);
+    if (upErr) throw upErr;
+    return { ok: true };
+  });
+
+export const archiveTask = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: isAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin) throw new Error("Only admins can archive tasks.");
+    const { error } = await context.supabase
+      .from("tasks")
+      .update({ status: "archived", archived_at: new Date().toISOString() })
+      .eq("id", data.id)
+      .eq("user_id", context.userId);
+    if (error) throw error;
     return { ok: true };
   });
 

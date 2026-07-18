@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { updateTaskStatus, deleteTask } from "@/lib/sim.functions";
+import { updateTaskStatus, deleteTask, dismissTask, archiveTask } from "@/lib/sim.functions";
 import {
   listTasksRich,
   createRichTask,
@@ -34,6 +34,19 @@ import { StakeholderHoverAvatar as StakeholderAvatar } from "@/components/stakeh
 import { MentorTriggerButton } from "@/components/mentor/task-mentor";
 import { TaskSubmissionDialog } from "@/components/tasks/task-submission-dialog";
 import { ReflectionDialog } from "@/components/tasks/reflection-dialog";
+import { DismissTaskDialog } from "@/components/tasks/dismiss-task-dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { checkIsAdmin } from "@/lib/session.functions";
+import { Archive, X } from "lucide-react";
 import { detectTemplateKind } from "@/lib/templates";
 
 export const Route = createFileRoute("/_authenticated/app/tasks")({
@@ -62,6 +75,15 @@ const COMPLETED_TASK_STATUSES = ["done", "approved", "completed", "closed"];
 
 function isCompletedTaskStatus(status: string) {
   return COMPLETED_TASK_STATUSES.includes(status);
+}
+
+// Required = seeded simulation flow (drives chapter progression).
+// Optional system = auto-generated (email, change_request, meeting).
+// User-created = manually added by the coordinator.
+function classifyTask(source: string): "required" | "optional_system" | "user" {
+  if (source === "manual") return "user";
+  if (source === "onboarding") return "required";
+  return "optional_system";
 }
 
 function inferRaidKind(t: { title?: string | null; description?: string | null; category?: string | null }):
@@ -166,6 +188,9 @@ function Tasks() {
   const createFn = useServerFn(createRichTask);
   const updateFn = useServerFn(updateTaskStatus);
   const deleteFn = useServerFn(deleteTask);
+  const dismissFn = useServerFn(dismissTask);
+  const archiveFn = useServerFn(archiveTask);
+  const isAdminFn = useServerFn(checkIsAdmin);
   const submitFn = useServerFn(submitTaskWithWork);
   const closeFn = useServerFn(closeTaskWithReview);
   const escalateFn = useServerFn(escalateTask);
@@ -173,6 +198,11 @@ function Tasks() {
     queryKey: ["tasks"],
     queryFn: () => fetchTasks() as Promise<RichTask[]>,
   });
+  const { data: adminInfo } = useQuery({
+    queryKey: ["is-admin"],
+    queryFn: () => isAdminFn(),
+  });
+  const isAdmin = !!adminInfo?.isAdmin;
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -185,6 +215,8 @@ function Tasks() {
     prompt: string;
     suggestedTags: string[];
   } | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<RichTask | null>(null);
+  const [dismissTarget, setDismissTarget] = useState<RichTask | null>(null);
 
   const create = useMutation({
     mutationFn: () =>
@@ -225,7 +257,45 @@ function Tasks() {
 
   const del = useMutation({
     mutationFn: (id: string) => deleteFn({ data: { id } }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["tasks"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tasks"] });
+      qc.invalidateQueries({ queryKey: ["overview"] });
+      qc.invalidateQueries({ queryKey: ["whats-next"] });
+      qc.invalidateQueries({ queryKey: ["phase-progress"] });
+      qc.invalidateQueries({ queryKey: ["chapters"] });
+      qc.invalidateQueries({ queryKey: ["next-action"] });
+      setConfirmDelete(null);
+      toast.success("Task deleted");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+
+  const dismiss = useMutation({
+    mutationFn: (v: { id: string; reason: "not_relevant" | "duplicate" | "deferred" | "other"; note?: string }) =>
+      dismissFn({ data: v }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tasks"] });
+      qc.invalidateQueries({ queryKey: ["overview"] });
+      qc.invalidateQueries({ queryKey: ["whats-next"] });
+      qc.invalidateQueries({ queryKey: ["phase-progress"] });
+      qc.invalidateQueries({ queryKey: ["chapters"] });
+      qc.invalidateQueries({ queryKey: ["next-action"] });
+      setDismissTarget(null);
+      toast.success("Task dismissed");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+
+  const archive = useMutation({
+    mutationFn: (id: string) => archiveFn({ data: { id } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tasks"] });
+      qc.invalidateQueries({ queryKey: ["overview"] });
+      qc.invalidateQueries({ queryKey: ["phase-progress"] });
+      qc.invalidateQueries({ queryKey: ["chapters"] });
+      toast.success("Task archived");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
 
   const submit = useMutation({
@@ -391,7 +461,10 @@ function Tasks() {
                   onApprove={() => close.mutate({ id: t.id, decision: "approved" })}
                   onRework={() => close.mutate({ id: t.id, decision: "rework" })}
                   onEscalate={(mode) => escalate.mutate({ id: t.id, mode })}
-                  onDelete={() => del.mutate(t.id)}
+                  onDelete={() => setConfirmDelete(t)}
+                  onDismiss={() => setDismissTarget(t)}
+                  onArchive={() => archive.mutate(t.id)}
+                  isAdmin={isAdmin}
                   busy={close.isPending || submit.isPending || escalate.isPending}
                 />
               ))}
@@ -423,6 +496,39 @@ function Tasks() {
         prompt={reflect?.prompt ?? ""}
         suggestedTags={reflect?.suggestedTags}
       />
+
+      <DismissTaskDialog
+        open={!!dismissTarget}
+        onOpenChange={(o) => { if (!o) setDismissTarget(null); }}
+        taskTitle={dismissTarget?.title ?? ""}
+        busy={dismiss.isPending}
+        onConfirm={(reason, note) =>
+          dismissTarget && dismiss.mutate({ id: dismissTarget.id, reason, note })
+        }
+      />
+
+      <AlertDialog
+        open={!!confirmDelete}
+        onOpenChange={(o) => { if (!o) setConfirmDelete(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete personal task?</AlertDialogTitle>
+            <AlertDialogDescription>
+              "{confirmDelete?.title}" will be permanently removed. This can't be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={del.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={del.isPending}
+              onClick={() => confirmDelete && del.mutate(confirmDelete.id)}
+            >
+              {del.isPending ? "Deleting…" : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -442,6 +548,9 @@ function TaskCard({
   onRework,
   onEscalate,
   onDelete,
+  onDismiss,
+  onArchive,
+  isAdmin,
   busy,
 }: {
   t: RichTask;
@@ -451,11 +560,15 @@ function TaskCard({
   onRework: () => void;
   onEscalate: (mode: "assign_lead" | "ask_pm" | "escalate_sponsor" | "add_to_raid") => void;
   onDelete: () => void;
+  onDismiss: () => void;
+  onArchive: () => void;
+  isAdmin: boolean;
   busy: boolean;
 }) {
   const isComplete = isCompletedTaskStatus(t.status);
   const isBlocked = t.blocked_by.length > 0 && !isComplete;
   const overdue = t.due_at && +new Date(t.due_at) < Date.now() && !isComplete;
+  const kind = classifyTask(t.source);
 
   if (isComplete) {
     const score = typeof t.feedback?.score !== "undefined" ? `${t.feedback.score}/5` : null;
@@ -474,13 +587,24 @@ function TaskCard({
               </span>
             )}
           </div>
-          <button
-            onClick={onDelete}
-            className="shrink-0 text-muted-foreground hover:text-destructive"
-            aria-label="Delete completed task"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
+          {kind === "user" ? (
+            <button
+              onClick={onDelete}
+              className="shrink-0 text-muted-foreground hover:text-destructive"
+              aria-label="Delete completed task"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          ) : isAdmin ? (
+            <button
+              onClick={onArchive}
+              className="shrink-0 text-muted-foreground hover:text-foreground"
+              aria-label="Archive completed task"
+              title="Archive (admin)"
+            >
+              <Archive className="h-3.5 w-3.5" />
+            </button>
+          ) : null}
         </div>
       </li>
     );
@@ -625,13 +749,36 @@ function TaskCard({
                 </div>
               </details>
             )}
-            <button
-              onClick={onDelete}
-              className="ml-auto text-muted-foreground hover:text-destructive"
-              aria-label="Delete"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
+            {kind === "user" && (
+              <button
+                onClick={onDelete}
+                className="ml-auto text-muted-foreground hover:text-destructive"
+                aria-label="Delete"
+                title="Delete personal task"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            )}
+            {kind === "optional_system" && (
+              <button
+                onClick={onDismiss}
+                className="ml-auto inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground"
+                aria-label="Dismiss task"
+                title="Dismiss this optional task"
+              >
+                <X className="h-3 w-3" /> Dismiss
+              </button>
+            )}
+            {kind === "required" && isAdmin && (
+              <button
+                onClick={onArchive}
+                className="ml-auto text-muted-foreground hover:text-foreground"
+                aria-label="Archive (admin)"
+                title="Archive (admin only)"
+              >
+                <Archive className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
         </div>
         {!isComplete && (

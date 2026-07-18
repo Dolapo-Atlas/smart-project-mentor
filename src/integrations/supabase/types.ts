@@ -1866,12 +1866,15 @@ export type Database = {
       }
       tasks: {
         Row: {
+          archived_at: string | null
           category: string | null
           completed_at: string | null
           completion_action: string | null
           created_at: string
           depends_on: string[]
           description: string | null
+          dismissal_reason: string | null
+          dismissed_at: string | null
           due_at: string | null
           feedback: Json | null
           id: string
@@ -1890,12 +1893,15 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          archived_at?: string | null
           category?: string | null
           completed_at?: string | null
           completion_action?: string | null
           created_at?: string
           depends_on?: string[]
           description?: string | null
+          dismissal_reason?: string | null
+          dismissed_at?: string | null
           due_at?: string | null
           feedback?: Json | null
           id?: string
@@ -1914,12 +1920,15 @@ export type Database = {
           user_id: string
         }
         Update: {
+          archived_at?: string | null
           category?: string | null
           completed_at?: string | null
           completion_action?: string | null
           created_at?: string
           depends_on?: string[]
           description?: string | null
+          dismissal_reason?: string | null
+          dismissed_at?: string | null
           due_at?: string | null
           feedback?: Json | null
           id?: string
