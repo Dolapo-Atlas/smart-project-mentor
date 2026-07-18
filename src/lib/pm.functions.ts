@@ -150,6 +150,11 @@ export const upsertStatusReport = createServerFn({ method: "POST" })
       achievements: z.string().optional(),
       next_week: z.string().optional(),
       risks_blockers: z.string().optional(),
+      decisions_needed: z.string().optional(),
+      budget_note: z.string().optional(),
+      evidence_refs: z
+        .array(z.object({ kind: z.string(), id: z.string(), label: z.string().optional() }))
+        .optional(),
       submit: z.boolean().optional(),
     }).parse(d),
   )
@@ -175,6 +180,9 @@ export const upsertStatusReport = createServerFn({ method: "POST" })
       achievements: data.achievements ?? null,
       next_week: data.next_week ?? null,
       risks_blockers: data.risks_blockers ?? null,
+      decisions_needed: data.decisions_needed ?? null,
+      budget_note: data.budget_note ?? null,
+      evidence_refs: data.evidence_refs ?? [],
       submitted_at: data.submit ? new Date().toISOString() : null,
     };
     const { data: row, error } = await context.supabase
@@ -209,7 +217,13 @@ ${data.next_week || "(none)"}
 Risks / blockers:
 ${data.risks_blockers || "(none)"}
 
-Score 0-100. A good status report has: concrete achievements with evidence, named risks with owners and mitigations, a credible plan for next week, and an RAG that matches the narrative. Push back hard on vague language, missing owners, or RAG that contradicts the content.`;
+Decisions needed from sponsor:
+${data.decisions_needed || "(none)"}
+
+Budget note:
+${data.budget_note || "(none)"}
+
+Score 0-100. A good status report has: concrete achievements with evidence, named risks with owners and mitigations, a credible plan for next week, decisions clearly framed for the sponsor, an honest budget line, and an RAG that matches the narrative. Push back hard on vague language, missing owners, or RAG that contradicts the content.`;
         const { object } = await generateObject({
           model: getModel(),
           schema: Schema,

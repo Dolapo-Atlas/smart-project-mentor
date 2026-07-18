@@ -135,6 +135,8 @@ function Reports() {
   const [ach, setAch] = useState(current?.achievements ?? "");
   const [next, setNext] = useState(current?.next_week ?? "");
   const [risks, setRisks] = useState(current?.risks_blockers ?? "");
+  const [decisions, setDecisions] = useState((current as any)?.decisions_needed ?? "");
+  const [budgetNote, setBudgetNote] = useState((current as any)?.budget_note ?? "");
 
   // When live data arrives (or task-link mode swaps overview), sync RAG default
   // once, without stomping the user's manual choice on this render.
@@ -151,7 +153,18 @@ function Reports() {
 
   const save = useMutation({
     mutationFn: (submit: boolean) =>
-      upsert({ data: { week_start: thisWeek, rag_summary: rag, achievements: ach, next_week: next, risks_blockers: risks, submit } }),
+      upsert({
+        data: {
+          week_start: thisWeek,
+          rag_summary: rag,
+          achievements: ach,
+          next_week: next,
+          risks_blockers: risks,
+          decisions_needed: decisions || undefined,
+          budget_note: budgetNote || undefined,
+          submit,
+        },
+      }),
     onSuccess: (_d, submit) => {
       qc.invalidateQueries({ queryKey: ["status_reports"] });
       qc.invalidateQueries({ queryKey: ["inbox"] });
@@ -283,6 +296,8 @@ function Reports() {
           <Field label="Achievements this week" value={ach} setValue={setAch} placeholder="What got done? Be specific — name artefacts, decisions, milestones." />
           <Field label="Plan for next week" value={next} setValue={setNext} placeholder="Top 3-5 priorities, with owners and dates." />
           <Field label="Risks & blockers" value={risks} setValue={setRisks} placeholder="What could derail us? What do you need from the sponsor?" />
+          <Field label="Decisions needed from sponsor" value={decisions} setValue={setDecisions} placeholder="What decisions do you need this week — from whom, by when, and what's the impact of delay?" />
+          <Field label="Budget note" value={budgetNote} setValue={setBudgetNote} placeholder="One or two lines on the financial picture: variance, forecast, contingency, notable commitments." />
         </div>
 
         <div className="mt-5 flex flex-wrap justify-end gap-2">

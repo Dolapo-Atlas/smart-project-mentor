@@ -166,9 +166,12 @@ export const submitReflection = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z
       .object({
-        phase: z.number().int().min(1).max(8),
+        phase: z.number().int().min(1).max(8).optional(),
         prompt: z.string().min(1).max(500),
         answer: z.string().trim().min(3).max(2000),
+        task_id: z.string().uuid().optional(),
+        tags: z.array(z.string().max(40)).max(8).optional(),
+        trigger_kind: z.string().max(40).optional(),
       })
       .parse(d),
   )
@@ -176,9 +179,12 @@ export const submitReflection = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const { error } = await supabase.from("reflection_entries").insert({
       user_id: userId,
-      phase: data.phase,
+      phase: data.phase ?? null,
       prompt: data.prompt,
       answer: data.answer,
+      task_id: data.task_id ?? null,
+      tags: data.tags ?? [],
+      trigger_kind: data.trigger_kind ?? "manual",
     });
     if (error) throw error;
     return { ok: true };
