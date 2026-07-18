@@ -1450,6 +1450,9 @@ export type Database = {
           phase: number | null
           project_instance_id: string | null
           prompt: string
+          tags: string[]
+          task_id: string | null
+          trigger_kind: string | null
           user_id: string
         }
         Insert: {
@@ -1459,6 +1462,9 @@ export type Database = {
           phase?: number | null
           project_instance_id?: string | null
           prompt: string
+          tags?: string[]
+          task_id?: string | null
+          trigger_kind?: string | null
           user_id: string
         }
         Update: {
@@ -1468,6 +1474,9 @@ export type Database = {
           phase?: number | null
           project_instance_id?: string | null
           prompt?: string
+          tags?: string[]
+          task_id?: string | null
+          trigger_kind?: string | null
           user_id?: string
         }
         Relationships: [
@@ -1476,6 +1485,13 @@ export type Database = {
             columns: ["project_instance_id"]
             isOneToOne: false
             referencedRelation: "project_instances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reflection_entries_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
             referencedColumns: ["id"]
           },
         ]
@@ -1728,7 +1744,10 @@ export type Database = {
           achievements: string | null
           ai_feedback: Json | null
           ai_score: number | null
+          budget_note: string | null
           created_at: string
+          decisions_needed: string | null
+          evidence_refs: Json
           id: string
           next_week: string | null
           project_instance_id: string | null
@@ -1743,7 +1762,10 @@ export type Database = {
           achievements?: string | null
           ai_feedback?: Json | null
           ai_score?: number | null
+          budget_note?: string | null
           created_at?: string
+          decisions_needed?: string | null
+          evidence_refs?: Json
           id?: string
           next_week?: string | null
           project_instance_id?: string | null
@@ -1758,7 +1780,10 @@ export type Database = {
           achievements?: string | null
           ai_feedback?: Json | null
           ai_score?: number | null
+          budget_note?: string | null
           created_at?: string
+          decisions_needed?: string | null
+          evidence_refs?: Json
           id?: string
           next_week?: string | null
           project_instance_id?: string | null
