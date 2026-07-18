@@ -7,13 +7,15 @@ import {
 } from "@/lib/sim.functions";
 import { getActiveProject } from "@/lib/projects.functions";
 import { Button } from "@/components/ui/button";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Compass } from "lucide-react";
 import { toast } from "sonner";
 import { TimeControls } from "@/components/time-controls";
 import { ContinueCard } from "@/components/dashboard/continue-card";
 import { TaskSummaryStrip } from "@/components/dashboard/task-summary-strip";
 import { TaskBoard } from "@/components/dashboard/task-board";
 import { ProjectSidePanel } from "@/components/dashboard/project-side-panel";
+import { ProjectBriefSheet } from "@/components/dashboard/project-brief-sheet";
+import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/app/")({
   component: Dashboard,
@@ -31,6 +33,21 @@ function Dashboard() {
     queryKey: ["active-project"],
     queryFn: () => fetchActive(),
   });
+
+  const [briefOpen, setBriefOpen] = useState(false);
+  const activeId = (active as any)?.id as string | undefined;
+
+  // Auto-open the Project Brief the first time the user lands on the
+  // dashboard for a given project instance. Uses localStorage so returning
+  // users are not interrupted.
+  useEffect(() => {
+    if (!activeId) return;
+    if (typeof window === "undefined") return;
+    const key = `atlas.brief-seen.${activeId}`;
+    if (window.localStorage.getItem(key) === "1") return;
+    setBriefOpen(true);
+    window.localStorage.setItem(key, "1");
+  }, [activeId]);
 
   const summon = useMutation({
     mutationFn: () => genMessage(),
@@ -100,6 +117,15 @@ function Dashboard() {
         <div className="shrink-0">
           <Button
             size="sm"
+            variant="secondary"
+            className="mr-2 border border-border"
+            onClick={() => setBriefOpen(true)}
+          >
+            <Compass className="mr-2 h-4 w-4" />
+            Project brief
+          </Button>
+          <Button
+            size="sm"
             onClick={() => summon.mutate()}
             disabled={summon.isPending}
             variant="secondary"
@@ -124,6 +150,7 @@ function Dashboard() {
           <ProjectSidePanel />
         </div>
       </div>
+      <ProjectBriefSheet open={briefOpen} onOpenChange={setBriefOpen} />
     </div>
   );
 }
