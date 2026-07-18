@@ -98,6 +98,12 @@ export function ProjectBriefSheet({ open, onOpenChange }: Props) {
     tpl?.description ??
     "Guide this project from initiation to closure, managing stakeholders, risks, issues and competing priorities.";
   const roleTitle = "Project Coordinator";
+  const activeId = activeAny?.id as string | undefined;
+  const hasSeenBrief = useMemo(() => {
+    if (typeof window === "undefined" || !activeId) return false;
+    return window.localStorage.getItem(`atlas.brief-seen.${activeId}`) === "1";
+  }, [activeId]);
+  const primaryCta = hasSeenBrief ? "Continue project" : "Start project";
   const phaseKey = normalisePhase(overview?.state?.phase as string | undefined);
   const phaseLabel = PHASE_LABEL[phaseKey] ?? "In progress";
 
