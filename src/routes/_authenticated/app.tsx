@@ -287,11 +287,11 @@ function AppLayout() {
                   </DropdownMenuItem>
                 ))}
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setMarketingOpen(true); }}>
-                  <Camera className="mr-2 h-3.5 w-3.5" /> Marketing export
-                </DropdownMenuItem>
                 <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setBriefOpen(true); }}>
                   <Compass className="mr-2 h-3.5 w-3.5" /> Project brief
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setMarketingOpen(true); }}>
+                  <Camera className="mr-2 h-3.5 w-3.5" /> Marketing export
                 </DropdownMenuItem>
                 {isAdmin && (
                   <>

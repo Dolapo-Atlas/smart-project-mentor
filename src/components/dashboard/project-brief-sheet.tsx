@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
+import { useMemo } from "react";
 import {
   Sheet,
   SheetContent,
@@ -14,7 +15,6 @@ import { getOverview } from "@/lib/sim.functions";
 import { listWhatsNext } from "@/lib/tasks.functions";
 import { getPhaseProgress } from "@/lib/phase.functions";
 import {
-  Compass,
   Target,
   UserCircle2,
   Sparkles,
@@ -96,8 +96,14 @@ export function ProjectBriefSheet({ open, onOpenChange }: Props) {
   const mission =
     tpl?.welcome_intro ??
     tpl?.description ??
-    "Support this project through initiation, planning, delivery and closure while managing communication, documentation, stakeholders, risks, issues and competing priorities.";
+    "Guide this project from initiation to closure, managing stakeholders, risks, issues and competing priorities.";
   const roleTitle = "Project Coordinator";
+  const activeId = activeAny?.id as string | undefined;
+  const hasSeenBrief = useMemo(() => {
+    if (typeof window === "undefined" || !activeId) return false;
+    return window.localStorage.getItem(`atlas.brief-seen.${activeId}`) === "1";
+  }, [activeId]);
+  const primaryCta = hasSeenBrief ? "Continue project" : "Start project";
   const phaseKey = normalisePhase(overview?.state?.phase as string | undefined);
   const phaseLabel = PHASE_LABEL[phaseKey] ?? "In progress";
 
@@ -137,9 +143,8 @@ export function ProjectBriefSheet({ open, onOpenChange }: Props) {
           <Section icon={UserCircle2} label="Your role">
             <p>
               You are the <span className="font-medium text-foreground">{roleTitle}</span>{" "}
-              supporting {title}. You coordinate work across the team, keep
-              stakeholders aligned, and make the calls that keep the project
-              moving.
+              supporting {title}. Coordinate work, keep stakeholders aligned, and
+              make the calls that keep the project moving.
             </p>
           </Section>
 
@@ -239,16 +244,8 @@ export function ProjectBriefSheet({ open, onOpenChange }: Props) {
             <Button asChild onClick={() => onOpenChange(false)}>
               <Link to="/app/tasks">
                 <ArrowRight className="mr-2 h-4 w-4" />
-                Continue project
+                {primaryCta}
               </Link>
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={() => onOpenChange(false)}
-              className="border border-border"
-            >
-              <Compass className="mr-2 h-4 w-4" />
-              Close brief
             </Button>
           </div>
         </div>

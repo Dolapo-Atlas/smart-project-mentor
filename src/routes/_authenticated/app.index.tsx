@@ -15,7 +15,7 @@ import { TaskSummaryStrip } from "@/components/dashboard/task-summary-strip";
 import { TaskBoard } from "@/components/dashboard/task-board";
 import { ProjectSidePanel } from "@/components/dashboard/project-side-panel";
 import { ProjectBriefSheet } from "@/components/dashboard/project-brief-sheet";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/app/")({
   component: Dashboard,
@@ -36,6 +36,7 @@ function Dashboard() {
 
   const [briefOpen, setBriefOpen] = useState(false);
   const activeId = (active as any)?.id as string | undefined;
+  const autoOpenedRef = useRef<string | null>(null);
 
   // Auto-open the Project Brief the first time the user lands on the
   // dashboard for a given project instance. Uses localStorage so returning
@@ -43,8 +44,10 @@ function Dashboard() {
   useEffect(() => {
     if (!activeId) return;
     if (typeof window === "undefined") return;
+    if (autoOpenedRef.current === activeId) return;
     const key = `atlas.brief-seen.${activeId}`;
     if (window.localStorage.getItem(key) === "1") return;
+    autoOpenedRef.current = activeId;
     setBriefOpen(true);
     window.localStorage.setItem(key, "1");
   }, [activeId]);
