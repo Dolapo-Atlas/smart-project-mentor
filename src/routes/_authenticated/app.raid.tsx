@@ -193,6 +193,25 @@ function RaidPage() {
   const rows = (raid ?? []).filter((r) => r.kind === tab);
   const activeTab = KIND_TABS.find((t) => t.key === tab)!;
 
+  // Severity heatmap: counts per kind × severity, driving the summary board.
+  const SEV_ROWS: { key: Sev; label: string; bar: string }[] = [
+    { key: "critical", label: "Critical", bar: "bg-red-500" },
+    { key: "high",     label: "High",     bar: "bg-lime-500" },
+    { key: "medium",   label: "Moderate", bar: "bg-amber-400" },
+    { key: "low",      label: "Low",      bar: "bg-sky-400" },
+  ];
+  const heatmap: Record<Kind, Record<Sev, number>> = {
+    risk:       { low: 0, medium: 0, high: 0, critical: 0 },
+    assumption: { low: 0, medium: 0, high: 0, critical: 0 },
+    issue:      { low: 0, medium: 0, high: 0, critical: 0 },
+    dependency: { low: 0, medium: 0, high: 0, critical: 0 },
+  };
+  (raid ?? []).forEach((r) => {
+    const k = r.kind as Kind;
+    const s = (((r as any).priority ?? r.severity ?? "medium") as Sev);
+    if (heatmap[k] && s in heatmap[k]) heatmap[k][s] += 1;
+  });
+
   return (
     <div className="space-y-8">
       <header className="flex flex-wrap items-end justify-between gap-4">
@@ -217,6 +236,41 @@ function RaidPage() {
           </Button>
         </div>
       </header>
+
+      <section aria-label="RAID summary" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {KIND_TABS.map(({ key, label }) => {
+          const total = counts[key];
+          const active = tab === key;
+          return (
+            <button
+              key={key}
+              onClick={() => setTab(key)}
+              className={`group rounded-xl border bg-card p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md ${
+                active ? "border-primary/60 shadow-sm" : "border-border"
+              }`}
+            >
+              <div className="mb-3 rounded-md bg-muted/60 px-3 py-1.5 text-center text-xs font-semibold uppercase tracking-wider text-foreground/80">
+                {label}
+              </div>
+              <div className="space-y-1.5">
+                {SEV_ROWS.map((sv) => (
+                  <div key={sv.key} className="flex items-center gap-2">
+                    <div className="w-6 text-center text-xs font-semibold tabular-nums text-muted-foreground">
+                      {heatmap[key][sv.key]}
+                    </div>
+                    <div className={`flex-1 rounded-sm px-2 py-1 text-[11px] font-medium text-white ${sv.bar}`}>
+                      {sv.label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-3 rounded-md bg-muted/40 py-1.5 text-center text-lg font-semibold tabular-nums">
+                {total}
+              </div>
+            </button>
+          );
+        })}
+      </section>
 
       <nav className="flex flex-wrap gap-2 border-b border-border">
         {KIND_TABS.map(({ key, label, icon: Icon }) => (
