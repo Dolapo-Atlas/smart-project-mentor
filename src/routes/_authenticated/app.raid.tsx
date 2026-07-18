@@ -237,6 +237,8 @@ function RaidPage() {
         </div>
       </header>
 
+      <TaskContextPanel taskId={search.task} />
+
       <section aria-label="RAID summary" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {KIND_TABS.map(({ key, label }) => {
           const total = counts[key];
