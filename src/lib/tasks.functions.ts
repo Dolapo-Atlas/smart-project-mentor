@@ -130,6 +130,23 @@ export const listTasksRich = createServerFn({ method: "GET" })
     });
   });
 
+/* ---------- GET SINGLE TASK (for in-module context panels) ---------- */
+
+export const getTaskById = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: t, error } = await context.supabase
+      .from("tasks")
+      .select("*")
+      .eq("id", data.id)
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (error) throw error;
+    if (!t) return null;
+    return { ...t, linked_module_route: inferModuleRoute(t) };
+  });
+
 /* ---------- WHAT'S NEXT (top 3 ready tasks) ---------- */
 
 const PRIORITY_RANK: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
