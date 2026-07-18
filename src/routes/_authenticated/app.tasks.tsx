@@ -33,6 +33,7 @@ import { TimeControls } from "@/components/time-controls";
 import { StakeholderHoverAvatar as StakeholderAvatar } from "@/components/stakeholder-card";
 import { MentorTriggerButton } from "@/components/mentor/task-mentor";
 import { TaskSubmissionDialog } from "@/components/tasks/task-submission-dialog";
+import { ReflectionDialog } from "@/components/tasks/reflection-dialog";
 import { detectTemplateKind } from "@/lib/templates";
 
 export const Route = createFileRoute("/_authenticated/app/tasks")({
@@ -179,6 +180,11 @@ function Tasks() {
   const [category, setCategory] = useState<string>("");
   const [submitTaskId, setSubmitTaskId] = useState<string | null>(null);
   const [submission, setSubmission] = useState("");
+  const [reflect, setReflect] = useState<{
+    task: { id: string; title: string };
+    prompt: string;
+    suggestedTags: string[];
+  } | null>(null);
 
   const create = useMutation({
     mutationFn: () =>
@@ -252,6 +258,13 @@ function Tasks() {
         toast.success(
           res?.impact_summary?.length ? `Closed. ${res.impact_summary.join(" · ")}` : "Closed",
         );
+        if (res?.task && res?.reflection_prompt) {
+          setReflect({
+            task: res.task,
+            prompt: res.reflection_prompt,
+            suggestedTags: res?.feedback?.skill ? [res.feedback.skill] : [],
+          });
+        }
       } else {
         toast.message("Sent back for rework");
       }
