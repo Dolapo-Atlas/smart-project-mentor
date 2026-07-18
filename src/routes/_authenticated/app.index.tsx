@@ -15,7 +15,7 @@ import { TaskSummaryStrip } from "@/components/dashboard/task-summary-strip";
 import { TaskBoard } from "@/components/dashboard/task-board";
 import { ProjectSidePanel } from "@/components/dashboard/project-side-panel";
 import { ProjectBriefSheet } from "@/components/dashboard/project-brief-sheet";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/app/")({
   component: Dashboard,
