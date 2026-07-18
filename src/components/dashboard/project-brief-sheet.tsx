@@ -244,16 +244,8 @@ export function ProjectBriefSheet({ open, onOpenChange }: Props) {
             <Button asChild onClick={() => onOpenChange(false)}>
               <Link to="/app/tasks">
                 <ArrowRight className="mr-2 h-4 w-4" />
-                Continue project
+                {primaryCta}
               </Link>
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={() => onOpenChange(false)}
-              className="border border-border"
-            >
-              <Compass className="mr-2 h-4 w-4" />
-              Close brief
             </Button>
           </div>
         </div>
