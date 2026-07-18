@@ -126,7 +126,7 @@ export const listTasksRich = createServerFn({ method: "GET" })
         .map((id) => byId.get(id))
         .filter((d) => d && !["done", "approved", "completed", "closed"].includes(d.status))
         .map((d) => ({ id: d!.id, title: d!.title }));
-      return { ...t, blocked_by: blockedBy };
+      return { ...t, blocked_by: blockedBy, linked_module_route: inferModuleRoute(t) };
     });
   });
 
@@ -160,10 +160,11 @@ export const listWhatsNext = createServerFn({ method: "GET" })
         return ad - bd;
       })
       .slice(0, 3);
+    const readyRouted = ready.map((t) => ({ ...t, linked_module_route: inferModuleRoute(t) }));
     const criticalOverdue = all.some(
       (t) => t.priority === "critical" && t.due_at && +new Date(t.due_at) < Date.now() && t.status !== "done",
     );
-    return { tasks: ready, criticalOverdue };
+    return { tasks: readyRouted, criticalOverdue };
   });
 
 /* ---------- CREATE / UPDATE / SUBMIT / CLOSE ---------- */
