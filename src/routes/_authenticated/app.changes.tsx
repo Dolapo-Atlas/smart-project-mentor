@@ -1,4 +1,5 @@
 import { createFileRoute, useSearch, useNavigate } from "@tanstack/react-router";
+import { TaskContextPanel } from "@/components/mentor/task-context-panel";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -215,6 +216,8 @@ function Changes() {
           </Button>
         </div>
       </header>
+
+      <TaskContextPanel taskId={search.task} />
 
       {authorMode && (
         <section className="rounded-lg border border-border bg-card p-6">
