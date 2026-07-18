@@ -8,6 +8,8 @@ import {
   competencyIdsForPhase,
   unlockedPhases,
   phaseFromDocTitle,
+  artifactFromDocTitle,
+  competencyIdsForArtifact,
 } from "./learning";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -67,16 +69,22 @@ export async function applyPhaseStatus(
   await applyCompetencyStatus(supabase, userId, competencyIdsForPhase(phase), status);
 }
 
-/** Auto-tick competencies based on a document review score. */
+/**
+ * Auto-tick competencies based on a document review score.
+ * Only credits the specific competencies the artifact actually evidences —
+ * NOT the entire phase (which used to over-credit from one submission).
+ */
 export async function applyDocumentReview(
   supabase: SupabaseClient,
   userId: string,
   docTitle: string,
   score: number,
 ): Promise<void> {
-  const phase = phaseFromDocTitle(docTitle);
-  if (!phase) return;
-  await applyPhaseStatus(supabase, userId, phase, score >= 65 ? "mastered" : "drafting");
+  const kind = artifactFromDocTitle(docTitle);
+  if (!kind) return;
+  const ids = competencyIdsForArtifact(kind);
+  if (ids.length === 0) return;
+  await applyCompetencyStatus(supabase, userId, ids, score >= 65 ? "mastered" : "drafting");
 }
 
 export const getLearningJourney = createServerFn({ method: "GET" })
@@ -198,11 +206,12 @@ export const backfillLearningJourney = createServerFn({ method: "POST" })
     const mastered = new Set<string>();
     const drafting = new Set<string>();
 
-    // Documents → phase competencies via title + score
+    // Documents → targeted artifact competencies (not entire phase)
     for (const d of (docs.data ?? []) as Array<{ title: string | null; quality_score: number | null; status: string | null }>) {
-      const phase = phaseFromDocTitle(d.title ?? "");
-      if (!phase) continue;
-      const ids = competencyIdsForPhase(phase);
+      const kind = artifactFromDocTitle(d.title ?? "");
+      if (!kind) continue;
+      const ids = competencyIdsForArtifact(kind);
+      if (ids.length === 0) continue;
       const score = typeof d.quality_score === "number" ? d.quality_score : null;
       const passed = score !== null ? score >= 65 : d.status === "submitted";
       for (const id of ids) (passed ? mastered : drafting).add(id);
