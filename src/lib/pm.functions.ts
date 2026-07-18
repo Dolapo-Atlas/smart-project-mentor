@@ -1624,16 +1624,16 @@ export const getReportingPack = createServerFn({ method: "GET" })
 
     const [tasksRes, raidRes, crRes, milestonesRes, budgetRes, commsRes] = await Promise.all([
       supabase.from("tasks")
-        .select("id,title,status,priority,updated_at,linked_stakeholder,completion_action,due_at")
+        .select("id,title,status,priority,completed_at,linked_stakeholder,completion_action,due_at")
         .eq("user_id", userId),
       supabase.from("raid_items")
         .select("id,kind,title,severity,status")
         .eq("user_id", userId)
-        .in("status", ["open", "active", "monitoring"]),
+        .in("status", ["open", "mitigating"]),
       supabase.from("change_requests")
         .select("id,title,status,cost_impact,schedule_impact_days")
         .eq("user_id", userId)
-        .in("status", ["submitted", "under_review", "approved"]),
+        .in("status", ["submitted", "approved"]),
       supabase.from("phase_gates")
         .select("phase,status,updated_at")
         .eq("user_id", userId),
@@ -1649,7 +1649,7 @@ export const getReportingPack = createServerFn({ method: "GET" })
     const tasks = tasksRes.data ?? [];
     const completedThisWeek = tasks.filter((t) =>
       ["done", "approved", "completed", "closed"].includes(t.status) &&
-      t.updated_at && t.updated_at.slice(0, 10) >= weekStart,
+      t.completed_at && t.completed_at.slice(0, 10) >= weekStart,
     );
     const openTasks = tasks.filter((t) =>
       ["todo", "in_progress", "blocked", "submitted"].includes(t.status),
