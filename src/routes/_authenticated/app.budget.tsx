@@ -1,4 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useSearch } from "@tanstack/react-router";
+import { z } from "zod";
+import { TaskContextPanel } from "@/components/mentor/task-context-panel";
+import { BudgetBriefing } from "@/components/dashboard/budget-briefing";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listBudget, addBudgetLine, deleteBudgetLine, seedBudgetIfEmpty } from "@/lib/pm.functions";
@@ -8,7 +11,10 @@ import { Input } from "@/components/ui/input";
 import { Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
 
+const budgetSearchSchema = z.object({ task: z.string().uuid().optional() });
+
 export const Route = createFileRoute("/_authenticated/app/budget")({
+  validateSearch: budgetSearchSchema,
   component: Budget,
 });
 
@@ -27,6 +33,7 @@ function fmt(n: number) {
 
 function Budget() {
   const qc = useQueryClient();
+  const search = useSearch({ from: "/_authenticated/app/budget" });
   const fetchLines = useServerFn(listBudget);
   const seed = useServerFn(seedBudgetIfEmpty);
   const addFn = useServerFn(addBudgetLine);
@@ -95,6 +102,10 @@ function Budget() {
           £500,000 envelope. Track planned vs actuals, log vendor invoices, forecast change-request impacts.
         </p>
       </header>
+
+      <TaskContextPanel taskId={search.task} />
+
+      <BudgetBriefing />
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Total budget" value={fmt(TOTAL_BUDGET)} />
