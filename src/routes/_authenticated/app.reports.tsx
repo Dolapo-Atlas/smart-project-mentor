@@ -1,4 +1,5 @@
 import { createFileRoute, useSearch, useNavigate } from "@tanstack/react-router";
+import { TaskContextPanel } from "@/components/mentor/task-context-panel";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listStatusReports, upsertStatusReport } from "@/lib/pm.functions";
@@ -250,6 +251,8 @@ function Reports() {
           </div>
         )}
       </header>
+
+      <TaskContextPanel taskId={search.task} />
 
       <section className="rounded-lg border border-border bg-card p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
