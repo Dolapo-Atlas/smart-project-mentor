@@ -147,6 +147,93 @@ export function competencyIdsForPhase(phase: number): string[] {
 }
 
 /**
+ * Targeted competency credits per artifact type. A single artifact should only
+ * evidence the specific skills it actually demonstrates — NOT the entire phase.
+ * Anything not listed here is left to be earned via other artifacts, delegate
+ * actions, comms, or reflections.
+ */
+export type ArtifactKind =
+  | "charter"
+  | "stakeholder_register"
+  | "project_plan"
+  | "raid"
+  | "communication_plan"
+  | "status_report"
+  | "change_request"
+  | "lessons_learned";
+
+export const ARTIFACT_COMPETENCIES: Record<ArtifactKind, string[]> = {
+  charter: [
+    "p1.project_charter_creation",
+    "p1.business_case_basics",
+    "p1.project_objectives",
+    "p1.scope_definition",
+    "p1.in_scope_vs_out_of_scope",
+    "p1.success_criteria",
+  ],
+  stakeholder_register: [
+    "p2.stakeholder_identification",
+    "p2.stakeholder_register",
+    "p2.stakeholder_analysis",
+    "p2.power_interest_matrix",
+  ],
+  project_plan: [
+    "p3.project_planning",
+    "p3.work_breakdown_structure",
+    "p3.milestones",
+    "p3.deliverables",
+    "p3.dependencies",
+    "p3.schedule_management",
+  ],
+  raid: [
+    "p4.raid_log",
+    "p4.risks",
+    "p4.assumptions_tracking",
+    "p4.issues",
+    "p4.dependencies_tracking",
+  ],
+  communication_plan: [
+    "p5.communication_planning",
+    "p5.stakeholder_emails",
+    "p5.project_updates",
+  ],
+  status_report: [
+    "p5.status_reporting",
+    "p5.project_updates",
+    "p7.governance_reporting",
+    "p7.kpi_tracking",
+  ],
+  change_request: [
+    "p6.change_requests",
+    "p6.issue_resolution",
+  ],
+  lessons_learned: [
+    "p8.lessons_learned",
+    "p8.project_closure_report",
+  ],
+};
+
+/** Map a document title to its artifact kind (finer than phaseFromDocTitle). */
+export function artifactFromDocTitle(title: string): ArtifactKind | null {
+  const t = title.toLowerCase();
+  if (/\bcommunicat/.test(t) && /\bplan\b/.test(t)) return "communication_plan";
+  if (/\braid\b/.test(t)) return "raid";
+  if (/\bstakeholder\b/.test(t) && /\bregister\b/.test(t)) return "stakeholder_register";
+  if (/\blessons\b/.test(t)) return "lessons_learned";
+  if (/\bstatus\s+report\b/.test(t)) return "status_report";
+  if (/\bchange\s+request\b/.test(t)) return "change_request";
+  if (/\bproject\s+plan\b/.test(t) || /\bwbs\b/.test(t) || /\bschedule\b/.test(t))
+    return "project_plan";
+  if (/\bcharter\b/.test(t)) return "charter";
+  if (/\bstakeholder\b/.test(t)) return "stakeholder_register";
+  return null;
+}
+
+export function competencyIdsForArtifact(kind: ArtifactKind): string[] {
+  return ARTIFACT_COMPETENCIES[kind] ?? [];
+}
+
+/**
  * Decide which phases are unlocked given a set of mastered competency ids.
  * Phase 1 always unlocked. Phase N>=2 unlocked when 80% of phase N-1 mastered.
  */
