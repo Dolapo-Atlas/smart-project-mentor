@@ -548,6 +548,9 @@ function TaskCard({
   onRework,
   onEscalate,
   onDelete,
+  onDismiss,
+  onArchive,
+  isAdmin,
   busy,
 }: {
   t: RichTask;
@@ -557,11 +560,15 @@ function TaskCard({
   onRework: () => void;
   onEscalate: (mode: "assign_lead" | "ask_pm" | "escalate_sponsor" | "add_to_raid") => void;
   onDelete: () => void;
+  onDismiss: () => void;
+  onArchive: () => void;
+  isAdmin: boolean;
   busy: boolean;
 }) {
   const isComplete = isCompletedTaskStatus(t.status);
   const isBlocked = t.blocked_by.length > 0 && !isComplete;
   const overdue = t.due_at && +new Date(t.due_at) < Date.now() && !isComplete;
+  const kind = classifyTask(t.source);
 
   if (isComplete) {
     const score = typeof t.feedback?.score !== "undefined" ? `${t.feedback.score}/5` : null;
@@ -580,13 +587,24 @@ function TaskCard({
               </span>
             )}
           </div>
-          <button
-            onClick={onDelete}
-            className="shrink-0 text-muted-foreground hover:text-destructive"
-            aria-label="Delete completed task"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
+          {kind === "user" ? (
+            <button
+              onClick={onDelete}
+              className="shrink-0 text-muted-foreground hover:text-destructive"
+              aria-label="Delete completed task"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          ) : isAdmin ? (
+            <button
+              onClick={onArchive}
+              className="shrink-0 text-muted-foreground hover:text-foreground"
+              aria-label="Archive completed task"
+              title="Archive (admin)"
+            >
+              <Archive className="h-3.5 w-3.5" />
+            </button>
+          ) : null}
         </div>
       </li>
     );
@@ -731,13 +749,36 @@ function TaskCard({
                 </div>
               </details>
             )}
-            <button
-              onClick={onDelete}
-              className="ml-auto text-muted-foreground hover:text-destructive"
-              aria-label="Delete"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
+            {kind === "user" && (
+              <button
+                onClick={onDelete}
+                className="ml-auto text-muted-foreground hover:text-destructive"
+                aria-label="Delete"
+                title="Delete personal task"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            )}
+            {kind === "optional_system" && (
+              <button
+                onClick={onDismiss}
+                className="ml-auto inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground"
+                aria-label="Dismiss task"
+                title="Dismiss this optional task"
+              >
+                <X className="h-3 w-3" /> Dismiss
+              </button>
+            )}
+            {kind === "required" && isAdmin && (
+              <button
+                onClick={onArchive}
+                className="ml-auto text-muted-foreground hover:text-foreground"
+                aria-label="Archive (admin)"
+                title="Archive (admin only)"
+              >
+                <Archive className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
         </div>
         {!isComplete && (
