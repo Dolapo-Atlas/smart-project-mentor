@@ -239,6 +239,33 @@ export const submitTaskWithWork = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    // Reject structurally empty submissions early with a clear message.
+    // Template submissions encode as JSON; plain free-text submissions are raw strings.
+    const raw = data.submission.trim();
+    const looksJson = raw.startsWith("{") || raw.startsWith("[");
+    if (!looksJson) {
+      const wordCount = raw.split(/\s+/).filter(Boolean).length;
+      if (raw.length < 20 || wordCount < 4) {
+        throw new Error(
+          "Submission is too short to review. Add a short paragraph describing what you did and what you're handing over.",
+        );
+      }
+    } else {
+      try {
+        const parsed = JSON.parse(raw);
+        const values = Object.values(parsed as Record<string, unknown>).filter(
+          (v) => typeof v === "string" && v.trim().length > 0,
+        );
+        if (values.length === 0) {
+          throw new Error(
+            "Template is empty. Fill in the required sections before submitting.",
+          );
+        }
+      } catch (e) {
+        if (e instanceof Error && e.message.startsWith("Template is empty")) throw e;
+        // Not valid JSON — fall through and accept as free text.
+      }
+    }
     // Check dependencies
     const { data: task } = await supabase
       .from("tasks")

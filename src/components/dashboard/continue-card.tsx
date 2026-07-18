@@ -53,6 +53,9 @@ export function ContinueCard() {
   const allDone = total > 0 && remaining === 0;
 
   const activeChapter = chapters?.chapters.find((c) => c.status === "active");
+  const lastCompleteChapter = [...(chapters?.chapters ?? [])]
+    .reverse()
+    .find((c) => c.status === "complete");
   const isResume = !!inProgress;
   const label = isResume
     ? "Resume where you left off"
@@ -166,8 +169,26 @@ export function ContinueCard() {
           )}
         </>
       ) : allDone ? (
-        <div className="relative mt-4 rounded-md border border-white/20 bg-white/5 p-6 text-center text-sm text-white/80">
-          All {total} tasks completed. Continue to the next milestone.
+        <div className="relative mt-4 rounded-md border border-white/20 bg-white/5 p-6 text-center text-sm text-white/85">
+          {activeChapter ? (
+            <>
+              <div className="font-display text-lg text-white">
+                Chapter {activeChapter.chapter_number} ready to close
+              </div>
+              <p className="mt-1 text-white/70">
+                All {total} tasks completed. Advance time to move to the next chapter.
+              </p>
+            </>
+          ) : lastCompleteChapter ? (
+            <>
+              <div className="font-display text-lg text-white">
+                Chapter {lastCompleteChapter.chapter_number} complete
+              </div>
+              <p className="mt-1 text-white/70">Continue to the next milestone.</p>
+            </>
+          ) : (
+            <>All {total} tasks completed. Continue to the next milestone.</>
+          )}
         </div>
       ) : (
         <div className="relative mt-4 rounded-md border border-dashed border-white/20 bg-white/5 p-6 text-center text-sm text-white/70">
