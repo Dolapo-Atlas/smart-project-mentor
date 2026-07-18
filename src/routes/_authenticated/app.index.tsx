@@ -36,6 +36,7 @@ function Dashboard() {
 
   const [briefOpen, setBriefOpen] = useState(false);
   const activeId = (active as any)?.id as string | undefined;
+  const autoOpenedRef = useRef<string | null>(null);
 
   // Auto-open the Project Brief the first time the user lands on the
   // dashboard for a given project instance. Uses localStorage so returning
@@ -43,8 +44,10 @@ function Dashboard() {
   useEffect(() => {
     if (!activeId) return;
     if (typeof window === "undefined") return;
+    if (autoOpenedRef.current === activeId) return;
     const key = `atlas.brief-seen.${activeId}`;
     if (window.localStorage.getItem(key) === "1") return;
+    autoOpenedRef.current = activeId;
     setBriefOpen(true);
     window.localStorage.setItem(key, "1");
   }, [activeId]);
