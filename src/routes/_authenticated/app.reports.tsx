@@ -1,5 +1,6 @@
 import { createFileRoute, useSearch, useNavigate } from "@tanstack/react-router";
 import { TaskContextPanel } from "@/components/mentor/task-context-panel";
+import { ReportingPack } from "@/components/dashboard/reporting-pack";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listStatusReports, upsertStatusReport } from "@/lib/pm.functions";
@@ -154,6 +155,7 @@ function Reports() {
     onSuccess: (_d, submit) => {
       qc.invalidateQueries({ queryKey: ["status_reports"] });
       qc.invalidateQueries({ queryKey: ["inbox"] });
+      qc.invalidateQueries({ queryKey: ["reporting-pack"] });
       toast.success(submit ? "Submitted to sponsor." : "Draft saved.");
       // If a task deep-linked us here, open the shared submission dialog so
       // the linked task closes through the existing feedback pipeline.
@@ -253,6 +255,8 @@ function Reports() {
       </header>
 
       <TaskContextPanel taskId={search.task} />
+
+      <ReportingPack />
 
       <section className="rounded-lg border border-border bg-card p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
