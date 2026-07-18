@@ -415,6 +415,14 @@ function Tasks() {
           submit.mutate({ id: submitTask.id, submission: encoded });
         }}
       />
+
+      <ReflectionDialog
+        open={!!reflect}
+        onOpenChange={(o) => { if (!o) setReflect(null); }}
+        task={reflect?.task ?? null}
+        prompt={reflect?.prompt ?? ""}
+        suggestedTags={reflect?.suggestedTags}
+      />
     </div>
   );
 }
