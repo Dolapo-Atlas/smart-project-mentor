@@ -155,6 +155,7 @@ function Reports() {
     onSuccess: (_d, submit) => {
       qc.invalidateQueries({ queryKey: ["status_reports"] });
       qc.invalidateQueries({ queryKey: ["inbox"] });
+      qc.invalidateQueries({ queryKey: ["reporting-pack"] });
       toast.success(submit ? "Submitted to sponsor." : "Draft saved.");
       // If a task deep-linked us here, open the shared submission dialog so
       // the linked task closes through the existing feedback pipeline.
