@@ -14,7 +14,6 @@ import { getOverview } from "@/lib/sim.functions";
 import { listWhatsNext } from "@/lib/tasks.functions";
 import { getPhaseProgress } from "@/lib/phase.functions";
 import {
-  Compass,
   Target,
   UserCircle2,
   Sparkles,
