@@ -26,6 +26,7 @@ const changesSearchSchema = z.object({
   task: z.string().uuid().optional(),
   create: z.coerce.boolean().optional(),
   prefill_title: z.string().optional(),
+  cr: z.string().uuid().optional(),
 });
 
 export const Route = createFileRoute("/_authenticated/app/changes")({
