@@ -35,6 +35,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import atlasLogo from "@/assets/atlas-logo.png.asset.json";
 import { AutoDemo } from "@/components/auto-demo";
+import { HeroStage } from "@/components/landing/hero-stage";
 import { getReferralStats } from "@/lib/signup.functions";
 
 export const Route = createFileRoute("/")({
@@ -315,7 +316,7 @@ function Hero() {
         </div>
 
         <Reveal delay={140} className="relative">
-          <HeroInbox />
+          <HeroStage />
         </Reveal>
       </div>
     </section>
