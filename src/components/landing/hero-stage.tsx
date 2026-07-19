@@ -94,7 +94,7 @@ export function HeroStage() {
 
         <div className="grid grid-cols-[132px_1fr] sm:grid-cols-[168px_1fr]">
           {/* Sidebar (navy) */}
-          <aside className="relative flex min-h-[420px] flex-col gap-3 bg-[hsl(220_45%_14%)] p-3 text-white">
+          <aside className="relative flex min-h-[420px] flex-col gap-3 bg-navy p-3 text-white">
             <div className="flex items-center gap-2 px-1.5 py-1">
               <img src={atlasLogo.url} alt="" className="h-5 w-5 object-contain" />
               <span className="font-display text-sm font-semibold tracking-tight">Atlas</span>
@@ -200,7 +200,7 @@ export function HeroStage() {
                 <span className="text-[10px] uppercase tracking-wider text-muted-foreground">For Sarah Williams</span>
                 <button
                   type="button"
-                  className="inline-flex items-center gap-1 rounded-full bg-[hsl(220_45%_14%)] px-3 py-1.5 text-[11px] font-medium text-white"
+                  className="inline-flex items-center gap-1 rounded-full bg-navy px-3 py-1.5 text-[11px] font-medium text-white"
                 >
                   Start task <ArrowRight className="h-3 w-3" />
                 </button>
@@ -349,7 +349,7 @@ function NavTile({
       className={
         "relative grid place-items-center gap-0.5 rounded-md px-1 py-1.5 text-center text-[8.5px] leading-tight " +
         (active
-          ? "bg-white text-[hsl(220_45%_14%)]"
+          ? "bg-white text-navy"
           : "bg-white/[0.04] text-white/75")
       }
     >
