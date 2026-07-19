@@ -1,49 +1,62 @@
-# Templates-in-Modules Build Plan
+## Goal
 
-Goal: task → correct in-module template opens → learner completes real work → work persists in the module → readiness check → submit → stakeholder reacts. No duplicate template pages. Reuse `TaskSubmissionDialog`, readiness engine, upload flow, task linkage.
+Make the landing page hero "come alive" like the uploaded reference — a layered product mockup with floating UI cards, subtle motion, and a stronger sense of a real, working workspace. Landing-page only. No changes to auth, app routes, backend, or scoring.
 
-## Shared architecture (built once, reused everywhere)
+## What the reference shows (and what we're missing)
 
-- **Data model per artefact**: one table per artefact type (charter, status_report, resource_plan, change_request, stakeholder_register, meeting, lessons_learned). Each row is versioned, scoped to `project_instance_id + user_id`, with `status` (draft | submitted | approved), `linked_task_id`, `payload jsonb`, `version int`, `submitted_at`.
-- **Version history**: snapshot on Submit only (per your choice). New `*_versions` sibling tables store an immutable copy of `payload` per submission.
-- **Reusable pieces**:
-  - `useArtefact(kind)` hook — load current draft for active project.
-  - `<ArtefactSectionField>` component — label, guidance placeholder, min-length hint, live completion signal.
-  - `<ArtefactActions>` — Save draft · Edit · Preview · Submit · Export PDF (client-side via `jsPDF`) · Upload PDF.
-  - Readiness reuses existing `TEMPLATES` field registry + `evaluateGenericTemplate` from `src/lib/templates.ts`; the "Submit" button inside each module opens the existing `TaskSubmissionDialog` prefilled with the artefact's current fields when a `linked_task_id` is set.
-- **Task → module routing**: `resolveTaskArtefactRoute(task)` maps a task to a module URL with `?task=<id>` param (e.g. `/app/charter?task=…`). The module reads the param, loads/creates a draft linked to that task, and scrolls to the first empty required section. RAID single-risk tasks open the RAID entry form with the correct kind/severity pre-selected.
-- **On submit**: writes version snapshot → updates task status via existing `submitTaskWithReadiness` → recomputes phase progress (existing `phase.functions.ts`) → posts a stakeholder inbox message using existing comms pipeline.
+The reference hero is a **composed scene**, not a single card:
+1. A macOS-chrome "browser window" showing a mini Atlas dashboard (navy sidebar with Home/Inbox/Tasks/People/Charter/Kick-off + Phase card + "Powered by Google Gemini" footer, and a **"Recommended Next Step"** hero card with orange progress + "Start task").
+2. A floating **Inbox popover** overlapping the top-right (Margaret Chen / James Lin / Sarah Williams).
+3. A floating **"Task in Progress"** card overlapping the bottom-left (progress bar, chips, avatar).
+4. A floating **"RAID Log · Summary"** card overlapping the bottom-right (donut chart + legend).
+5. Soft dotted texture on the right, gentle float/parallax, all in the cream + navy + orange palette we already own.
 
-## Stage 1 — Project Charter (this turn's build after approval)
+Today's hero has one flat `HeroInbox` card. That's the gap.
 
-1. **DB migration**: `project_charters` + `project_charter_versions` with all 17 charter sections in a `payload jsonb`, `completion_pct` generated, `approval_status`, `sponsor_comment`. RLS scoped to owner; GRANTs to `authenticated` + `service_role`.
-2. **Server fns** `src/lib/charter.functions.ts`: `getCharter`, `upsertCharterDraft`, `submitCharter`, `listCharterVersions`, `approveCharter` (sponsor sim).
-3. **Route** `src/routes/_authenticated/app.charter.tsx`: sectioned form (title, background, business need, purpose, objectives, success criteria, in/out of scope, deliverables, milestones, budget summary, key stakeholders, sponsor, PM, assumptions, constraints, initial risks, governance). Each section shows guidance placeholder — never auto-fills. Right rail: completion %, version history list, approval status pill, Export PDF, Upload PDF, Submit for sponsor approval.
-4. **Task linkage**: charter-category tasks route to `/app/charter?task=…` and the Submit action in the charter reuses `TaskSubmissionDialog` with `values` pre-populated from `payload`.
-5. **Sidebar nav**: add "Charter" under Planning.
-6. **PDF export**: client-side `jsPDF` renders the sections; installed with `bun add jspdf`.
+## Plan (frontend-only, hero + nav polish)
 
-## Stage 2 — RAID linkage polish
+### 1. Replace `HeroInbox` with a new `HeroStage` composition
+File: `src/routes/index.tsx` (swap the `<HeroInbox />` usage), new file `src/components/landing/hero-stage.tsx`.
 
-- Individual RAID tasks (`Log the vendor delivery risk`, etc.) open `/app/raid?kind=risk&task=…&prefill_title=…` and auto-scroll to the entry form with fields prefilled.
-- On saving that specific entry, mark the task ready and auto-open the existing submission dialog scoped to just that entry (not the whole log).
-- Keep the existing "Submit log for review" workflow untouched.
+Structure:
+- **Base layer** — browser-chrome frame (reuse traffic-light dots) containing a *miniature* of the real Atlas dashboard:
+  - Left: condensed navy sidebar (Atlas mark, Home/Inbox/Tasks/People/Charter/Kick-off tiles with the same neutral-tile + orange-icon treatment we already ship, Phase card, "Powered by Google Gemini" chip).
+  - Right: greeting line ("Good afternoon, Dolapo."), time-control chips (Next Day / Next Week / Begin Sprint / Steering Committee / Go-Live), a **Recommended Next Step** card (navy body, orange progress, white "Start task" pill), a compact Kanban strip (To Do / In Progress / Pending Review / Completed).
+  - All static markup — no data fetching, no functional buttons. Purely a visual mirror of the real dashboard.
+- **Floating layer** (absolutely positioned over the frame):
+  - Top-right: **Inbox popover** — 3 messages, "5 new" chip, "View all messages →" footer. Gentle float animation (staggered from the frame).
+  - Bottom-left: **Task in Progress** card — "Update Project Charter · Technical Milestones", Documentation/Critical/Ch.2 chips, 52% progress bar, "Due this week · James Lin".
+  - Bottom-right: **RAID Log · Summary** card — SVG donut (Risks 12 / Actions 10 / Issues 6 / Decisions 4) with legend. Donut built as a single SVG with 4 arcs, no chart lib.
+- **Ambient layer** — retain the existing radial-gradient wash + add a subtle dotted pattern (CSS `radial-gradient` dots) on the far right, matching the reference.
 
-## Stage 3 — Status Report module
+### 2. Motion (tasteful, not busy)
+- Reuse the existing `Reveal` intersection helper for enter animation.
+- Each floating card gets its own slow `float` keyframe with different phase/duration (6s / 8s / 10s) so they drift independently.
+- On pointer-move over the stage (desktop only), apply a very small parallax translate (±4px) to the three floating cards using `requestAnimationFrame`. Disabled under `prefers-reduced-motion` and on touch.
+- One subtle "typing" shimmer on the Recommended Next Step progress bar (loop 0→11%→0 over ~6s), echoing `AutoDemo` energy.
 
-- New route `/app/status-report` using the same shared architecture. Live-populated fields: reporting period (auto), RAG (from `simulation_state.health`), schedule/budget status (from `phase.functions` + `budget_lines`). Narrative fields blank with guidance.
-- Version snapshots on Submit; PDF export; upload alternative; task linkage identical to Charter.
+### 3. Responsive behaviour
+- ≥ lg: full composed scene as described.
+- md: hide the RAID donut card, keep Inbox + Task cards, shrink frame.
+- < md: show only the browser frame with the Recommended Next Step card; floating cards collapse into a single stacked "peek" below the frame so mobile stays legible (matches current hero footprint).
 
-## Stages 4–8 (future turns, same pattern)
+### 4. Nav polish to match reference
+- Add an "About" and "FAQ" hover underline treatment (already links, just visual).
+- Keep everything else identical.
 
-Resource Plan (extend `budget_lines` or new `resource_plan_items`), Change Request (Create vs Review split inside existing `app.changes.tsx`), Stakeholder Register with influence×interest matrix (extend existing stakeholder module), Meetings agenda+minutes with auto-task creation from action items, Lessons Learned inside Closure. Each reuses the artefact hook, section field, actions bar, readiness engine, PDF export, and task linkage.
+### 5. Small copy nudge (optional, one line)
+Reference eyebrow reads "Now accepting Founder Access" with a live orange dot — we already have this exact treatment. No copy changes.
 
-## Non-goals for this build
+## What stays untouched
 
-- No redesign of Atlas visual identity.
-- No new duplicate `/templates` pages — the existing reference index at `/app/templates` stays as a directory; the working templates are the module pages themselves.
-- No AI auto-completion of sections.
+- All auth, `/app/*`, backend, server functions, templates, scoring, AI, task logic.
+- Everything below the hero on the landing page (`SocialProof`, `AutoDemo`, `Features`, `HowItWorks`, `Experience`, `WhyAtlas`, `Founder`, `Faq`, `SiteFooter`) — untouched.
+- Color tokens in `src/styles.css` — untouched. Cream bg, navy, orange accent, semantic tokens only.
+- `HeroInbox` component — deleted after `HeroStage` replaces it (it's only used in the hero).
 
-## Approval needed
+## Files touched
 
-Confirm and I'll ship **Stage 1 (Project Charter)** end-to-end: migration → server fns → route → task routing → PDF export → sidebar nav. Stages 2 and 3 follow in the next turns after you validate the Charter flow.
+- `src/routes/index.tsx` — swap `<HeroInbox />` for `<HeroStage />`, remove `HeroInbox` definition.
+- `src/components/landing/hero-stage.tsx` — new; composed scene + floating cards + donut SVG + motion.
+
+That's it. Fully additive, reversible, and matches the reference structure without pulling in real product data.
