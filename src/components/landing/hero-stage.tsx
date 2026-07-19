@@ -46,9 +46,6 @@ export function HeroStage() {
       if (raf) return;
       raf = requestAnimationFrame(() => {
         raf = 0;
-        if (inboxRef.current)
-          inboxRef.current.style.setProperty("--px", `${tx * -6}px`) ||
-            (inboxRef.current.style.setProperty("--py", `${ty * -4}px`));
         if (taskRef.current) {
           taskRef.current.style.setProperty("--px", `${tx * 6}px`);
           taskRef.current.style.setProperty("--py", `${ty * 4}px`);
