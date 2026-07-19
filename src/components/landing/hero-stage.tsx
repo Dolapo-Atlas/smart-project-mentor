@@ -12,7 +12,6 @@ import {
   ArrowRight,
   ChevronRight,
   Mail,
-  MessageSquare,
 } from "lucide-react";
 import atlasLogo from "@/assets/atlas-logo.png.asset.json";
 
