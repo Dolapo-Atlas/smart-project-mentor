@@ -21,6 +21,7 @@ import { Sparkles, Check, X, Download, FilePlus2, Send } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import jsPDF from "jspdf";
+import { StakeholderSelect } from "@/components/stakeholder-select";
 
 const changesSearchSchema = z.object({
   task: z.string().uuid().optional(),
@@ -96,7 +97,7 @@ function Changes() {
     mutationFn: () => genFn(),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["change_requests"] });
-      toast.success("New change request");
+      toast.success("A new change request just landed.");
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
@@ -108,7 +109,7 @@ function Changes() {
       qc.invalidateQueries({ queryKey: ["inbox"] });
       qc.invalidateQueries({ queryKey: ["budget"] });
       setAssessment(""); setNotes("");
-      toast.success("Decision recorded.");
+      toast.success("Decision saved.");
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
@@ -132,7 +133,7 @@ function Changes() {
       qc.invalidateQueries({ queryKey: ["inbox"] });
       qc.invalidateQueries({ queryKey: ["tasks"] });
       setLastCreatedId(row?.id ?? null);
-      toast.success("Change request submitted to the change board.");
+      toast.success("Change request sent to the change board.");
       if (linkedTask) {
         setSubmitOpen(true);
       } else {
@@ -167,7 +168,7 @@ function Changes() {
       qc.invalidateQueries({ queryKey: ["whats-next"] });
       qc.invalidateQueries({ queryKey: ["phase-progress"] });
       setSubmitOpen(false);
-      toast.success("Task completed.");
+      toast.success("Task complete — well done.");
       navigate({ to: "/app/tasks" });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
@@ -239,8 +240,13 @@ function Changes() {
             <Field label="CR title">
               <Input value={aTitle} onChange={(e) => setATitle(e.target.value)} placeholder="e.g. Add vendor integration to Phase 2" />
             </Field>
-            <Field label="Requested by (named)">
-              <Input value={aRequester} onChange={(e) => setARequester(e.target.value)} placeholder="Full name and role" />
+            <Field label="Requested by">
+              <StakeholderSelect
+                value={aRequester}
+                onChange={(name) => setARequester(name)}
+                emptyLabel="Choose a stakeholder"
+                suggestedRoles={["sponsor", "care_home", "clinical", "vendor"]}
+              />
             </Field>
             <Field label="Cost impact (£)">
               <Input type="number" value={aCost} onChange={(e) => setACost(e.target.value)} placeholder="0" />
