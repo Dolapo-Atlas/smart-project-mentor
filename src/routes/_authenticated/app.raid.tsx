@@ -69,7 +69,6 @@ function RaidPage() {
   const submitRaidFn = useServerFn(submitRaidLog);
   const fetchTasks = useServerFn(listTasksRich);
   const submitTaskFn = useServerFn(submitTaskWithWork);
-  const roster = useRoster();
 
   const { data: raid } = useQuery({ queryKey: ["raid"], queryFn: () => fetchRaid() });
   const { data: allTasks } = useQuery({
