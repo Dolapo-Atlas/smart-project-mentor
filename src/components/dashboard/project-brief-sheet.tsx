@@ -39,12 +39,12 @@ const PHASE_LABEL: Record<string, string> = {
 };
 
 const HOW_IT_WORKS = [
-  "Review project information as it arrives.",
-  "Interpret stakeholder requests in the inbox.",
-  "Complete tasks using the module templates.",
-  "Decide when to act, delegate, or escalate.",
-  "Submit your work for structured feedback.",
-  "Improve and continue the project.",
+  "Read what arrives — briefings, updates and stakeholder requests.",
+  "Interpret what people are really asking for in the inbox.",
+  "Use the module templates to shape your response.",
+  "Choose when to act, delegate or escalate — the call is yours.",
+  "Submit your work when you’re ready and take on the feedback.",
+  "Refine, learn and keep the project moving.",
 ];
 
 const TOOLS: { label: string; to: string }[] = [
