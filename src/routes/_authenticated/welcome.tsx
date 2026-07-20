@@ -64,8 +64,11 @@ function Welcome() {
               Welcome, {firstName}.
             </h1>
             <p className="mt-4 max-w-xl text-base text-muted-foreground">
-              Atlas Enterprise has assigned you to a live project. Your
-              workspace is ready.
+              Welcome aboard. You’re joining the Digital Care Records Rollout as
+              Project Coordinator. Across 12 chapters you’ll manage realistic
+              project situations, work with virtual stakeholders and build
+              practical experience through your decisions. This is a safe place
+              to practise, make mistakes and improve.
             </p>
 
             <div className="mt-10 grid gap-4 sm:grid-cols-3">
