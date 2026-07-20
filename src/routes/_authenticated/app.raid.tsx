@@ -13,7 +13,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Trash2, Plus, Paperclip, ShieldAlert, AlertOctagon, Link2, HelpCircle, LayoutTemplate, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
-import { useRoster } from "@/lib/roster";
 import { StakeholderSelect } from "@/components/stakeholder-select";
 import { format } from "date-fns";
 import { z } from "zod";
