@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Trash2, Plus, Paperclip, ShieldAlert, AlertOctagon, Link2, HelpCircle, LayoutTemplate, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { useRoster } from "@/lib/roster";
+import { StakeholderSelect } from "@/components/stakeholder-select";
 import { format } from "date-fns";
 import { z } from "zod";
 
@@ -146,7 +147,7 @@ function RaidPage() {
       qc.invalidateQueries({ queryKey: ["tasks"] });
       setForm({ ...form, title: "", description: "", owner: "", mitigation: "", target_date: "", comments: "" });
       setShowForm(false);
-      toast.success("Logged to RAID register.");
+      toast.success("Nice — added to the RAID register.");
       // If a task deep-linked us here, open submission dialog for that task.
       if (search.task) {
         setSubmitOpen(true);
@@ -161,7 +162,7 @@ function RaidPage() {
       qc.invalidateQueries({ queryKey: ["tasks"] });
       qc.invalidateQueries({ queryKey: ["overview"] });
       qc.invalidateQueries({ queryKey: ["whats-next"] });
-      toast.success("Submitted for review");
+      toast.success("Sent to Sponsor for review.");
       setSubmitOpen(false);
       // Clear query params so re-open of page is clean.
       navigate({ to: "/app/raid", search: {}, replace: true });
@@ -175,7 +176,7 @@ function RaidPage() {
       qc.invalidateQueries({ queryKey: ["raid"] });
       qc.invalidateQueries({ queryKey: ["tasks"] });
       qc.invalidateQueries({ queryKey: ["inbox"] });
-      toast.success("RAID Log submitted to Sponsor for review.");
+      toast.success("RAID Log sent to Sponsor for review — well done.");
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
@@ -319,14 +320,20 @@ function RaidPage() {
           <div className="grid gap-3 sm:grid-cols-2">
             <Input placeholder="Title…" value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })} />
-            <select value={form.owner}
-              onChange={(e) => setForm({ ...form, owner: e.target.value })}
-              className="h-10 rounded-md border border-input bg-background px-3 text-sm">
-              <option value="">Owner (unassigned)</option>
-              {roster.map((s) => (
-                <option key={s.role} value={s.name}>{s.name} — {s.title}</option>
-              ))}
-            </select>
+            <StakeholderSelect
+              value={form.owner}
+              onChange={(name) => setForm({ ...form, owner: name })}
+              emptyLabel="Owner (unassigned)"
+              suggestedRoles={
+                tab === "risk"
+                  ? ["pm", "sponsor", "tech"]
+                  : tab === "issue"
+                    ? ["pm", "tech", "vendor"]
+                    : tab === "dependency"
+                      ? ["vendor", "tech", "operations"]
+                      : ["pm", "sponsor"]
+              }
+            />
             <select value={form.priority}
               onChange={(e) => setForm({ ...form, priority: e.target.value as Sev })}
               className="h-10 rounded-md border border-input bg-background px-3 text-sm">

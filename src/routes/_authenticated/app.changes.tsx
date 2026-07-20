@@ -21,6 +21,7 @@ import { Sparkles, Check, X, Download, FilePlus2, Send } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import jsPDF from "jspdf";
+import { StakeholderSelect } from "@/components/stakeholder-select";
 
 const changesSearchSchema = z.object({
   task: z.string().uuid().optional(),
