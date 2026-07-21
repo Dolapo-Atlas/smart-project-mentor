@@ -109,7 +109,7 @@ function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <header className="atlas-rise grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:flex-wrap sm:items-end sm:justify-between">
+      <header className="atlas-rise flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
         <div className="min-w-0">
           <div className="truncate text-xs uppercase tracking-[0.2em] text-muted-foreground">
             {projectTitle} · Day {state?.current_day ?? 1} · Week {state?.current_week ?? 1}
@@ -118,11 +118,11 @@ function Dashboard() {
             {greeting}, {name}.
           </h1>
         </div>
-        <div className="shrink-0">
+        <div className="flex shrink-0 flex-wrap gap-2">
           <Button
             size="sm"
             variant="secondary"
-            className="mr-2 border border-border"
+            className="border border-border"
             onClick={() => setBriefOpen(true)}
           >
             <Compass className="mr-2 h-4 w-4" />
