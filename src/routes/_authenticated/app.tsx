@@ -80,35 +80,67 @@ const PHASE_NAV: Record<string, NavItem[]> = {
   ],
   closure: [
     { to: "/app/reports", label: "Reports", icon: FileBarChart2 },
-    { to: "/app/lessons", label: "Lessons", icon: Sparkles },
+    { to: "/app/lessons", label: "Retros", icon: Sparkles },
     { to: "/app/results", label: "Close out", icon: Award },
   ],
 };
 
-// Everything else lives under More. The list is dynamic — items already in the
-// active phase row are removed so we don't show duplicates.
-const ALL_OVERFLOW: NavItem[] = [
-  { to: "/app/results", label: "Final review & certificate", icon: Award },
-  { to: "/app/templates", label: "Templates", icon: LayoutTemplate },
-  { to: "/app/charter", label: "Project charter", icon: FileText },
-  { to: "/app/lessons", label: "Lessons learned", icon: Sparkles },
-  { to: "/app/gemini", label: "Gemini AI features", icon: Sparkles },
-  { to: "/app/stakeholders", label: "People", icon: Contact },
-  { to: "/app/meetings", label: "Meetings", icon: Users },
-  { to: "/app/comms", label: "Comms", icon: Send },
-  { to: "/app/raid", label: "RAID log", icon: ShieldAlert },
-  { to: "/app/reports", label: "Status reports", icon: FileBarChart2 },
-  { to: "/app/documents", label: "Documents", icon: FileText },
-  { to: "/app/budget", label: "Budget", icon: Wallet },
-  { to: "/app/changes", label: "Change requests", icon: GitPullRequest },
-  { to: "/app/gates", label: "Phase gates", icon: Gavel },
-  { to: "/app/health", label: "Project health", icon: Activity },
-  { to: "/app/progress", label: "Progress", icon: Gauge },
-  { to: "/app/completed", label: "Completed work", icon: CheckCircle2 },
-  { to: "/app/reviews", label: "Reviews", icon: Award },
-  { to: "/app/learning", label: "Learning", icon: Compass },
-  { to: "/app/workplace-tools", label: "Workplace tools", icon: Sparkles },
-  { to: "/app/settings", label: "Settings", icon: Settings },
+// Overflow is grouped so the 15+ modules stop feeling like peers competing for
+// attention. Renames: Learning → Competencies, Lessons → Retrospectives, so the
+// difference between them is obvious from the label alone.
+type NavGroup = { label: string; items: NavItem[] };
+const MORE_GROUPS: NavGroup[] = [
+  {
+    label: "Reporting",
+    items: [
+      { to: "/app/reports", label: "Status reports", icon: FileBarChart2 },
+      { to: "/app/health", label: "Project health", icon: Activity },
+      { to: "/app/progress", label: "Progress", icon: Gauge },
+      { to: "/app/reviews", label: "Reviews", icon: Award },
+      { to: "/app/completed", label: "Completed work", icon: CheckCircle2 },
+    ],
+  },
+  {
+    label: "Communications",
+    items: [
+      { to: "/app/meetings", label: "Meetings", icon: Users },
+      { to: "/app/comms", label: "Comms", icon: Send },
+      { to: "/app/stakeholders", label: "People", icon: Contact },
+    ],
+  },
+  {
+    label: "Artifacts",
+    items: [
+      { to: "/app/charter", label: "Project charter", icon: FileText },
+      { to: "/app/raid", label: "RAID log", icon: ShieldAlert },
+      { to: "/app/budget", label: "Budget", icon: Wallet },
+      { to: "/app/documents", label: "Documents", icon: FileText },
+      { to: "/app/templates", label: "Templates", icon: LayoutTemplate },
+    ],
+  },
+  {
+    label: "Governance",
+    items: [
+      { to: "/app/changes", label: "Change requests", icon: GitPullRequest },
+      { to: "/app/gates", label: "Phase gates", icon: Gavel },
+    ],
+  },
+  {
+    label: "Learning",
+    items: [
+      { to: "/app/learning", label: "Competencies", icon: Compass },
+      { to: "/app/lessons", label: "Retrospectives", icon: Sparkles },
+      { to: "/app/results", label: "Final review & certificate", icon: Award },
+    ],
+  },
+  {
+    label: "System",
+    items: [
+      { to: "/app/gemini", label: "Gemini AI features", icon: Sparkles },
+      { to: "/app/workplace-tools", label: "Workplace tools", icon: Sparkles },
+      { to: "/app/settings", label: "Settings", icon: Settings },
+    ],
+  },
 ];
 
 function normalisePhase(p?: string | null): keyof typeof PHASE_NAV {
@@ -207,7 +239,10 @@ function AppLayout() {
   const phaseLabel = phaseKey.charAt(0).toUpperCase() + phaseKey.slice(1);
   const NAV: NavItem[] = [...PINNED, ...PHASE_NAV[phaseKey]];
   const navTos = new Set(NAV.map((n) => n.to));
-  const MORE_LINKS = ALL_OVERFLOW.filter((n) => !navTos.has(n.to));
+  const MORE_GROUPS_FILTERED = MORE_GROUPS.map((g) => ({
+    label: g.label,
+    items: g.items.filter((n) => !navTos.has(n.to)),
+  })).filter((g) => g.items.length > 0);
 
   return (
     <div className="min-h-screen bg-background text-foreground paper-texture">
@@ -281,10 +316,20 @@ function AppLayout() {
                   Project tools
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {MORE_LINKS.map((m) => (
-                  <DropdownMenuItem key={m.to} asChild>
-                    <Link to={m.to}>{m.label}</Link>
-                  </DropdownMenuItem>
+                {MORE_GROUPS_FILTERED.map((g, gi) => (
+                  <div key={g.label}>
+                    {gi > 0 && <DropdownMenuSeparator />}
+                    <DropdownMenuLabel className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                      {g.label}
+                    </DropdownMenuLabel>
+                    {g.items.map((m) => (
+                      <DropdownMenuItem key={m.to} asChild>
+                        <Link to={m.to}>
+                          <m.icon className="mr-2 h-3.5 w-3.5" /> {m.label}
+                        </Link>
+                      </DropdownMenuItem>
+                    ))}
+                  </div>
                 ))}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setBriefOpen(true); }}>
