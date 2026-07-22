@@ -7,7 +7,7 @@ import {
 } from "@/lib/sim.functions";
 import { getActiveProject } from "@/lib/projects.functions";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Compass } from "lucide-react";
+import { Sparkles, Compass, Focus, LayoutGrid } from "lucide-react";
 import { toast } from "sonner";
 import { TimeControls } from "@/components/time-controls";
 import { ContinueCard } from "@/components/dashboard/continue-card";
@@ -37,6 +37,14 @@ function Dashboard() {
   });
 
   const [briefOpen, setBriefOpen] = useState(false);
+  const [focusMode, setFocusMode] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("atlas.focus-mode") === "1";
+  });
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem("atlas.focus-mode", focusMode ? "1" : "0");
+  }, [focusMode]);
   const activeId = (active as any)?.id as string | undefined;
   const autoOpenedRef = useRef<string | null>(null);
 
@@ -122,6 +130,29 @@ function Dashboard() {
         <div className="flex shrink-0 flex-wrap gap-2">
           <Button
             size="sm"
+            variant={focusMode ? "default" : "secondary"}
+            className={focusMode ? "" : "border border-border"}
+            onClick={() => setFocusMode((v) => !v)}
+            title={
+              focusMode
+                ? "Show the full dashboard"
+                : "Hide secondary panels and focus on one next action"
+            }
+          >
+            {focusMode ? (
+              <>
+                <LayoutGrid className="mr-2 h-4 w-4" />
+                Full dashboard
+              </>
+            ) : (
+              <>
+                <Focus className="mr-2 h-4 w-4" />
+                Focus mode
+              </>
+            )}
+          </Button>
+          <Button
+            size="sm"
             variant="secondary"
             className="border border-border"
             onClick={() => setBriefOpen(true)}
@@ -145,19 +176,31 @@ function Dashboard() {
         <TimeControls />
       </div>
 
-      <WelcomeBackPanel />
-
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="min-w-0 space-y-6">
+      {focusMode ? (
+        <div className="mx-auto max-w-2xl space-y-4">
+          <div className="rounded-lg border border-accent-orange/30 bg-accent-orange/5 px-4 py-3 text-xs text-foreground/80">
+            <span className="font-medium text-foreground">Focus mode.</span>{" "}
+            One thing at a time. Everything else is still there — toggle the
+            full dashboard when you’re ready.
+          </div>
           <div className="atlas-rise atlas-rise-2"><ContinueCard /></div>
-          <div className="atlas-rise atlas-rise-2"><PhaseReadinessPanel /></div>
-          <div className="atlas-rise atlas-rise-3"><TaskSummaryStrip /></div>
-          <div className="atlas-rise atlas-rise-4"><TaskBoard /></div>
         </div>
-        <div className="atlas-rise atlas-rise-2">
-          <ProjectSidePanel />
-        </div>
-      </div>
+      ) : (
+        <>
+          <WelcomeBackPanel />
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <div className="min-w-0 space-y-6">
+              <div className="atlas-rise atlas-rise-2"><ContinueCard /></div>
+              <div className="atlas-rise atlas-rise-2"><PhaseReadinessPanel /></div>
+              <div className="atlas-rise atlas-rise-3"><TaskSummaryStrip /></div>
+              <div className="atlas-rise atlas-rise-4"><TaskBoard /></div>
+            </div>
+            <div className="atlas-rise atlas-rise-2">
+              <ProjectSidePanel />
+            </div>
+          </div>
+        </>
+      )}
       <ProjectBriefSheet open={briefOpen} onOpenChange={setBriefOpen} />
     </div>
   );
