@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getReadiness } from "@/lib/time.functions";
 import { getOverview } from "@/lib/sim.functions";
+import { getPhaseProgress } from "@/lib/phase.functions";
 import { CheckCircle2, Circle, ArrowRight } from "lucide-react";
 
 const PHASE_ORDER = [
@@ -35,6 +36,7 @@ type Row = {
 export function PhaseReadinessPanel() {
   const fetchReadiness = useServerFn(getReadiness);
   const fetchOverview = useServerFn(getOverview);
+  const fetchPhase = useServerFn(getPhaseProgress);
 
   const { data: readiness } = useQuery({
     queryKey: ["readiness"],
@@ -44,6 +46,11 @@ export function PhaseReadinessPanel() {
   const { data: overview } = useQuery({
     queryKey: ["overview"],
     queryFn: () => fetchOverview(),
+  });
+  const { data: phaseProgress } = useQuery({
+    queryKey: ["phase-progress"],
+    queryFn: () => fetchPhase(),
+    refetchInterval: 20000,
   });
 
   const phase = (overview as any)?.state?.phase ?? "initiation";
@@ -99,6 +106,14 @@ export function PhaseReadinessPanel() {
   const totalDone = rows.filter((r) => r.count === 0).length;
   const pct = Math.round((totalDone / rows.length) * 100);
 
+  const deliverables = phaseProgress?.overall ?? 0;
+  const deliverablesDone = deliverables >= 100;
+  const deliverableHint = (phaseProgress?.items ?? [])
+    .filter((it) => it.pct < 100)
+    .slice(0, 2)
+    .map((it) => it.label)
+    .join(" · ");
+
   return (
     <section
       className="rounded-2xl border border-border bg-card p-5 shadow-sm"
@@ -141,6 +156,37 @@ export function PhaseReadinessPanel() {
           }`}
           style={{ width: `${pct}%` }}
         />
+      </div>
+
+      <div className="mt-4 rounded-lg border border-border bg-background px-3 py-2.5">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <div className="text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+              Phase deliverables
+            </div>
+            <div className="mt-0.5 truncate text-sm">
+              {deliverablesDone ? (
+                <span className="font-medium text-emerald-700">All {titleCase(phase)} deliverables complete</span>
+              ) : deliverableHint ? (
+                <span className="text-muted-foreground">Still to build: <span className="font-medium text-foreground">{deliverableHint}</span></span>
+              ) : (
+                <span className="text-muted-foreground">Live progress across {titleCase(phase)} modules</span>
+              )}
+            </div>
+          </div>
+          <div className="shrink-0 tabular-nums font-display text-lg">{deliverables}%</div>
+        </div>
+        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+          <div
+            className={`h-full rounded-full transition-all duration-500 ${
+              deliverablesDone ? "bg-emerald-500" : "bg-accent-orange"
+            }`}
+            style={{ width: `${deliverables}%` }}
+          />
+        </div>
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          The readiness checklist shows time-advance blockers. This bar shows how much of the phase you've actually built — matches the sidebar.
+        </p>
       </div>
 
       <ul className="mt-4 grid gap-2 sm:grid-cols-2">
