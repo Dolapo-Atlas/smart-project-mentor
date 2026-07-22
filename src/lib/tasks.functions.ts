@@ -487,6 +487,13 @@ Return strict JSON. Be specific and tied to the submission. Skill = the project-
       .eq("id", data.id)
       .eq("user_id", userId);
 
+    // Cascade: any task that was blocked by this one is now free.
+    try {
+      await unblockDependents(supabase, userId);
+    } catch (e) {
+      console.error("unblockDependents (approve) failed", e);
+    }
+
     // Story log + reflection
     const { data: state } = await supabase
       .from("simulation_state")
