@@ -8,6 +8,7 @@ import {
   submitTaskWithWork,
   closeTaskWithReview,
   escalateTask,
+  resumeBlockedTask,
   TASK_CATEGORIES,
 } from "@/lib/tasks.functions";
 import { useState } from "react";
@@ -194,6 +195,7 @@ function Tasks() {
   const submitFn = useServerFn(submitTaskWithWork);
   const closeFn = useServerFn(closeTaskWithReview);
   const escalateFn = useServerFn(escalateTask);
+  const resumeFn = useServerFn(resumeBlockedTask);
   const { data: tasks } = useQuery<RichTask[]>({
     queryKey: ["tasks"],
     queryFn: () => fetchTasks() as Promise<RichTask[]>,
@@ -356,6 +358,19 @@ function Tasks() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
 
+  const resume = useMutation({
+    mutationFn: (id: string) => resumeFn({ data: { id } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tasks"] });
+      qc.invalidateQueries({ queryKey: ["overview"] });
+      qc.invalidateQueries({ queryKey: ["whats-next"] });
+      qc.invalidateQueries({ queryKey: ["phase-progress"] });
+      qc.invalidateQueries({ queryKey: ["next-action"] });
+      toast.success("Task resumed — pick up where you left off");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+
   const grouped = {
     todo: tasks?.filter((t) => t.status === "todo") ?? [],
     in_progress: tasks?.filter((t) => t.status === "in_progress") ?? [],
@@ -461,11 +476,12 @@ function Tasks() {
                   onApprove={() => close.mutate({ id: t.id, decision: "approved" })}
                   onRework={() => close.mutate({ id: t.id, decision: "rework" })}
                   onEscalate={(mode) => escalate.mutate({ id: t.id, mode })}
+                  onResume={() => resume.mutate(t.id)}
                   onDelete={() => setConfirmDelete(t)}
                   onDismiss={() => setDismissTarget(t)}
                   onArchive={() => archive.mutate(t.id)}
                   isAdmin={isAdmin}
-                  busy={close.isPending || submit.isPending || escalate.isPending}
+                  busy={close.isPending || submit.isPending || escalate.isPending || resume.isPending}
                 />
               ))}
             </ul>
