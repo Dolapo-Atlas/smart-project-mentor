@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Lock } from "lucide-react";
+import { TaskStateRibbon } from "@/components/insights/insight-ribbon";
+import { RationaleChip } from "@/components/insights/rationale-chip";
 
 type Task = {
   id: string;
@@ -160,6 +162,7 @@ export function TaskBoard() {
               </SheetHeader>
 
               <div className="mt-6 space-y-4 text-sm">
+                <TaskStateRibbon status={selected.status} description={selected.description} />
                 {selected.description && (
                   <div>
                     <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
@@ -215,6 +218,16 @@ export function TaskBoard() {
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
+                <RationaleChip
+                  insight={
+                    (selected.description ?? "").includes("[Resolution]")
+                      ? "task.verify_resolution"
+                      : selected.status === "blocked"
+                        ? "task.escalate"
+                        : "task.submit"
+                  }
+                  className="mt-3"
+                />
               </div>
             </>
           )}

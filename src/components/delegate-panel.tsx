@@ -8,6 +8,9 @@ import { Users, ShieldAlert, CalendarPlus, UserCog } from "lucide-react";
 import { delegateInboxMessage } from "@/lib/delegate.functions";
 import { createMeeting } from "@/lib/pm.functions";
 import { useRoster, rosterByName, rosterByRole } from "@/lib/roster";
+import { insightToast } from "@/lib/insight-toast";
+import { RationaleChip } from "@/components/insights/rationale-chip";
+import type { InsightKey } from "@/lib/pm-insights";
 
 type Mode = "ask_pm" | "escalate_sponsor" | "assign_lead";
 
@@ -50,9 +53,15 @@ export function DelegatePanel({
   const delegate = useMutation({
     mutationFn: (mode: Mode) => delegateFn({ data: { inbox_id: inboxId, mode } }),
     onMutate: (mode) => setPendingMode(mode),
-    onSuccess: (res) => {
+    onSuccess: (res, mode) => {
       invalidate();
-      toast.success(res.system_note);
+      const key: InsightKey =
+        mode === "ask_pm"
+          ? "delegate.ask_pm"
+          : mode === "assign_lead"
+            ? "delegate.assign_lead"
+            : "delegate.escalate_sponsor";
+      insightToast(key, res.system_note);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
     onSettled: () => setPendingMode(null),
@@ -76,7 +85,7 @@ export function DelegatePanel({
     onSuccess: () => {
       invalidate();
       qc.invalidateQueries({ queryKey: ["meetings"] });
-      toast.success(`Meeting drafted with ${senderName}.`);
+      insightToast("delegate.meeting", `Meeting drafted with ${senderName}.`);
       navigate({ to: "/app/meetings" });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
@@ -87,7 +96,7 @@ export function DelegatePanel({
   const busy = delegate.isPending || meeting.isPending;
 
   const Card = ({
-    icon, title, hint, action, mode, disabled,
+    icon, title, hint, action, mode, disabled, insight,
   }: {
     icon: React.ReactNode;
     title: string;
@@ -95,6 +104,7 @@ export function DelegatePanel({
     action: () => void;
     mode: Mode | "meeting";
     disabled?: boolean;
+    insight?: InsightKey;
   }) => (
     <div className="rounded-md border border-border bg-card/60 p-3">
       <div className="flex items-start gap-3">
@@ -102,6 +112,7 @@ export function DelegatePanel({
         <div className="min-w-0 flex-1">
           <div className="text-sm font-medium">{title}</div>
           <div className="mt-0.5 text-xs text-muted-foreground">{hint}</div>
+          {insight ? <RationaleChip insight={insight} className="mt-1.5" /> : null}
         </div>
         <Button size="sm" variant="outline" disabled={busy || disabled} onClick={action}>
           {pendingMode === mode ? "…" : "Do it"}
@@ -125,6 +136,7 @@ export function DelegatePanel({
           hint={`${pm?.name?.split(" ")[0] ?? "The PM"} owns the reply. They'll quietly resent it if you over-delegate.`}
           action={() => delegate.mutate("ask_pm")}
           mode="ask_pm"
+          insight="delegate.ask_pm"
         />
         {showLead && (
           <Card
@@ -133,6 +145,7 @@ export function DelegatePanel({
             hint="The right specialist responds directly — usually the best move for technical or governance questions."
             action={() => delegate.mutate("assign_lead")}
             mode="assign_lead"
+            insight="delegate.assign_lead"
           />
         )}
         <Card
@@ -141,6 +154,7 @@ export function DelegatePanel({
           hint="Drafts a meeting with the sender. Send minutes afterwards to close the loop."
           action={() => meeting.mutate()}
           mode="meeting"
+          insight="delegate.meeting"
         />
         <Card
           icon={<ShieldAlert className="h-4 w-4" />}
@@ -148,6 +162,7 @@ export function DelegatePanel({
           hint="Reserve this for budget, scope or governance. Sponsors lose patience with trivial escalations."
           action={() => delegate.mutate("escalate_sponsor")}
           mode="escalate_sponsor"
+          insight="delegate.escalate_sponsor"
         />
       </div>
     </div>

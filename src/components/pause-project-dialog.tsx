@@ -14,6 +14,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { RationaleChip } from "@/components/insights/rationale-chip";
+import { insightToast } from "@/lib/insight-toast";
 
 export function PauseProjectDialog({
   open,
@@ -37,7 +39,7 @@ export function PauseProjectDialog({
       await qc.invalidateQueries({ queryKey: ["active-project"] });
       await qc.invalidateQueries({ queryKey: ["overview"] });
       onOpenChange(false);
-      toast.success("Project paused — you can resume any time.");
+      insightToast("project.pause", "Project paused — you can resume any time.");
       navigate({ to: "/app/projects" });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to pause"),
@@ -66,6 +68,7 @@ export function PauseProjectDialog({
             {busy ? "Pausing…" : "Pause project"}
           </AlertDialogAction>
         </AlertDialogFooter>
+        <RationaleChip insight="project.pause" className="pt-1" />
       </AlertDialogContent>
     </AlertDialog>
   );
