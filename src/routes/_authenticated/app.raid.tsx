@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useSearch, useNavigate } from "@tanstack/react-router";
 import { TaskContextPanel } from "@/components/mentor/task-context-panel";
+import { WhyThisMatters } from "@/components/why-this-matters";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
