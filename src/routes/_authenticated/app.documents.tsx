@@ -7,7 +7,6 @@ import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Upload, FileText, Sparkles, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { TimeControls } from "@/components/time-controls";
 
 export const Route = createFileRoute("/_authenticated/app/documents")({
   component: Documents,
@@ -119,7 +118,6 @@ function Documents() {
         <div>
           <input ref={fileInput} type="file" onChange={onPick} className="hidden" />
           <div className="flex flex-wrap items-center gap-2">
-            <TimeControls compact />
             <Button onClick={() => fileInput.current?.click()} disabled={uploading}>
               {uploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
               {uploading ? "Uploading…" : "Upload (PDF, DOCX, XLSX)"}

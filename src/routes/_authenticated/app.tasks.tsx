@@ -31,7 +31,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { insightToast } from "@/lib/insight-toast";
-import { TimeControls } from "@/components/time-controls";
 import { StakeholderHoverAvatar as StakeholderAvatar } from "@/components/stakeholder-card";
 import { MentorTriggerButton } from "@/components/mentor/task-mentor";
 import { TaskSubmissionDialog } from "@/components/tasks/task-submission-dialog";
@@ -412,7 +411,6 @@ function Tasks() {
           here is what actually resolves them, improves health, and shifts stakeholder sentiment.
           Submit your work, then close the task once the review accepts it.
         </p>
-        <div className="mt-4"><TimeControls compact /></div>
         <div className="mt-2">
           <Link to="/app/completed" className="text-xs text-primary hover:underline">
             View completed work log →

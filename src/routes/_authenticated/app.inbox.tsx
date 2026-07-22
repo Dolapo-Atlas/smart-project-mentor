@@ -11,7 +11,6 @@ import { Sparkles, Mail, Flame, Reply, Send } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { StakeholderHoverAvatar as StakeholderAvatar } from "@/components/stakeholder-card";
-import { TimeControls } from "@/components/time-controls";
 import { DelegatePanel } from "@/components/delegate-panel";
 import { ReadAloudButton } from "@/components/read-aloud-button";
 import { useVoiceSettings } from "@/lib/voice";
@@ -126,7 +125,6 @@ function Inbox() {
           <h1 className="font-display text-3xl font-medium sm:text-4xl">Inbox</h1>
         </div>
         <div className="flex flex-wrap gap-2">
-          <TimeControls compact />
           <Button variant="outline" onClick={() => stir.mutate()} disabled={stir.isPending}>
             <Flame className="mr-2 h-4 w-4" />
             {stir.isPending ? "Stirring…" : "Stir the pot"}
