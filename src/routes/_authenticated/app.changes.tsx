@@ -1,5 +1,6 @@
 import { createFileRoute, useSearch, useNavigate } from "@tanstack/react-router";
 import { TaskContextPanel } from "@/components/mentor/task-context-panel";
+import { WhyThisMatters } from "@/components/why-this-matters";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -220,6 +221,27 @@ function Changes() {
       </header>
 
       <TaskContextPanel taskId={search.task} />
+
+      <WhyThisMatters
+        storageKey="changes"
+        title="Why Change Requests exist"
+        body={
+          <>
+            <p>
+              Every project gets asked to "just add one small thing." A CR is how you
+              protect the plan: it forces the requester to name the trigger, quantify
+              the impact on scope, schedule and cost, and consider at least two options
+              before the change board decides.
+            </p>
+            <p>
+              Silent scope creep is what sinks projects. A CR turns an argument in a
+              corridor into a documented decision — good news for the sponsor, and
+              good cover for you when the timeline slips because they said yes.
+            </p>
+          </>
+        }
+        tip="Never submit a CR with only one option. Change boards reject single-option asks on principle."
+      />
 
       {authorMode && (
         <section className="rounded-lg border border-border bg-card p-6">

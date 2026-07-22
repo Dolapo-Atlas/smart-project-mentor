@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useSearch, useNavigate } from "@tanstack/react-router";
 import { TaskContextPanel } from "@/components/mentor/task-context-panel";
+import { WhyThisMatters } from "@/components/why-this-matters";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -238,6 +239,28 @@ function RaidPage() {
       </header>
 
       <TaskContextPanel taskId={search.task} />
+
+      <WhyThisMatters
+        storageKey="raid"
+        title="Why you're keeping a RAID Log"
+        body={
+          <>
+            <p>
+              RAID stands for <strong>Risks</strong> (what might go wrong),
+              <strong> Assumptions</strong> (what you're taking to be true),
+              <strong> Issues</strong> (what's already gone wrong), and
+              <strong> Dependencies</strong> (what you're waiting on).
+            </p>
+            <p>
+              This is your governance defense. When something blows up in month four,
+              the sponsor's first question is "did you see it coming?" A RAID log with
+              named owners and mitigations is your evidence — and your early warning
+              system while there's still time to act.
+            </p>
+          </>
+        }
+        tip="Every risk needs a named owner, not 'the team'. Ownership is what makes a log real."
+      />
 
       <section aria-label="RAID summary" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {KIND_TABS.map(({ key, label }) => {
