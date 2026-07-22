@@ -359,22 +359,45 @@ export const advanceTime = createServerFn({ method: "POST" })
       // Cap per advance to avoid inbox spam.
       for (const t of candidates.slice(0, 2)) {
         const owner = t.linked_stakeholder ?? "Functional Lead";
+        // Build concrete "what I did / what to verify" bullets so the user
+        // has something tangible to check when they resume the task, rather
+        // than a vague "it's done" note.
+        const title = t.title ?? "the action";
+        const didBullets = [
+          `Reviewed the underlying issue on "${title}" and cleared the immediate blocker on my side.`,
+          `Aligned with the relevant contact so we're not stepping on each other going forward.`,
+          `Left the artefact/module in a state you can pick up and finish.`,
+        ];
+        const verifyBullets = [
+          `Open the linked module and confirm the change matches the project's scope and constraints.`,
+          `Check no downstream item (RAID, budget, plan, stakeholders) needs updating because of what I did.`,
+          `Decide if you're satisfied — if yes, submit the task; if not, send it back with a note.`,
+        ];
         await supabase.from("inbox_messages").insert({
           user_id: userId,
           sender_name: owner,
           sender_role: "Escalation owner",
-          subject: `Resolution — "${t.title}"`,
+          subject: `Resolution — "${title}"`,
           tone: "neutral",
-          body: `Hi — coming back to you on "${t.title}". I've worked through it on my side and the action is ready for you to pick back up. Please resume the task and close it out when you're satisfied.\n\n${owner}`,
+          body:
+            `Hi — coming back to you on "${title}".\n\n` +
+            `What I did:\n- ${didBullets.join("\n- ")}\n\n` +
+            `What I'd like you to verify before closing this out:\n- ${verifyBullets.join("\n- ")}\n\n` +
+            `Resume the task when you're ready and close it out once you're satisfied.\n\n${owner}`,
         });
+        // Store a structured block the task sheet can parse & render as a
+        // proper "Resolution from <owner>" panel with checklist.
+        const resolutionBlock =
+          `[Resolution] ${owner} has come back — resume when ready.\n` +
+          `[[RESOLUTION_JSON]]${JSON.stringify({ owner, did: didBullets, verify: verifyBullets })}[[/RESOLUTION_JSON]]`;
         await supabase
           .from("tasks")
           .update({
-            description: `${t.description}\n\n[Resolution] ${owner} has come back — resume when ready.`,
+            description: `${t.description}\n\n${resolutionBlock}`,
           })
           .eq("id", t.id)
           .eq("user_id", userId);
-        newEmails.push(`${owner}: Resolution — ${t.title}`);
+        newEmails.push(`${owner}: Resolution — ${title}`);
       }
     } catch {
       // non-fatal

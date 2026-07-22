@@ -20,5 +20,6 @@ export function insightToast(
         : opts?.kind === "info"
           ? toast.info ?? toast
           : toast.success;
-  fn(title, { description });
+  // 8s so the senior-PM rationale is actually readable, not a 2s flash.
+  fn(title, { description, duration: 8000 });
 }

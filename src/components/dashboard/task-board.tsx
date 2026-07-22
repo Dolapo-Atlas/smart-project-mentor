@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Lock } from "lucide-react";
 import { TaskStateRibbon } from "@/components/insights/insight-ribbon";
 import { RationaleChip } from "@/components/insights/rationale-chip";
+import { ResolutionPanel, stripResolutionMarker } from "@/components/insights/resolution-panel";
 
 type Task = {
   id: string;
@@ -163,12 +164,17 @@ export function TaskBoard() {
 
               <div className="mt-6 space-y-4 text-sm">
                 <TaskStateRibbon status={selected.status} description={selected.description} />
+                {selected.description?.includes("[[RESOLUTION_JSON]]") && (
+                  <ResolutionPanel description={selected.description} />
+                )}
                 {selected.description && (
                   <div>
                     <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
                       Detail
                     </div>
-                    <p className="mt-1 whitespace-pre-wrap">{selected.description}</p>
+                    <p className="mt-1 whitespace-pre-wrap">
+                      {stripResolutionMarker(selected.description)}
+                    </p>
                   </div>
                 )}
                 {selected.linked_stakeholder && (
