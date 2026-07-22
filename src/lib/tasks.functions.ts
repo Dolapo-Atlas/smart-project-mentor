@@ -662,6 +662,46 @@ export const escalateTask = createServerFn({ method: "POST" })
     return { ok: true, owner: newOwner };
   });
 
+/* ---------- RESUME A BLOCKED TASK (post-escalation) ---------- */
+
+export const resumeBlockedTask = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: task } = await supabase
+      .from("tasks")
+      .select("id,status,depends_on,description")
+      .eq("id", data.id)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (!task) throw new Error("Task not found");
+    if (task.status !== "blocked") throw new Error("Task is not blocked");
+    // If dependency-blocked, refuse — dependencies must complete first.
+    const deps = (task.depends_on ?? []) as string[];
+    if (deps.length > 0) {
+      const { data: depRows } = await supabase
+        .from("tasks")
+        .select("id,status,title")
+        .in("id", deps)
+        .eq("user_id", userId);
+      const unmet = (depRows ?? []).filter(
+        (d: any) => !["done", "approved", "completed", "closed"].includes(d.status),
+      );
+      if (unmet.length > 0) {
+        throw new Error(
+          `Still blocked by: ${unmet.map((d: any) => d.title).join(", ")}. Complete these first.`,
+        );
+      }
+    }
+    await supabase
+      .from("tasks")
+      .update({ status: "in_progress" })
+      .eq("id", data.id)
+      .eq("user_id", userId);
+    return { ok: true };
+  });
+
 /* ---------- COMPLETED WORK LOG ---------- */
 
 export const listCompletedWork = createServerFn({ method: "GET" })
