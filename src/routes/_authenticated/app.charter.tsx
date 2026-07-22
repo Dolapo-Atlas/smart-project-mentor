@@ -16,6 +16,7 @@ import {
   CheckCircle2,
   Loader2,
   AlertTriangle,
+  Lightbulb,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -243,6 +244,28 @@ function CharterPage() {
         </header>
 
         <TaskContextPanel taskId={search.task} />
+
+        <div className="rounded-lg border border-accent-orange/30 bg-accent-orange/5 p-4">
+          <div className="flex items-start gap-2">
+            <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-accent-orange" />
+            <div className="space-y-2 text-sm leading-relaxed">
+              <div className="font-semibold text-foreground">Why you're writing a Charter</div>
+              <p className="text-muted-foreground">
+                The Charter is the one-page contract between you and your sponsor. It answers four
+                questions before the project starts spending money: <em>Why are we doing this? What
+                does "done" look like? Who owns it? What could go wrong?</em>
+              </p>
+              <p className="text-muted-foreground">
+                Without an approved Charter, scope drifts, risks arrive as surprises, and nobody
+                agrees on what success means. It doesn't need to be long — it needs to be specific
+                to <em>this</em> project, not a template you copied.
+              </p>
+              <p className="text-xs text-muted-foreground/80">
+                Tip: fill in the fields in order. Each one builds on the last.
+              </p>
+            </div>
+          </div>
+        </div>
 
         {mode === "edit" ? (
           <div className="space-y-4">
