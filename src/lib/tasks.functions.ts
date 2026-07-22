@@ -109,6 +109,41 @@ type TaskSpec = z.infer<typeof TaskSpecSchema>;
 
 /* ---------- LIST WITH BLOCKED COMPUTATION ---------- */
 
+/**
+ * Auto-unblock: any task in status='blocked' whose `depends_on` are all
+ * satisfied (done/approved/completed/closed) is moved back to 'todo'.
+ * Escalation-parked tasks (status='blocked' with empty depends_on) are
+ * NOT touched here — they're released via resumeBlockedTask/advanceTime.
+ */
+export async function unblockDependents(supabase: any, userId: string) {
+  const { data: blocked } = await supabase
+    .from("tasks")
+    .select("id,depends_on")
+    .eq("user_id", userId)
+    .eq("status", "blocked");
+  const rows = (blocked ?? []).filter((t: any) => Array.isArray(t.depends_on) && t.depends_on.length > 0);
+  if (rows.length === 0) return 0;
+  const depIds = Array.from(new Set(rows.flatMap((r: any) => r.depends_on as string[])));
+  const { data: depRows } = await supabase
+    .from("tasks")
+    .select("id,status")
+    .in("id", depIds)
+    .eq("user_id", userId);
+  const done = new Set(
+    (depRows ?? [])
+      .filter((d: any) => ["done", "approved", "completed", "closed"].includes(d.status))
+      .map((d: any) => d.id),
+  );
+  const toUnblock = rows.filter((r: any) => (r.depends_on as string[]).every((id) => done.has(id)));
+  if (toUnblock.length === 0) return 0;
+  await supabase
+    .from("tasks")
+    .update({ status: "todo" })
+    .in("id", toUnblock.map((r: any) => r.id))
+    .eq("user_id", userId);
+  return toUnblock.length;
+}
+
 export const listTasksRich = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
