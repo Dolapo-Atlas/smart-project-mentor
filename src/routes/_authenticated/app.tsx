@@ -80,35 +80,67 @@ const PHASE_NAV: Record<string, NavItem[]> = {
   ],
   closure: [
     { to: "/app/reports", label: "Reports", icon: FileBarChart2 },
-    { to: "/app/lessons", label: "Lessons", icon: Sparkles },
+    { to: "/app/lessons", label: "Retros", icon: Sparkles },
     { to: "/app/results", label: "Close out", icon: Award },
   ],
 };
 
-// Everything else lives under More. The list is dynamic — items already in the
-// active phase row are removed so we don't show duplicates.
-const ALL_OVERFLOW: NavItem[] = [
-  { to: "/app/results", label: "Final review & certificate", icon: Award },
-  { to: "/app/templates", label: "Templates", icon: LayoutTemplate },
-  { to: "/app/charter", label: "Project charter", icon: FileText },
-  { to: "/app/lessons", label: "Lessons learned", icon: Sparkles },
-  { to: "/app/gemini", label: "Gemini AI features", icon: Sparkles },
-  { to: "/app/stakeholders", label: "People", icon: Contact },
-  { to: "/app/meetings", label: "Meetings", icon: Users },
-  { to: "/app/comms", label: "Comms", icon: Send },
-  { to: "/app/raid", label: "RAID log", icon: ShieldAlert },
-  { to: "/app/reports", label: "Status reports", icon: FileBarChart2 },
-  { to: "/app/documents", label: "Documents", icon: FileText },
-  { to: "/app/budget", label: "Budget", icon: Wallet },
-  { to: "/app/changes", label: "Change requests", icon: GitPullRequest },
-  { to: "/app/gates", label: "Phase gates", icon: Gavel },
-  { to: "/app/health", label: "Project health", icon: Activity },
-  { to: "/app/progress", label: "Progress", icon: Gauge },
-  { to: "/app/completed", label: "Completed work", icon: CheckCircle2 },
-  { to: "/app/reviews", label: "Reviews", icon: Award },
-  { to: "/app/learning", label: "Learning", icon: Compass },
-  { to: "/app/workplace-tools", label: "Workplace tools", icon: Sparkles },
-  { to: "/app/settings", label: "Settings", icon: Settings },
+// Overflow is grouped so the 15+ modules stop feeling like peers competing for
+// attention. Renames: Learning → Competencies, Lessons → Retrospectives, so the
+// difference between them is obvious from the label alone.
+type NavGroup = { label: string; items: NavItem[] };
+const MORE_GROUPS: NavGroup[] = [
+  {
+    label: "Reporting",
+    items: [
+      { to: "/app/reports", label: "Status reports", icon: FileBarChart2 },
+      { to: "/app/health", label: "Project health", icon: Activity },
+      { to: "/app/progress", label: "Progress", icon: Gauge },
+      { to: "/app/reviews", label: "Reviews", icon: Award },
+      { to: "/app/completed", label: "Completed work", icon: CheckCircle2 },
+    ],
+  },
+  {
+    label: "Communications",
+    items: [
+      { to: "/app/meetings", label: "Meetings", icon: Users },
+      { to: "/app/comms", label: "Comms", icon: Send },
+      { to: "/app/stakeholders", label: "People", icon: Contact },
+    ],
+  },
+  {
+    label: "Artifacts",
+    items: [
+      { to: "/app/charter", label: "Project charter", icon: FileText },
+      { to: "/app/raid", label: "RAID log", icon: ShieldAlert },
+      { to: "/app/budget", label: "Budget", icon: Wallet },
+      { to: "/app/documents", label: "Documents", icon: FileText },
+      { to: "/app/templates", label: "Templates", icon: LayoutTemplate },
+    ],
+  },
+  {
+    label: "Governance",
+    items: [
+      { to: "/app/changes", label: "Change requests", icon: GitPullRequest },
+      { to: "/app/gates", label: "Phase gates", icon: Gavel },
+    ],
+  },
+  {
+    label: "Learning",
+    items: [
+      { to: "/app/learning", label: "Competencies", icon: Compass },
+      { to: "/app/lessons", label: "Retrospectives", icon: Sparkles },
+      { to: "/app/results", label: "Final review & certificate", icon: Award },
+    ],
+  },
+  {
+    label: "System",
+    items: [
+      { to: "/app/gemini", label: "Gemini AI features", icon: Sparkles },
+      { to: "/app/workplace-tools", label: "Workplace tools", icon: Sparkles },
+      { to: "/app/settings", label: "Settings", icon: Settings },
+    ],
+  },
 ];
 
 function normalisePhase(p?: string | null): keyof typeof PHASE_NAV {
