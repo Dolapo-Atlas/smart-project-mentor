@@ -20,7 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sparkles, Check, X, Download, FilePlus2, Send, GitPullRequestArrow } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
-import changesEmpty from "@/assets/illustrations/changes-empty.png";
+import changesEmpty from "@/assets/illustrations/changes-empty.png.asset.json";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import jsPDF from "jspdf";
@@ -324,7 +324,7 @@ function Changes() {
             <li>
               <EmptyState
                 icon={GitPullRequestArrow}
-                illustration={changesEmpty}
+                illustration={changesEmpty.url}
                 title="No change requests."
                 body="Enjoy the calm — it rarely lasts. When scope shifts, this is where you'll capture it."
               />

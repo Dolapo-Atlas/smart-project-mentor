@@ -7,7 +7,7 @@ import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Upload, FileText, Sparkles, Loader2, FolderOpen } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
-import documentsEmpty from "@/assets/illustrations/documents-empty.png";
+import documentsEmpty from "@/assets/illustrations/documents-empty.png.asset.json";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/app/documents")({
@@ -134,7 +134,7 @@ function Documents() {
             <li>
               <EmptyState
                 icon={FolderOpen}
-                illustration={documentsEmpty}
+                illustration={documentsEmpty.url}
                 title="No documents uploaded."
                 body="Templates are one tab over — start there, then bring the panel in for review."
                 cta={{ label: "Browse templates", to: "/app/templates" }}

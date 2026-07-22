@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Sparkles, Mail, Flame, Reply, Send } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
-import inboxEmpty from "@/assets/illustrations/inbox-empty.png";
+import inboxEmpty from "@/assets/illustrations/inbox-empty.png.asset.json";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { StakeholderHoverAvatar as StakeholderAvatar } from "@/components/stakeholder-card";
@@ -144,7 +144,7 @@ function Inbox() {
             <li>
               <EmptyState
                 icon={Mail}
-                illustration={inboxEmpty}
+                illustration={inboxEmpty.url}
                 title="Inbox zero."
                 body="Rare in real projects. Savour it — or summon a stakeholder to get the conversation moving."
               />

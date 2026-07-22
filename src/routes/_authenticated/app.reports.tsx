@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Send, Save, Download, FileText, CheckCircle2, FileClock } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
-import reportsEmpty from "@/assets/illustrations/reports-empty.png";
+import reportsEmpty from "@/assets/illustrations/reports-empty.png.asset.json";
 
 const reportsSearchSchema = z.object({
   task: z.string().uuid().optional(),
@@ -348,7 +348,7 @@ function Reports() {
         {submitted.length === 0 && (
           <EmptyState
             icon={FileClock}
-            illustration={reportsEmpty}
+            illustration={reportsEmpty.url}
             title="No status reports filed yet."
             body="Sponsors are watching quietly. A short weekly note keeps trust warm — even when there's nothing dramatic to report."
             compact
