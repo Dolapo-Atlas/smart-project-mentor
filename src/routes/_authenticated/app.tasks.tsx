@@ -30,6 +30,7 @@ import {
   Ban,
 } from "lucide-react";
 import { toast } from "sonner";
+import { insightToast } from "@/lib/insight-toast";
 import { TimeControls } from "@/components/time-controls";
 import { StakeholderHoverAvatar as StakeholderAvatar } from "@/components/stakeholder-card";
 import { MentorTriggerButton } from "@/components/mentor/task-mentor";
@@ -347,13 +348,24 @@ function Tasks() {
   const escalate = useMutation({
     mutationFn: (v: { id: string; mode: "assign_lead" | "ask_pm" | "escalate_sponsor" | "add_to_raid" }) =>
       escalateFn({ data: v }),
-    onSuccess: (res: any) => {
+    onSuccess: (res: any, vars) => {
       qc.invalidateQueries({ queryKey: ["tasks"] });
       qc.invalidateQueries({ queryKey: ["overview"] });
       qc.invalidateQueries({ queryKey: ["phase-progress"] });
       qc.invalidateQueries({ queryKey: ["chapters"] });
       qc.invalidateQueries({ queryKey: ["raid"] });
-      toast.success(`${res?.owner} has taken ownership`);
+      const key =
+        vars.mode === "ask_pm"
+          ? "delegate.ask_pm"
+          : vars.mode === "assign_lead"
+            ? "delegate.assign_lead"
+            : vars.mode === "escalate_sponsor"
+              ? "delegate.escalate_sponsor"
+              : "task.escalate";
+      insightToast(
+        key,
+        res?.system_note ?? `${res?.owner ?? "The owner"} has taken ownership — check your inbox for their update.`,
+      );
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
