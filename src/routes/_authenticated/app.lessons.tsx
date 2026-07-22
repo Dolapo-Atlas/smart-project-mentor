@@ -28,6 +28,7 @@ import {
 } from "@/lib/lessons.functions";
 import { TEMPLATES, evaluateGenericTemplate } from "@/lib/templates";
 import { getOverview } from "@/lib/sim.functions";
+import { WhyThisMatters } from "@/components/why-this-matters";
 
 const searchSchema = z.object({
   task: z.string().uuid().optional(),
