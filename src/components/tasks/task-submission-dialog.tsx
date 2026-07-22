@@ -45,6 +45,7 @@ import { getOverview } from "@/lib/sim.functions";
 import { checkSubmissionReadiness } from "@/lib/submission.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { recordDocument } from "@/lib/sim.functions";
+import { RationaleChip } from "@/components/insights/rationale-chip";
 
 type TaskLike = {
   id: string;
