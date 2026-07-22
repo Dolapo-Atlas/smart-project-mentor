@@ -682,8 +682,11 @@ function TaskCard({
           )}
           {!isComplete && t.description && (
             <div className="mt-1 line-clamp-3 text-[11px] leading-snug text-muted-foreground break-words">
-              {t.description}
+              {stripResolutionMarker(t.description)}
             </div>
+          )}
+          {!isComplete && t.description?.includes("[[RESOLUTION_JSON]]") && (
+            <ResolutionPanel description={t.description} className="mt-2" />
           )}
           {isComplete && t.feedback && (
             <div className="mt-1">
