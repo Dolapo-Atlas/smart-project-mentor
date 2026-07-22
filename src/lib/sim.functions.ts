@@ -584,6 +584,12 @@ ${pm.name.split(" ")[0]}`;
         .from("simulation_state")
         .update({ progress: Math.min(100, (s?.progress ?? 0) + 3), updated_at: new Date().toISOString() })
         .eq("user_id", context.userId);
+      try {
+        const { unblockDependents } = await import("@/lib/tasks.functions");
+        await unblockDependents(context.supabase, context.userId);
+      } catch (e) {
+        console.error("unblockDependents (done) failed", e);
+      }
     }
     return { ok: true };
   });

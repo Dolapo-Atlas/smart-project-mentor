@@ -339,6 +339,47 @@ export const advanceTime = createServerFn({ method: "POST" })
       // non-fatal
     }
 
+    // ---- Escalation resolutions: stakeholders come back after time passes ----
+    // For each blocked+escalated task without a resolution yet, insert an
+    // inbox message from the new owner and mark the task with [Resolution]
+    // so the user can Resume it and finish the work.
+    try {
+      const { data: escalated } = await supabase
+        .from("tasks")
+        .select("id,title,description,linked_stakeholder")
+        .eq("user_id", userId)
+        .eq("status", "blocked")
+        .limit(20);
+      const candidates = (escalated ?? []).filter(
+        (t) =>
+          typeof t.description === "string" &&
+          t.description.includes("[Escalated]") &&
+          !t.description.includes("[Resolution]"),
+      );
+      // Cap per advance to avoid inbox spam.
+      for (const t of candidates.slice(0, 2)) {
+        const owner = t.linked_stakeholder ?? "Functional Lead";
+        await supabase.from("inbox_messages").insert({
+          user_id: userId,
+          sender_name: owner,
+          sender_role: "Escalation owner",
+          subject: `Resolution — "${t.title}"`,
+          tone: "neutral",
+          body: `Hi — coming back to you on "${t.title}". I've worked through it on my side and the action is ready for you to pick back up. Please resume the task and close it out when you're satisfied.\n\n${owner}`,
+        });
+        await supabase
+          .from("tasks")
+          .update({
+            description: `${t.description}\n\n[Resolution] ${owner} has come back — resume when ready.`,
+          })
+          .eq("id", t.id)
+          .eq("user_id", userId);
+        newEmails.push(`${owner}: Resolution — ${t.title}`);
+      }
+    } catch {
+      // non-fatal
+    }
+
     return {
       blocked: false,
       summary: {

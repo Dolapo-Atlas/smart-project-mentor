@@ -109,6 +109,41 @@ type TaskSpec = z.infer<typeof TaskSpecSchema>;
 
 /* ---------- LIST WITH BLOCKED COMPUTATION ---------- */
 
+/**
+ * Auto-unblock: any task in status='blocked' whose `depends_on` are all
+ * satisfied (done/approved/completed/closed) is moved back to 'todo'.
+ * Escalation-parked tasks (status='blocked' with empty depends_on) are
+ * NOT touched here — they're released via resumeBlockedTask/advanceTime.
+ */
+export async function unblockDependents(supabase: any, userId: string) {
+  const { data: blocked } = await supabase
+    .from("tasks")
+    .select("id,depends_on")
+    .eq("user_id", userId)
+    .eq("status", "blocked");
+  const rows = (blocked ?? []).filter((t: any) => Array.isArray(t.depends_on) && t.depends_on.length > 0);
+  if (rows.length === 0) return 0;
+  const depIds = Array.from(new Set(rows.flatMap((r: any) => r.depends_on as string[])));
+  const { data: depRows } = await supabase
+    .from("tasks")
+    .select("id,status")
+    .in("id", depIds)
+    .eq("user_id", userId);
+  const done = new Set(
+    (depRows ?? [])
+      .filter((d: any) => ["done", "approved", "completed", "closed"].includes(d.status))
+      .map((d: any) => d.id),
+  );
+  const toUnblock = rows.filter((r: any) => (r.depends_on as string[]).every((id) => done.has(id)));
+  if (toUnblock.length === 0) return 0;
+  await supabase
+    .from("tasks")
+    .update({ status: "todo" })
+    .in("id", toUnblock.map((r: any) => r.id))
+    .eq("user_id", userId);
+  return toUnblock.length;
+}
+
 export const listTasksRich = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -452,6 +487,13 @@ Return strict JSON. Be specific and tied to the submission. Skill = the project-
       .eq("id", data.id)
       .eq("user_id", userId);
 
+    // Cascade: any task that was blocked by this one is now free.
+    try {
+      await unblockDependents(supabase, userId);
+    } catch (e) {
+      console.error("unblockDependents (approve) failed", e);
+    }
+
     // Story log + reflection
     const { data: state } = await supabase
       .from("simulation_state")
@@ -618,6 +660,46 @@ export const escalateTask = createServerFn({ method: "POST" })
     });
 
     return { ok: true, owner: newOwner };
+  });
+
+/* ---------- RESUME A BLOCKED TASK (post-escalation) ---------- */
+
+export const resumeBlockedTask = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: task } = await supabase
+      .from("tasks")
+      .select("id,status,depends_on,description")
+      .eq("id", data.id)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (!task) throw new Error("Task not found");
+    if (task.status !== "blocked") throw new Error("Task is not blocked");
+    // If dependency-blocked, refuse — dependencies must complete first.
+    const deps = (task.depends_on ?? []) as string[];
+    if (deps.length > 0) {
+      const { data: depRows } = await supabase
+        .from("tasks")
+        .select("id,status,title")
+        .in("id", deps)
+        .eq("user_id", userId);
+      const unmet = (depRows ?? []).filter(
+        (d: any) => !["done", "approved", "completed", "closed"].includes(d.status),
+      );
+      if (unmet.length > 0) {
+        throw new Error(
+          `Still blocked by: ${unmet.map((d: any) => d.title).join(", ")}. Complete these first.`,
+        );
+      }
+    }
+    await supabase
+      .from("tasks")
+      .update({ status: "in_progress" })
+      .eq("id", data.id)
+      .eq("user_id", userId);
+    return { ok: true };
   });
 
 /* ---------- COMPLETED WORK LOG ---------- */
