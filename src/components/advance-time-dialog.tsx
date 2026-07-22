@@ -133,12 +133,11 @@ export function AdvanceTimeDialog({
               : "time.advance";
       insightToast(key, title, { kind: blockerCount > 0 && force ? "warning" : "success" });
       qc.invalidateQueries();
-      // Capture phase change vs. the readiness snapshot we already loaded.
-      const phaseChanged = !!s.phase && s.phase !== data?.phase && !!data?.phase
-        ? true
-        : mode === "steerco" || mode === "golive"
-          ? true
-          : false;
+      // Phase only advances when blockers are cleared AND the mode is
+      // sprint / steerco / go-live (see advanceTime in time.functions.ts).
+      const phaseChanged =
+        (mode === "sprint" || mode === "steerco" || mode === "golive") &&
+        blockerCount === 0;
       setReview({
         days: s.days,
         fromDay: s.fromDay,
