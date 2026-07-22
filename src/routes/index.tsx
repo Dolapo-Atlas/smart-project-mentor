@@ -267,7 +267,7 @@ function Hero() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent-orange opacity-60" />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent-orange" />
               </span>
-              Now accepting Founder Access
+              Founder access is open
             </span>
           </Reveal>
           <Reveal delay={80}>
@@ -278,7 +278,7 @@ function Hero() {
           </Reveal>
           <Reveal delay={160}>
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">
-              Experience realistic workplace scenarios, collaborate with stakeholders, make decisions, and build the confidence employers expect — all inside a safe, AI-powered simulation.
+              Atlas drops you into a real project. Your sponsor emails you at 8pm. Finance pushes back on your budget. A vendor slips a deadline. You decide what happens next, and you get to see how it plays out.
             </p>
           </Reveal>
           <Reveal delay={240}>
@@ -309,7 +309,7 @@ function Hero() {
                 </span>
               </div>
               <div className="hidden items-center gap-2 text-xs text-muted-foreground sm:flex">
-                <Sparkles className="h-3.5 w-3.5 text-accent-orange" /> First 100 get Founder Access
+                <Sparkles className="h-3.5 w-3.5 text-accent-orange" /> Free for the first 100 sign-ups
               </div>
             </div>
           </Reveal>
@@ -333,7 +333,7 @@ function SocialProof() {
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
         <Reveal>
           <p className="text-center text-[11px] font-medium uppercase tracking-[0.28em] text-muted-foreground/80">
-            Built around the frameworks and tools the industry already uses
+            Modelled on how real project teams actually work
           </p>
         </Reveal>
         <Reveal delay={120}>
@@ -434,36 +434,36 @@ const FEATURES: Array<{
   {
     icon: Mail,
     tag: "Inbox",
-    title: "A live stakeholder inbox.",
-    body: "Sponsors, finance, vendors, governance — each writes in character. They remember what you ignore.",
+    title: "Your sponsor emails you at 8pm.",
+    body: "Finance, vendors and governance all have their own voice. Ignore them and they notice.",
     preview: <PreviewInbox />,
   },
   {
     icon: FileText,
     tag: "Charter",
-    title: "Real project documentation.",
-    body: "Charters, RAID logs, status reports, stakeholder registers — drafted as actual deliverables.",
+    title: "Write the docs a real PM writes.",
+    body: "Charters, RAID logs, status reports and stakeholder registers. Drafted properly, not from a template.",
     preview: <PreviewCharter />,
   },
   {
     icon: Sparkles,
     tag: "AI Review",
-    title: "Workplace-grade AI panel.",
-    body: "Every artefact gets a structured review across clarity, completeness, governance and professionalism.",
+    title: "Feedback like a senior PM would give.",
+    body: "Submit any artefact and get a proper review on what's clear, what's missing and what a governance board would push back on.",
     preview: <PreviewAiReview />,
   },
   {
     icon: GitBranch,
     tag: "Decisions",
-    title: "Decisions with consequences.",
-    body: "Every reply, every late deliverable shapes the project. The story — and your reputation — bends with you.",
+    title: "Choices that actually stick.",
+    body: "Reply late and stakeholders remember. Cut scope and the sponsor asks why. Your project bends around what you do.",
     preview: <PreviewDecision />,
   },
   {
     icon: Users,
     tag: "Stakeholders",
-    title: "Stakeholder management.",
-    body: "Track sentiment and influence. Recover relationships before the Friday call.",
+    title: "Read the room before Friday.",
+    body: "See who's happy, who's slipping, and who you need to call before the next steering committee.",
     preview: <PreviewStakeholders />,
   },
   {
