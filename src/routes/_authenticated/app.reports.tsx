@@ -1,5 +1,6 @@
 import { createFileRoute, useSearch, useNavigate } from "@tanstack/react-router";
 import { TaskContextPanel } from "@/components/mentor/task-context-panel";
+import { WhyThisMatters } from "@/components/why-this-matters";
 import { ReportingPack } from "@/components/dashboard/reporting-pack";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -268,6 +269,26 @@ function Reports() {
       </header>
 
       <TaskContextPanel taskId={search.task} />
+
+      <WhyThisMatters
+        storageKey="reports"
+        title="Why you're writing a Status Report"
+        body={
+          <>
+            <p>
+              The Status Report isn't paperwork — it's how you buy sponsor trust and
+              buy yourself early warning. A green report that hides risks is worse than
+              an amber one that names them.
+            </p>
+            <p>
+              The sponsor doesn't want to be surprised. If they hear about a slip from
+              you first, with a mitigation and a decision to make, you're a PM they can
+              back. If they hear about it from someone else, you've lost the room.
+            </p>
+          </>
+        }
+        tip="If your RAG is amber or red, always tell the sponsor what decision you need from them."
+      />
 
       <ReportingPack />
 
