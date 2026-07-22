@@ -1,62 +1,105 @@
-## Goal
+# Atlas UX Polish — Batch A (Weekend-Ready)
 
-Make the landing page hero "come alive" like the uploaded reference — a layered product mockup with floating UI cards, subtle motion, and a stronger sense of a real, working workspace. Landing-page only. No changes to auth, app routes, backend, or scoring.
+Goal: make Atlas feel like it was built by a team of 10, not by Lovable — without touching any simulation, scoring, or AI logic. Everything below is presentation/visual layer only.
 
-## What the reference shows (and what we're missing)
+## Scope guardrails (what stays untouched)
 
-The reference hero is a **composed scene**, not a single card:
-1. A macOS-chrome "browser window" showing a mini Atlas dashboard (navy sidebar with Home/Inbox/Tasks/People/Charter/Kick-off + Phase card + "Powered by Google Gemini" footer, and a **"Recommended Next Step"** hero card with orange progress + "Start task").
-2. A floating **Inbox popover** overlapping the top-right (Margaret Chen / James Lin / Sarah Williams).
-3. A floating **"Task in Progress"** card overlapping the bottom-left (progress bar, chips, avatar).
-4. A floating **"RAID Log · Summary"** card overlapping the bottom-right (donut chart + legend).
-5. Soft dotted texture on the right, gentle float/parallax, all in the cream + navy + orange palette we already own.
+- No changes to `sim.functions.ts`, `time.functions.ts`, `tasks.functions.ts`, `learning.ts`, `pm.functions.ts`, `submission.functions.ts`, `templates.ts`, or any Supabase schema.
+- No changes to routes, server functions, query keys, or invalidation logic.
+- No changes to Charter, RAID, Budget, Reports, Meetings, CR, Retros module logic.
+- Sidebar structure, phase gates, blocker detection, task permissions all remain as they are.
 
-Today's hero has one flat `HeroInbox` card. That's the gap.
+## 1. Motion & micro-interactions
 
-## Plan (frontend-only, hero + nav polish)
+Install `framer-motion` (already peer-compatible). Add a small motion primitives file `src/components/motion/primitives.tsx` with reusable variants (`fadeUp`, `stagger`, `pop`, `checkPulse`).
 
-### 1. Replace `HeroInbox` with a new `HeroStage` composition
-File: `src/routes/index.tsx` (swap the `<HeroInbox />` usage), new file `src/components/landing/hero-stage.tsx`.
+Apply to:
+- **Dashboard hero card** — subtle fadeUp on mount, progress bar animates from 0 to current value.
+- **Task summary strip** — staggered count-up on the four numbers (uses `useReducedMotion` for accessibility).
+- **Task board columns** — cards fade+slide when status changes; column count badges pop on update.
+- **Phase progress card** — checkmarks fill with a spring animation when a deliverable completes.
+- **Buttons** — micro press-scale (0.97) on primary/navy CTAs.
+- **Sidebar nav** — active-tile transition with layoutId (Linear-style pill slide).
+- **Phase gate advance** — confetti burst (canvas-confetti, ~4KB) + navy-to-orange gradient sweep across the hero when a phase completes.
 
-Structure:
-- **Base layer** — browser-chrome frame (reuse traffic-light dots) containing a *miniature* of the real Atlas dashboard:
-  - Left: condensed navy sidebar (Atlas mark, Home/Inbox/Tasks/People/Charter/Kick-off tiles with the same neutral-tile + orange-icon treatment we already ship, Phase card, "Powered by Google Gemini" chip).
-  - Right: greeting line ("Good afternoon, Dolapo."), time-control chips (Next Day / Next Week / Begin Sprint / Steering Committee / Go-Live), a **Recommended Next Step** card (navy body, orange progress, white "Start task" pill), a compact Kanban strip (To Do / In Progress / Pending Review / Completed).
-  - All static markup — no data fetching, no functional buttons. Purely a visual mirror of the real dashboard.
-- **Floating layer** (absolutely positioned over the frame):
-  - Top-right: **Inbox popover** — 3 messages, "5 new" chip, "View all messages →" footer. Gentle float animation (staggered from the frame).
-  - Bottom-left: **Task in Progress** card — "Update Project Charter · Technical Milestones", Documentation/Critical/Ch.2 chips, 52% progress bar, "Due this week · James Lin".
-  - Bottom-right: **RAID Log · Summary** card — SVG donut (Risks 12 / Actions 10 / Issues 6 / Decisions 4) with legend. Donut built as a single SVG with 4 arcs, no chart lib.
-- **Ambient layer** — retain the existing radial-gradient wash + add a subtle dotted pattern (CSS `radial-gradient` dots) on the far right, matching the reference.
+Respects `prefers-reduced-motion` everywhere.
 
-### 2. Motion (tasteful, not busy)
-- Reuse the existing `Reveal` intersection helper for enter animation.
-- Each floating card gets its own slow `float` keyframe with different phase/duration (6s / 8s / 10s) so they drift independently.
-- On pointer-move over the stage (desktop only), apply a very small parallax translate (±4px) to the three floating cards using `requestAnimationFrame`. Disabled under `prefers-reduced-motion` and on touch.
-- One subtle "typing" shimmer on the Recommended Next Step progress bar (loop 0→11%→0 over ~6s), echoing `AutoDemo` energy.
+## 2. Characterful empty states
 
-### 3. Responsive behaviour
-- ≥ lg: full composed scene as described.
-- md: hide the RAID donut card, keep Inbox + Task cards, shrink frame.
-- < md: show only the browser frame with the Recommended Next Step card; floating cards collapse into a single stacked "peek" below the frame so mobile stays legible (matches current hero footprint).
+New shared component `src/components/empty-state.tsx` accepts `illustration`, `title`, `body`, `cta`. Voice matches Atlas mentor tone (warm, PM-flavoured).
 
-### 4. Nav polish to match reference
-- Add an "About" and "FAQ" hover underline treatment (already links, just visual).
-- Keep everything else identical.
+Applied to:
+- RAID: "No risks logged yet. David hasn't flagged anything either — quiet, but stay alert."
+- Change Requests: "No change requests. Enjoy the calm — it rarely lasts."
+- Inbox: "Inbox zero. Rare in real projects. Savour it."
+- Meetings: "No meetings scheduled. Time to actually do the work."
+- Retrospectives: "No retros yet. You need a phase gate under your belt first."
+- Reports: "No status reports filed. Sponsors are watching quietly."
+- Documents: "No documents uploaded. Templates are one tab over."
+- Tasks: "All clear on this filter. Try switching columns."
 
-### 5. Small copy nudge (optional, one line)
-Reference eyebrow reads "Now accepting Founder Access" with a live orange dot — we already have this exact treatment. No copy changes.
+## 3. Day in Review recap modal
 
-## What stays untouched
+New component `src/components/dashboard/day-in-review.tsx`. Triggers automatically after `advanceTime` returns, before returning control to the user. Duolingo-style modal, 3 animated slides:
 
-- All auth, `/app/*`, backend, server functions, templates, scoring, AI, task logic.
-- Everything below the hero on the landing page (`SocialProof`, `AutoDemo`, `Features`, `HowItWorks`, `Experience`, `WhyAtlas`, `Founder`, `Faq`, `SiteFooter`) — untouched.
-- Color tokens in `src/styles.css` — untouched. Cream bg, navy, orange accent, semantic tokens only.
-- `HeroInbox` component — deleted after `HeroStage` replaces it (it's only used in the hero).
+1. **What changed** — count-up of new inbox messages, resolved blockers, new tasks. Icons animate in sequence.
+2. **Wins & watch-outs** — pulled from the existing `resolution` payload and RAID severity. No new data source; just presentation.
+3. **What's next** — top 3 recommended tasks (from existing `listWhatsNext`). Each card is clickable and closes the modal into the target module.
 
-## Files touched
+Persistence: user can dismiss and reopen from the sidebar "More" menu ("Last day recap"). Won't auto-open more than once per advance.
 
-- `src/routes/index.tsx` — swap `<HeroInbox />` for `<HeroStage />`, remove `HeroInbox` definition.
-- `src/components/landing/hero-stage.tsx` — new; composed scene + floating cards + donut SVG + motion.
+## 4. Custom illustrations (flat-geometric, navy/orange/cream)
 
-That's it. Fully additive, reversible, and matches the reference structure without pulling in real product data.
+Generate 8 illustrations via image gen, style-locked to: flat geometric, thin strokes, navy `#0B132B` + orange `#F97316` + cream `#FFF8EF` + neutral `#E5E7EB`, subtle grid backgrounds, no gradients.
+
+Set:
+1. David the mentor — portrait for mentor panels
+2. Empty inbox
+3. Empty RAID (calm office)
+4. Empty change requests
+5. Empty meetings (empty conference room)
+6. Phase-gate hero (mountain summit / flag)
+7. Celebration (confetti + trophy) for Day in Review "wins" slide
+8. Onboarding hero for the Comfort Start brief sheet
+
+Each committed as a `.asset.json` pointer via `lovable-assets` — repo stays light.
+
+## 5. Micro-polish sweep
+
+- Card hover elevations (subtle, 2px lift + shadow) on dashboard tiles and RAID summary tiles.
+- Focus rings tightened to Atlas orange for keyboard navigation.
+- Skeleton loaders replaced with animated shimmer using existing tokens (currently a static grey box on some routes).
+- Tooltip on the sidebar phase card's progress bar showing "X of Y deliverables mapped."
+
+## Files created
+
+- `src/components/motion/primitives.tsx`
+- `src/components/empty-state.tsx`
+- `src/components/dashboard/day-in-review.tsx`
+- `src/assets/illustrations/*.svg.asset.json` (8 pointers)
+
+## Files modified (presentation only, no logic changes)
+
+- `src/routes/_authenticated/app.index.tsx` — motion on hero + strip, mount Day in Review, empty-state prop pass-through
+- `src/components/dashboard/continue-card.tsx` — animated progress bar
+- `src/components/dashboard/task-summary-strip.tsx` — count-up numbers
+- `src/components/dashboard/task-board.tsx` — card motion + empty state
+- `src/components/dashboard/phase-progress-card.tsx` — check animation + tooltip
+- `src/routes/_authenticated/app.tsx` — sidebar active-tile motion, "Last day recap" entry
+- `src/routes/_authenticated/app.raid.tsx`, `app.inbox.tsx`, `app.meetings.tsx`, `app.documents.tsx`, `app.tasks.tsx`, `app.change-requests.tsx`, `app.reports.tsx`, `app.retros.tsx` — empty-state swap
+- `src/styles.css` — micro-polish tokens (hover elevation, focus ring, shimmer keyframes)
+- `package.json` — add `framer-motion`, `canvas-confetti`
+
+## What's NOT in this batch (Batch B, post-presentation)
+
+- Guided onboarding tour (medium risk — DOM-selector coupling)
+- Mobile-first RAID & Kanban restructure (medium-high risk — restructures working screens)
+
+## Verification
+
+After build I'll manually confirm:
+- Dashboard hero + strip animate on mount without layout shift
+- Advance a day → Day in Review opens with real counts from `advanceTime` output
+- One phase gate advance still fires (Steering Committee unchanged), plus confetti
+- Empty states render on filtered views without hitting protected data
+- No new console errors; existing simulation flows unaffected
