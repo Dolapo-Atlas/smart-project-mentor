@@ -66,19 +66,23 @@ export function EmptyState({
 
       <div className="relative mx-auto flex max-w-md flex-col items-center gap-3">
         {illustration ? (
-          <motion.img
-            src={illustration}
-            alt=""
-            aria-hidden
-            loading="lazy"
-            width={768}
-            height={512}
+          <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", stiffness: 180, damping: 22, delay: 0.05 }}
-            className="mb-1 h-36 w-auto max-w-[240px] select-none"
-            draggable={false}
-          />
+            className="mb-2 flex h-40 w-full max-w-[260px] items-center justify-center overflow-hidden rounded-xl bg-cream shadow-sm ring-1 ring-border/60"
+          >
+            <img
+              src={illustration}
+              alt=""
+              aria-hidden
+              loading="lazy"
+              width={768}
+              height={512}
+              className="h-full w-full select-none object-cover"
+              draggable={false}
+            />
+          </motion.div>
         ) : (
           <motion.div
             initial={{ scale: 0.85, opacity: 0 }}
