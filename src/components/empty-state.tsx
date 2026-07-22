@@ -38,6 +38,7 @@ export function EmptyState({
 }) {
   return (
     <motion.div
+      data-atlas-empty-state
       initial="hidden"
       animate="visible"
       variants={fadeUp}
@@ -70,16 +71,17 @@ export function EmptyState({
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", stiffness: 180, damping: 22, delay: 0.05 }}
-            className="mb-2 flex h-40 w-full max-w-[260px] items-center justify-center overflow-hidden rounded-xl bg-cream shadow-sm ring-1 ring-border/60"
+            className="mb-2 flex h-44 w-full max-w-[280px] items-center justify-center overflow-hidden rounded-xl bg-muted/30 shadow-sm ring-1 ring-border/60 sm:h-40 sm:max-w-[260px]"
           >
             <img
               src={illustration}
               alt=""
               aria-hidden
-              loading="lazy"
+              loading="eager"
+              fetchPriority="high"
               width={768}
               height={512}
-              className="h-full w-full select-none object-cover"
+              className="h-full w-full select-none object-contain"
               draggable={false}
             />
           </motion.div>
