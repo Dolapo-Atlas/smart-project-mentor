@@ -16,6 +16,7 @@ import { TaskBoard } from "@/components/dashboard/task-board";
 import { ProjectSidePanel } from "@/components/dashboard/project-side-panel";
 import { ProjectBriefSheet } from "@/components/dashboard/project-brief-sheet";
 import { WelcomeBackPanel } from "@/components/dashboard/welcome-back-panel";
+import { PhaseReadinessPanel } from "@/components/dashboard/phase-readiness-panel";
 import { useEffect, useRef, useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/app/")({
@@ -149,6 +150,7 @@ function Dashboard() {
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="min-w-0 space-y-6">
           <div className="atlas-rise atlas-rise-2"><ContinueCard /></div>
+          <div className="atlas-rise atlas-rise-2"><PhaseReadinessPanel /></div>
           <div className="atlas-rise atlas-rise-3"><TaskSummaryStrip /></div>
           <div className="atlas-rise atlas-rise-4"><TaskBoard /></div>
         </div>
