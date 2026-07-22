@@ -15,6 +15,8 @@ import { ArrowRight, Lock } from "lucide-react";
 import { TaskStateRibbon } from "@/components/insights/insight-ribbon";
 import { RationaleChip } from "@/components/insights/rationale-chip";
 import { ResolutionPanel, stripResolutionMarker } from "@/components/insights/resolution-panel";
+import { motion, fadeUp, stagger } from "@/components/motion/primitives";
+import { AnimatePresence } from "framer-motion";
 
 type Task = {
   id: string;
@@ -89,10 +91,18 @@ export function TaskBoard() {
                     Empty
                   </li>
                 )}
+                <AnimatePresence initial={false}>
                 {col.items.slice(0, 6).map((t) => {
                   const blocked = t.blocked_by?.length > 0;
                   return (
-                    <li key={t.id}>
+                    <motion.li
+                      key={t.id}
+                      layout
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                    >
                       <button
                         type="button"
                         onClick={() => setSelected(t)}
@@ -122,9 +132,10 @@ export function TaskBoard() {
                           </div>
                         </div>
                       </button>
-                    </li>
+                    </motion.li>
                   );
                 })}
+                </AnimatePresence>
                 {col.items.length > 6 && (
                   <li className="pt-1 text-center text-[11px] text-muted-foreground">
                     +{col.items.length - 6} more
