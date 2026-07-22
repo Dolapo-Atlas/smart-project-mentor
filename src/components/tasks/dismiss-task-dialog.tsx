@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { RationaleChip } from "@/components/insights/rationale-chip";
 
 const REASONS = [
   { value: "not_relevant", label: "Not relevant" },
@@ -97,6 +98,7 @@ export function DismissTaskDialog({
             {busy ? "Dismissing…" : "Dismiss task"}
           </Button>
         </DialogFooter>
+        <RationaleChip insight="task.dismiss" className="pt-1" />
       </DialogContent>
     </Dialog>
   );

@@ -7,6 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Sparkles } from "lucide-react";
+import { RationaleChip } from "@/components/insights/rationale-chip";
+import { insightToast } from "@/lib/insight-toast";
 
 const CHIPS = ["What worked", "What I'd change", "Stakeholder insight", "Skill practised", "For interviews"];
 
@@ -51,7 +53,7 @@ export function ReflectionDialog({
         },
       }),
     onSuccess: () => {
-      toast.success("Reflection saved to your Learning Journey.");
+      insightToast("reflection.save", "Reflection saved to your Learning Journey.");
       onOpenChange(false);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to save"),
@@ -107,6 +109,7 @@ export function ReflectionDialog({
             Save reflection
           </Button>
         </DialogFooter>
+        <RationaleChip insight="reflection.save" className="pt-1" />
       </DialogContent>
     </Dialog>
   );

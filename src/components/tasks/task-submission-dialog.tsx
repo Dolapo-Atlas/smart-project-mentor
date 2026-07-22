@@ -589,6 +589,7 @@ export function TaskSubmissionDialog({
             {submitting ? "Submitting…" : "Submit for review"}
           </Button>
         </DialogFooter>
+        <RationaleChip insight="task.submit" className="pt-2" />
       </DialogContent>
     </Dialog>
   );

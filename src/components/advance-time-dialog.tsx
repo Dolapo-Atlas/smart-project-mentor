@@ -17,6 +17,9 @@ import { toast } from "sonner";
 import { ReadAloudButton } from "@/components/read-aloud-button";
 import { useVoiceSettings, useSpeech, personaForStakeholder } from "@/lib/voice";
 import { useEffect, useMemo } from "react";
+import { RationaleChip } from "@/components/insights/rationale-chip";
+import { insightToast } from "@/lib/insight-toast";
+import type { InsightKey } from "@/lib/pm-insights";
 
 type Mode = "day" | "week" | "sprint" | "steerco" | "golive";
 
@@ -114,11 +117,19 @@ export function AdvanceTimeDialog({
         return;
       }
       const s = res.summary!;
-      toast.success(
+      const title =
         `Advanced ${s.days} day${s.days === 1 ? "" : "s"} → Day ${s.toDay}` +
-          (s.healthChange ? ` · Health ${s.healthChange.from} → ${s.healthChange.to}` : "") +
-          (s.newEmails.length ? ` · ${s.newEmails.length} new email${s.newEmails.length === 1 ? "" : "s"}` : ""),
-      );
+        (s.healthChange ? ` · Health ${s.healthChange.from} → ${s.healthChange.to}` : "") +
+        (s.newEmails.length ? ` · ${s.newEmails.length} new email${s.newEmails.length === 1 ? "" : "s"}` : "");
+      const key: InsightKey =
+        mode === "steerco"
+          ? "time.steerco"
+          : mode === "golive"
+            ? "time.golive"
+            : blockerCount > 0
+              ? "time.advance.blocked"
+              : "time.advance";
+      insightToast(key, title, { kind: blockerCount > 0 && force ? "warning" : "success" });
       qc.invalidateQueries();
       onOpenChange(false);
     } catch (e) {
@@ -172,6 +183,18 @@ export function AdvanceTimeDialog({
             {advancing ? "Advancing…" : blockerCount === 0 ? `Continue to ${MODE_LABEL[mode]}` : "Continue Anyway"}
           </Button>
         </DialogFooter>
+        <RationaleChip
+          insight={
+            mode === "steerco"
+              ? "time.steerco"
+              : mode === "golive"
+                ? "time.golive"
+                : blockerCount > 0
+                  ? "time.advance.blocked"
+                  : "time.advance"
+          }
+          className="pt-2"
+        />
       </DialogContent>
     </Dialog>
   );
