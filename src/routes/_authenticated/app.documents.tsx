@@ -129,8 +129,13 @@ function Documents() {
       <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
         <ul className="space-y-2">
           {(docs ?? []).length === 0 && (
-            <li className="rounded-md border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-              No documents yet. Upload something to get reviewed.
+            <li>
+              <EmptyState
+                icon={FolderOpen}
+                title="No documents uploaded."
+                body="Templates are one tab over — start there, then bring the panel in for review."
+                cta={{ label: "Browse templates", to: "/app/templates" }}
+              />
             </li>
           )}
           {docs?.map((d) => (

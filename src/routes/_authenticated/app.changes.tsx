@@ -319,8 +319,12 @@ function Changes() {
       <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
         <ul className="space-y-2">
           {(crs ?? []).length === 0 && (
-            <li className="rounded-md border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-              No change requests yet.
+            <li>
+              <EmptyState
+                icon={GitPullRequestArrow}
+                title="No change requests."
+                body="Enjoy the calm — it rarely lasts. When scope shifts, this is where you'll capture it."
+              />
             </li>
           )}
           {crs?.map((c) => {

@@ -284,8 +284,12 @@ function Meetings() {
       <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
         <ul className="space-y-2">
           {(meetings ?? []).length === 0 && (
-            <li className="rounded-md border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-              No meetings yet.
+            <li>
+              <EmptyState
+                icon={CalendarClock}
+                title="No meetings on the books."
+                body="Time to actually do the work — or schedule one when you need a decision from stakeholders."
+              />
             </li>
           )}
           {meetings?.map((m) => {

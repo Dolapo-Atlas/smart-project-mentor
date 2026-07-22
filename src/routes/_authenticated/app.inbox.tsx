@@ -139,8 +139,12 @@ function Inbox() {
       <div className="grid gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
         <ul className="space-y-2">
           {(messages ?? []).length === 0 && (
-            <li className="rounded-md border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-              The inbox is quiet. Summon a stakeholder to get started.
+            <li>
+              <EmptyState
+                icon={Mail}
+                title="Inbox zero."
+                body="Rare in real projects. Savour it — or summon a stakeholder to get the conversation moving."
+              />
             </li>
           )}
           {messages?.map((m) => {

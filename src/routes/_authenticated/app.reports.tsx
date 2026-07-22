@@ -344,9 +344,12 @@ function Reports() {
           Every submitted status report is archived here. Download as Word or PDF for your records.
         </p>
         {submitted.length === 0 && (
-          <div className="rounded-md border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-            No submitted reports yet. Submit a report to the sponsor and it will be saved here.
-          </div>
+          <EmptyState
+            icon={FileClock}
+            title="No status reports filed yet."
+            body="Sponsors are watching quietly. A short weekly note keeps trust warm — even when there's nothing dramatic to report."
+            compact
+          />
         )}
         <ul className="space-y-2">
           {submitted.map((r) => (

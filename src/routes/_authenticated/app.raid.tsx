@@ -419,7 +419,13 @@ function RaidPage() {
           <tbody>
             {rows.length === 0 && (
               <tr><td colSpan={8} className="px-4 py-10 text-center text-sm text-muted-foreground">
-                No {tab}s logged. Click <span className="font-medium text-foreground">New entry</span> to add one.
+                {tab === "risk"
+                  ? "No risks logged yet. David hasn't flagged anything either — quiet, but stay alert."
+                  : tab === "assumption"
+                    ? "No assumptions on record. Every plan makes some — write yours down before they surprise you."
+                    : tab === "issue"
+                      ? "No issues raised. Momentum feels good until it doesn't — capture the first sign of friction here."
+                      : "No dependencies mapped. If another team's work has to land first, note it before it slips."}
               </td></tr>
             )}
             {rows.map((r, i) => {
