@@ -24,7 +24,6 @@ import { WhyThisMatters } from "@/components/why-this-matters";
 import { Plus, Users, CheckCircle2, Sparkles, Mic, MessageSquare, NotebookPen, PlayCircle, UserPlus, X, Wand2, Send, ListChecks } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
-import { TimeControls } from "@/components/time-controls";
 
 export const Route = createFileRoute("/_authenticated/app/meetings")({
   component: Meetings,
@@ -65,9 +64,6 @@ function PostMeetingActions({
           </li>
         ))}
       </ul>
-      <div className="mt-4">
-        <TimeControls compact />
-      </div>
     </div>
   );
 }
