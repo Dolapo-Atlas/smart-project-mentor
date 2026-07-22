@@ -20,6 +20,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { WhyThisMatters } from "@/components/why-this-matters";
 import { Plus, Users, CheckCircle2, Sparkles, Mic, MessageSquare, NotebookPen, PlayCircle, UserPlus, X, Wand2, Send, ListChecks } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -239,6 +240,27 @@ function Meetings() {
           Schedule stand-ups, steering committees, vendor calls, and retros. Capture decisions and minutes — AI generates a sharp summary you can paste into governance reports.
         </p>
       </header>
+
+      <WhyThisMatters
+        storageKey="meetings"
+        title="Why you're running Meetings"
+        body={
+          <>
+            <p>
+              Meetings exist to make <em>decisions</em>, not to broadcast status. If a
+              meeting could have been an email, it should have been. Every meeting on
+              this project should end with either a decision, a next action with a
+              named owner, or a clear reason it was postponed.
+            </p>
+            <p>
+              Steering committees especially: the sponsor's time is the most expensive
+              resource on your project. Come with options and a recommendation, not
+              open questions.
+            </p>
+          </>
+        }
+        tip="Every agenda item needs an owner and a time-box. Otherwise it's a wish, not a plan."
+      />
 
       <section className="rounded-lg border border-border bg-card p-5">
         <h2 className="font-display text-xl">Schedule a meeting</h2>

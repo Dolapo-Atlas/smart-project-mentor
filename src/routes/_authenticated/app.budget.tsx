@@ -1,6 +1,7 @@
 import { createFileRoute, useSearch } from "@tanstack/react-router";
 import { z } from "zod";
 import { TaskContextPanel } from "@/components/mentor/task-context-panel";
+import { WhyThisMatters } from "@/components/why-this-matters";
 import { BudgetBriefing } from "@/components/dashboard/budget-briefing";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -110,6 +111,27 @@ function Budget() {
       </header>
 
       <TaskContextPanel taskId={search.task} />
+
+      <WhyThisMatters
+        storageKey="budget"
+        title="Why you're tracking a Budget"
+        body={
+          <>
+            <p>
+              The budget is how you defend decisions with numbers. Sponsors don't fund
+              activities — they fund outcomes at a price. Every invoice, forecast and
+              variance you log here is future ammunition for a conversation about scope,
+              speed or quality.
+            </p>
+            <p>
+              A well-kept budget lets you say "we can absorb this change" or "we can't,
+              here's why" with evidence. A neglected one leaves you at the mercy of
+              whoever shouts loudest at the steering committee.
+            </p>
+          </>
+        }
+        tip="Log invoices as they arrive, not at month-end. Fresh actuals make forecasts trustworthy."
+      />
 
       <BudgetBriefing />
 

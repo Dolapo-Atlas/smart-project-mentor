@@ -19,6 +19,7 @@ import {
   type RegisterRow,
 } from "@/lib/stakeholder-register.functions";
 import { TEMPLATES } from "@/lib/templates";
+import { WhyThisMatters } from "@/components/why-this-matters";
 
 const stakeholdersSearchSchema = z.object({
   task: z.string().uuid().optional(),
@@ -64,6 +65,28 @@ function StakeholdersPage() {
           {showRegister ? "Hide register" : "Stakeholder register"}
         </Button>
       </div>
+
+      <WhyThisMatters
+        storageKey="stakeholders"
+        title="Why you're managing Stakeholders"
+        body={
+          <>
+            <p>
+              Stakeholders aren't a contact list — they're the people who can make or
+              break this project. Each one has an interest (what they want),
+              influence (how much power they have) and an attitude (supportive,
+              neutral, hostile). Your job is to keep the powerful ones informed and
+              the sceptical ones engaged, on purpose.
+            </p>
+            <p>
+              Neglected stakeholders don't disappear — they show up at the steering
+              committee with objections you didn't see coming. Cheaper to hear their
+              concerns in a 1:1 now than in a governance meeting later.
+            </p>
+          </>
+        }
+        tip="Update sentiment after every interaction. Yesterday's champion can be today's blocker."
+      />
 
       {showRegister && <RegisterPanel taskId={search.task} />}
 

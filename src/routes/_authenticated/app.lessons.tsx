@@ -250,6 +250,27 @@ function LessonsPage() {
           </div>
         </header>
 
+        <WhyThisMatters
+          storageKey="lessons"
+          title="Why you're writing Lessons Learned"
+          body={
+            <>
+              <p>
+                Lessons Learned aren't a retro ritual — they're the debt your next
+                project inherits, for better or worse. The team after yours will hit
+                the same rocks unless you name them, honestly, with root causes and
+                concrete actions.
+              </p>
+              <p>
+                The rule: no blame, no vague platitudes ("we should communicate
+                better"). Describe the pattern, ask why twice, and leave an action
+                with an owner and a date. That's what a real retro delivers.
+              </p>
+            </>
+          }
+          tip="Actions without an owner and a date will not land. Assign both, always."
+        />
+
         {mode === "edit" ? (
           <div className="space-y-4">
             {template.fields.map((f) => (
