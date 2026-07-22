@@ -48,6 +48,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { checkIsAdmin } from "@/lib/session.functions";
+import { ResolutionPanel, stripResolutionMarker } from "@/components/insights/resolution-panel";
 import { Archive, X } from "lucide-react";
 import { detectTemplateKind } from "@/lib/templates";
 
