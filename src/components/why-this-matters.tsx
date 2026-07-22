@@ -1,6 +1,5 @@
-import { Lightbulb } from "lucide-react";
 import { useState } from "react";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { Lightbulb, ChevronDown, ChevronRight } from "lucide-react";
 
 type Props = {
   title: string;
