@@ -23,6 +23,7 @@ import {
   Trophy,
   ArrowRight,
   BookOpen,
+  LifeBuoy,
 } from "lucide-react";
 
 type Props = {
@@ -150,6 +151,49 @@ export function ProjectBriefSheet({ open, onOpenChange }: Props) {
 
           <Section icon={Target} label="Your mission">
             <p>{mission}</p>
+          </Section>
+
+          <Section icon={LifeBuoy} label="How to survive this sim">
+            <div className="rounded-lg border border-accent-orange/30 bg-accent-orange/5 p-4">
+              <p className="font-medium text-foreground">
+                You are not meant to clear the board.
+              </p>
+              <p className="mt-2">
+                Real project managers never see an empty task list. Atlas is the
+                same — the goal is to make good calls under pressure, not to
+                finish every item.
+              </p>
+              <ul className="mt-3 space-y-1.5">
+                <li className="flex gap-2">
+                  <span className="text-accent-orange">•</span>
+                  <span>
+                    <span className="font-medium text-foreground">Pick one thing at a time.</span>{" "}
+                    Use “Continue where you left off” or the top priority — ignore the rest for now.
+                  </span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-accent-orange">•</span>
+                  <span>
+                    <span className="font-medium text-foreground">Delegate and escalate freely.</span>{" "}
+                    Handing work to the right person is a PM skill, not a failure.
+                  </span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-accent-orange">•</span>
+                  <span>
+                    <span className="font-medium text-foreground">Progress beats perfection.</span>{" "}
+                    A “good enough” submission that moves the phase forward is worth more than a perfect one that never ships.
+                  </span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-accent-orange">•</span>
+                  <span>
+                    <span className="font-medium text-foreground">Overwhelm is the lesson.</span>{" "}
+                    Feeling stretched is the realistic part — noticing it and choosing where to focus is the skill Atlas is training.
+                  </span>
+                </li>
+              </ul>
+            </div>
           </Section>
 
           <div className="grid gap-4 sm:grid-cols-2">
