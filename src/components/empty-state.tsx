@@ -24,6 +24,7 @@ export function EmptyState({
   compact = false,
   className,
   extra,
+  illustration,
 }: {
   icon: LucideIcon;
   title: string;
@@ -32,6 +33,8 @@ export function EmptyState({
   compact?: boolean;
   className?: string;
   extra?: ReactNode;
+  /** Optional PNG import — when provided, replaces the decorative shapes + icon badge. */
+  illustration?: string;
 }) {
   return (
     <motion.div
@@ -44,8 +47,8 @@ export function EmptyState({
         (className ?? "")
       }
     >
-      {/* decorative flat-geometric composition */}
-      <div aria-hidden className="pointer-events-none absolute inset-0">
+      {/* decorative flat-geometric composition — hidden when an illustration is provided */}
+      {!illustration && <div aria-hidden className="pointer-events-none absolute inset-0">
         <div className="absolute -top-16 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full bg-accent-orange/10 blur-3xl" />
         <div className="absolute bottom-0 right-0 h-24 w-24 translate-x-1/3 translate-y-1/3 rounded-full bg-navy/5 blur-2xl" />
         <svg
@@ -59,17 +62,33 @@ export function EmptyState({
           <circle cx="140" cy="35" r="8" />
           <rect x="160" y="30" width="20" height="20" rx="10" />
         </svg>
-      </div>
+      </div>}
 
       <div className="relative mx-auto flex max-w-md flex-col items-center gap-3">
-        <motion.div
-          initial={{ scale: 0.85, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 220, damping: 18, delay: 0.05 }}
-          className="flex h-14 w-14 items-center justify-center rounded-2xl border border-accent-orange/30 bg-accent-orange/10 text-accent-orange shadow-sm"
-        >
-          <Icon className="h-6 w-6" />
-        </motion.div>
+        {illustration ? (
+          <motion.img
+            src={illustration}
+            alt=""
+            aria-hidden
+            loading="lazy"
+            width={768}
+            height={512}
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 180, damping: 22, delay: 0.05 }}
+            className="mb-1 h-36 w-auto max-w-[240px] select-none"
+            draggable={false}
+          />
+        ) : (
+          <motion.div
+            initial={{ scale: 0.85, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 220, damping: 18, delay: 0.05 }}
+            className="flex h-14 w-14 items-center justify-center rounded-2xl border border-accent-orange/30 bg-accent-orange/10 text-accent-orange shadow-sm"
+          >
+            <Icon className="h-6 w-6" />
+          </motion.div>
+        )}
         <h3 className="font-display text-lg font-semibold tracking-tight text-foreground">
           {title}
         </h3>
