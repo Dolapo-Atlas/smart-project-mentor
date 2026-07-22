@@ -563,6 +563,7 @@ function TaskCard({
   onApprove,
   onRework,
   onEscalate,
+  onResume,
   onDelete,
   onDismiss,
   onArchive,
@@ -575,6 +576,7 @@ function TaskCard({
   onApprove: () => void;
   onRework: () => void;
   onEscalate: (mode: "assign_lead" | "ask_pm" | "escalate_sponsor" | "add_to_raid") => void;
+  onResume: () => void;
   onDelete: () => void;
   onDismiss: () => void;
   onArchive: () => void;
@@ -713,6 +715,16 @@ function TaskCard({
                 className="rounded-md border border-border px-2 py-1 text-[11px] hover:bg-accent disabled:opacity-40"
               >
                 Start
+              </button>
+            )}
+            {t.status === "blocked" && t.blocked_by.length === 0 && (
+              <button
+                onClick={onResume}
+                disabled={busy}
+                className="rounded-md bg-primary px-2 py-1 text-[11px] font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-40"
+                title="Resolution received — resume this task"
+              >
+                Resume task
               </button>
             )}
             {(t.status === "todo" || t.status === "in_progress") && (
