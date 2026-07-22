@@ -5,7 +5,8 @@ import { listDocuments, recordDocument, reviewDocument, signedDocUrl } from "@/l
 import { supabase } from "@/integrations/supabase/client";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, FileText, Sparkles, Loader2 } from "lucide-react";
+import { Upload, FileText, Sparkles, Loader2, FolderOpen } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/app/documents")({

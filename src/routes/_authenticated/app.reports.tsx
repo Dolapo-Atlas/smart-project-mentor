@@ -15,7 +15,8 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Send, Save, Download, FileText, CheckCircle2 } from "lucide-react";
+import { Send, Save, Download, FileText, CheckCircle2, FileClock } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
 
 const reportsSearchSchema = z.object({
   task: z.string().uuid().optional(),

@@ -8,6 +8,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Sparkles, Mail, Flame, Reply, Send } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { StakeholderHoverAvatar as StakeholderAvatar } from "@/components/stakeholder-card";
