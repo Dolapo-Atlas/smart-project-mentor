@@ -239,7 +239,10 @@ function AppLayout() {
   const phaseLabel = phaseKey.charAt(0).toUpperCase() + phaseKey.slice(1);
   const NAV: NavItem[] = [...PINNED, ...PHASE_NAV[phaseKey]];
   const navTos = new Set(NAV.map((n) => n.to));
-  const MORE_LINKS = ALL_OVERFLOW.filter((n) => !navTos.has(n.to));
+  const MORE_GROUPS_FILTERED = MORE_GROUPS.map((g) => ({
+    label: g.label,
+    items: g.items.filter((n) => !navTos.has(n.to)),
+  })).filter((g) => g.items.length > 0);
 
   return (
     <div className="min-h-screen bg-background text-foreground paper-texture">
@@ -313,10 +316,20 @@ function AppLayout() {
                   Project tools
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {MORE_LINKS.map((m) => (
-                  <DropdownMenuItem key={m.to} asChild>
-                    <Link to={m.to}>{m.label}</Link>
-                  </DropdownMenuItem>
+                {MORE_GROUPS_FILTERED.map((g, gi) => (
+                  <div key={g.label}>
+                    {gi > 0 && <DropdownMenuSeparator />}
+                    <DropdownMenuLabel className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                      {g.label}
+                    </DropdownMenuLabel>
+                    {g.items.map((m) => (
+                      <DropdownMenuItem key={m.to} asChild>
+                        <Link to={m.to}>
+                          <m.icon className="mr-2 h-3.5 w-3.5" /> {m.label}
+                        </Link>
+                      </DropdownMenuItem>
+                    ))}
+                  </div>
                 ))}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setBriefOpen(true); }}>
