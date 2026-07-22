@@ -20,6 +20,7 @@ import { useEffect, useMemo } from "react";
 import { RationaleChip } from "@/components/insights/rationale-chip";
 import { insightToast } from "@/lib/insight-toast";
 import type { InsightKey } from "@/lib/pm-insights";
+import { DayInReview, type DayInReviewSummary } from "@/components/dashboard/day-in-review";
 
 type Mode = "day" | "week" | "sprint" | "steerco" | "golive";
 
@@ -46,6 +47,7 @@ export function AdvanceTimeDialog({
   const [data, setData] = useState<Awaited<ReturnType<typeof getReadiness>> | null>(null);
   const [loading, setLoading] = useState(false);
   const [advancing, setAdvancing] = useState(false);
+  const [review, setReview] = useState<DayInReviewSummary | null>(null);
   const { settings } = useVoiceSettings();
   const { play, stop } = useSpeech();
   const playedRef = useRef(false);
@@ -131,6 +133,23 @@ export function AdvanceTimeDialog({
               : "time.advance";
       insightToast(key, title, { kind: blockerCount > 0 && force ? "warning" : "success" });
       qc.invalidateQueries();
+      // Phase only advances when blockers are cleared AND the mode is
+      // sprint / steerco / go-live (see advanceTime in time.functions.ts).
+      const phaseChanged =
+        (mode === "sprint" || mode === "steerco" || mode === "golive") &&
+        blockerCount === 0;
+      setReview({
+        days: s.days,
+        fromDay: s.fromDay,
+        toDay: s.toDay,
+        phase: s.phase,
+        phaseChanged,
+        healthChange: s.healthChange,
+        sentimentDeltas: s.sentimentDeltas,
+        reputationDelta: s.reputationDelta,
+        newEmails: s.newEmails,
+        beats: s.beats,
+      });
       onOpenChange(false);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to advance time");
@@ -140,6 +159,7 @@ export function AdvanceTimeDialog({
   }
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
@@ -197,6 +217,12 @@ export function AdvanceTimeDialog({
         />
       </DialogContent>
     </Dialog>
+    <DayInReview
+      open={!!review}
+      summary={review}
+      onOpenChange={(v) => !v && setReview(null)}
+    />
+    </>
   );
 }
 

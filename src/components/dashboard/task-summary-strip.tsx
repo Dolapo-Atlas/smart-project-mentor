@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listTasksRich } from "@/lib/tasks.functions";
 import { Circle, CircleDot, Clock, CheckCircle2 } from "lucide-react";
+import { motion, fadeUp, stagger, CountUp } from "@/components/motion/primitives";
 
 const TILES: Array<{
   key: string;
@@ -53,13 +54,19 @@ export function TaskSummaryStrip() {
   });
   const rows = tasks ?? [];
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={stagger}
+      className="grid grid-cols-2 gap-3 sm:grid-cols-4"
+    >
       {TILES.map((t) => {
         const count = rows.filter((r) => t.statuses.includes(r.status)).length;
         const Icon = t.icon;
         return (
-          <div
+          <motion.div
             key={t.key}
+            variants={fadeUp}
             className="hover-lift relative overflow-hidden rounded-xl border border-border bg-card p-4 shadow-sm"
           >
             <span className={`absolute left-0 top-0 h-full w-1 ${t.bar}`} aria-hidden />
@@ -69,14 +76,14 @@ export function TaskSummaryStrip() {
                   {t.label}
                 </div>
                 <div className="mt-1.5 font-display text-2xl font-semibold text-foreground">
-                  {count}
+                  <CountUp value={count} />
                 </div>
               </div>
               <Icon className={`h-4 w-4 ${t.accent}`} />
             </div>
-          </div>
+          </motion.div>
         );
       })}
-    </div>
+    </motion.div>
   );
 }

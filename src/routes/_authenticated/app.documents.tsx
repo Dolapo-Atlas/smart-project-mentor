@@ -5,7 +5,8 @@ import { listDocuments, recordDocument, reviewDocument, signedDocUrl } from "@/l
 import { supabase } from "@/integrations/supabase/client";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, FileText, Sparkles, Loader2 } from "lucide-react";
+import { Upload, FileText, Sparkles, Loader2, FolderOpen } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/app/documents")({
@@ -129,8 +130,13 @@ function Documents() {
       <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
         <ul className="space-y-2">
           {(docs ?? []).length === 0 && (
-            <li className="rounded-md border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-              No documents yet. Upload something to get reviewed.
+            <li>
+              <EmptyState
+                icon={FolderOpen}
+                title="No documents uploaded."
+                body="Templates are one tab over — start there, then bring the panel in for review."
+                cta={{ label: "Browse templates", to: "/app/templates" }}
+              />
             </li>
           )}
           {docs?.map((d) => (

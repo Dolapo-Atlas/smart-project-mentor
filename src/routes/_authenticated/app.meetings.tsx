@@ -21,7 +21,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { WhyThisMatters } from "@/components/why-this-matters";
-import { Plus, Users, CheckCircle2, Sparkles, Mic, MessageSquare, NotebookPen, PlayCircle, UserPlus, X, Wand2, Send, ListChecks } from "lucide-react";
+import { Plus, Users, CheckCircle2, Sparkles, Mic, MessageSquare, NotebookPen, PlayCircle, UserPlus, X, Wand2, Send, ListChecks, CalendarClock } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
@@ -284,8 +285,12 @@ function Meetings() {
       <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
         <ul className="space-y-2">
           {(meetings ?? []).length === 0 && (
-            <li className="rounded-md border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-              No meetings yet.
+            <li>
+              <EmptyState
+                icon={CalendarClock}
+                title="No meetings on the books."
+                body="Time to actually do the work — or schedule one when you need a decision from stakeholders."
+              />
             </li>
           )}
           {meetings?.map((m) => {
