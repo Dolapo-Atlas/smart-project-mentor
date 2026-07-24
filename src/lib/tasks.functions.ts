@@ -67,6 +67,7 @@ function inferModuleRoute<T extends { title?: string | null; description?: strin
   const text = `${t.title ?? ""} ${t.description ?? ""}`.toLowerCase();
   const rules: Array<[RegExp, string]> = [
     [/\bproject charter\b|\bcharter\b/, "/app/charter"],
+    [/\bscope\b|\btechnical spec(?:ification)?\b|\bvendor\b|\brequirements?\b|\bsow\b|\bstatement of work\b/, "/app/charter"],
     [/\bstakeholder register\b|\bstakeholder map|\bstakeholders?\b/, "/app/stakeholders"],
     [/\braid\b|\brisk log\b|risks?, ?assumption/, "/app/raid"],
     [/\bchange request\b|\bcr\b/, "/app/changes"],
