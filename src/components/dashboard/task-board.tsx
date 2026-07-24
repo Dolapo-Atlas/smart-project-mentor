@@ -49,6 +49,12 @@ const PRIORITY_DOT: Record<string, string> = {
   low: "bg-muted-foreground/50",
 };
 
+// Required = seeded onboarding tasks that drive phase progression.
+// Everything else (email, change_request, manual) is optional / supporting.
+function isRequired(t: { source?: string | null }) {
+  return t.source === "onboarding";
+}
+
 export function TaskBoard() {
   const fetchTasks = useServerFn(listTasksRich);
   const { data } = useQuery<Task[]>({
@@ -69,7 +75,19 @@ export function TaskBoard() {
     <>
       <section className="rounded-2xl border border-border bg-card p-4 shadow-sm md:p-6">
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-lg font-semibold">Task board</h2>
+          <div>
+            <h2 className="font-display text-lg font-semibold">Task board</h2>
+            <div className="mt-1 flex items-center gap-3 text-[10px] uppercase tracking-wider text-muted-foreground">
+              <span className="inline-flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-accent-orange" />
+                Required — moves the phase forward
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50" />
+                Optional — supporting work
+              </span>
+            </div>
+          </div>
           <Link to="/app/tasks" className="text-xs font-medium text-primary hover:underline">
             Open full board →
           </Link>
@@ -106,7 +124,11 @@ export function TaskBoard() {
                       <button
                         type="button"
                         onClick={() => setSelected(t)}
-                        className="hover-lift w-full rounded-md border border-border bg-card p-3 text-left hover:border-primary/40"
+                        className={`hover-lift w-full rounded-md border bg-card p-3 text-left hover:border-primary/40 ${
+                          isRequired(t)
+                            ? "border-accent-orange/50 ring-1 ring-accent-orange/20"
+                            : "border-border"
+                        }`}
                       >
                         <div className="flex items-start gap-2">
                           <span
@@ -115,7 +137,14 @@ export function TaskBoard() {
                             }`}
                           />
                           <div className="min-w-0 flex-1">
-                            <div className="line-clamp-2 text-sm font-medium">{t.title}</div>
+                            <div className="flex items-start gap-1.5">
+                              {isRequired(t) && (
+                                <span className="mt-0.5 shrink-0 rounded-sm bg-accent-orange/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-accent-orange">
+                                  Required
+                                </span>
+                              )}
+                              <div className="line-clamp-2 text-sm font-medium">{t.title}</div>
+                            </div>
                             <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-muted-foreground">
                               {t.category && (
                                 <span className="rounded-full bg-muted px-1.5 py-0.5 uppercase tracking-wider">
@@ -153,6 +182,11 @@ export function TaskBoard() {
             <>
               <SheetHeader>
                 <div className="flex flex-wrap items-center gap-2">
+                  {isRequired(selected) && (
+                    <span className="rounded-sm bg-accent-orange/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-accent-orange">
+                      Required
+                    </span>
+                  )}
                   {selected.category && (
                     <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
                       {selected.category}
