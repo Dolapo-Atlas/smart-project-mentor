@@ -16,6 +16,9 @@ import {
   CheckCircle2,
   Loader2,
   AlertTriangle,
+  Target,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +31,7 @@ import {
 } from "@/lib/charter.functions";
 import { TEMPLATES, evaluateCharter } from "@/lib/templates";
 import { getOverview } from "@/lib/sim.functions";
+import { getTaskById } from "@/lib/tasks.functions";
 import { TaskContextPanel } from "@/components/mentor/task-context-panel";
 import { WhyThisMatters } from "@/components/why-this-matters";
 
@@ -46,6 +50,36 @@ const STATUS_STYLES: Record<string, string> = {
   changes_requested: "border-orange-500/40 bg-orange-500/10 text-orange-700 dark:text-orange-300",
 };
 
+/**
+ * Given a linked task's title + description, return which charter field keys
+ * are most relevant. Users routed from a task shouldn't feel they must fill
+ * all 10 fields — most tasks touch only 2–4.
+ */
+function inferFocusFields(taskText: string): string[] {
+  const s = taskText.toLowerCase();
+  const picks = new Set<string>();
+  const add = (...keys: string[]) => keys.forEach((k) => picks.add(k));
+
+  if (/\bscope|in[- ]scope|out of scope|vendor|technical spec|sow|requirement/.test(s))
+    add("scope_in", "scope_out", "success_criteria");
+  if (/objective|goal|outcome|success|kpi|measure/.test(s))
+    add("objectives", "success_criteria");
+  if (/purpose|why|business case|rationale|justif/.test(s))
+    add("purpose", "objectives");
+  if (/risk|threat|issue|assumption/.test(s)) add("initial_risks");
+  if (/milestone|timeline|schedule|date|deadline/.test(s)) add("milestones");
+  if (/stakeholder|sponsor|raci|owner/.test(s))
+    add("key_stakeholders", "sponsor");
+  if (/charter|kick[- ]off|initiate|initiation/.test(s))
+    add("purpose", "objectives", "success_criteria");
+
+  // Sensible default if nothing matched — the core three every charter needs.
+  if (picks.size === 0) add("purpose", "objectives", "success_criteria");
+  // Always include title so the doc has a name.
+  picks.add("title");
+  return Array.from(picks);
+}
+
 function CharterPage() {
   const qc = useQueryClient();
   const search = useSearch({ from: "/_authenticated/app/charter" });
@@ -55,6 +89,7 @@ function CharterPage() {
   const submitFn = useServerFn(submitCharter);
   const versionsFn = useServerFn(listCharterVersions);
   const overviewFn = useServerFn(getOverview);
+  const fetchTask = useServerFn(getTaskById);
 
   const charterQuery = useQuery({
     queryKey: ["charter", search.task ?? null],
@@ -68,11 +103,32 @@ function CharterPage() {
     queryKey: ["overview"],
     queryFn: () => overviewFn(),
   });
+  const taskQuery = useQuery({
+    queryKey: ["task-by-id", search.task ?? null],
+    queryFn: () => fetchTask({ data: { id: search.task! } }),
+    enabled: !!search.task,
+  });
 
   const template = TEMPLATES.project_charter;
   const [values, setValues] = useState<Record<string, string>>({});
   const [mode, setMode] = useState<"edit" | "preview">("edit");
   const [dirty, setDirty] = useState(false);
+  const [showAllFields, setShowAllFields] = useState(false);
+
+  const focusKeys = useMemo(() => {
+    const t = taskQuery.data as any;
+    if (!search.task || !t) return null;
+    return inferFocusFields(`${t.title ?? ""} ${t.description ?? ""}`);
+  }, [search.task, taskQuery.data]);
+  const focusSet = useMemo(
+    () => (focusKeys ? new Set(focusKeys) : null),
+    [focusKeys],
+  );
+  // Fields the user must fill for THIS task; exclude "title" from the visible
+ // count so the "3 fields" number matches what actually feels like work.
+  const focusCountLabel = focusKeys
+    ? Math.max(1, focusKeys.filter((k) => k !== "title").length)
+    : 0;
 
   useEffect(() => {
     if (charterQuery.data) {
@@ -266,9 +322,22 @@ function CharterPage() {
         />
 
         {mode === "edit" ? (
-          <div className="space-y-4">
-            {template.fields.map((f) => (
-              <div key={f.key} className="rounded-lg border border-border bg-card p-4">
+          (() => {
+            const focused = focusSet
+              ? template.fields.filter((f) => focusSet.has(f.key))
+              : template.fields;
+            const rest = focusSet
+              ? template.fields.filter((f) => !focusSet.has(f.key))
+              : [];
+            const renderField = (f: (typeof template.fields)[number]) => (
+              <div
+                key={f.key}
+                className={`rounded-lg border p-4 ${
+                  focusSet && focusSet.has(f.key)
+                    ? "border-accent-orange/40 bg-accent-orange/5"
+                    : "border-border bg-card"
+                }`}
+              >
                 <label className="text-sm font-semibold text-foreground">
                   {f.label}
                   {f.required && <span className="ml-1 text-destructive">*</span>}
@@ -298,8 +367,54 @@ function CharterPage() {
                   </div>
                 ) : null}
               </div>
-            ))}
-          </div>
+            );
+            return (
+              <div className="space-y-4">
+                {focusSet && (
+                  <div className="rounded-lg border border-accent-orange/40 bg-accent-orange/10 p-3 text-sm">
+                    <div className="flex items-start gap-2">
+                      <Target className="mt-0.5 h-4 w-4 shrink-0 text-accent-orange" />
+                      <div>
+                        <div className="font-semibold text-foreground">
+                          For this task, focus on {focusCountLabel} {focusCountLabel === 1 ? "field" : "fields"}
+                        </div>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          The Charter has 10 sections total, but you don't need to fill them all today.
+                          The highlighted fields below are what this task is really asking for. You can
+                          revisit the rest later — the Charter is a living document.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {focused.map(renderField)}
+                {focusSet && rest.length > 0 && (
+                  <div className="rounded-lg border border-dashed border-border">
+                    <button
+                      type="button"
+                      onClick={() => setShowAllFields((v) => !v)}
+                      className="flex w-full items-center justify-between px-4 py-3 text-sm text-muted-foreground hover:text-foreground"
+                    >
+                      <span>
+                        {showAllFields ? "Hide" : "Show"} the other {rest.length} charter fields
+                        <span className="ml-1 text-xs opacity-70">(optional for this task)</span>
+                      </span>
+                      {showAllFields ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      )}
+                    </button>
+                    {showAllFields && (
+                      <div className="space-y-4 border-t border-border/60 p-4">
+                        {rest.map(renderField)}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })()
         ) : (
           <div className="space-y-4 rounded-lg border border-border bg-card p-6">
             <h2 className="font-display text-2xl">{values.title || "(Untitled charter)"}</h2>
