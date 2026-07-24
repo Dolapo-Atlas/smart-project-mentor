@@ -139,13 +139,16 @@ export const Route = createFileRoute('/api/public/early-access')({
         // 2. Admin notification (best-effort)
         try {
           const adminTpl = TEMPLATES['early-access-signup']
-          if (adminTpl?.to) {
-            await sendTemplate(
-              'early-access-signup',
-              adminTpl.to,
-              { ...parsed, submitted_at: inserted?.created_at ?? new Date().toISOString() },
-              `early-access-${inserted?.id}`,
-            )
+          const adminRecipients = ['rasaqdolapo@gmail.com', 'fuhad.dolapo@gmail.com']
+          if (adminTpl) {
+            for (const recipient of adminRecipients) {
+              await sendTemplate(
+                'early-access-signup',
+                recipient,
+                { ...parsed, submitted_at: inserted?.created_at ?? new Date().toISOString() },
+                `early-access-${inserted?.id}-${recipient}`,
+              )
+            }
           }
         } catch (err) {
           console.error('early-access notify failed', err)
