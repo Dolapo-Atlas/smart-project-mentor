@@ -163,6 +163,29 @@ export function ProjectBriefSheet({ open, onOpenChange }: Props) {
                 same — the goal is to make good calls under pressure, not to
                 finish every item.
               </p>
+              <div className="mt-3 rounded-md border border-border bg-background/70 p-3 text-xs">
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Two kinds of tasks
+                </div>
+                <div className="mt-2 space-y-1.5">
+                  <div className="flex items-start gap-2">
+                    <span className="mt-0.5 rounded-sm bg-accent-orange/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-accent-orange">
+                      Required
+                    </span>
+                    <span className="text-foreground/80">
+                      Seeded tasks that move the phase forward. Look for the orange ring on the Task Board — do these first.
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="mt-0.5 rounded-sm bg-muted px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      Optional
+                    </span>
+                    <span className="text-foreground/80">
+                      Emails, change requests and your own additions. Handle if useful, dismiss with a reason if not.
+                    </span>
+                  </div>
+                </div>
+              </div>
               <ul className="mt-3 space-y-1.5">
                 <li className="flex gap-2">
                   <span className="text-accent-orange">•</span>
