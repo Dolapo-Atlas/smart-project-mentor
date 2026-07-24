@@ -66,7 +66,7 @@ export const template = {
   subject: (data: Record<string, any>) =>
     `New Atlas signup${data?.name ? ` — ${data.name}` : ''}`,
   displayName: 'Early Access Signup Notification',
-  to: 'rasaqdolapo@gmail.com',
+  to: 'rasaqdolapo@gmail.com, fuhad.dolapo@gmail.com',
   previewData: {
     name: 'Jane Doe',
     email: 'jane@example.com',
