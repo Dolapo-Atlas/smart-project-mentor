@@ -53,7 +53,29 @@ export function TaskSummaryStrip() {
     queryFn: () => fetchTasks() as Promise<any[]>,
   });
   const rows = tasks ?? [];
+  const openStatuses = ["todo", "blocked", "in_progress"];
+  const requiredOpen = rows.filter(
+    (r) => r.source === "onboarding" && openStatuses.includes(r.status),
+  ).length;
+  const requiredTotal = rows.filter((r) => r.source === "onboarding").length;
   return (
+    <div className="space-y-2">
+      {requiredTotal > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-accent-orange/30 bg-accent-orange/5 px-3 py-2 text-xs">
+          <div className="flex items-center gap-2 text-foreground/80">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent-orange" />
+            <span>
+              <span className="font-semibold text-foreground">
+                {requiredOpen}
+              </span>{" "}
+              required {requiredOpen === 1 ? "task" : "tasks"} left to move this phase forward
+            </span>
+          </div>
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            Focus these first
+          </span>
+        </div>
+      )}
     <motion.div
       initial="hidden"
       animate="visible"
@@ -85,5 +107,6 @@ export function TaskSummaryStrip() {
         );
       })}
     </motion.div>
+    </div>
   );
 }

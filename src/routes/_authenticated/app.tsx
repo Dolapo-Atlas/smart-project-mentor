@@ -357,6 +357,11 @@ function AppLayout() {
             </DropdownMenu>
           </nav>
 
+          <div className="mt-2 text-[10px] leading-relaxed text-white/55">
+            Home · Inbox · Tasks stay put. The next 3 tiles adapt to your current phase
+            <span className="text-white/75"> ({phaseLabel})</span>. Everything else lives under More.
+          </div>
+
           {/* Live phase progress card — dynamic items per phase. */}
           <div className="mt-8">
             <PhaseProgressCard compact={isMobile} />
