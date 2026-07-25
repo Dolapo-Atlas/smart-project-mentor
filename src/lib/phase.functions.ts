@@ -65,7 +65,7 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
       supabase.from("raid_items").select("kind,status,owner,mitigation,updated_at").eq("user_id", userId),
       supabase.from("stakeholder_relationships").select("stakeholder_name,role,interaction_count").eq("user_id", userId),
       supabase.from("meetings").select("kind,title,agenda,attendees,held,minutes").eq("user_id", userId),
-      supabase.from("tasks").select("status,category").eq("user_id", userId),
+      supabase.from("tasks").select("title,status,category,linked_area,source").eq("user_id", userId),
       supabase.from("status_reports").select("submitted_at").eq("user_id", userId),
       supabase.from("budget_lines").select("kind").eq("user_id", userId),
       supabase.from("change_requests").select("status").eq("user_id", userId),
@@ -74,11 +74,18 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
       supabase.from("comms_messages").select("id").eq("user_id", userId),
     ]);
 
-    const { data: charterRow } = await supabase
-      .from("project_charters")
-      .select("completion_pct,status,approval_status")
-      .eq("user_id", userId)
-      .maybeSingle();
+    const [{ data: charterRow }, { data: registerRow }] = await Promise.all([
+      supabase
+        .from("project_charters")
+        .select("completion_pct,status,approval_status")
+        .eq("user_id", userId)
+        .maybeSingle(),
+      supabase
+        .from("stakeholder_registers")
+        .select("completion_pct,approval_status,submitted_at")
+        .eq("user_id", userId)
+        .maybeSingle(),
+    ]);
 
     const phase = normalisePhase(state?.phase as string | undefined);
     const D = docs ?? [];
@@ -105,6 +112,21 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
       return 50;
     };
 
+    const taskPct = (rx: RegExp, linkedArea?: string) => {
+      const match = T.filter((t) => {
+        const title = t.title ?? "";
+        return rx.test(title) || (linkedArea ? t.linked_area === linkedArea : false);
+      });
+      if (match.length === 0) return 0;
+      const scoreForStatus = (status?: string | null) => {
+        if (["done", "approved", "completed", "closed"].includes(status ?? "")) return 100;
+        if (status === "submitted") return 80;
+        if (status === "in_progress") return 50;
+        return 0;
+      };
+      return Math.max(0, ...match.map((t) => scoreForStatus(t.status)));
+    };
+
     let items: PhaseItem[] = [];
 
     if (phase === "initiation") {
@@ -120,9 +142,20 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
           approved ? 100 : submitted ? Math.max(base, 75) : base,
         );
       }
-      // Stakeholder mapping — target 5 stakeholders with a role captured
+      // Stakeholder mapping — use the same sources the user actually works in:
+      // the live Stakeholder Register artifact and the required stakeholder task.
+      // Relationship rows are only a fallback because the UI can render roster
+      // people without persisting a relationship row yet.
       const mapped = S.filter((s) => (s.role ?? "").trim().length > 0).length || S.length;
-      const stakeholderPct = pct(mapped, 5);
+      const relationshipPct = pct(mapped, 5);
+      const registerBase = registerRow?.completion_pct ?? 0;
+      const registerPct = registerRow
+        ? registerRow.submitted_at
+          ? Math.max(registerBase, 80)
+          : registerBase
+        : 0;
+      const stakeholderTaskPct = taskPct(/stakeholder (register|mapping|map)|meet your key stakeholders/i, "stakeholders");
+      const stakeholderPct = Math.max(registerPct, stakeholderTaskPct, relationshipPct);
       // RAID setup — need at least one of each kind (R,A,I,D)
       const kinds = new Set(R.map((r) => String(r.kind).toLowerCase()));
       const raidPct = pct(kinds.size, 4);
@@ -139,8 +172,8 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
         if (kickoff.held) kickPct += 25;
       }
       items = [
-        { key: "charter", label: "Project Charter", pct: charter, route: "/app/documents" },
-        { key: "stakeholders", label: "Stakeholder Mapping", pct: stakeholderPct, route: "/app/stakeholders", hint: `${Math.min(mapped, 5)}/5 mapped` },
+        { key: "charter", label: "Project Charter", pct: charter, route: "/app/charter" },
+        { key: "stakeholders", label: "Stakeholder Mapping", pct: stakeholderPct, route: "/app/stakeholders", hint: stakeholderPct >= 100 ? "Mapped" : `${Math.min(mapped, 5)}/5 mapped` },
         { key: "raid", label: "RAID Log Setup", pct: raidPct, route: "/app/raid", hint: `${Math.min(kinds.size, 4)}/4 kinds (risks, assumptions, issues, dependencies)` },
         { key: "kickoff", label: "Kick-off Preparation", pct: kickPct, route: "/app/meetings" },
       ];
