@@ -7,7 +7,6 @@ import { useServerFn } from "@tanstack/react-start";
 import { listStatusReports, upsertStatusReport } from "@/lib/pm.functions";
 import { getOverview } from "@/lib/sim.functions";
 import { listTasksRich, submitTaskWithWork } from "@/lib/tasks.functions";
-import { TaskSubmissionDialog } from "@/components/tasks/task-submission-dialog";
 import { encodeSubmission, evaluateStatusReport } from "@/lib/templates";
 import { useEffect, useMemo, useRef, useState } from "react";
 import jsPDF from "jspdf";
@@ -128,7 +127,6 @@ function Reports() {
     enabled: !!search.task,
   });
   const linkedTask = (allTasks ?? []).find((t: any) => t.id === search.task) ?? null;
-  const [submitOpen, setSubmitOpen] = useState(false);
 
   const thisWeek = mondayOf();
   const current = reports?.find((r) => r.week_start === thisWeek);
@@ -154,9 +152,19 @@ function Reports() {
     }
   }, [current, overview, suggestedRag]);
 
+  const templateValues = useMemo(() => ({
+    period: `Week of ${thisWeek}`,
+    rag,
+    achievements: ach,
+    next_week: next,
+    risks_blockers: risks,
+    decisions_needed: decisions,
+    budget_note: budgetNote,
+  }), [thisWeek, rag, ach, next, risks, decisions, budgetNote]);
+
   const save = useMutation({
-    mutationFn: (submit: boolean) =>
-      upsert({
+    mutationFn: async (submit: boolean) => {
+      const result = await upsert({
         data: {
           week_start: thisWeek,
           rag_summary: rag,
@@ -167,44 +175,37 @@ function Reports() {
           budget_note: budgetNote || undefined,
           submit,
         },
-      }),
+      });
+      if (submit && search.task) {
+        const encoded = encodeSubmission({
+          kind: "template",
+          template: "status_report",
+          values: templateValues,
+          readiness: evaluateStatusReport(templateValues, {
+            projectName: (overview as any)?.state?.project_name ?? null,
+          }),
+        });
+        await submitTaskFn({ data: { id: search.task, submission: encoded } });
+      }
+      return result;
+    },
     onSuccess: (_d, submit) => {
       qc.invalidateQueries({ queryKey: ["status_reports"] });
       qc.invalidateQueries({ queryKey: ["inbox"] });
       qc.invalidateQueries({ queryKey: ["reporting-pack"] });
-      toast.success(submit ? "Submitted to sponsor." : "Draft saved.");
-      // If a task deep-linked us here, open the shared submission dialog so
-      // the linked task closes through the existing feedback pipeline.
-      if (submit && search.task && linkedTask) {
-        setSubmitOpen(true);
+      if (submit && search.task) {
+        qc.invalidateQueries({ queryKey: ["tasks"] });
+        qc.invalidateQueries({ queryKey: ["overview"] });
+        qc.invalidateQueries({ queryKey: ["whats-next"] });
+        qc.invalidateQueries({ queryKey: ["phase-progress"] });
+        toast.success("Submitted to sponsor — linked task moved to Submitted.");
+        navigate({ to: "/app/reports", search: {}, replace: true });
+      } else {
+        toast.success(submit ? "Submitted to sponsor." : "Draft saved.");
       }
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
-
-  const submitLinkedTask = useMutation({
-    mutationFn: (v: { id: string; submission: string }) => submitTaskFn({ data: v }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["tasks"] });
-      qc.invalidateQueries({ queryKey: ["overview"] });
-      qc.invalidateQueries({ queryKey: ["whats-next"] });
-      qc.invalidateQueries({ queryKey: ["phase-progress"] });
-      toast.success("Submitted for review");
-      setSubmitOpen(false);
-      navigate({ to: "/app/reports", search: {}, replace: true });
-    },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
-  });
-
-  const templateValues = useMemo(() => ({
-    period: `Week of ${thisWeek}`,
-    rag,
-    achievements: ach,
-    next_week: next,
-    risks_blockers: risks,
-    decisions_needed: "",
-    budget_note: "",
-  }), [thisWeek, rag, ach, next, risks]);
 
   function exportPdf() {
     const doc = new jsPDF({ unit: "pt", format: "a4" });
@@ -263,7 +264,7 @@ function Reports() {
                 <div className="mt-0.5 text-muted-foreground">→ {linkedTask.completion_action}</div>
               )}
               <div className="mt-1 text-muted-foreground">
-                Submit the report below — Atlas will open the submission dialog to close the linked task.
+                Submit the report below — Atlas will move the linked task to Submitted automatically.
               </div>
             </div>
           </div>
@@ -385,31 +386,6 @@ function Reports() {
         </ul>
       </section>
 
-      <TaskSubmissionDialog
-        task={linkedTask ? {
-          id: linkedTask.id,
-          title: linkedTask.title,
-          description: linkedTask.description,
-          category: linkedTask.category,
-          linked_area: linkedTask.linked_area,
-          completion_action: linkedTask.completion_action,
-        } : null}
-        open={submitOpen && !!linkedTask}
-        onOpenChange={(o) => setSubmitOpen(o)}
-        submitting={submitLinkedTask.isPending}
-        onSubmit={(encoded) => {
-          if (!linkedTask) return;
-          submitLinkedTask.mutate({ id: linkedTask.id, submission: encoded });
-        }}
-      />
-
-      {/* Reference: template payload derived from live report fields (used by the dialog when prefilled). */}
-      <input type="hidden" data-status-report-payload value={encodeSubmission({
-        kind: "template",
-        template: "status_report",
-        values: templateValues,
-        readiness: evaluateStatusReport(templateValues, { projectName: (overview as any)?.state?.project_name ?? null }),
-      })} />
     </div>
   );
 }
