@@ -7,7 +7,7 @@ import {
   listRaid, createRaid, updateRaidStatus, deleteRaid, submitRaidLog,
 } from "@/lib/raid.functions";
 import { listTasksRich, submitTaskWithWork } from "@/lib/tasks.functions";
-import { TaskSubmissionDialog } from "@/components/tasks/task-submission-dialog";
+import { encodeSubmission, evaluateRaid } from "@/lib/templates";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -92,7 +92,6 @@ function RaidPage() {
 
   const [showForm, setShowForm] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
-  const [submitOpen, setSubmitOpen] = useState(false);
   const [form, setForm] = useState({
     kind: "risk" as Kind,
     title: "",
@@ -127,44 +126,69 @@ function RaidPage() {
   }, [search.task, search.kind, search.prefill_title, search.prefill_desc]);
 
   const create = useMutation({
-    mutationFn: () => addRaid({ data: {
-      kind: form.kind,
-      title: form.title,
-      description: form.description || undefined,
-      severity: form.severity,
-      likelihood: form.likelihood,
-      priority: form.priority,
-      owner: form.owner || undefined,
-      mitigation: form.mitigation || undefined,
-      target_date: form.target_date || undefined,
-      comments: form.comments || undefined,
-    } }),
+    mutationFn: async () => {
+      const newEntry = {
+        kind: form.kind,
+        title: form.title,
+        description: form.description || undefined,
+        severity: form.severity,
+        likelihood: form.likelihood,
+        priority: form.priority,
+        owner: form.owner || undefined,
+        mitigation: form.mitigation || undefined,
+        target_date: form.target_date || undefined,
+        comments: form.comments || undefined,
+      };
+      const row = await addRaid({ data: newEntry });
+      if (search.task) {
+        const allEntries = [...(raid ?? []), { ...newEntry, status: "open" }];
+        const readinessCounts = allEntries.reduce(
+          (acc, item: any) => {
+            const kind = item.kind as Kind;
+            acc[kind] = (acc[kind] ?? 0) + 1;
+            const isHighRisk = kind === "risk" && ["high", "critical"].includes(item.severity);
+            const hasRiskControls =
+              kind === "risk" && Boolean(String(item.owner ?? "").trim()) && Boolean(String(item.mitigation ?? "").trim());
+            if (isHighRisk) acc.highOrCriticalRisks += 1;
+            if (hasRiskControls) acc.risksWithOwnerAndMitigation += 1;
+            return acc;
+          },
+          {
+            risk: 0,
+            assumption: 0,
+            issue: 0,
+            dependency: 0,
+            highOrCriticalRisks: 0,
+            risksWithOwnerAndMitigation: 0,
+          },
+        );
+        const encoded = encodeSubmission({
+          kind: "template",
+          template: "raid_log",
+          values: {
+            narrative: `Added ${form.kind}: ${form.title}. ${form.description || "Entry logged in the RAID register."}`,
+          },
+          readiness: evaluateRaid(readinessCounts),
+        });
+        await submitTaskFn({ data: { id: search.task, submission: encoded } });
+      }
+      return row;
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["raid"] });
       qc.invalidateQueries({ queryKey: ["overview"] });
       qc.invalidateQueries({ queryKey: ["inbox"] });
       qc.invalidateQueries({ queryKey: ["tasks"] });
+      qc.invalidateQueries({ queryKey: ["whats-next"] });
+      qc.invalidateQueries({ queryKey: ["phase-progress"] });
       setForm({ ...form, title: "", description: "", owner: "", mitigation: "", target_date: "", comments: "" });
       setShowForm(false);
-      toast.success("Nice — added to the RAID register.");
-      // If a task deep-linked us here, open submission dialog for that task.
       if (search.task) {
-        setSubmitOpen(true);
+        toast.success("RAID entry saved — linked task moved to Submitted.");
+        navigate({ to: "/app/raid", search: {}, replace: true });
+      } else {
+        toast.success("Nice — added to the RAID register.");
       }
-    },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
-  });
-
-  const submitLinkedTask = useMutation({
-    mutationFn: (v: { id: string; submission: string }) => submitTaskFn({ data: v }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["tasks"] });
-      qc.invalidateQueries({ queryKey: ["overview"] });
-      qc.invalidateQueries({ queryKey: ["whats-next"] });
-      toast.success("Sent to Sponsor for review.");
-      setSubmitOpen(false);
-      // Clear query params so re-open of page is clean.
-      navigate({ to: "/app/raid", search: {}, replace: true });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
@@ -328,7 +352,7 @@ function RaidPage() {
                 </div>
               )}
               <div className="mt-1 text-[11px] text-muted-foreground">
-                Log the entry below. When you save, Atlas will open the submission dialog so the linked task closes as part of the same action.
+                Log the entry below. When you save, Atlas will move the linked task to Submitted automatically.
               </div>
             </div>
           </div>
@@ -470,23 +494,6 @@ function RaidPage() {
         </table>
       </div>
 
-      <TaskSubmissionDialog
-        task={linkedTask ? {
-          id: linkedTask.id,
-          title: linkedTask.title,
-          description: linkedTask.description,
-          category: linkedTask.category,
-          linked_area: linkedTask.linked_area,
-          completion_action: linkedTask.completion_action,
-        } : null}
-        open={submitOpen && !!linkedTask}
-        onOpenChange={(o) => setSubmitOpen(o)}
-        submitting={submitLinkedTask.isPending}
-        onSubmit={(encoded) => {
-          if (!linkedTask) return;
-          submitLinkedTask.mutate({ id: linkedTask.id, submission: encoded });
-        }}
-      />
     </div>
   );
 }
