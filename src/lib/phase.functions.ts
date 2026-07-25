@@ -74,6 +74,12 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
       supabase.from("comms_messages").select("id").eq("user_id", userId),
     ]);
 
+    const { data: charterRow } = await supabase
+      .from("project_charters")
+      .select("completion_pct,status,approval_status")
+      .eq("user_id", userId)
+      .maybeSingle();
+
     const phase = normalisePhase(state?.phase as string | undefined);
     const D = docs ?? [];
     const R = raid ?? [];
@@ -102,8 +108,18 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
     let items: PhaseItem[] = [];
 
     if (phase === "initiation") {
-      // Charter
-      const charter = docPct(/charter/i);
+      // Charter — prefer the live project_charters row (source of truth),
+      // fall back to any legacy /charter/i document.
+      let charter = docPct(/charter/i);
+      if (charterRow) {
+        const approved = charterRow.approval_status === "approved";
+        const submitted = !!charterRow.status && charterRow.status !== "draft";
+        const base = charterRow.completion_pct ?? 0;
+        charter = Math.max(
+          charter,
+          approved ? 100 : submitted ? Math.max(base, 75) : base,
+        );
+      }
       // Stakeholder mapping — target 5 stakeholders with a role captured
       const mapped = S.filter((s) => (s.role ?? "").trim().length > 0).length || S.length;
       const stakeholderPct = pct(mapped, 5);
