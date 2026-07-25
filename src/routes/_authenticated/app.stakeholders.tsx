@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Save, Send, Download, FileText, ClipboardList } from "lucide-react";
+import { Save, Send, Download, FileText, ClipboardList, Sparkles, Star } from "lucide-react";
 import jsPDF from "jspdf";
 import {
   getOrCreateRegister,
@@ -157,6 +157,7 @@ function RegisterPanel({ taskId }: { taskId?: string }) {
   const saveFn = useServerFn(saveRegisterDraft);
   const submitFn = useServerFn(submitRegister);
   const versionsFn = useServerFn(listRegisterVersions);
+  const { data: liveStakeholders } = useStakeholders();
 
   const { data: reg } = useQuery<RegisterRow>({
     queryKey: ["stakeholder-register", taskId ?? "current"],
@@ -172,7 +173,51 @@ function RegisterPanel({ taskId }: { taskId?: string }) {
     if (reg) setPayload((reg.payload ?? {}) as Record<string, string>);
   }, [reg?.id]);
 
+  // Build a prefill draft from the live roster (name · role · sentiment).
+  function buildRosterDraft(): { sponsor: string; key_stakeholders: string } {
+    const list = liveStakeholders ?? [];
+    const sponsor = list.find((s: any) => s.type === "sponsor");
+    const others = list.filter((s: any) => s.type !== "sponsor");
+    const attitude = (n: number) =>
+      n >= 20 ? "Supportive" : n <= -20 ? "Sceptical" : "Neutral";
+    const lines = others.map(
+      (s: any) =>
+        `${s.name} · ${s.role} · Interest: [add] · Influence: [H/M/L] · Attitude: ${attitude(s.sentiment)}`,
+    );
+    return {
+      sponsor: sponsor ? `${sponsor.name} — ${sponsor.role}` : "",
+      key_stakeholders: lines.join("\n"),
+    };
+  }
+
+  function prefillFromRoster() {
+    const draft = buildRosterDraft();
+    setPayload((p) => ({
+      ...p,
+      sponsor: p.sponsor?.trim() ? p.sponsor : draft.sponsor,
+      key_stakeholders: p.key_stakeholders?.trim() ? p.key_stakeholders : draft.key_stakeholders,
+    }));
+    toast.success("Pre-filled from your live stakeholder list — now add Interest and Influence.");
+  }
+
+  // Auto-seed once when the register is empty and the roster is loaded.
+  useEffect(() => {
+    if (!reg || !liveStakeholders?.length) return;
+    const hasAny = Object.values(payload).some((v) => (v ?? "").trim().length > 0);
+    if (hasAny) return;
+    const draft = buildRosterDraft();
+    if (!draft.key_stakeholders) return;
+    setPayload((p) => ({ ...p, sponsor: draft.sponsor, key_stakeholders: draft.key_stakeholders }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reg?.id, liveStakeholders?.length]);
+
   const spec = TEMPLATES.stakeholder_register.fields;
+  // Fields where the *thinking* lives — the ones a reviewer actually reads.
+  const PRIORITY_KEYS = new Set([
+    "key_stakeholders",
+    "engagement_plan",
+    "resistance",
+  ]);
   const pct = useMemo(() => {
     const total = spec.reduce((s, f) => s + (f.required ? 2 : 1), 0);
     let earned = 0;
@@ -252,11 +297,46 @@ function RegisterPanel({ taskId }: { taskId?: string }) {
         </div>
       </div>
 
+      <div className="mt-4 rounded-md border border-amber-300/60 bg-amber-50/70 p-3 text-xs text-amber-900">
+        <div className="mb-1 flex items-center gap-1.5 font-semibold">
+          <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
+          Focus on these three
+        </div>
+        <p className="leading-relaxed">
+          The reviewer mostly reads <b>Key Stakeholders</b> (with Interest / Influence / Attitude),
+          your <b>Engagement Plan</b>, and how you'll handle <b>Resistance</b>. Everything else is
+          scaffolding.
+        </p>
+        <div className="mt-2">
+          <Button size="sm" variant="outline" onClick={prefillFromRoster}>
+            <Sparkles className="mr-1.5 h-3.5 w-3.5" /> Pre-fill from live roster
+          </Button>
+        </div>
+      </div>
+
       <div className="mt-5 grid gap-4">
         {spec.map((f) => (
-          <label key={f.key} className="block">
+          <label
+            key={f.key}
+            className={`block rounded-md ${
+              PRIORITY_KEYS.has(f.key)
+                ? "border border-amber-300/70 bg-amber-50/40 p-3"
+                : ""
+            }`}
+          >
             <div className="mb-1 flex items-center justify-between text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              <span>{f.label}{f.required && <span className="ml-1 text-destructive">*</span>}</span>
+              <span className="flex items-center gap-1.5">
+                {PRIORITY_KEYS.has(f.key) && (
+                  <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
+                )}
+                {f.label}
+                {f.required && <span className="ml-1 text-destructive">*</span>}
+                {PRIORITY_KEYS.has(f.key) && (
+                  <span className="ml-1 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-amber-700">
+                    Priority
+                  </span>
+                )}
+              </span>
               {f.minChars ? <span className="text-[10px] normal-case text-muted-foreground/70">min {f.minChars} chars</span> : null}
             </div>
             {f.kind === "text" ? (
