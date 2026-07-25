@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-export type PhaseKey = "initiation" | "planning" | "execution" | "monitoring" | "closure";
+export type PhaseKey = "initiation" | "planning" | "execution" | "monitoring" | "go-live" | "closure";
 
 export type PhaseItem = {
   key: string;
@@ -23,12 +23,28 @@ function pct(n: number, target: number) {
   return Math.max(0, Math.min(100, Math.round((n / target) * 100)));
 }
 
+const DONE_STATUSES = new Set(["done", "approved", "completed", "closed"]);
+const IGNORED_STATUSES = new Set(["dismissed", "archived", "cancelled", "canceled"]);
+
+function scoreForStatus(status?: string | null) {
+  if (DONE_STATUSES.has(status ?? "")) return 100;
+  if (status === "submitted" || status === "review") return 80;
+  if (status === "in_progress") return 50;
+  if (status === "blocked") return 20;
+  return 0;
+}
+
+function bestOf(...values: Array<number | null | undefined>) {
+  return Math.max(0, ...values.map((v) => v ?? 0));
+}
+
 function normalisePhase(p?: string | null): PhaseKey {
   const k = (p ?? "").toLowerCase().trim();
   if (k.startsWith("init")) return "initiation";
   if (k.startsWith("plan")) return "planning";
   if (k.startsWith("exec")) return "execution";
   if (k.startsWith("mon")) return "monitoring";
+  if (k.startsWith("go")) return "go-live";
   if (k.startsWith("clos")) return "closure";
   return "execution";
 }
@@ -38,13 +54,34 @@ const LABELS: Record<PhaseKey, string> = {
   planning: "Planning",
   execution: "Execution",
   monitoring: "Monitoring & Control",
+  "go-live": "Go Live",
   closure: "Closure",
+};
+
+type TaskRow = {
+  title?: string | null;
+  description?: string | null;
+  status?: string | null;
+  category?: string | null;
+  linked_area?: string | null;
+  linked_module_route?: string | null;
+  source?: string | null;
 };
 
 export const getPhaseProgress = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<PhaseProgress> => {
     const { supabase, userId } = context;
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("current_project_instance_id")
+      .eq("id", userId)
+      .maybeSingle();
+
+    const instanceId = (profile as { current_project_instance_id?: string | null } | null)
+      ?.current_project_instance_id;
+    const scoped = (query: any) => (instanceId ? query.eq("project_instance_id", instanceId) : query);
 
     const [
       { data: state },
@@ -59,32 +96,27 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
       { data: reflections },
       { data: gates },
       { data: comms },
+      { data: charterRow },
+      { data: registerRow },
+      { data: lessonsDocs },
+      { data: outcomes },
     ] = await Promise.all([
-      supabase.from("simulation_state").select("phase").eq("user_id", userId).maybeSingle(),
-      supabase.from("documents").select("title,status,quality_score").eq("user_id", userId),
-      supabase.from("raid_items").select("kind,status,owner,mitigation,updated_at").eq("user_id", userId),
-      supabase.from("stakeholder_relationships").select("stakeholder_name,role,interaction_count").eq("user_id", userId),
-      supabase.from("meetings").select("kind,title,agenda,attendees,held,minutes").eq("user_id", userId),
-      supabase.from("tasks").select("title,status,category,linked_area,source").eq("user_id", userId),
-      supabase.from("status_reports").select("submitted_at").eq("user_id", userId),
-      supabase.from("budget_lines").select("kind").eq("user_id", userId),
-      supabase.from("change_requests").select("status").eq("user_id", userId),
-      supabase.from("reflection_entries").select("id").eq("user_id", userId),
-      supabase.from("phase_gates").select("phase,status").eq("user_id", userId),
-      supabase.from("comms_messages").select("id").eq("user_id", userId),
-    ]);
-
-    const [{ data: charterRow }, { data: registerRow }] = await Promise.all([
-      supabase
-        .from("project_charters")
-        .select("completion_pct,status,approval_status")
-        .eq("user_id", userId)
-        .maybeSingle(),
-      supabase
-        .from("stakeholder_registers")
-        .select("completion_pct,approval_status,submitted_at")
-        .eq("user_id", userId)
-        .maybeSingle(),
+      scoped(supabase.from("simulation_state").select("phase").eq("user_id", userId)).maybeSingle(),
+      scoped(supabase.from("documents").select("title,status,quality_score").eq("user_id", userId)),
+      scoped(supabase.from("raid_items").select("kind,status,owner,mitigation,updated_at").eq("user_id", userId)),
+      scoped(supabase.from("stakeholder_relationships").select("stakeholder_name,role,interaction_count").eq("user_id", userId)),
+      scoped(supabase.from("meetings").select("kind,title,agenda,attendees,held,minutes").eq("user_id", userId)),
+      scoped(supabase.from("tasks").select("title,description,status,category,linked_area,linked_module_route,source").eq("user_id", userId)),
+      scoped(supabase.from("status_reports").select("submitted_at").eq("user_id", userId)),
+      scoped(supabase.from("budget_lines").select("kind").eq("user_id", userId)),
+      scoped(supabase.from("change_requests").select("title,status").eq("user_id", userId)),
+      scoped(supabase.from("reflection_entries").select("id").eq("user_id", userId)),
+      scoped(supabase.from("phase_gates").select("phase,status").eq("user_id", userId)),
+      scoped(supabase.from("comms_messages").select("id").eq("user_id", userId)),
+      scoped(supabase.from("project_charters").select("completion_pct,status,approval_status,submitted_at").eq("user_id", userId)).maybeSingle(),
+      scoped(supabase.from("stakeholder_registers").select("completion_pct,approval_status,submitted_at").eq("user_id", userId)).maybeSingle(),
+      scoped(supabase.from("lessons_learned_docs").select("completion_pct,status,approval_status,submitted_at").eq("user_id", userId)),
+      scoped(supabase.from("project_outcomes").select("id").eq("user_id", userId)),
     ]);
 
     const phase = normalisePhase(state?.phase as string | undefined);
@@ -92,16 +124,16 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
     const R = raid ?? [];
     const S = stakeholders ?? [];
     const M = meetings ?? [];
-    const T = tasks ?? [];
+    const T = ((tasks ?? []) as TaskRow[]).filter((t) => !IGNORED_STATUSES.has(t.status ?? ""));
     const SR = reports ?? [];
     const B = budget ?? [];
     const CR = changes ?? [];
     const RE = reflections ?? [];
     const G = gates ?? [];
     const C = comms ?? [];
+    const L = lessonsDocs ?? [];
+    const O = outcomes ?? [];
 
-    const has = (rx: RegExp, list: { title?: string | null }[]) =>
-      list.some((d) => rx.test(d.title ?? ""));
     const docPct = (rx: RegExp) => {
       const match = D.filter((d) => rx.test(d.title ?? ""));
       if (match.length === 0) return 0;
@@ -112,20 +144,58 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
       return 50;
     };
 
-    const taskPct = (rx: RegExp, linkedArea?: string) => {
+    const artifactPct = (row?: {
+      completion_pct?: number | null;
+      status?: string | null;
+      approval_status?: string | null;
+      submitted_at?: string | null;
+    } | null) => {
+      if (!row) return 0;
+      if (row.approval_status === "approved") return 100;
+      const base = row.completion_pct ?? 0;
+      if (row.submitted_at || (row.status && row.status !== "draft")) return Math.max(base, 80);
+      return base;
+    };
+
+    const lessonArtifactPct = () => {
+      if (L.length === 0) return 0;
+      return Math.max(0, ...L.map((row) => artifactPct(row)));
+    };
+
+    const taskMatches = (rx: RegExp, linkedAreas?: string | string[]) => {
+      const areas = Array.isArray(linkedAreas)
+        ? linkedAreas
+        : linkedAreas
+          ? [linkedAreas]
+          : [];
       const match = T.filter((t) => {
-        const title = t.title ?? "";
-        return rx.test(title) || (linkedArea ? t.linked_area === linkedArea : false);
+        const text = `${t.title ?? ""} ${t.description ?? ""} ${t.category ?? ""} ${t.linked_area ?? ""}`;
+        return rx.test(text) || (t.linked_area ? areas.includes(t.linked_area) : false);
       });
+      return match;
+    };
+
+    const taskBestPct = (rx: RegExp, linkedAreas?: string | string[]) => {
+      const match = taskMatches(rx, linkedAreas);
       if (match.length === 0) return 0;
-      const scoreForStatus = (status?: string | null) => {
-        if (["done", "approved", "completed", "closed"].includes(status ?? "")) return 100;
-        if (status === "submitted") return 80;
-        if (status === "in_progress") return 50;
-        return 0;
-      };
       return Math.max(0, ...match.map((t) => scoreForStatus(t.status)));
     };
+
+    const taskAveragePct = (rx: RegExp, linkedAreas?: string | string[]) => {
+      const match = taskMatches(rx, linkedAreas);
+      if (match.length === 0) return 0;
+      return Math.round(match.reduce((sum, t) => sum + scoreForStatus(t.status), 0) / match.length);
+    };
+
+    const taskDoneHint = (rx: RegExp, linkedAreas?: string | string[]) => {
+      const match = taskMatches(rx, linkedAreas);
+      if (match.length === 0) return null;
+      const done = match.filter((t) => DONE_STATUSES.has(t.status ?? "")).length;
+      return `${done}/${match.length} linked tasks`;
+    };
+
+    const doneTaskCount = T.filter((t) => DONE_STATUSES.has(t.status ?? "")).length;
+    const allTaskCompletion = T.length === 0 ? 0 : Math.round((doneTaskCount / T.length) * 100);
 
     let items: PhaseItem[] = [];
 
@@ -142,6 +212,7 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
           approved ? 100 : submitted ? Math.max(base, 75) : base,
         );
       }
+      charter = bestOf(charter, taskBestPct(/project charter|\bcharter\b|scope verification|technical spec|requirements|statement of work|\bsow\b/i, "charter"));
       // Stakeholder mapping — use the same sources the user actually works in:
       // the live Stakeholder Register artifact and the required stakeholder task.
       // Relationship rows are only a fallback because the UI can render roster
@@ -154,11 +225,11 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
           ? Math.max(registerBase, 80)
           : registerBase
         : 0;
-      const stakeholderTaskPct = taskPct(/stakeholder (register|mapping|map)|meet your key stakeholders/i, "stakeholders");
+      const stakeholderTaskPct = taskBestPct(/stakeholder (register|mapping|map)|meet your key stakeholders|stakeholder roster|stakeholder profile/i, "stakeholders");
       const stakeholderPct = Math.max(registerPct, stakeholderTaskPct, relationshipPct);
       // RAID setup — need at least one of each kind (R,A,I,D)
       const kinds = new Set(R.map((r) => String(r.kind).toLowerCase()));
-      const raidPct = pct(kinds.size, 4);
+      const raidPct = bestOf(pct(kinds.size, 4), taskBestPct(/raid|risk register|risk log|assumption|dependency|issue/i, "risk"));
       // Kick-off preparation — steering meeting with agenda/attendees/held
       const kickoff = M.find((m) =>
         /kick.?off|kickoff/i.test(m.title ?? "") || m.kind === "steering",
@@ -171,6 +242,7 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
         if (attCount >= 3) kickPct += 25;
         if (kickoff.held) kickPct += 25;
       }
+      kickPct = bestOf(kickPct, taskBestPct(/kick.?off|vendor kickoff|steering committee|steerco|meeting agenda|meeting minutes/i, "meetings"));
       items = [
         { key: "charter", label: "Project Charter", pct: charter, route: "/app/charter" },
         { key: "stakeholders", label: "Stakeholder Mapping", pct: stakeholderPct, route: "/app/stakeholders", hint: stakeholderPct >= 100 ? "Mapped" : `${Math.min(mapped, 5)}/5 mapped` },
@@ -178,29 +250,48 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
         { key: "kickoff", label: "Kick-off Preparation", pct: kickPct, route: "/app/meetings" },
       ];
     } else if (phase === "planning") {
-      const schedule = docPct(/schedule|plan\b|gantt|timeline/i);
-      const resource = docPct(/resource|team plan|raci/i);
-      const budgetPct = pct(B.length, 5);
-      const commsPlan = docPct(/communication|comms plan|stakeholder engagement/i);
+      const schedule = bestOf(
+        docPct(/schedule|plan\b|gantt|timeline|data migration/i),
+        taskBestPct(/project schedule|schedule|timeline|gantt|data migration plan|migration plan|milestone/i),
+      );
+      const resource = bestOf(
+        docPct(/resource|team plan|raci/i),
+        taskBestPct(/resource plan|resourcing|team plan|raci|resource plan revision|data remediation/i),
+      );
+      const budgetPct = bestOf(
+        pct(B.length, 5),
+        taskAveragePct(/budget|cost|forecast|baseline|cost.?to.?complete|financial|variance|contingency/i, "budget"),
+      );
+      const commsPlan = bestOf(
+        docPct(/communication|comms plan|stakeholder engagement/i),
+        taskBestPct(/communication plan|comms plan|stakeholder engagement|communication cadence/i, "comms"),
+      );
       const risksWithMitigation = R.filter((r) => String(r.kind).toLowerCase() === "risk" && (r.mitigation ?? "").trim().length > 0).length;
       const totalRisks = R.filter((r) => String(r.kind).toLowerCase() === "risk").length;
-      const riskResponse = totalRisks === 0 ? 0 : pct(risksWithMitigation, totalRisks);
+      const riskResponse = bestOf(
+        totalRisks === 0 ? 0 : pct(risksWithMitigation, totalRisks),
+        taskBestPct(/risk response|risk register|risk mitigation|mitigation plan|raid/i, "risk"),
+      );
       items = [
         { key: "schedule", label: "Project Schedule", pct: schedule, route: "/app/documents" },
         { key: "resource", label: "Resource Plan", pct: resource, route: "/app/documents" },
-        { key: "budget", label: "Budget Baseline", pct: budgetPct, route: "/app/budget", hint: `${B.length}/5 lines` },
+        { key: "budget", label: "Budget Baseline", pct: budgetPct, route: "/app/budget", hint: taskDoneHint(/budget|cost|forecast|baseline|cost.?to.?complete|financial|variance|contingency/i, "budget") ?? `${B.length}/5 lines` },
         { key: "comms", label: "Communication Plan", pct: commsPlan, route: "/app/documents" },
         { key: "risk", label: "Risk Response Plan", pct: riskResponse, route: "/app/raid" },
       ];
     } else if (phase === "execution") {
-      const done = T.filter((t) => ["done", "approved", "completed", "closed"].includes(t.status)).length;
-      const tasksPct = T.length === 0 ? 0 : Math.round((done / T.length) * 100);
-      const inProg = T.filter((t) => t.status === "in_progress" || t.status === "review").length;
-      const teamActions = pct(inProg + done, Math.max(6, T.length));
-      const deliverables = pct(D.filter((d) => d.status === "approved").length, 3);
-      const commsPct = pct(C.length, 5);
+      const executionTaskRx = /pilot|implementation|frontline|training|uat|go.?live|vendor|technical|data migration|team action|workstream/i;
+      const executionMatches = taskMatches(executionTaskRx);
+      const executionDone = executionMatches.filter((t) => DONE_STATUSES.has(t.status ?? "")).length;
+      const tasksPct = executionMatches.length > 0 ? taskAveragePct(executionTaskRx) : allTaskCompletion;
+      const teamActions = bestOf(taskAveragePct(/team action|frontline|training|vendor|technical|workstream|implementation|pilot/i), pct(executionDone, Math.max(6, executionMatches.length)));
+      const deliverables = bestOf(
+        pct(D.filter((d) => d.status === "approved").length, 3),
+        taskBestPct(/deliverable|pilot|implementation|migration|uat|technical spec|scope verification|requirements/i, ["documents", "charter"]),
+      );
+      const commsPct = bestOf(pct(C.length, 5), taskAveragePct(/stakeholder comms|stakeholder communication|brief|reply|update|communication/i, "comms"));
       items = [
-        { key: "tasks", label: "Tasks Completed", pct: tasksPct, route: "/app/tasks", hint: `${done}/${T.length}` },
+        { key: "tasks", label: "Tasks Completed", pct: tasksPct, route: "/app/tasks", hint: executionMatches.length > 0 ? `${executionDone}/${executionMatches.length} execution tasks` : `${doneTaskCount}/${T.length}` },
         { key: "team", label: "Team Actions", pct: teamActions, route: "/app/tasks" },
         { key: "deliv", label: "Deliverables", pct: deliverables, route: "/app/documents" },
         { key: "comms", label: "Stakeholder Comms", pct: commsPct, route: "/app/comms" },
@@ -214,29 +305,55 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
       const raidUpdates = pct(recentRaid, Math.max(3, R.length));
       const actuals = B.filter((b) => String(b.kind).toLowerCase() === "actual").length;
       const budgets = B.filter((b) => String(b.kind).toLowerCase() === "budget").length || 1;
-      const budgetTrack = pct(actuals, budgets);
-      const crPct = pct(CR.length, 2);
-      const doneTasks = T.filter((t) => ["done", "approved", "completed", "closed"].includes(t.status)).length;
-      const schedule = T.length === 0 ? 0 : Math.round((doneTasks / T.length) * 100);
+      const budgetTrack = bestOf(pct(actuals, budgets), taskAveragePct(/budget tracking|budget|actual|forecast|variance|cost.?to.?complete/i, "budget"));
+      const crPct = bestOf(pct(CR.length, 2), taskAveragePct(/change request|\bpcr\b|scope change|impact assessment|change board/i, "changes"));
+      const schedule = bestOf(allTaskCompletion, taskAveragePct(/schedule performance|schedule|timeline|progress|milestone|delay|slippage/i, "reports"));
+      const reportPct = bestOf(pct(submitted, 3), taskAveragePct(/status report|weekly status|board report|status update/i, "reports"));
+      const raidUpdatePct = bestOf(raidUpdates, taskAveragePct(/raid update|risk update|risk|issue|dependency|assumption|mitigation/i, "risk"));
       items = [
-        { key: "reports", label: "Status Reports", pct: pct(submitted, 3), route: "/app/reports", hint: `${submitted}/3` },
-        { key: "raid", label: "RAID Updates", pct: raidUpdates, route: "/app/raid" },
+        { key: "reports", label: "Status Reports", pct: reportPct, route: "/app/reports", hint: taskDoneHint(/status report|weekly status|board report|status update/i, "reports") ?? `${submitted}/3` },
+        { key: "raid", label: "RAID Updates", pct: raidUpdatePct, route: "/app/raid" },
         { key: "budget", label: "Budget Tracking", pct: budgetTrack, route: "/app/budget" },
         { key: "changes", label: "Change Requests", pct: crPct, route: "/app/changes" },
         { key: "sched", label: "Schedule Performance", pct: schedule, route: "/app/progress" },
       ];
+    } else if (phase === "go-live") {
+      const goLiveReadiness = taskAveragePct(/go.?live|cutover|readiness|pilot|uat|launch|deployment/i);
+      const cutoverSupport = taskAveragePct(/cutover|hypercare|support|deployment|launch|standby/i);
+      const stakeholderReadiness = bestOf(
+        taskAveragePct(/stakeholder readiness|frontline|training|briefing|comms|communication/i, ["stakeholders", "comms"]),
+        pct(C.length, 5),
+      );
+      const goLiveGate = G.find((g) => /go.?live|execution|monitoring/i.test(String(g.phase ?? "").toLowerCase()));
+      const decisionPct = bestOf(
+        goLiveGate?.status === "passed" ? 100 : goLiveGate?.status === "open" ? 50 : 0,
+        taskBestPct(/go.?live decision|sponsor approval|sign.?off|approval|phase gate|steering committee/i, "gates"),
+      );
+      items = [
+        { key: "readiness", label: "Go-Live Readiness", pct: goLiveReadiness, route: "/app/tasks", hint: taskDoneHint(/go.?live|cutover|readiness|pilot|uat|launch|deployment/i) ?? undefined },
+        { key: "cutover", label: "Cutover & Support", pct: cutoverSupport, route: "/app/tasks", hint: taskDoneHint(/cutover|hypercare|support|deployment|launch|standby/i) ?? undefined },
+        { key: "stakeholders", label: "Stakeholder Readiness", pct: stakeholderReadiness, route: "/app/stakeholders" },
+        { key: "approval", label: "Go-Live Decision", pct: decisionPct, route: "/app/gates" },
+      ];
     } else {
       // closure
-      const finalDeliv = pct(D.filter((d) => d.status === "approved").length, Math.max(3, D.length));
-      const handover = docPct(/handover|hand.?over|transition/i);
-      const lessons = pct(RE.length, 3);
-      const closureReport = docPct(/closure|close.?out|final report/i);
+      const finalDeliv = bestOf(
+        pct(D.filter((d) => d.status === "approved").length, Math.max(3, D.length)),
+        taskAveragePct(/final deliverable|final delivery|deliverable|closure|close.?out/i, "documents"),
+      );
+      const handover = bestOf(docPct(/handover|hand.?over|transition/i), taskBestPct(/handover|hand.?over|transition|support model/i, "documents"));
+      const lessons = bestOf(pct(RE.length, 3), lessonArtifactPct(), taskBestPct(/lessons learned|lesson|retrospective|post.?mortem/i));
+      const closureReport = bestOf(docPct(/closure|close.?out|final report/i), taskBestPct(/closure report|close.?out|final report|project closure/i, ["documents", "reports"]));
       const closureGate = G.find((g) => String(g.phase).toLowerCase() === "closure");
-      const sponsorApproval = closureGate?.status === "passed" ? 100 : closureGate?.status === "open" ? 50 : 0;
+      const sponsorApproval = bestOf(
+        closureGate?.status === "passed" ? 100 : closureGate?.status === "open" ? 50 : 0,
+        O.length > 0 ? 100 : 0,
+        taskBestPct(/sponsor approval|closure approval|sign.?off|phase gate|closure gate/i, "gates"),
+      );
       items = [
         { key: "final", label: "Final Deliverables", pct: finalDeliv, route: "/app/documents" },
         { key: "handover", label: "Handover", pct: handover, route: "/app/documents" },
-        { key: "lessons", label: "Lessons Learned", pct: lessons, route: "/app/reviews" },
+        { key: "lessons", label: "Lessons Learned", pct: lessons, route: "/app/lessons" },
         { key: "report", label: "Closure Report", pct: closureReport, route: "/app/documents" },
         { key: "sponsor", label: "Sponsor Approval", pct: sponsorApproval, route: "/app/gates" },
       ];
