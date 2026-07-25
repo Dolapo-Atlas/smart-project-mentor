@@ -162,11 +162,11 @@ function Changes() {
       qc.invalidateQueries({ queryKey: ["whats-next"] });
       qc.invalidateQueries({ queryKey: ["phase-progress"] });
       toast.success(
-        linkedTask
+        search.task
           ? "Change request sent — linked task moved to Submitted."
           : "Change request sent to the change board.",
       );
-      if (linkedTask) {
+      if (search.task) {
         navigate({ to: "/app/changes", search: { cr: row?.id }, replace: true });
       } else {
         // reset
