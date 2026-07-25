@@ -68,6 +68,37 @@ type TaskRow = {
   source?: string | null;
 };
 
+type DocRow = { title?: string | null; status?: string | null; quality_score?: number | null };
+type RaidRow = {
+  kind?: string | null;
+  status?: string | null;
+  owner?: string | null;
+  mitigation?: string | null;
+  updated_at?: string | null;
+};
+type StakeholderRow = { stakeholder_name?: string | null; role?: string | null; interaction_count?: number | null };
+type MeetingRow = {
+  kind?: string | null;
+  title?: string | null;
+  agenda?: string | null;
+  attendees?: unknown;
+  held?: boolean | null;
+  minutes?: string | null;
+};
+type StatusReportRow = { submitted_at?: string | null };
+type BudgetRow = { kind?: string | null };
+type ChangeRow = { title?: string | null; status?: string | null };
+type ReflectionRow = { id?: string | null };
+type GateRow = { phase?: string | null; status?: string | null };
+type CommsRow = { id?: string | null };
+type ArtifactRow = {
+  completion_pct?: number | null;
+  status?: string | null;
+  approval_status?: string | null;
+  submitted_at?: string | null;
+};
+type OutcomeRow = { id?: string | null };
+
 export const getPhaseProgress = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<PhaseProgress> => {
@@ -120,19 +151,19 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
     ]);
 
     const phase = normalisePhase(state?.phase as string | undefined);
-    const D = docs ?? [];
-    const R = raid ?? [];
-    const S = stakeholders ?? [];
-    const M = meetings ?? [];
+    const D = (docs ?? []) as DocRow[];
+    const R = (raid ?? []) as RaidRow[];
+    const S = (stakeholders ?? []) as StakeholderRow[];
+    const M = (meetings ?? []) as MeetingRow[];
     const T = ((tasks ?? []) as TaskRow[]).filter((t) => !IGNORED_STATUSES.has(t.status ?? ""));
-    const SR = reports ?? [];
-    const B = budget ?? [];
-    const CR = changes ?? [];
-    const RE = reflections ?? [];
-    const G = gates ?? [];
-    const C = comms ?? [];
-    const L = lessonsDocs ?? [];
-    const O = outcomes ?? [];
+    const SR = (reports ?? []) as StatusReportRow[];
+    const B = (budget ?? []) as BudgetRow[];
+    const CR = (changes ?? []) as ChangeRow[];
+    const RE = (reflections ?? []) as ReflectionRow[];
+    const G = (gates ?? []) as GateRow[];
+    const C = (comms ?? []) as CommsRow[];
+    const L = (lessonsDocs ?? []) as ArtifactRow[];
+    const O = (outcomes ?? []) as OutcomeRow[];
 
     const docPct = (rx: RegExp) => {
       const match = D.filter((d) => rx.test(d.title ?? ""));
