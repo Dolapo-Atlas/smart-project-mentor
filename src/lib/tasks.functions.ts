@@ -329,6 +329,19 @@ export const submitTaskWithWork = createServerFn({ method: "POST" })
       .update({ status: "submitted", submission: data.submission, submitted_at: new Date().toISOString() })
       .eq("id", data.id)
       .eq("user_id", userId);
+    // Roll this artifact submission into rolling competency scores + story beats
+    // so the Performance dashboard reacts to inline template work (Charter,
+    // Stakeholder Register, RAID, etc.), not just uploaded PDFs.
+    try {
+      await rollSubmissionIntoPerformance(supabase, userId, {
+        submission: data.submission,
+        taskTitle: String((task as any)?.title ?? "Submission"),
+        category: String((task as any)?.category ?? ""),
+        linkedArea: String((task as any)?.linked_area ?? ""),
+      });
+    } catch (e) {
+      console.error("perf roll-up failed", e);
+    }
     // Chapter trigger: submitting the Project Charter task closes chapter 3.
     try {
       const title = String((task as any)?.title ?? "");
@@ -341,6 +354,98 @@ export const submitTaskWithWork = createServerFn({ method: "POST" })
     }
     return { ok: true };
   });
+
+// ---------- Competency / story roll-up shared by all template submissions ----------
+
+type PerfCat = "documentation" | "stakeholder" | "governance" | "risk" | "communication";
+
+const TEMPLATE_WEIGHTS: Record<string, Partial<Record<PerfCat, number>>> = {
+  project_charter: { documentation: 1, governance: 0.6 },
+  stakeholder_register: { stakeholder: 1, communication: 0.6 },
+  raid_log: { risk: 1, governance: 0.6 },
+  status_report: { communication: 1, documentation: 0.6 },
+  change_request: { governance: 1, documentation: 0.4 },
+  resource_plan: { documentation: 1, governance: 0.4 },
+  meeting_agenda: { communication: 1 },
+  lessons_learned: { documentation: 1, communication: 0.4 },
+};
+
+function weightsFromContext(category: string, linkedArea: string): Partial<Record<PerfCat, number>> {
+  const c = (category || "").toLowerCase();
+  const a = (linkedArea || "").toLowerCase();
+  if (a === "charter" || /charter/.test(c)) return { documentation: 1, governance: 0.6 };
+  if (a === "stakeholders" || /stakeholder/.test(c)) return { stakeholder: 1, communication: 0.6 };
+  if (a === "risk" || /raid|risk/.test(c)) return { risk: 1, governance: 0.6 };
+  if (a === "reports" || /report/.test(c)) return { communication: 1, documentation: 0.6 };
+  if (a === "changes" || /change/.test(c)) return { governance: 1 };
+  if (a === "comms" || /comm/.test(c)) return { communication: 1 };
+  if (a === "meetings" || /meeting/.test(c)) return { communication: 1 };
+  if (a === "gates" || /governance/.test(c)) return { governance: 1 };
+  return { documentation: 1 };
+}
+
+export async function rollSubmissionIntoPerformance(
+  supabase: any,
+  userId: string,
+  args: { submission: string; taskTitle: string; category: string; linkedArea: string },
+) {
+  const decoded = decodeSubmission(args.submission);
+  if (!decoded || decoded.kind === "free_text") return;
+  const score = decoded.readiness?.score ?? decoded.ai_readiness?.score;
+  if (typeof score !== "number") return;
+  const template = decoded.kind === "template" ? decoded.template : undefined;
+  const weights = (template && TEMPLATE_WEIGHTS[template]) || weightsFromContext(args.category, args.linkedArea);
+
+  const { data: state } = await supabase
+    .from("simulation_state")
+    .select("performance,story_log,phase,reputation,progress")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (!state) return;
+
+  const prev = (state.performance ?? {}) as Record<PerfCat, number>;
+  const mix = (p: number | undefined, w: number) =>
+    Math.round(((p ?? 50) * (3 - w) + score * w) / 3);
+  const next: Record<PerfCat, number> = {
+    documentation: prev.documentation ?? 50,
+    stakeholder: prev.stakeholder ?? 50,
+    governance: prev.governance ?? 50,
+    risk: prev.risk ?? 50,
+    communication: prev.communication ?? 50,
+  };
+  for (const [cat, w] of Object.entries(weights) as [PerfCat, number][]) {
+    next[cat] = Math.max(0, Math.min(100, mix(prev[cat], w)));
+  }
+
+  const story = Array.isArray(state.story_log) ? state.story_log : [];
+  const beat =
+    score >= 80
+      ? "Solid submission — this is the level of specificity the sponsor wants."
+      : score >= 50
+      ? "Landed the essentials. Tighten owners, dates and mitigations next time."
+      : "Generic in places — reference this specific project's context so it lands with the sponsor.";
+  story.push({
+    at: new Date().toISOString(),
+    phase: state.phase ?? "initiation",
+    score,
+    doc: args.taskTitle,
+    beat,
+  });
+
+  // Nudge reputation slightly based on submission quality (bounded).
+  const repDelta = Math.round((score - 50) / 10); // -5..+5
+  const newReputation = Math.max(0, Math.min(100, (state.reputation ?? 50) + repDelta));
+
+  await supabase
+    .from("simulation_state")
+    .update({
+      performance: next,
+      story_log: story,
+      reputation: newReputation,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("user_id", userId);
+}
 
 async function applyImpact(
   supabase: any,

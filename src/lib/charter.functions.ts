@@ -178,6 +178,26 @@ export const submitCharter = createServerFn({ method: "POST" })
       // Suppress unused-import warning; keep symbol available for future direct call.
       void submitTaskWithWork;
 
+      // Roll charter submission into rolling competency scores + story beats
+      // so the Performance dashboard reacts to inline template work.
+      try {
+        const { rollSubmissionIntoPerformance } = await import("@/lib/tasks.functions");
+        const { data: linkedTask } = await supabase
+          .from("tasks")
+          .select("title,category,linked_area")
+          .eq("id", charter.linked_task_id)
+          .eq("user_id", userId)
+          .maybeSingle();
+        await rollSubmissionIntoPerformance(supabase, userId, {
+          submission: encoded,
+          taskTitle: String((linkedTask as any)?.title ?? "Project Charter"),
+          category: String((linkedTask as any)?.category ?? "Documentation"),
+          linkedArea: String((linkedTask as any)?.linked_area ?? "charter"),
+        });
+      } catch (e) {
+        console.error("charter perf roll-up failed", e);
+      }
+
       // Chapter tick
       try {
         const { tickChapterBySlug } = await import("@/lib/chapters.functions");
