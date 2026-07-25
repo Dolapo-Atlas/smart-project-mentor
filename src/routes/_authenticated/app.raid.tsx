@@ -81,12 +81,17 @@ function RaidPage() {
 
   const [tab, setTab] = useState<Kind>("risk");
 
+  function selectTab(kind: Kind) {
+    setTab(kind);
+    setForm((current) => ({ ...current, kind }));
+  }
+
   // Deep-link support: /app/raid#risk|assumption|issue|dependency
   useEffect(() => {
     if (typeof window === "undefined") return;
     const h = window.location.hash.replace("#", "").toLowerCase();
     if (h === "risk" || h === "assumption" || h === "issue" || h === "dependency") {
-      setTab(h as Kind);
+      selectTab(h as Kind);
     }
   }, []);
 
@@ -128,7 +133,7 @@ function RaidPage() {
   const create = useMutation({
     mutationFn: async () => {
       const newEntry = {
-        kind: form.kind,
+        kind: tab,
         title: form.title,
         description: form.description || undefined,
         severity: form.severity,
@@ -166,7 +171,7 @@ function RaidPage() {
           kind: "template",
           template: "raid_log",
           values: {
-            narrative: `Added ${form.kind}: ${form.title}. ${form.description || "Entry logged in the RAID register."}`,
+            narrative: `Added ${tab}: ${form.title}. ${form.description || "Entry logged in the RAID register."}`,
           },
           readiness: evaluateRaid(readinessCounts),
         });
@@ -293,7 +298,7 @@ function RaidPage() {
           return (
             <button
               key={key}
-              onClick={() => setTab(key)}
+              onClick={() => selectTab(key)}
               className={`group rounded-xl border bg-card p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md ${
                 active ? "border-primary/60 shadow-sm" : "border-border"
               }`}
@@ -325,7 +330,7 @@ function RaidPage() {
         {KIND_TABS.map(({ key, label, icon: Icon }) => (
           <button
             key={key}
-            onClick={() => setTab(key)}
+            onClick={() => selectTab(key)}
             className={`flex items-center gap-2 border-b-2 px-3 pb-2 pt-1 text-sm font-medium transition ${
               tab === key
                 ? "border-primary text-foreground"
