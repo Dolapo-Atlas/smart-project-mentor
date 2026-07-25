@@ -258,9 +258,15 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
         : 0;
       const stakeholderTaskPct = taskBestPct(/stakeholder (register|mapping|map)|meet your key stakeholders|stakeholder roster|stakeholder profile/i, "stakeholders");
       const stakeholderPct = Math.max(registerPct, stakeholderTaskPct, relationshipPct);
-      // RAID setup — need at least one of each kind (R,A,I,D)
+      // RAID setup — the artifact is the raid_items table itself.
+      // Do NOT credit completion from task status alone; users must actually
+      // log entries. Task completion can only nudge once at least one item exists.
       const kinds = new Set(R.map((r) => String(r.kind).toLowerCase()));
-      const raidPct = bestOf(pct(kinds.size, 4), taskBestPct(/raid|risk register|risk log|assumption|dependency|issue/i, "risk"));
+      const raidArtifactPct = pct(kinds.size, 4);
+      const raidTaskNudge = kinds.size > 0
+        ? taskBestPct(/raid log|risk register|risk log|assumption log|dependency log|issue log/i, "risk")
+        : 0;
+      const raidPct = bestOf(raidArtifactPct, raidTaskNudge);
       // Kick-off preparation — steering meeting with agenda/attendees/held
       const kickoff = M.find((m) =>
         /kick.?off|kickoff/i.test(m.title ?? "") || m.kind === "steering",
