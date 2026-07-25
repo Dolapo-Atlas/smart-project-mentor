@@ -390,9 +390,10 @@ async function rollSubmissionIntoPerformance(
   args: { submission: string; taskTitle: string; category: string; linkedArea: string },
 ) {
   const decoded = decodeSubmission(args.submission);
-  const score = decoded?.readiness?.score ?? decoded?.ai_readiness?.score;
+  if (!decoded || decoded.kind === "free_text") return;
+  const score = decoded.readiness?.score ?? decoded.ai_readiness?.score;
   if (typeof score !== "number") return;
-  const template = decoded?.kind === "template" ? decoded.template : undefined;
+  const template = decoded.kind === "template" ? decoded.template : undefined;
   const weights = (template && TEMPLATE_WEIGHTS[template]) || weightsFromContext(args.category, args.linkedArea);
 
   const { data: state } = await supabase
