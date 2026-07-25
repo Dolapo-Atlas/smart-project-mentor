@@ -96,7 +96,7 @@ export function PhaseReadinessPanel() {
       key: "sentiment",
       label: "Stakeholders needing attention",
       count: readiness?.frustratedStakeholders.length ?? 0,
-      route: "/app/people",
+      route: "/app/stakeholders",
       emptyLabel: "Stakeholders on side",
     },
   ];
