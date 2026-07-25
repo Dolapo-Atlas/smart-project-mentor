@@ -384,7 +384,7 @@ function weightsFromContext(category: string, linkedArea: string): Partial<Recor
   return { documentation: 1 };
 }
 
-async function rollSubmissionIntoPerformance(
+export async function rollSubmissionIntoPerformance(
   supabase: any,
   userId: string,
   args: { submission: string; taskTitle: string; category: string; linkedArea: string },
