@@ -10,8 +10,7 @@ import {
   createChangeRequest,
 } from "@/lib/pm.functions";
 import { listTasksRich, submitTaskWithWork } from "@/lib/tasks.functions";
-import { TaskSubmissionDialog } from "@/components/tasks/task-submission-dialog";
-import { encodeSubmission, evaluateGenericTemplate, TEMPLATES } from "@/lib/templates";
+import { encodeSubmission, evaluateGenericTemplate } from "@/lib/templates";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -89,8 +88,6 @@ function Changes() {
   const [aRecommendation, setARecommendation] = useState("");
   const [aImpact, setAImpact] = useState("");
   const [aDecisionBy, setADecisionBy] = useState("");
-  const [submitOpen, setSubmitOpen] = useState(false);
-  const [lastCreatedId, setLastCreatedId] = useState<string | null>(null);
 
   useEffect(() => {
     if (search.prefill_title && !aTitle) setATitle(search.prefill_title);
@@ -117,37 +114,6 @@ function Changes() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
 
-  const create = useMutation({
-    mutationFn: () =>
-      createFn({
-        data: {
-          title: aTitle,
-          description: aDescription,
-          requested_by: aRequester,
-          cost_impact: Number(aCost) || 0,
-          schedule_impact_days: Math.trunc(Number(aDays) || 0),
-          risk_impact: aRisk,
-          impact_assessment: aImpact,
-          linked_task_id: search.task ?? undefined,
-        },
-      }),
-    onSuccess: (row: any) => {
-      qc.invalidateQueries({ queryKey: ["change_requests"] });
-      qc.invalidateQueries({ queryKey: ["inbox"] });
-      qc.invalidateQueries({ queryKey: ["tasks"] });
-      setLastCreatedId(row?.id ?? null);
-      toast.success("Change request sent to the change board.");
-      if (linkedTask) {
-        setSubmitOpen(true);
-      } else {
-        // reset
-        setATitle(""); setADescription(""); setARequester("");
-        setACost("0"); setADays("0"); setAOptions(""); setARecommendation(""); setAImpact(""); setADecisionBy("");
-      }
-    },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
-  });
-
   const templateValues = useMemo(
     () => ({
       summary: aDescription,
@@ -163,16 +129,50 @@ function Changes() {
     [aDescription, aImpact, aDays, aCost, aOptions, aRecommendation, aRequester, aDecisionBy],
   );
 
-  const submitLinkedTask = useMutation({
-    mutationFn: (v: { id: string; submission: string }) => submitFn({ data: v }),
-    onSuccess: () => {
+  const create = useMutation({
+    mutationFn: async () => {
+      const row = await createFn({
+        data: {
+          title: aTitle,
+          description: aDescription,
+          requested_by: aRequester,
+          cost_impact: Number(aCost) || 0,
+          schedule_impact_days: Math.trunc(Number(aDays) || 0),
+          risk_impact: aRisk,
+          impact_assessment: aImpact,
+          linked_task_id: search.task ?? undefined,
+        },
+      });
+      if (search.task) {
+        const encoded = encodeSubmission({
+          kind: "template",
+          template: "change_request",
+          values: templateValues,
+          readiness: evaluateGenericTemplate("change_request", templateValues),
+        });
+        await submitFn({ data: { id: search.task, submission: encoded } });
+      }
+      return row;
+    },
+    onSuccess: (row: any) => {
+      qc.invalidateQueries({ queryKey: ["change_requests"] });
+      qc.invalidateQueries({ queryKey: ["inbox"] });
       qc.invalidateQueries({ queryKey: ["tasks"] });
       qc.invalidateQueries({ queryKey: ["overview"] });
       qc.invalidateQueries({ queryKey: ["whats-next"] });
       qc.invalidateQueries({ queryKey: ["phase-progress"] });
-      setSubmitOpen(false);
-      toast.success("Task complete — well done.");
-      navigate({ to: "/app/tasks" });
+      toast.success(
+        linkedTask
+          ? "Change request sent — linked task moved to Submitted."
+          : "Change request sent to the change board.",
+      );
+      if (linkedTask) {
+        navigate({ to: "/app/changes", search: { cr: row?.id }, replace: true });
+      } else {
+        // reset
+        setATitle(""); setADescription(""); setARequester("");
+        setACost("0"); setADays("0"); setAOptions(""); setARecommendation(""); setAImpact(""); setADecisionBy("");
+      }
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
@@ -253,7 +253,7 @@ function Changes() {
               <h2 className="font-display text-2xl font-medium">Draft a change request</h2>
               <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
                 {linkedTask
-                  ? <>Linked to task <span className="font-medium">{linkedTask.title}</span>. Submitting will file the CR and complete the task.</>
+                  ? <>Linked to task <span className="font-medium">{linkedTask.title}</span>. Submitting will file the CR and move the task to Submitted.</>
                   : "Fill every section. The change board rejects vague asks with no options or quantified impact."}
               </p>
             </div>
@@ -445,31 +445,6 @@ function Changes() {
         </article>
       </div>
 
-      <TaskSubmissionDialog
-        task={linkedTask ? {
-          id: linkedTask.id,
-          title: linkedTask.title,
-          description: linkedTask.description,
-          category: linkedTask.category,
-          linked_area: linkedTask.linked_area,
-          completion_action: linkedTask.completion_action,
-        } : null}
-        open={submitOpen && !!linkedTask}
-        onOpenChange={(o) => setSubmitOpen(o)}
-        submitting={submitLinkedTask.isPending}
-        onSubmit={(encoded) => {
-          if (!linkedTask) return;
-          submitLinkedTask.mutate({ id: linkedTask.id, submission: encoded });
-        }}
-      />
-
-      {/* Reference: template payload derived from CR fields (used by the dialog when prefilled). */}
-      <input type="hidden" data-cr-payload value={encodeSubmission({
-        kind: "template",
-        template: "change_request",
-        values: templateValues,
-        readiness: evaluateGenericTemplate("change_request", templateValues),
-      })} />
     </div>
   );
 }
