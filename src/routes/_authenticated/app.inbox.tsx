@@ -155,18 +155,26 @@ function Inbox() {
             return (
               <li key={m.id}>
                 <button
-                  className={`w-full rounded-md border p-4 text-left transition ${
+                  className={`relative w-full rounded-md border p-4 text-left transition ${
                     active
                       ? "border-foreground bg-card shadow-sm"
                       : "border-border bg-card/60 hover:bg-card"
-                  }`}
+                  } ${!m.read ? "bg-primary/5" : ""}`}
                   onClick={() => {
                     setSelectedId(m.id);
                     if (!m.read) mark.mutate(m.id);
                   }}
                 >
+                  {!m.read && (
+                    <span className="absolute left-0 top-4 bottom-4 w-1 rounded-r-full bg-primary" aria-hidden="true" />
+                  )}
                   <div className="flex items-start gap-3">
-                    <StakeholderAvatar name={m.sender_name} size="md" />
+                    <div className="relative">
+                      <StakeholderAvatar name={m.sender_name} size="md" />
+                      {!m.read && (
+                        <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-destructive ring-2 ring-background" aria-hidden="true" />
+                      )}
+                    </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
                         <span className="truncate text-sm font-semibold">{m.sender_name}</span>
@@ -175,7 +183,14 @@ function Inbox() {
                         </span>
                       </div>
                       <div className="text-xs text-muted-foreground">{m.sender_role}</div>
-                      <div className={`mt-2 truncate text-sm ${!m.read ? "font-semibold" : ""}`}>{m.subject}</div>
+                      <div className="mt-2 flex items-center gap-2">
+                        <span className={`truncate text-sm ${!m.read ? "font-semibold" : ""}`}>{m.subject}</span>
+                        {!m.read && (
+                          <span className="shrink-0 rounded-full bg-primary px-2 py-0.5 text-[10px] font-medium text-primary-foreground">
+                            Unread
+                          </span>
+                        )}
+                      </div>
                       <div className="mt-1 text-xs text-muted-foreground">
                         {formatDistanceToNow(new Date(m.created_at), { addSuffix: true })}
                       </div>
