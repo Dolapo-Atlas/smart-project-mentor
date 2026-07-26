@@ -14,6 +14,7 @@ import { getActiveProject } from "@/lib/projects.functions";
 import { getOverview } from "@/lib/sim.functions";
 import { listWhatsNext } from "@/lib/tasks.functions";
 import { getPhaseProgress } from "@/lib/phase.functions";
+import { getTaskModuleLink } from "@/lib/task-module-link";
 import {
   Target,
   UserCircle2,
@@ -108,10 +109,10 @@ export function ProjectBriefSheet({ open, onOpenChange }: Props) {
   const phaseKey = normalisePhase(overview?.state?.phase as string | undefined);
   const phaseLabel = PHASE_LABEL[phaseKey] ?? "In progress";
 
-  const priorities: { title: string; to?: string }[] =
+  const priorities: { title: string; link: ReturnType<typeof getTaskModuleLink> }[] =
     (whatsNext?.tasks ?? []).slice(0, 5).map((t: any) => ({
       title: t.title,
-      to: t.linked_module_route ?? "/app/tasks",
+      link: t.linked_module_route ? getTaskModuleLink(t) : { to: "/app/tasks" },
     }));
 
   const phaseItems = (phase as any)?.items ?? [];
@@ -253,17 +254,14 @@ export function ProjectBriefSheet({ open, onOpenChange }: Props) {
                     <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-navy text-[11px] font-semibold text-white">
                       {i + 1}
                     </span>
-                    {p.to ? (
-                      <Link
-                        to={p.to}
-                        onClick={() => onOpenChange(false)}
-                        className="text-foreground underline-offset-4 hover:underline"
-                      >
-                        {p.title}
-                      </Link>
-                    ) : (
-                      <span>{p.title}</span>
-                    )}
+                    <Link
+                      to={p.link.to as any}
+                      search={p.link.search as any}
+                      onClick={() => onOpenChange(false)}
+                      className="text-foreground underline-offset-4 hover:underline"
+                    >
+                      {p.title}
+                    </Link>
                   </li>
                 ))}
               </ol>
