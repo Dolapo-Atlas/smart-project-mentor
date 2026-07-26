@@ -86,13 +86,6 @@ export function PhaseReadinessPanel() {
       emptyLabel: "All minutes sent",
     },
     {
-      key: "risks",
-      label: "High-severity RAID items",
-      count: readiness?.openHighRisks.length ?? 0,
-      route: "/app/raid",
-      emptyLabel: "No high-severity items",
-    },
-    {
       key: "sentiment",
       label: "Stakeholders needing attention",
       count: readiness?.frustratedStakeholders.length ?? 0,
