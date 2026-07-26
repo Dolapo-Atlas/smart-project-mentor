@@ -26,8 +26,9 @@ export function ContinueCard() {
   });
   const { data: chapters } = useQuery({ queryKey: ["chapters"], queryFn: () => fetchChapters() });
 
-  // Canonical status buckets — must match task-board / task-summary-strip.
-  const DONE = ["done", "approved", "completed", "closed"];
+  // Canonical user-handled statuses. "submitted" means the learner has done
+  // their part and is now waiting for review, so it must not count as remaining.
+  const DONE = ["submitted", "done", "approved", "completed", "closed"];
   const PRIORITY_RANK: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
   const rows = tasks ?? [];
 
@@ -42,8 +43,7 @@ export function ContinueCard() {
       const bd = b.due_at ? +new Date(b.due_at) : Infinity;
       return ad - bd;
     });
-  const pendingReview = rows.find((t) => t.status === "submitted");
-  const primary = inProgress ?? readyTodo[0] ?? pendingReview ?? null;
+  const primary = inProgress ?? readyTodo[0] ?? null;
 
   // Progress reflects the actual task list — the same dataset the board uses.
   const total = rows.length;
