@@ -30,6 +30,12 @@ export type DayInReviewSummary = {
   toDay: number;
   phase: string;
   phaseChanged: boolean;
+  /** True when the user attempted a phase-gate action (steerco/golive) but blockers stopped it. */
+  phaseBlocked?: boolean;
+  /** Human-readable list of what stopped the phase from advancing. */
+  phaseBlockers?: string[];
+  /** The phase the user was trying to reach. */
+  attemptedPhase?: string;
   healthChange: { from: string; to: string } | null;
   sentimentDeltas: Record<string, number>;
   reputationDelta: number;
@@ -129,10 +135,14 @@ export function DayInReview({
           <DialogTitle className="relative mt-2 font-display text-2xl font-semibold text-white">
             {summary.phaseChanged
               ? `Phase cleared — welcome to ${summary.phase}.`
-              : `Day ${summary.fromDay} → Day ${summary.toDay}`}
+              : summary.phaseBlocked
+                ? `Still in ${summary.phase}. Phase did not advance.`
+                : `Day ${summary.fromDay} → Day ${summary.toDay}`}
           </DialogTitle>
           <DialogDescription className="relative mt-1 text-sm text-white/70">
-            {SLIDE_LABEL[slide]}
+            {summary.phaseBlocked && slide === 0
+              ? `Time moved forward, but ${summary.attemptedPhase ?? "the next phase"} is gated.`
+              : SLIDE_LABEL[slide]}
           </DialogDescription>
           <div className="relative mt-4 flex gap-1.5">
             {Array.from({ length: total }).map((_, i) => (
@@ -155,6 +165,22 @@ export function DayInReview({
               variants={stagger}
               className="grid grid-cols-2 gap-3"
             >
+              {summary.phaseBlocked && summary.phaseBlockers && summary.phaseBlockers.length > 0 ? (
+                <div className="col-span-2 rounded-xl border border-amber-500/40 bg-amber-500/5 px-4 py-3 text-sm">
+                  <div className="mb-1 flex items-center gap-2 font-medium text-amber-700 dark:text-amber-400">
+                    <AlertTriangle className="h-4 w-4" />
+                    Why {summary.attemptedPhase ?? "the next phase"} didn't unlock
+                  </div>
+                  <ul className="ml-6 list-disc space-y-0.5 text-xs text-foreground/80">
+                    {summary.phaseBlockers.map((b, i) => (
+                      <li key={i}>{b}</li>
+                    ))}
+                  </ul>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Clear these, then run Steering Committee again to advance.
+                  </p>
+                </div>
+              ) : null}
               <StatTile
                 icon={Mail}
                 label="New emails"
