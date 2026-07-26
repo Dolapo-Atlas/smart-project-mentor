@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { motion, fadeUp, stagger, CountUp } from "@/components/motion/primitives";
 import { listWhatsNext } from "@/lib/tasks.functions";
+import { getTaskModuleLink } from "@/lib/task-module-link";
 
 export type DayInReviewSummary = {
   days: number;
@@ -288,7 +289,8 @@ export function DayInReview({
               {(whatsNext?.tasks ?? []).slice(0, 3).map((t: any) => (
                 <motion.div key={t.id} variants={fadeUp}>
                   <Link
-                    to={t.linked_module_route ?? "/app/tasks"}
+                    to={(t.linked_module_route ? getTaskModuleLink(t).to : "/app/tasks") as any}
+                    search={(t.linked_module_route ? getTaskModuleLink(t).search : undefined) as any}
                     onClick={() => onOpenChange(false)}
                     className="hover-lift group flex items-center justify-between gap-3 rounded-md border border-border bg-card px-3 py-2.5 text-sm"
                   >

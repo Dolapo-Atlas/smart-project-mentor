@@ -5,6 +5,7 @@ import { listTasksRich } from "@/lib/tasks.functions";
 import { listChapters } from "@/lib/chapters.functions";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, AlertTriangle, Sparkles } from "lucide-react";
+import { getTaskModuleLink } from "@/lib/task-module-link";
 
 const PRIORITY_STYLE: Record<string, string> = {
   critical: "bg-destructive/20 text-destructive-foreground border-destructive/40",
@@ -62,7 +63,7 @@ export function ContinueCard() {
     : allDone
       ? "Milestone ready"
       : "Recommended next step";
-  const route = primary?.linked_module_route ?? "/app/tasks";
+  const route = primary ? getTaskModuleLink(primary) : { to: "/app/tasks" };
 
   const criticalOverdue = rows.some(
     (t) =>
@@ -153,7 +154,7 @@ export function ContinueCard() {
               size="lg"
               className="hover-lift shrink-0 bg-white px-7 py-6 text-base font-semibold text-navy shadow-md ring-1 ring-black/5 hover:bg-white active:translate-y-0"
             >
-              <Link to={route}>
+              <Link to={route.to as any} search={route.search as any}>
                 {isResume ? <Play className="mr-2 h-5 w-5 fill-navy text-navy" /> : <ArrowRight className="mr-2 h-5 w-5 text-navy" />}
                 {isResume ? "Resume task" : "Start task"}
                 <ArrowRight className="ml-2 h-5 w-5 text-navy" />

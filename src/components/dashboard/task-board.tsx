@@ -17,6 +17,7 @@ import { RationaleChip } from "@/components/insights/rationale-chip";
 import { ResolutionPanel, stripResolutionMarker } from "@/components/insights/resolution-panel";
 import { motion, fadeUp, stagger } from "@/components/motion/primitives";
 import { AnimatePresence } from "framer-motion";
+import { getTaskModuleLink } from "@/lib/task-module-link";
 
 type Task = {
   id: string;
@@ -262,7 +263,8 @@ export function TaskBoard() {
               <div className="mt-8">
                 <Button asChild size="lg" className="w-full">
                   <Link
-                    to={selected.linked_module_route ?? "/app/tasks"}
+                    to={(selected.linked_module_route ? getTaskModuleLink(selected).to : "/app/tasks") as any}
+                    search={(selected.linked_module_route ? getTaskModuleLink(selected).search : undefined) as any}
                     onClick={() => setSelected(null)}
                   >
                     Open in module

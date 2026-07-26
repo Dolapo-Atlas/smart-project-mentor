@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
 import { listWhatsNext } from "@/lib/tasks.functions";
 import { ArrowRight, Sparkles, AlertTriangle } from "lucide-react";
+import { getTaskModuleLink } from "@/lib/task-module-link";
 
 const PRIORITY_STYLE: Record<string, string> = {
   critical: "bg-red-500/15 text-red-700 dark:text-red-400",
@@ -73,7 +74,8 @@ export function WhatsNextPanel() {
               )}
             </div>
             <Link
-              to={t.linked_module_route ?? "/app/tasks"}
+              to={(t.linked_module_route ? getTaskModuleLink(t).to : "/app/tasks") as any}
+              search={(t.linked_module_route ? getTaskModuleLink(t).search : undefined) as any}
               className="shrink-0 inline-flex items-center gap-1 rounded-md bg-primary px-2.5 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90"
             >
               Do it <ArrowRight className="h-3 w-3" />
