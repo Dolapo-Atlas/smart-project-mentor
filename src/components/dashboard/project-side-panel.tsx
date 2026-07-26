@@ -19,7 +19,7 @@ export function ProjectSidePanel() {
   const activeStakeholders = Array.from(
     new Set(
       (tasks ?? [])
-        .filter((t) => !["done", "approved", "completed", "closed"].includes(t.status))
+        .filter((t) => !["submitted", "done", "approved", "completed", "closed"].includes(t.status))
         .map((t) => t.linked_stakeholder)
         .filter(Boolean),
     ),

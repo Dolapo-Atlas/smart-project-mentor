@@ -158,7 +158,7 @@ export const getOverview = createServerFn({ method: "GET" })
           .from("tasks")
           .select("*", { count: "exact", head: true })
           .eq("user_id", userId)
-          .in("status", ["todo", "in_progress", "blocked", "submitted"]),
+          .in("status", ["todo", "in_progress", "blocked"]),
         supabase
           .from("documents")
           .select("*", { count: "exact", head: true })

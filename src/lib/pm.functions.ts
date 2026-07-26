@@ -1666,7 +1666,7 @@ export const getReportingPack = createServerFn({ method: "GET" })
       t.completed_at && t.completed_at.slice(0, 10) >= weekStart,
     );
     const openTasks = tasks.filter((t) =>
-      ["todo", "in_progress", "blocked", "submitted"].includes(t.status),
+      ["todo", "in_progress", "blocked"].includes(t.status),
     );
 
     let baseline = 0, spent = 0, forecast = 0;

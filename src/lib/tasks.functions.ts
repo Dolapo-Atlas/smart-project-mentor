@@ -112,7 +112,7 @@ type TaskSpec = z.infer<typeof TaskSpecSchema>;
 
 /**
  * Auto-unblock: any task in status='blocked' whose `depends_on` are all
- * satisfied (done/approved/completed/closed) is moved back to 'todo'.
+ * satisfied (submitted/done/approved/completed/closed) is moved back to 'todo'.
  * Escalation-parked tasks (status='blocked' with empty depends_on) are
  * NOT touched here — they're released via resumeBlockedTask/advanceTime.
  */
@@ -132,7 +132,7 @@ export async function unblockDependents(supabase: any, userId: string) {
     .eq("user_id", userId);
   const done = new Set(
     (depRows ?? [])
-      .filter((d: any) => ["done", "approved", "completed", "closed"].includes(d.status))
+      .filter((d: any) => ["submitted", "done", "approved", "completed", "closed"].includes(d.status))
       .map((d: any) => d.id),
   );
   const toUnblock = rows.filter((r: any) => (r.depends_on as string[]).every((id) => done.has(id)));
@@ -160,7 +160,7 @@ export const listTasksRich = createServerFn({ method: "GET" })
       const deps = (t.depends_on ?? []) as string[];
       const blockedBy = deps
         .map((id) => byId.get(id))
-        .filter((d) => d && !["done", "approved", "completed", "closed"].includes(d.status))
+        .filter((d) => d && !["submitted", "done", "approved", "completed", "closed"].includes(d.status))
         .map((d) => ({ id: d!.id, title: d!.title }));
       return { ...t, blocked_by: blockedBy, linked_module_route: inferModuleRoute(t) };
     });
@@ -201,7 +201,7 @@ export const listWhatsNext = createServerFn({ method: "GET" })
         .from("tasks")
         .select("id,status")
         .eq("user_id", context.userId)
-        .in("status", ["done", "approved", "completed", "closed"])).data?.map((t) => t.id) ?? [],
+        .in("status", ["submitted", "done", "approved", "completed", "closed"])).data?.map((t) => t.id) ?? [],
     );
     const ready = all
       .filter((t) => ((t.depends_on ?? []) as string[]).every((id) => doneSet.has(id)))
@@ -317,7 +317,7 @@ export const submitTaskWithWork = createServerFn({ method: "POST" })
         .select("id,title,status")
         .in("id", deps)
         .eq("user_id", userId);
-      const unmet = (depRows ?? []).filter((d) => !["done", "approved"].includes(d.status));
+      const unmet = (depRows ?? []).filter((d) => !["submitted", "done", "approved", "completed", "closed"].includes(d.status));
       if (unmet.length > 0) {
         throw new Error(
           `Blocked by: ${unmet.map((d) => d.title).join(", ")}. Complete these first.`,
@@ -792,7 +792,7 @@ export const resumeBlockedTask = createServerFn({ method: "POST" })
         .in("id", deps)
         .eq("user_id", userId);
       const unmet = (depRows ?? []).filter(
-        (d: any) => !["done", "approved", "completed", "closed"].includes(d.status),
+        (d: any) => !["submitted", "done", "approved", "completed", "closed"].includes(d.status),
       );
       if (unmet.length > 0) {
         throw new Error(
