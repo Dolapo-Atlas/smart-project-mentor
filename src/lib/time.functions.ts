@@ -72,8 +72,10 @@ export const getReadiness = createServerFn({ method: "GET" })
       unread.length +
       unsubmitted.length +
       meetingsMissingMinutes.length +
-      highRisks.length +
       frustrated.length;
+    // Note: high-severity RAID items are intentionally NOT part of blockerCount.
+    // In real PM, RAID is a living register that travels with the project — it
+    // shouldn't gate phase exit. It still influences health/sentiment below.
 
     return {
       openTasks: openTasks.map((t) => ({ id: t.id, title: t.title })),
