@@ -113,9 +113,21 @@ export function AdvanceTimeDialog({
   async function doAdvance(force: boolean) {
     setAdvancing(true);
     try {
-      const res = await advance({ data: { mode, force } });
+      // For governance gates (Steering Committee / Go-Live), never force-advance
+      // when there are blockers. Forcing would move the clock forward and spawn
+      // new stakeholder emails + auto-tasks (chase-ups, overdue bumps), which
+      // become fresh blockers — exactly the loop users report. Instead, treat
+      // the click as "attempt to hold the meeting": if blocked, do nothing and
+      // show what's missing.
+      const gateMode = mode === "steerco" || mode === "golive";
+      const effectiveForce = gateMode ? false : force;
+      const res = await advance({ data: { mode, force: effectiveForce } });
       if (res.blocked) {
-        toast.warning("Resolve blockers or choose Continue Anyway.");
+        toast.warning(
+          gateMode
+            ? "Meeting can't be held yet — clear the blockers below first."
+            : "Resolve blockers or choose Continue Anyway.",
+        );
         return;
       }
       const s = res.summary!;
