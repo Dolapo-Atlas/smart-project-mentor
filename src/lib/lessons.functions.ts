@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { TEMPLATES, evaluateGenericTemplate, encodeSubmission, type Readiness } from "./templates";
+import { markSubmittedArtifactTasks } from "./task-sync.server";
 
 export type LessonsDoc = {
   id: string;
@@ -149,24 +150,20 @@ export const submitLessons = createServerFn({ method: "POST" })
       })
       .eq("id", doc.id);
 
-    if (doc.linked_task_id) {
-      const readiness: Readiness = evaluateGenericTemplate("lessons_learned", payload, {});
-      const encoded = encodeSubmission({
-        kind: "template",
-        template: "lessons_learned",
-        values: payload,
-        readiness,
-      });
-      await supabase
-        .from("tasks")
-        .update({
-          status: "submitted",
-          submission: encoded,
-          submitted_at: new Date().toISOString(),
-        })
-        .eq("id", doc.linked_task_id)
-        .eq("user_id", userId);
+    const readiness: Readiness = evaluateGenericTemplate("lessons_learned", payload, {});
+    const encoded = encodeSubmission({
+      kind: "template",
+      template: "lessons_learned",
+      values: payload,
+      readiness,
+    });
+    await markSubmittedArtifactTasks(supabase, userId, {
+      template: "lessons_learned",
+      linkedTaskId: doc.linked_task_id,
+      submission: encoded,
+    });
 
+    if (doc.linked_task_id) {
       try {
         const { tickChapterBySlug } = await import("@/lib/chapters.functions");
         await tickChapterBySlug(supabase, userId, "closure");

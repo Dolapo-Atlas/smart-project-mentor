@@ -6,8 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listStatusReports, upsertStatusReport } from "@/lib/pm.functions";
 import { getOverview } from "@/lib/sim.functions";
-import { listTasksRich, submitTaskWithWork } from "@/lib/tasks.functions";
-import { encodeSubmission, evaluateStatusReport } from "@/lib/templates";
+import { listTasksRich } from "@/lib/tasks.functions";
 import { useEffect, useMemo, useRef, useState } from "react";
 import jsPDF from "jspdf";
 import { z } from "zod";
@@ -118,7 +117,6 @@ function Reports() {
   const upsert = useServerFn(upsertStatusReport);
   const fetchOverview = useServerFn(getOverview);
   const fetchTasks = useServerFn(listTasksRich);
-  const submitTaskFn = useServerFn(submitTaskWithWork);
   const { data: reports } = useQuery({ queryKey: ["status_reports"], queryFn: () => fetchReports() });
   const { data: overview } = useQuery({ queryKey: ["overview"], queryFn: () => fetchOverview() });
   const { data: allTasks } = useQuery({
@@ -174,19 +172,9 @@ function Reports() {
           decisions_needed: decisions || undefined,
           budget_note: budgetNote || undefined,
           submit,
+          linked_task_id: search.task,
         },
       });
-      if (submit && search.task) {
-        const encoded = encodeSubmission({
-          kind: "template",
-          template: "status_report",
-          values: templateValues,
-          readiness: evaluateStatusReport(templateValues, {
-            projectName: (overview as any)?.state?.project_name ?? null,
-          }),
-        });
-        await submitTaskFn({ data: { id: search.task, submission: encoded } });
-      }
       return result;
     },
     onSuccess: (_d, submit) => {

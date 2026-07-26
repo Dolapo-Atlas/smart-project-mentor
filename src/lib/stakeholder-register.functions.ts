@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { TEMPLATES, evaluateGenericTemplate, encodeSubmission } from "./templates";
+import { markSubmittedArtifactTasks } from "./task-sync.server";
 
 export type RegisterRow = {
   id: string;
@@ -144,24 +145,18 @@ export const submitRegister = createServerFn({ method: "POST" })
       })
       .eq("id", reg.id);
 
-    if (reg.linked_task_id) {
-      const readiness = evaluateGenericTemplate("stakeholder_register", payload);
-      const encoded = encodeSubmission({
-        kind: "template",
-        template: "stakeholder_register",
-        values: payload,
-        readiness,
-      });
-      await supabase
-        .from("tasks")
-        .update({
-          status: "submitted",
-          submission: encoded,
-          submitted_at: new Date().toISOString(),
-        })
-        .eq("id", reg.linked_task_id)
-        .eq("user_id", userId);
-    }
+    const readiness = evaluateGenericTemplate("stakeholder_register", payload);
+    const encoded = encodeSubmission({
+      kind: "template",
+      template: "stakeholder_register",
+      values: payload,
+      readiness,
+    });
+    await markSubmittedArtifactTasks(supabase, userId, {
+      template: "stakeholder_register",
+      linkedTaskId: reg.linked_task_id,
+      submission: encoded,
+    });
 
     try {
       await supabase.from("inbox_messages").insert({

@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { TEMPLATES, evaluateCharter, encodeSubmission, type Readiness } from "./templates";
+import { markSubmittedArtifactTasks } from "./task-sync.server";
 
 export type CharterRow = {
   id: string;
@@ -153,31 +154,22 @@ export const submitCharter = createServerFn({ method: "POST" })
       })
       .eq("id", charter.id);
 
+    const readiness: Readiness = evaluateCharter(payload, {});
+    const encoded = encodeSubmission({
+      kind: "template",
+      template: "project_charter",
+      values: payload,
+      readiness,
+    });
+    await markSubmittedArtifactTasks(supabase, userId, {
+      template: "project_charter",
+      linkedTaskId: charter.linked_task_id,
+      submission: encoded,
+    });
+
     // If linked to a task, submit it through the existing pipeline so
     // task board + feedback + phase progress all react automatically.
     if (charter.linked_task_id) {
-      const readiness: Readiness = evaluateCharter(payload, {});
-      const encoded = encodeSubmission({
-        kind: "template",
-        template: "project_charter",
-        values: payload,
-        readiness,
-      });
-      const { submitTaskWithWork } = await import("@/lib/tasks.functions");
-      // Call the underlying server fn logic in-process by invoking the same
-      // supabase mutation the fn performs, so we don't recursively RPC.
-      await supabase
-        .from("tasks")
-        .update({
-          status: "submitted",
-          submission: encoded,
-          submitted_at: new Date().toISOString(),
-        })
-        .eq("id", charter.linked_task_id)
-        .eq("user_id", userId);
-      // Suppress unused-import warning; keep symbol available for future direct call.
-      void submitTaskWithWork;
-
       // Roll charter submission into rolling competency scores + story beats
       // so the Performance dashboard reacts to inline template work.
       try {
