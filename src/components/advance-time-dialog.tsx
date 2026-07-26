@@ -215,7 +215,13 @@ export function AdvanceTimeDialog({
             Review Issues
           </Button>
           <Button onClick={() => doAdvance(true)} disabled={advancing || loading}>
-            {advancing ? "Advancing…" : blockerCount === 0 ? `Continue to ${MODE_LABEL[mode]}` : "Continue Anyway"}
+            {advancing
+              ? "Advancing…"
+              : blockerCount === 0
+                ? `Continue to ${MODE_LABEL[mode]}`
+                : (mode === "steerco" || mode === "golive")
+                  ? "Advance time (phase stays locked)"
+                  : "Continue Anyway"}
           </Button>
         </DialogFooter>
         <RationaleChip
