@@ -74,7 +74,7 @@ export async function markSubmittedArtifactTasks(
 
   const matched = ((tasks ?? []) as TaskRow[]).filter((task) => {
     if (args.linkedTaskId && task.id === args.linkedTaskId) return true;
-    if (args.linkedTaskId) return false;
+    if (args.linkedTaskId && args.template === "change_request") return false;
     return matchesArtifact(task, args.template);
   });
   if (matched.length === 0) return { updated: 0, taskIds: [] as string[] };

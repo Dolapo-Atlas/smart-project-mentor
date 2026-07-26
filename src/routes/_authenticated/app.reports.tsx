@@ -7,7 +7,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { listStatusReports, upsertStatusReport } from "@/lib/pm.functions";
 import { getOverview } from "@/lib/sim.functions";
 import { listTasksRich } from "@/lib/tasks.functions";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import jsPDF from "jspdf";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -150,16 +150,6 @@ function Reports() {
     }
   }, [current, overview, suggestedRag]);
 
-  const templateValues = useMemo(() => ({
-    period: `Week of ${thisWeek}`,
-    rag,
-    achievements: ach,
-    next_week: next,
-    risks_blockers: risks,
-    decisions_needed: decisions,
-    budget_note: budgetNote,
-  }), [thisWeek, rag, ach, next, risks, decisions, budgetNote]);
-
   const save = useMutation({
     mutationFn: async (submit: boolean) => {
       const result = await upsert({
@@ -181,15 +171,15 @@ function Reports() {
       qc.invalidateQueries({ queryKey: ["status_reports"] });
       qc.invalidateQueries({ queryKey: ["inbox"] });
       qc.invalidateQueries({ queryKey: ["reporting-pack"] });
-      if (submit && search.task) {
+      if (submit) {
         qc.invalidateQueries({ queryKey: ["tasks"] });
         qc.invalidateQueries({ queryKey: ["overview"] });
         qc.invalidateQueries({ queryKey: ["whats-next"] });
         qc.invalidateQueries({ queryKey: ["phase-progress"] });
-        toast.success("Submitted to sponsor — linked task moved to Submitted.");
-        navigate({ to: "/app/reports", search: {}, replace: true });
+        toast.success(search.task ? "Submitted to sponsor — linked reporting task(s) moved to Submitted." : "Submitted to sponsor.");
+        if (search.task) navigate({ to: "/app/reports", search: {}, replace: true });
       } else {
-        toast.success(submit ? "Submitted to sponsor." : "Draft saved.");
+        toast.success("Draft saved.");
       }
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
