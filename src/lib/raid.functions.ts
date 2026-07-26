@@ -2,6 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { loadRoster, rosterByRole, type RosterMember } from "./roster";
+import { encodeSubmission, evaluateRaid } from "./templates";
+import { markSubmittedArtifactTasks } from "./task-sync.server";
 
 const Kind = z.enum(["risk", "assumption", "issue", "dependency"]);
 const Sev = z.enum(["low", "medium", "high", "critical"]);
@@ -357,15 +359,27 @@ export const submitRaidLog = createServerFn({ method: "POST" })
     const firstName = profile?.preferred_name?.trim() || profile?.first_name || "there";
     const roster = await loadRoster(supabase, userId);
 
-    const { data: task } = await supabase
-      .from("tasks")
-      .select("id,status")
-      .eq("user_id", userId)
-      .ilike("title", "%RAID Log%")
-      .maybeSingle();
-    if (task && task.status !== "done") {
-      await supabase.from("tasks").update({ status: "submitted" }).eq("id", task.id);
-    }
+    const counts = (items ?? []).reduce(
+      (acc: any, item: any) => {
+        const kind = item.kind as "risk" | "assumption" | "issue" | "dependency";
+        acc[kind] = (acc[kind] ?? 0) + 1;
+        if (kind === "risk" && ["high", "critical"].includes(item.severity)) acc.highOrCriticalRisks += 1;
+        if (kind === "risk" && String(item.owner ?? "").trim() && String(item.mitigation ?? "").trim()) {
+          acc.risksWithOwnerAndMitigation += 1;
+        }
+        return acc;
+      },
+      { risk: 0, assumption: 0, issue: 0, dependency: 0, highOrCriticalRisks: 0, risksWithOwnerAndMitigation: 0 },
+    );
+    await markSubmittedArtifactTasks(supabase, userId, {
+      template: "raid_log",
+      submission: encodeSubmission({
+        kind: "template",
+        template: "raid_log",
+        values: { narrative: `Submitted RAID log with ${(items ?? []).length} entries.` },
+        readiness: evaluateRaid(counts),
+      }),
+    });
 
     // Notify every assigned owner that the RAID log has been sent for review
     const seen = new Set<string>();

@@ -6,9 +6,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listStatusReports, upsertStatusReport } from "@/lib/pm.functions";
 import { getOverview } from "@/lib/sim.functions";
-import { listTasksRich, submitTaskWithWork } from "@/lib/tasks.functions";
-import { encodeSubmission, evaluateStatusReport } from "@/lib/templates";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { listTasksRich } from "@/lib/tasks.functions";
+import { useEffect, useRef, useState } from "react";
 import jsPDF from "jspdf";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -118,7 +117,6 @@ function Reports() {
   const upsert = useServerFn(upsertStatusReport);
   const fetchOverview = useServerFn(getOverview);
   const fetchTasks = useServerFn(listTasksRich);
-  const submitTaskFn = useServerFn(submitTaskWithWork);
   const { data: reports } = useQuery({ queryKey: ["status_reports"], queryFn: () => fetchReports() });
   const { data: overview } = useQuery({ queryKey: ["overview"], queryFn: () => fetchOverview() });
   const { data: allTasks } = useQuery({
@@ -152,16 +150,6 @@ function Reports() {
     }
   }, [current, overview, suggestedRag]);
 
-  const templateValues = useMemo(() => ({
-    period: `Week of ${thisWeek}`,
-    rag,
-    achievements: ach,
-    next_week: next,
-    risks_blockers: risks,
-    decisions_needed: decisions,
-    budget_note: budgetNote,
-  }), [thisWeek, rag, ach, next, risks, decisions, budgetNote]);
-
   const save = useMutation({
     mutationFn: async (submit: boolean) => {
       const result = await upsert({
@@ -174,34 +162,24 @@ function Reports() {
           decisions_needed: decisions || undefined,
           budget_note: budgetNote || undefined,
           submit,
+          linked_task_id: search.task,
         },
       });
-      if (submit && search.task) {
-        const encoded = encodeSubmission({
-          kind: "template",
-          template: "status_report",
-          values: templateValues,
-          readiness: evaluateStatusReport(templateValues, {
-            projectName: (overview as any)?.state?.project_name ?? null,
-          }),
-        });
-        await submitTaskFn({ data: { id: search.task, submission: encoded } });
-      }
       return result;
     },
     onSuccess: (_d, submit) => {
       qc.invalidateQueries({ queryKey: ["status_reports"] });
       qc.invalidateQueries({ queryKey: ["inbox"] });
       qc.invalidateQueries({ queryKey: ["reporting-pack"] });
-      if (submit && search.task) {
+      if (submit) {
         qc.invalidateQueries({ queryKey: ["tasks"] });
         qc.invalidateQueries({ queryKey: ["overview"] });
         qc.invalidateQueries({ queryKey: ["whats-next"] });
         qc.invalidateQueries({ queryKey: ["phase-progress"] });
-        toast.success("Submitted to sponsor — linked task moved to Submitted.");
-        navigate({ to: "/app/reports", search: {}, replace: true });
+        toast.success(search.task ? "Submitted to sponsor — linked reporting task(s) moved to Submitted." : "Submitted to sponsor.");
+        if (search.task) navigate({ to: "/app/reports", search: {}, replace: true });
       } else {
-        toast.success(submit ? "Submitted to sponsor." : "Draft saved.");
+        toast.success("Draft saved.");
       }
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),

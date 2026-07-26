@@ -6,6 +6,7 @@ import { createLovableAiGatewayProvider } from "./ai-gateway.server";
 import { ARCHETYPE_SENTIMENT, getProjectCtx } from "./pm.functions";
 import { loadRoster, rosterByRole, DEFAULT_ROSTER } from "./roster";
 import { decodeSubmission, payloadToNarrative, TEMPLATES } from "./templates";
+import { reconcileSubmittedArtifactTasks } from "./task-sync.server";
 
 const MODEL = "google/gemini-3-flash-preview";
 function getModel() {
@@ -148,6 +149,7 @@ export async function unblockDependents(supabase: any, userId: string) {
 export const listTasksRich = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    await reconcileSubmittedArtifactTasks(context.supabase, context.userId);
     const { data, error } = await context.supabase
       .from("tasks")
       .select("*")

@@ -6,6 +6,8 @@ import { generateObject, generateText } from "ai";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
 import type { Json } from "@/integrations/supabase/types";
 import { loadRoster, rosterByRole, rosterByName, DEFAULT_ROSTER, type RosterMember } from "./roster";
+import { encodeSubmission, evaluateStatusReport } from "./templates";
+import { markSubmittedArtifactTasks } from "./task-sync.server";
 
 const MODEL = "google/gemini-3-flash-preview";
 function getModel() {
@@ -156,6 +158,7 @@ export const upsertStatusReport = createServerFn({ method: "POST" })
         .array(z.object({ kind: z.string(), id: z.string(), label: z.string().optional() }))
         .optional(),
       submit: z.boolean().optional(),
+      linked_task_id: z.string().uuid().optional(),
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -262,6 +265,30 @@ Score 0-100. A good status report has: concrete achievements with evidence, name
         }
       } catch (e) {
         console.error("status report scoring failed", e);
+      }
+      try {
+        const values = {
+          period: `Week of ${week_start}`,
+          rag: data.rag_summary,
+          achievements: data.achievements ?? "",
+          next_week: data.next_week ?? "",
+          risks_blockers: data.risks_blockers ?? "",
+          decisions_needed: data.decisions_needed ?? "",
+          budget_note: data.budget_note ?? "",
+        };
+        const encoded = encodeSubmission({
+          kind: "template",
+          template: "status_report",
+          values,
+          readiness: evaluateStatusReport(values),
+        });
+        await markSubmittedArtifactTasks(context.supabase, context.userId, {
+          template: "status_report",
+          linkedTaskId: data.linked_task_id,
+          submission: encoded,
+        });
+      } catch (e) {
+        console.error("status report task sync failed", e);
       }
       // Chapter trigger: submitting a status report closes chapter 10.
       try {
