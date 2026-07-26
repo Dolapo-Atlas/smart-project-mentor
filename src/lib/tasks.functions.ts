@@ -62,13 +62,26 @@ const AREA_TO_ROUTE: Record<string, string> = {
 // backfilling the DB, we infer the correct destination from the task's own
 // title/description at read time. This keeps existing rows intact and lets
 // the dashboard "Start task" button open the right working module.
-function inferModuleRoute<T extends { title?: string | null; description?: string | null; linked_module_route?: string | null; linked_area?: string | null }>(
+function inferModuleRoute<T extends {
+  title?: string | null;
+  description?: string | null;
+  completion_action?: string | null;
+  category?: string | null;
+  linked_module_route?: string | null;
+  linked_area?: string | null;
+}>(
   t: T,
 ): string | null {
-  const text = `${t.title ?? ""} ${t.description ?? ""}`.toLowerCase();
+  const text = `${t.title ?? ""} ${t.description ?? ""} ${t.completion_action ?? ""} ${t.category ?? ""}`.toLowerCase();
   const rules: Array<[RegExp, string]> = [
-    // Communication/chase intents go to Comms regardless of subject noun.
-    [/\bemail\b|\bchase\b|\breply\b|\bfollow[- ]?up\b|\bcc\b|\breach out\b/, "/app/comms"],
+    // Communication/chase/escalation intents go to Comms regardless of subject noun.
+    // Many generated tasks store the real action in completion_action (for example
+    // "Email the CareSoft vendor lead"), while the persisted linked route may still
+    // be the older Charter fallback. Use all task text so Open module follows the
+    // learner's actual job-to-be-done.
+    [/\b(?:email|e-mail|send|draft|write|chase|reply|respond|response|follow[- ]?up|cc|reach out|contact|communicat\w*|escalat\w*)\b/, "/app/comms"],
+    [/\b(?:vendor|caresoft|supplier)\b.*\b(?:gap|documentation|document|response|reply|email|chase|escalat\w*)\b/, "/app/comms"],
+    [/\b(?:gap|documentation|document|response|reply|email|chase|escalat\w*)\b.*\b(?:vendor|caresoft|supplier)\b/, "/app/comms"],
     [/\bproject charter\b|\bcharter\b/, "/app/charter"],
     [/\bvendor\b|\bcaresoft\b|\bsupplier\b/, "/app/comms"],
     [/\bscope\b|\btechnical spec(?:ification)?\b|\brequirements?\b|\bsow\b|\bstatement of work\b/, "/app/charter"],

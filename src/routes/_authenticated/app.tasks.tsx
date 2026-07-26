@@ -49,7 +49,7 @@ import {
 import { checkIsAdmin } from "@/lib/session.functions";
 import { ResolutionPanel, stripResolutionMarker } from "@/components/insights/resolution-panel";
 import { Archive, X } from "lucide-react";
-import { detectTemplateKind } from "@/lib/templates";
+import { getTaskModuleLink } from "@/lib/task-module-link";
 
 export const Route = createFileRoute("/_authenticated/app/tasks")({
   component: Tasks,
@@ -88,95 +88,13 @@ function classifyTask(source: string): "required" | "optional_system" | "user" {
   return "optional_system";
 }
 
-function inferRaidKind(t: { title?: string | null; description?: string | null; category?: string | null }):
-  "risk" | "assumption" | "issue" | "dependency" {
-  const s = `${t.title ?? ""} ${t.description ?? ""} ${t.category ?? ""}`.toLowerCase();
-  if (/\bassumption/.test(s)) return "assumption";
-  if (/\bissue|incident|blocker/.test(s)) return "issue";
-  if (/\bdependenc/.test(s)) return "dependency";
-  return "risk";
-}
-
 function OpenModuleLink({ t }: { t: RichTask }) {
-  const detected = detectTemplateKind({
-    title: t.title,
-    category: t.category,
-    linked_area: t.linked_area,
-  });
-  const base =
-    t.linked_module_route ??
-    (detected === "lessons_learned" ? "/app/lessons" : null);
-  if (!base) return null;
-  if (base === "/app/raid") {
-    const kind = inferRaidKind(t);
-    return (
-      <Link
-        to="/app/raid"
-        search={{ task: t.id, kind, prefill_title: t.title }}
-        className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] hover:bg-accent"
-      >
-        Open module <ArrowUpRight className="h-3 w-3" />
-      </Link>
-    );
-  }
-  if (base === "/app/charter") {
-    return (
-      <Link
-        to="/app/charter"
-        search={{ task: t.id }}
-        className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] hover:bg-accent"
-      >
-        Open module <ArrowUpRight className="h-3 w-3" />
-      </Link>
-    );
-  }
-  if (base === "/app/reports") {
-    return (
-      <Link
-        to="/app/reports"
-        search={{ task: t.id }}
-        className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] hover:bg-accent"
-      >
-        Open module <ArrowUpRight className="h-3 w-3" />
-      </Link>
-    );
-  }
-  if (base === "/app/changes") {
-    return (
-      <Link
-        to="/app/changes"
-        search={{ task: t.id, prefill_title: t.title }}
-        className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] hover:bg-accent"
-      >
-        Open module <ArrowUpRight className="h-3 w-3" />
-      </Link>
-    );
-  }
-  if (base === "/app/stakeholders") {
-    return (
-      <Link
-        to="/app/stakeholders"
-        search={{ task: t.id }}
-        className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] hover:bg-accent"
-      >
-        Open module <ArrowUpRight className="h-3 w-3" />
-      </Link>
-    );
-  }
-  if (base === "/app/lessons") {
-    return (
-      <Link
-        to="/app/lessons"
-        search={{ task: t.id }}
-        className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] hover:bg-accent"
-      >
-        Open module <ArrowUpRight className="h-3 w-3" />
-      </Link>
-    );
-  }
+  if (!t.linked_module_route) return null;
+  const link = getTaskModuleLink(t);
   return (
     <Link
-      to={base}
+      to={link.to as any}
+      search={link.search as any}
       className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] hover:bg-accent"
     >
       Open module <ArrowUpRight className="h-3 w-3" />
@@ -714,12 +632,7 @@ function TaskCard({
           )}
 
           <div className="mt-2 flex flex-wrap gap-1.5">
-            {(t.linked_module_route ||
-              detectTemplateKind({
-                title: t.title,
-                category: t.category,
-                linked_area: t.linked_area,
-              }) === "lessons_learned") && !isComplete && (
+            {t.linked_module_route && !isComplete && (
               <OpenModuleLink t={t} />
             )}
             {t.status === "todo" && (

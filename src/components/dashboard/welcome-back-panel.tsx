@@ -9,6 +9,7 @@ import { listWhatsNext } from "@/lib/tasks.functions";
 import { getPhaseProgress } from "@/lib/phase.functions";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Mail, ListChecks, AlertTriangle, X, Sparkles } from "lucide-react";
+import { getTaskModuleLink } from "@/lib/task-module-link";
 
 const GAP_MS = 4 * 60 * 60 * 1000; // 4 hours
 
@@ -113,6 +114,7 @@ export function WelcomeBackPanel() {
   const chapterLabel = state.current_chapter
     ? `Chapter ${state.current_chapter}`
     : `Day ${state.current_day ?? 1}`;
+  const recLink = summary.rec ? getTaskModuleLink(summary.rec) : { to: "/app/tasks" };
 
   return (
     <section
@@ -185,7 +187,7 @@ export function WelcomeBackPanel() {
           className="bg-white text-navy hover:bg-white/90"
           onClick={dismiss}
         >
-          <Link to={summary.rec?.linked_module_route ?? "/app/tasks"}>
+          <Link to={recLink.to as any} search={recLink.search as any}>
             Continue project <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
           </Link>
         </Button>
