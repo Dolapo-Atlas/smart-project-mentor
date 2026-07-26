@@ -86,13 +86,6 @@ export function PhaseReadinessPanel() {
       emptyLabel: "All minutes sent",
     },
     {
-      key: "risks",
-      label: "High-severity RAID items",
-      count: readiness?.openHighRisks.length ?? 0,
-      route: "/app/raid",
-      emptyLabel: "No high-severity items",
-    },
-    {
       key: "sentiment",
       label: "Stakeholders needing attention",
       count: readiness?.frustratedStakeholders.length ?? 0,
@@ -233,6 +226,17 @@ export function PhaseReadinessPanel() {
             {phase === "monitoring" || phase === "go-live" ? "Go Live" : "Steering Committee"}
           </span>{" "}
           in the time controls above.
+        </div>
+      )}
+
+      {(readiness?.openHighRisks.length ?? 0) > 0 && (
+        <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+          <span className="font-semibold">Advisory · not a phase blocker:</span>{" "}
+          {readiness!.openHighRisks.length} high-severity RAID item
+          {readiness!.openHighRisks.length === 1 ? "" : "s"} open. RAID is a live
+          register that travels with the project — it won't stop you moving to
+          the next phase, but leaving it unmitigated will hit project health and
+          sponsor sentiment on the next time advance.
         </div>
       )}
     </section>
