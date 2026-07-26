@@ -228,6 +228,17 @@ export function PhaseReadinessPanel() {
           in the time controls above.
         </div>
       )}
+
+      {(readiness?.openHighRisks.length ?? 0) > 0 && (
+        <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+          <span className="font-semibold">Advisory · not a phase blocker:</span>{" "}
+          {readiness!.openHighRisks.length} high-severity RAID item
+          {readiness!.openHighRisks.length === 1 ? "" : "s"} open. RAID is a live
+          register that travels with the project — it won't stop you moving to
+          the next phase, but leaving it unmitigated will hit project health and
+          sponsor sentiment on the next time advance.
+        </div>
+      )}
     </section>
   );
 }
