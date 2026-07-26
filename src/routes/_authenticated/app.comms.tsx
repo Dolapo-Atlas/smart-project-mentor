@@ -5,7 +5,7 @@ import { listComms, listAttachables, sendComm } from "@/lib/comms.functions";
 import { useRoster } from "@/lib/roster";
 import { recordDocument } from "@/lib/sim.functions";
 import { supabase } from "@/integrations/supabase/client";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,6 +14,11 @@ import { Send, Paperclip, ChevronRight, Upload, Loader2 } from "lucide-react";
 import { StakeholderHoverAvatar as StakeholderAvatar } from "@/components/stakeholder-card";
 
 export const Route = createFileRoute("/_authenticated/app/comms")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    task: typeof search.task === "string" ? search.task : undefined,
+    prefill_title: typeof search.prefill_title === "string" ? search.prefill_title : undefined,
+    prefill_body: typeof search.prefill_body === "string" ? search.prefill_body : undefined,
+  }),
   component: Comms,
 });
 
@@ -30,6 +35,7 @@ const sentimentClass: Record<string, string> = {
 
 function Comms() {
   const qc = useQueryClient();
+  const search = Route.useSearch();
   const fetchComms = useServerFn(listComms);
   const fetchAttach = useServerFn(listAttachables);
   const send = useServerFn(sendComm);
@@ -47,6 +53,15 @@ function Comms() {
   const [attachRef, setAttachRef] = useState<string>("");
   const fileInput = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const prefilledTaskRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!search.task || prefilledTaskRef.current === search.task) return;
+    prefilledTaskRef.current = search.task;
+    setMsgType("Request");
+    if (search.prefill_title) setSubject(search.prefill_title);
+    if (search.prefill_body) setBody(search.prefill_body);
+  }, [search.task, search.prefill_title, search.prefill_body]);
 
   async function readTextExcerpt(file: File): Promise<string | undefined> {
     if (file.type.startsWith("text/") || /\.(md|txt|json|csv)$/i.test(file.name)) {
