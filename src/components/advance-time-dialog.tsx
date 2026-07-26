@@ -138,12 +138,27 @@ export function AdvanceTimeDialog({
       const phaseChanged =
         (mode === "sprint" || mode === "steerco" || mode === "golive") &&
         blockerCount === 0;
+      const phaseGateMode = mode === "sprint" || mode === "steerco" || mode === "golive";
+      const phaseBlocked = phaseGateMode && blockerCount > 0 && !phaseChanged;
+      const blockerLines: string[] = [];
+      if (data) {
+        if (data.openTasks.length) blockerLines.push(`${data.openTasks.length} open task${data.openTasks.length === 1 ? "" : "s"} still to close`);
+        if (data.unreadInbox.length) blockerLines.push(`${data.unreadInbox.length} unread stakeholder message${data.unreadInbox.length === 1 ? "" : "s"}`);
+        if (data.unsubmittedDocs.length) blockerLines.push(`${data.unsubmittedDocs.length} document${data.unsubmittedDocs.length === 1 ? "" : "s"} pending submission`);
+        if (data.meetingsMissingMinutes.length) blockerLines.push(`${data.meetingsMissingMinutes.length} meeting${data.meetingsMissingMinutes.length === 1 ? "" : "s"} missing minutes`);
+        if (data.openHighRisks.length) blockerLines.push(`${data.openHighRisks.length} high-severity RAID item${data.openHighRisks.length === 1 ? "" : "s"} open`);
+        if (data.frustratedStakeholders.length) blockerLines.push(`${data.frustratedStakeholders.length} frustrated stakeholder${data.frustratedStakeholders.length === 1 ? "" : "s"}`);
+      }
       setReview({
         days: s.days,
         fromDay: s.fromDay,
         toDay: s.toDay,
         phase: s.phase,
         phaseChanged,
+        phaseBlocked,
+        phaseBlockers: blockerLines,
+        attemptedPhase:
+          mode === "steerco" ? "Planning" : mode === "golive" ? "Go-Live" : undefined,
         healthChange: s.healthChange,
         sentimentDeltas: s.sentimentDeltas,
         reputationDelta: s.reputationDelta,
@@ -200,7 +215,13 @@ export function AdvanceTimeDialog({
             Review Issues
           </Button>
           <Button onClick={() => doAdvance(true)} disabled={advancing || loading}>
-            {advancing ? "Advancing…" : blockerCount === 0 ? `Continue to ${MODE_LABEL[mode]}` : "Continue Anyway"}
+            {advancing
+              ? "Advancing…"
+              : blockerCount === 0
+                ? `Continue to ${MODE_LABEL[mode]}`
+                : (mode === "steerco" || mode === "golive")
+                  ? "Advance time (phase stays locked)"
+                  : "Continue Anyway"}
           </Button>
         </DialogFooter>
         <RationaleChip
