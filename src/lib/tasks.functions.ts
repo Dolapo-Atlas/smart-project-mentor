@@ -74,25 +74,25 @@ function inferModuleRoute<T extends {
 ): string | null {
   const text = `${t.title ?? ""} ${t.description ?? ""} ${t.completion_action ?? ""} ${t.category ?? ""}`.toLowerCase();
   const rules: Array<[RegExp, string]> = [
-    // Communication/chase/escalation intents go to Comms regardless of subject noun.
-    // Many generated tasks store the real action in completion_action (for example
-    // "Email the CareSoft vendor lead"), while the persisted linked route may still
-    // be the older Charter fallback. Use all task text so Open module follows the
-    // learner's actual job-to-be-done.
-    [/\b(?:email|e-mail|send|draft|write|chase|reply|respond|response|follow[- ]?up|cc|reach out|contact|communicat\w*|escalat\w*)\b/, "/app/comms"],
-    [/\b(?:vendor|caresoft|supplier)\b.*\b(?:gap|documentation|document|response|reply|email|chase|escalat\w*)\b/, "/app/comms"],
-    [/\b(?:gap|documentation|document|response|reply|email|chase|escalat\w*)\b.*\b(?:vendor|caresoft|supplier)\b/, "/app/comms"],
+    // Artifact-specific intents win over generic communication verbs.
+    // "Draft Emergency Change Request (CR)" contains "draft" but the learner's
+    // job lives in the Changes module, not Comms.
+    [/\bchange request\b|\bcr\b|\bcab\b|\bchange advisory board\b/, "/app/changes"],
     [/\bproject charter\b|\bcharter\b/, "/app/charter"],
-    [/\bvendor\b|\bcaresoft\b|\bsupplier\b/, "/app/comms"],
-    [/\bscope\b|\btechnical spec(?:ification)?\b|\brequirements?\b|\bsow\b|\bstatement of work\b/, "/app/charter"],
     [/\bstakeholder register\b|\bstakeholder map|\bstakeholders?\b/, "/app/stakeholders"],
     [/\braid\b|\brisk log\b|risks?, ?assumption/, "/app/raid"],
-    [/\bchange request\b|\bcr\b/, "/app/changes"],
     [/\bstatus report\b|\bweekly (?:status|report)\b/, "/app/reports"],
     [/\blessons learned\b|\bretrospective\b|\bpost[- ]?mortem\b/, "/app/lessons"],
     [/\bmeeting\b|\bagenda\b|\bminutes\b/, "/app/meetings"],
     [/\bbudget\b|\bforecast\b|\bspend\b/, "/app/budget"],
     [/\bresource plan\b/, "/app/documents"],
+    // Communication/chase/escalation intents route to Comms only after the
+    // artifact-specific checks above have missed.
+    [/\b(?:email|e-mail|send|write|chase|reply|respond|response|follow[- ]?up|cc|reach out|contact|communicat\w*|escalat\w*)\b/, "/app/comms"],
+    [/\b(?:vendor|caresoft|supplier)\b.*\b(?:gap|documentation|document|response|reply|email|chase|escalat\w*)\b/, "/app/comms"],
+    [/\b(?:gap|documentation|document|response|reply|email|chase|escalat\w*)\b.*\b(?:vendor|caresoft|supplier)\b/, "/app/comms"],
+    [/\bvendor\b|\bcaresoft\b|\bsupplier\b/, "/app/comms"],
+    [/\bscope\b|\btechnical spec(?:ification)?\b|\brequirements?\b|\bsow\b|\bstatement of work\b/, "/app/charter"],
   ];
   for (const [re, route] of rules) if (re.test(text)) return route;
   return t.linked_module_route ?? (t.linked_area ? AREA_TO_ROUTE[t.linked_area] ?? null : null);
