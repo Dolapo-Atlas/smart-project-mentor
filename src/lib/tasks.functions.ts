@@ -67,8 +67,11 @@ function inferModuleRoute<T extends { title?: string | null; description?: strin
 ): string | null {
   const text = `${t.title ?? ""} ${t.description ?? ""}`.toLowerCase();
   const rules: Array<[RegExp, string]> = [
+    // Communication/chase intents go to Comms regardless of subject noun.
+    [/\bemail\b|\bchase\b|\breply\b|\bfollow[- ]?up\b|\bcc\b|\breach out\b/, "/app/comms"],
     [/\bproject charter\b|\bcharter\b/, "/app/charter"],
-    [/\bscope\b|\btechnical spec(?:ification)?\b|\bvendor\b|\brequirements?\b|\bsow\b|\bstatement of work\b/, "/app/charter"],
+    [/\bvendor\b|\bcaresoft\b|\bsupplier\b/, "/app/comms"],
+    [/\bscope\b|\btechnical spec(?:ification)?\b|\brequirements?\b|\bsow\b|\bstatement of work\b/, "/app/charter"],
     [/\bstakeholder register\b|\bstakeholder map|\bstakeholders?\b/, "/app/stakeholders"],
     [/\braid\b|\brisk log\b|risks?, ?assumption/, "/app/raid"],
     [/\bchange request\b|\bcr\b/, "/app/changes"],
