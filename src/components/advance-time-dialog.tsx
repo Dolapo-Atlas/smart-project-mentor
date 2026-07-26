@@ -232,7 +232,7 @@ export function AdvanceTimeDialog({
               : blockerCount === 0
                 ? `Continue to ${MODE_LABEL[mode]}`
                 : (mode === "steerco" || mode === "golive")
-                  ? "Advance time (phase stays locked)"
+                  ? "Try to hold meeting"
                   : "Continue Anyway"}
           </Button>
         </DialogFooter>
