@@ -170,7 +170,7 @@ export const submitReflection = createServerFn({ method: "POST" })
         prompt: z.string().min(1).max(500),
         answer: z.string().trim().min(3).max(2000),
         task_id: z.string().uuid().optional(),
-        tags: z.array(z.string().max(40)).max(8).optional(),
+        tags: z.array(z.string().trim().min(1).max(160)).max(8).optional(),
         trigger_kind: z.string().max(40).optional(),
       })
       .parse(d),
