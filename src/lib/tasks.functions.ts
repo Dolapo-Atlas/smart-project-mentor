@@ -792,7 +792,7 @@ export const resumeBlockedTask = createServerFn({ method: "POST" })
         .in("id", deps)
         .eq("user_id", userId);
       const unmet = (depRows ?? []).filter(
-        (d: any) => !["done", "approved", "completed", "closed"].includes(d.status),
+        (d: any) => !["submitted", "done", "approved", "completed", "closed"].includes(d.status),
       );
       if (unmet.length > 0) {
         throw new Error(
