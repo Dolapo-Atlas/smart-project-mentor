@@ -16,7 +16,11 @@ export type TemplateKind =
   | "communication_plan"
   | "risk_response_plan"
   | "handover_note"
-  | "closure_report";
+  | "closure_report"
+  | "uat_plan"
+  | "cutover_plan"
+  | "training_plan"
+  | "benefits_tracker";
 
 export type FieldSpec = {
   key: string;
@@ -286,6 +290,69 @@ const EXTRA_TEMPLATES: Record<
       { key: "risks", label: "Resource risks", kind: "textarea", minChars: 30, placeholder: "Key-person risk, holidays, competing priorities." },
     ],
   },
+  uat_plan: {
+    kind: "uat_plan",
+    label: "UAT Test Plan",
+    intro:
+      "Plan how the solution will be tested with real users before go-live. Cover scope, entry/exit criteria, roles, scripts and how defects are triaged.",
+    fields: [
+      { key: "scope", label: "In-scope functionality", kind: "textarea", required: true, minChars: 80, placeholder: "Which flows/modules will be tested by users, and which are excluded?" },
+      { key: "objectives", label: "Test objectives", kind: "textarea", required: true, minChars: 60, placeholder: "What must be true for UAT to be judged a pass?" },
+      { key: "entry_criteria", label: "Entry criteria", kind: "textarea", required: true, minChars: 40, placeholder: "e.g. system-test complete, data loaded, users trained." },
+      { key: "exit_criteria", label: "Exit criteria", kind: "textarea", required: true, minChars: 40, placeholder: "Pass rate, no open Sev-1/2 defects, sign-off owner." },
+      { key: "participants", label: "Testers & roles (named)", kind: "textarea", required: true, minChars: 60, placeholder: "Frontline nurse, admin, ward manager — named where possible." },
+      { key: "scenarios", label: "Key scenarios / scripts", kind: "textarea", required: true, minChars: 120, placeholder: "1. Admit patient · 2. Record vitals · 3. Handover shift — with expected results.", guidance: "At least 5 numbered scenarios." },
+      { key: "defect_triage", label: "Defect logging & triage", kind: "textarea", required: true, minChars: 40, placeholder: "Where are defects logged, who triages, SLA per severity." },
+      { key: "schedule", label: "UAT dates", kind: "textarea", required: true, minChars: 30, placeholder: "Start / end dates and daily rhythm." },
+      { key: "signoff", label: "Sign-off owner (named)", kind: "text", required: true, placeholder: "Who accepts UAT as complete?" },
+    ],
+  },
+  cutover_plan: {
+    kind: "cutover_plan",
+    label: "Cutover & Go-Live Plan",
+    intro:
+      "Runbook for the go-live weekend. Every task timed, named and reversible — if something breaks, the rollback is not invented on the day.",
+    fields: [
+      { key: "window", label: "Cutover window", kind: "text", required: true, placeholder: "e.g. Fri 12 Dec 18:00 – Mon 15 Dec 06:00" },
+      { key: "runbook", label: "Runbook (timed steps)", kind: "textarea", required: true, minChars: 160, placeholder: "T-24h · Freeze changes — James\nT-4h · Data migration — Priya\nT-0 · Cutover switch — Sarah\nT+2h · Smoke test — QA lead", guidance: "At least 6 timed steps with owners." },
+      { key: "roles", label: "War-room roles (named)", kind: "textarea", required: true, minChars: 60, placeholder: "Incident lead, comms lead, tech lead, business lead, vendor rep — by name." },
+      { key: "comms", label: "Comms plan on the day", kind: "textarea", required: true, minChars: 60, placeholder: "Who tells whom, on which channel, at which checkpoints." },
+      { key: "rollback", label: "Rollback triggers & steps", kind: "textarea", required: true, minChars: 80, placeholder: "Conditions that trigger rollback and the exact steps to revert." },
+      { key: "hypercare", label: "Hypercare model", kind: "textarea", required: true, minChars: 40, placeholder: "Support cover for first 2 weeks — hours, contacts, escalation." },
+      { key: "gono_criteria", label: "Go / no-go criteria", kind: "textarea", required: true, minChars: 40, placeholder: "The checks the sponsor calls at the go/no-go meeting." },
+      { key: "owner", label: "Cutover lead (named)", kind: "text", required: true, placeholder: "Full name and role" },
+    ],
+  },
+  training_plan: {
+    kind: "training_plan",
+    label: "Training & Rollout Plan",
+    intro:
+      "How the workforce becomes confident with the new solution. Cover audiences, formats, materials, dates and how you'll measure competence — not just attendance.",
+    fields: [
+      { key: "audiences", label: "Audiences & numbers", kind: "textarea", required: true, minChars: 60, placeholder: "e.g. 40 nurses · 12 admins · 6 managers — with sites/wards." },
+      { key: "objectives", label: "Learning objectives", kind: "textarea", required: true, minChars: 60, placeholder: "By the end, staff can do X, Y, Z unaided." },
+      { key: "formats", label: "Formats & materials", kind: "textarea", required: true, minChars: 60, placeholder: "Classroom · floor-walking · quick-reference guides · e-learning." },
+      { key: "schedule", label: "Schedule & waves", kind: "textarea", required: true, minChars: 60, placeholder: "Cohort dates, coverage plan, backfill/cover arrangements." },
+      { key: "trainers", label: "Trainers & super-users (named)", kind: "textarea", required: true, minChars: 40, placeholder: "Who delivers, who champions on the floor — by name." },
+      { key: "assessment", label: "Competence check", kind: "textarea", required: true, minChars: 40, placeholder: "How you confirm each learner is ready — observation, quick task, sign-off." },
+      { key: "support", label: "Post-training support", kind: "textarea", required: true, minChars: 30, placeholder: "Hypercare, floor-walkers, quick help channel." },
+      { key: "risks", label: "Training risks", kind: "textarea", minChars: 30, placeholder: "Coverage gaps, shift patterns, digital confidence — and how you mitigate." },
+    ],
+  },
+  benefits_tracker: {
+    kind: "benefits_tracker",
+    label: "Benefits Tracker",
+    intro:
+      "Track the benefits this project must realise, who owns each one, how it is measured and when it lands. This is what the sponsor cares about after go-live.",
+    fields: [
+      { key: "benefits", label: "Benefits list", kind: "textarea", required: true, minChars: 160, placeholder: "Benefit 1 — Description\n  Measure: …\n  Baseline: …\n  Target: …\n  Owner: …\n  Realisation date: …\n\nBenefit 2 — …", guidance: "At least 3 benefits with measure, baseline, target, owner and date." },
+      { key: "baseline", label: "Current baseline evidence", kind: "textarea", required: true, minChars: 40, placeholder: "How is today's performance measured — source, date, method." },
+      { key: "measurement", label: "Measurement approach", kind: "textarea", required: true, minChars: 40, placeholder: "Reports, dashboards, sample audits — cadence and owner." },
+      { key: "governance", label: "Benefits governance", kind: "textarea", required: true, minChars: 40, placeholder: "Who reviews progress, how often, what triggers escalation." },
+      { key: "risks", label: "Risks to realisation", kind: "textarea", minChars: 30, placeholder: "Adoption, data quality, external dependencies." },
+      { key: "owner", label: "Overall benefits owner (named)", kind: "text", required: true, placeholder: "Usually the sponsor or a nominated senior lead." },
+    ],
+  },
   change_request: {
     kind: "change_request",
     label: "Change Request",
@@ -375,6 +442,10 @@ export function detectTemplateKind(task: {
   if (/risk response|risk mitigation plan|risk plan/.test(s)) return "risk_response_plan";
   if (/handover|hand[- ]?over|transition (note|plan)/.test(s)) return "handover_note";
   if (/closure report|close.?out report|final report|project closure/.test(s)) return "closure_report";
+  if (/\buat\b|user acceptance|test plan|test script/.test(s)) return "uat_plan";
+  if (/cutover|go.?live plan|runbook|deployment plan/.test(s)) return "cutover_plan";
+  if (/training plan|rollout plan|training & rollout|super.?user/.test(s)) return "training_plan";
+  if (/benefits (tracker|realisation|realization|register)|benefit tracking/.test(s)) return "benefits_tracker";
   return null;
 }
 

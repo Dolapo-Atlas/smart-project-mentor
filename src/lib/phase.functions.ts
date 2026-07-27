@@ -331,6 +331,9 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
         { key: "tasks", label: "Tasks Completed", pct: tasksPct, route: "/app/tasks", hint: executionMatches.length > 0 ? `${executionDone}/${executionMatches.length} execution tasks` : `${doneTaskCount}/${T.length}` },
         { key: "team", label: "Team Actions", pct: teamActions, route: "/app/tasks" },
         { key: "deliv", label: "Deliverables", pct: deliverables, route: "/app/documents" },
+        { key: "uat", label: "UAT Test Plan", pct: taskBestPct(/uat|user acceptance|test plan|test script/i, ["documents", "tasks"]), route: "/app/template/uat_plan" },
+        { key: "training", label: "Training & Rollout", pct: taskBestPct(/training|rollout|super.?user/i, ["documents", "tasks"]), route: "/app/template/training_plan" },
+        { key: "cutover", label: "Cutover Plan", pct: taskBestPct(/cutover|runbook|go.?live plan|deployment plan/i, ["documents", "tasks"]), route: "/app/template/cutover_plan" },
         { key: "comms", label: "Stakeholder Comms", pct: commsPct, route: "/app/comms" },
       ];
     } else if (phase === "monitoring") {
@@ -353,6 +356,7 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
         { key: "budget", label: "Budget Tracking", pct: budgetTrack, route: "/app/budget" },
         { key: "changes", label: "Change Requests", pct: crPct, route: "/app/changes" },
         { key: "sched", label: "Schedule Performance", pct: schedule, route: "/app/progress" },
+        { key: "benefits", label: "Benefits Tracker", pct: taskBestPct(/benefits (tracker|realisation|realization|register)|benefit tracking/i, ["documents"]), route: "/app/template/benefits_tracker" },
       ];
     } else if (phase === "go-live") {
       const goLiveReadiness = taskAveragePct(/go.?live|cutover|readiness|pilot|uat|launch|deployment/i);
