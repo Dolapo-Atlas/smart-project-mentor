@@ -3,7 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { recordDocument, reviewDocument } from "@/lib/sim.functions";
-import { TEMPLATES, type TemplateKind, evaluateGenericTemplate } from "@/lib/templates";
+import { TEMPLATES, TEMPLATE_WHY, type TemplateKind, evaluateGenericTemplate } from "@/lib/templates";
+import { WhyThisMatters } from "@/components/why-this-matters";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -124,6 +125,27 @@ function TemplateFillPage() {
         <h1 className="mt-1 font-display text-3xl font-semibold">{template.label}</h1>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{template.intro}</p>
       </header>
+
+      {(() => {
+        const why = TEMPLATE_WHY[kind as TemplateKind];
+        if (!why) return null;
+        return (
+          <div className="mt-4">
+            <WhyThisMatters
+              storageKey={`template.${kind}`}
+              title={why.title}
+              body={
+                <>
+                  {why.body.map((p, i) => (
+                    <p key={i}>{p}</p>
+                  ))}
+                </>
+              }
+              tip={why.tip}
+            />
+          </div>
+        );
+      })()}
 
       <div className="sticky top-2 z-10 mt-6 rounded-lg border border-border bg-card/95 p-3 backdrop-blur">
         <div className="flex flex-wrap items-center justify-between gap-3">
