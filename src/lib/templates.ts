@@ -20,7 +20,8 @@ export type TemplateKind =
   | "uat_plan"
   | "cutover_plan"
   | "training_plan"
-  | "benefits_tracker";
+  | "benefits_tracker"
+  | "raci_matrix";
 
 export type FieldSpec = {
   key: string;
@@ -169,6 +170,14 @@ export const TEMPLATE_WHY: Record<TemplateKind, { title: string; body: string[];
       "Every benefit gets a measure, a baseline, a target, an owner and a realisation date. If it doesn't, it won't happen.",
     ],
     tip: "Baselines have to exist before go-live — or you can't prove any benefit later.",
+  },
+  raci_matrix: {
+    title: "Why you're building a RACI Matrix",
+    body: [
+      "RACI answers the question that quietly kills projects: 'who actually does this, and who signs it off?' One row per deliverable, one column per stakeholder, and exactly one Accountable in every row.",
+      "It turns the Stakeholder Register from a list of people into a map of decision rights — so nothing important falls between two chairs.",
+    ],
+    tip: "Only one Accountable per row. Multiple A's mean nobody is really accountable.",
   },
 };
 
@@ -546,6 +555,29 @@ const EXTRA_TEMPLATES: Record<
       { key: "facilitator", label: "Facilitator (named)", kind: "text", required: true, placeholder: "Who ran the retro?" },
     ],
   },
+  raci_matrix: {
+    kind: "raci_matrix",
+    label: "RACI Matrix",
+    intro:
+      "Map decision rights across deliverables and stakeholders. For each deliverable, name exactly one Accountable (A). Add Responsible (R), Consulted (C) and Informed (I) as needed. No blanks on critical rows.",
+    fields: [
+      { key: "scope", label: "Scope of this matrix", kind: "textarea", required: true, minChars: 40, placeholder: "Which deliverables and phase does this RACI cover?" },
+      { key: "stakeholders", label: "Stakeholders (columns)", kind: "textarea", required: true, minChars: 60, placeholder: "One per line — Name · Role. Pull from your Stakeholder Register." },
+      {
+        key: "assignments",
+        label: "Deliverables × RACI assignments",
+        kind: "textarea",
+        required: true,
+        minChars: 200,
+        placeholder:
+          "Project Charter — A: Sponsor (Jane Doe) · R: PM (You) · C: Clinical Lead, IT Lead · I: SteerCo\nStakeholder Register — A: PM (You) · R: PMO · C: Sponsor · I: SteerCo\nRAID Log — A: PM (You) · R: PM (You) · C: Risk Owner · I: Sponsor\nProject Schedule — A: PM (You) · R: PM (You) · C: Workstream Leads · I: Sponsor\nUAT Plan — A: Clinical Lead · R: Test Lead · C: PM · I: SteerCo",
+        guidance: "One row per deliverable. Exactly one 'A' per row. Cover at least 5 deliverables.",
+      },
+      { key: "conflicts", label: "Conflicts / grey zones resolved", kind: "textarea", minChars: 30, placeholder: "Where two people thought they were Accountable — how did you decide?" },
+      { key: "review_cadence", label: "Review cadence", kind: "textarea", minChars: 20, placeholder: "When will this RACI be revisited? (e.g. at each phase gate.)" },
+      { key: "owner", label: "RACI owner (named)", kind: "text", required: true, placeholder: "Full name and role" },
+    ],
+  },
 };
 
 export const TEMPLATES: Record<TemplateKind, TemplateDef> = {
@@ -578,6 +610,7 @@ export function detectTemplateKind(task: {
   if (/cutover|go.?live plan|runbook|deployment plan/.test(s)) return "cutover_plan";
   if (/training plan|rollout plan|training & rollout|super.?user/.test(s)) return "training_plan";
   if (/benefits (tracker|realisation|realization|register)|benefit tracking/.test(s)) return "benefits_tracker";
+  if (/\braci\b|responsibility (matrix|assignment)|decision rights/.test(s)) return "raci_matrix";
   return null;
 }
 

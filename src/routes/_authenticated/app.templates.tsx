@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { FileText, Sparkles } from "lucide-react";
+import { BarChart3, FileText, Sparkles } from "lucide-react";
 import { TEMPLATES, type TemplateKind } from "@/lib/templates";
 
 export const Route = createFileRoute("/_authenticated/app/templates")({
@@ -19,6 +19,8 @@ export const Route = createFileRoute("/_authenticated/app/templates")({
 const ORDER: TemplateKind[] = [
   "project_charter",
   "raid_log",
+  "stakeholder_register",
+  "raci_matrix",
   "project_schedule",
   "communication_plan",
   "risk_response_plan",
@@ -27,7 +29,6 @@ const ORDER: TemplateKind[] = [
   "training_plan",
   "status_report",
   "benefits_tracker",
-  "stakeholder_register",
   "resource_plan",
   "change_request",
   "meeting_agenda",
@@ -59,6 +60,24 @@ function TemplatesPage() {
           </p>
         </div>
       </div>
+
+      <Link
+        to="/app/gantt"
+        className="group mb-6 flex items-start gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4 transition hover:border-primary/60 hover:bg-primary/10"
+      >
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/15 text-primary">
+          <BarChart3 className="h-4 w-4" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="font-display text-base font-semibold group-hover:text-primary">
+            Gantt Chart <span className="ml-2 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] uppercase tracking-wider text-primary">New</span>
+          </div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Visualise your Project Schedule as a timeline — phases as bars, milestones as diamonds.
+            Reads directly from your submitted schedule; nothing extra to fill in.
+          </p>
+        </div>
+      </Link>
 
       <div className="grid gap-4 sm:grid-cols-2">
         {ORDER.map((kind) => {

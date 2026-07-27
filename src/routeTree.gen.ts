@@ -45,6 +45,7 @@ import { Route as AuthenticatedAppInboxRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAppHealthRouteImport } from './routes/_authenticated/app.health'
 import { Route as AuthenticatedAppGeminiRouteImport } from './routes/_authenticated/app.gemini'
 import { Route as AuthenticatedAppGatesRouteImport } from './routes/_authenticated/app.gates'
+import { Route as AuthenticatedAppGanttRouteImport } from './routes/_authenticated/app.gantt'
 import { Route as AuthenticatedAppDocumentsRouteImport } from './routes/_authenticated/app.documents'
 import { Route as AuthenticatedAppCompletedRouteImport } from './routes/_authenticated/app.completed'
 import { Route as AuthenticatedAppCommsRouteImport } from './routes/_authenticated/app.comms'
@@ -249,6 +250,11 @@ const AuthenticatedAppGatesRoute = AuthenticatedAppGatesRouteImport.update({
   path: '/gates',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppGanttRoute = AuthenticatedAppGanttRouteImport.update({
+  id: '/gantt',
+  path: '/gantt',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const AuthenticatedAppDocumentsRoute =
   AuthenticatedAppDocumentsRouteImport.update({
     id: '/documents',
@@ -354,6 +360,7 @@ export interface FileRoutesByFullPath {
   '/app/comms': typeof AuthenticatedAppCommsRoute
   '/app/completed': typeof AuthenticatedAppCompletedRoute
   '/app/documents': typeof AuthenticatedAppDocumentsRoute
+  '/app/gantt': typeof AuthenticatedAppGanttRoute
   '/app/gates': typeof AuthenticatedAppGatesRoute
   '/app/gemini': typeof AuthenticatedAppGeminiRoute
   '/app/health': typeof AuthenticatedAppHealthRoute
@@ -405,6 +412,7 @@ export interface FileRoutesByTo {
   '/app/comms': typeof AuthenticatedAppCommsRoute
   '/app/completed': typeof AuthenticatedAppCompletedRoute
   '/app/documents': typeof AuthenticatedAppDocumentsRoute
+  '/app/gantt': typeof AuthenticatedAppGanttRoute
   '/app/gates': typeof AuthenticatedAppGatesRoute
   '/app/gemini': typeof AuthenticatedAppGeminiRoute
   '/app/health': typeof AuthenticatedAppHealthRoute
@@ -459,6 +467,7 @@ export interface FileRoutesById {
   '/_authenticated/app/comms': typeof AuthenticatedAppCommsRoute
   '/_authenticated/app/completed': typeof AuthenticatedAppCompletedRoute
   '/_authenticated/app/documents': typeof AuthenticatedAppDocumentsRoute
+  '/_authenticated/app/gantt': typeof AuthenticatedAppGanttRoute
   '/_authenticated/app/gates': typeof AuthenticatedAppGatesRoute
   '/_authenticated/app/gemini': typeof AuthenticatedAppGeminiRoute
   '/_authenticated/app/health': typeof AuthenticatedAppHealthRoute
@@ -513,6 +522,7 @@ export interface FileRouteTypes {
     | '/app/comms'
     | '/app/completed'
     | '/app/documents'
+    | '/app/gantt'
     | '/app/gates'
     | '/app/gemini'
     | '/app/health'
@@ -564,6 +574,7 @@ export interface FileRouteTypes {
     | '/app/comms'
     | '/app/completed'
     | '/app/documents'
+    | '/app/gantt'
     | '/app/gates'
     | '/app/gemini'
     | '/app/health'
@@ -617,6 +628,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/comms'
     | '/_authenticated/app/completed'
     | '/_authenticated/app/documents'
+    | '/_authenticated/app/gantt'
     | '/_authenticated/app/gates'
     | '/_authenticated/app/gemini'
     | '/_authenticated/app/health'
@@ -924,6 +936,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppGatesRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/gantt': {
+      id: '/_authenticated/app/gantt'
+      path: '/gantt'
+      fullPath: '/app/gantt'
+      preLoaderRoute: typeof AuthenticatedAppGanttRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/documents': {
       id: '/_authenticated/app/documents'
       path: '/documents'
@@ -1039,6 +1058,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppCommsRoute: typeof AuthenticatedAppCommsRoute
   AuthenticatedAppCompletedRoute: typeof AuthenticatedAppCompletedRoute
   AuthenticatedAppDocumentsRoute: typeof AuthenticatedAppDocumentsRoute
+  AuthenticatedAppGanttRoute: typeof AuthenticatedAppGanttRoute
   AuthenticatedAppGatesRoute: typeof AuthenticatedAppGatesRoute
   AuthenticatedAppGeminiRoute: typeof AuthenticatedAppGeminiRoute
   AuthenticatedAppHealthRoute: typeof AuthenticatedAppHealthRoute
@@ -1068,6 +1088,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppCommsRoute: AuthenticatedAppCommsRoute,
   AuthenticatedAppCompletedRoute: AuthenticatedAppCompletedRoute,
   AuthenticatedAppDocumentsRoute: AuthenticatedAppDocumentsRoute,
+  AuthenticatedAppGanttRoute: AuthenticatedAppGanttRoute,
   AuthenticatedAppGatesRoute: AuthenticatedAppGatesRoute,
   AuthenticatedAppGeminiRoute: AuthenticatedAppGeminiRoute,
   AuthenticatedAppHealthRoute: AuthenticatedAppHealthRoute,
