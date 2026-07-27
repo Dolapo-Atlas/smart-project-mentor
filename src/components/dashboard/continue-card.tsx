@@ -3,8 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listTasksRich } from "@/lib/tasks.functions";
 import { listChapters } from "@/lib/chapters.functions";
+import { getPhaseProgress } from "@/lib/phase.functions";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Play, AlertTriangle, Sparkles } from "lucide-react";
+import { ArrowRight, Play, AlertTriangle, Sparkles, Compass } from "lucide-react";
 import { getTaskModuleLink } from "@/lib/task-module-link";
 
 const PRIORITY_STYLE: Record<string, string> = {
@@ -20,12 +21,14 @@ const PRIORITY_STYLE: Record<string, string> = {
 export function ContinueCard() {
   const fetchTasks = useServerFn(listTasksRich);
   const fetchChapters = useServerFn(listChapters);
+  const fetchPhase = useServerFn(getPhaseProgress);
 
   const { data: tasks, isLoading: tasksLoading } = useQuery<any[]>({
     queryKey: ["tasks"],
     queryFn: () => fetchTasks() as Promise<any[]>,
   });
   const { data: chapters } = useQuery({ queryKey: ["chapters"], queryFn: () => fetchChapters() });
+  const { data: phase } = useQuery({ queryKey: ["phase-progress"], queryFn: () => fetchPhase() });
 
   // Canonical user-handled statuses. "submitted" means the learner has done
   // their part and is now waiting for review, so it must not count as remaining.
@@ -57,11 +60,20 @@ export function ContinueCard() {
   const lastCompleteChapter = [...(chapters?.chapters ?? [])]
     .reverse()
     .find((c) => c.status === "complete");
+
+  // Planning-era deliverables (schedule, resource plan, etc.) are tracked
+  // through artifact tables, not the task board. If any of them are still
+  // incomplete, we should NOT tell the learner the chapter is ready to close.
+  const nextDeliverable = (phase?.items ?? []).find((i) => (i.pct ?? 0) < 100) ?? null;
+  const phaseHasOpenWork = !!nextDeliverable;
+
   const isResume = !!inProgress;
   const label = isResume
     ? "Resume where you left off"
     : allDone
-      ? "Milestone ready"
+      ? phaseHasOpenWork
+        ? "Next deliverable"
+        : "Milestone ready"
       : "Recommended next step";
   const route = primary ? getTaskModuleLink(primary) : { to: "/app/tasks" };
 
@@ -170,6 +182,37 @@ export function ContinueCard() {
           )}
         </>
       ) : allDone ? (
+        phaseHasOpenWork ? (
+          <div className="relative mt-4 rounded-lg border border-white/15 bg-white/5 p-6 text-left">
+            <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider text-white/60">
+              <Compass className="h-3.5 w-3.5" /> {phase?.phaseLabel ?? "Current phase"} · deliverable
+            </div>
+            <h2 className="mt-2 font-display text-2xl font-semibold text-white md:text-3xl">
+              Build your {nextDeliverable!.label}
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm text-white/70">
+              No open tasks — this phase advances by building artifacts directly in the module.
+              {nextDeliverable!.hint ? ` ${nextDeliverable!.hint}.` : ""}
+            </p>
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
+              <div className="text-sm text-white/70">
+                <span className="text-[11px] uppercase tracking-wider text-white/50">Progress</span>
+                <span className="ml-2 font-medium text-white">{nextDeliverable!.pct}%</span>
+              </div>
+              <Button
+                asChild
+                size="lg"
+                className="hover-lift shrink-0 bg-white px-7 py-6 text-base font-semibold text-navy shadow-md ring-1 ring-black/5 hover:bg-white"
+              >
+                <Link to={nextDeliverable!.route as any}>
+                  <ArrowRight className="mr-2 h-5 w-5 text-navy" />
+                  Open {nextDeliverable!.label}
+                  <ArrowRight className="ml-2 h-5 w-5 text-navy" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+        ) : (
         <div className="relative mt-4 rounded-md border border-white/20 bg-white/5 p-6 text-center text-sm text-white/85">
           {activeChapter ? (
             <>
@@ -191,6 +234,7 @@ export function ContinueCard() {
             <>All {total} tasks completed. Continue to the next milestone.</>
           )}
         </div>
+        )
       ) : (
         <div className="relative mt-4 rounded-md border border-dashed border-white/20 bg-white/5 p-6 text-center text-sm text-white/70">
           No open tasks. Summon a stakeholder email or advance time to generate work.
