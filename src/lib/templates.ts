@@ -557,6 +557,31 @@ const EXTRA_TEMPLATES: Record<
   },
 };
 
+// RACI Matrix — appended to EXTRA_TEMPLATES below to keep diff small.
+(EXTRA_TEMPLATES as Record<string, TemplateDef>).raci_matrix = {
+  kind: "raci_matrix",
+  label: "RACI Matrix",
+  intro:
+    "Map decision rights across deliverables and stakeholders. For each deliverable, name exactly one Accountable (A). Add Responsible (R), Consulted (C) and Informed (I) as needed. No blanks on critical rows.",
+  fields: [
+    { key: "scope", label: "Scope of this matrix", kind: "textarea", required: true, minChars: 40, placeholder: "Which deliverables and phase does this RACI cover?" },
+    { key: "stakeholders", label: "Stakeholders (columns)", kind: "textarea", required: true, minChars: 60, placeholder: "One per line — Name · Role. Pull from your Stakeholder Register." },
+    {
+      key: "assignments",
+      label: "Deliverables × RACI assignments",
+      kind: "textarea",
+      required: true,
+      minChars: 200,
+      placeholder:
+        "Project Charter — A: Sponsor (Jane Doe) · R: PM (You) · C: Clinical Lead, IT Lead · I: SteerCo\nStakeholder Register — A: PM (You) · R: PMO · C: Sponsor · I: SteerCo\nRAID Log — A: PM (You) · R: PM (You) · C: Risk Owner · I: Sponsor\nProject Schedule — A: PM (You) · R: PM (You) · C: Workstream Leads · I: Sponsor\nUAT Plan — A: Clinical Lead · R: Test Lead · C: PM · I: SteerCo",
+      guidance: "One row per deliverable. Exactly one 'A' per row. Cover at least 5 deliverables.",
+    },
+    { key: "conflicts", label: "Conflicts / grey zones resolved", kind: "textarea", minChars: 30, placeholder: "Where two people thought they were Accountable — how did you decide?" },
+    { key: "review_cadence", label: "Review cadence", kind: "textarea", minChars: 20, placeholder: "When will this RACI be revisited? (e.g. at each phase gate.)" },
+    { key: "owner", label: "RACI owner (named)", kind: "text", required: true, placeholder: "Full name and role" },
+  ],
+};
+
 export const TEMPLATES: Record<TemplateKind, TemplateDef> = {
   ...(CORE_TEMPLATES as Record<"project_charter" | "status_report" | "raid_log", TemplateDef>),
   ...EXTRA_TEMPLATES,
