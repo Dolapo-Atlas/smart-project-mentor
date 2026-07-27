@@ -310,11 +310,11 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
         taskBestPct(/risk response|risk register|risk mitigation|mitigation plan|raid/i, "risk"),
       );
       items = [
-        { key: "schedule", label: "Project Schedule", pct: schedule, route: "/app/documents" },
-        { key: "resource", label: "Resource Plan", pct: resource, route: "/app/documents" },
+        { key: "schedule", label: "Project Schedule", pct: schedule, route: "/app/template/project_schedule" },
+        { key: "resource", label: "Resource Plan", pct: resource, route: "/app/template/resource_plan" },
         { key: "budget", label: "Budget Baseline", pct: budgetPct, route: "/app/budget", hint: taskDoneHint(/budget|cost|forecast|baseline|cost.?to.?complete|financial|variance|contingency/i, "budget") ?? `${B.length}/5 lines` },
-        { key: "comms", label: "Communication Plan", pct: commsPlan, route: "/app/documents" },
-        { key: "risk", label: "Risk Response Plan", pct: riskResponse, route: "/app/raid" },
+        { key: "comms", label: "Communication Plan", pct: commsPlan, route: "/app/template/communication_plan" },
+        { key: "risk", label: "Risk Response Plan", pct: riskResponse, route: "/app/template/risk_response_plan" },
       ];
     } else if (phase === "execution") {
       const executionTaskRx = /pilot|implementation|frontline|training|uat|go.?live|vendor|technical|data migration|team action|workstream/i;
@@ -389,9 +389,9 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
       );
       items = [
         { key: "final", label: "Final Deliverables", pct: finalDeliv, route: "/app/documents" },
-        { key: "handover", label: "Handover", pct: handover, route: "/app/documents" },
+        { key: "handover", label: "Handover", pct: handover, route: "/app/template/handover_note" },
         { key: "lessons", label: "Lessons Learned", pct: lessons, route: "/app/lessons" },
-        { key: "report", label: "Closure Report", pct: closureReport, route: "/app/documents" },
+        { key: "report", label: "Closure Report", pct: closureReport, route: "/app/template/closure_report" },
         { key: "sponsor", label: "Sponsor Approval", pct: sponsorApproval, route: "/app/gates" },
       ];
     }

@@ -85,6 +85,10 @@ function Documents() {
   });
 
   async function openDoc(path: string) {
+    if (!path || path.startsWith("template://")) {
+      toast.info("This deliverable was built in-app — see the excerpt below.");
+      return;
+    }
     try {
       const res = await signFn({ data: { path } });
       window.open(res.signedUrl, "_blank");

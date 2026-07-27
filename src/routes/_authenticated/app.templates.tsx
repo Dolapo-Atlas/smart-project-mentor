@@ -19,12 +19,17 @@ export const Route = createFileRoute("/_authenticated/app/templates")({
 const ORDER: TemplateKind[] = [
   "project_charter",
   "raid_log",
+  "project_schedule",
+  "communication_plan",
+  "risk_response_plan",
   "status_report",
   "stakeholder_register",
   "resource_plan",
   "change_request",
   "meeting_agenda",
   "lessons_learned",
+  "handover_note",
+  "closure_report",
 ];
 
 function TemplatesPage() {
@@ -55,10 +60,18 @@ function TemplatesPage() {
         {ORDER.map((kind) => {
           const t = TEMPLATES[kind];
           const required = t.fields.filter((f) => f.required).length;
+          // RAID and Charter have their own dedicated modules; every other
+          // template opens the in-app fill form.
+          const to =
+            kind === "raid_log"
+              ? "/app/raid"
+              : kind === "project_charter"
+                ? "/app/charter"
+                : `/app/template/${kind}`;
           return (
             <Link
               key={kind}
-              to="/app/tasks"
+              to={to as any}
               className="group flex flex-col rounded-lg border border-border bg-card p-4 transition hover:border-primary/50 hover:shadow-md"
             >
               <div className="flex items-start gap-3">
