@@ -44,6 +44,42 @@ const OnboardingSchema = z.object({
   ]),
 });
 
+const ROLE_OPTIONS = [
+  "Project Coordinator",
+  "Project Support Officer",
+  "Project Officer",
+  "Project Support Analyst",
+] as const;
+
+export const updateProjectRole = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ role: z.enum(ROLE_OPTIONS) }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+
+    // Role is locked once the learner has started (or previously started)
+    // a project instance. This preserves consistency across seeded emails,
+    // tasks, mentor prompts and performance reviews.
+    const { count } = await supabase
+      .from("project_instances")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId);
+    if ((count ?? 0) > 0) {
+      throw new Error(
+        "Your role is locked once a project has started. Complete or archive the current simulation to reset.",
+      );
+    }
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({ role: data.role, career_goal: data.role })
+      .eq("id", userId);
+    if (error) throw error;
+    return { ok: true, role: data.role };
+  });
+
 export const completeOnboarding = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => OnboardingSchema.parse(d))
