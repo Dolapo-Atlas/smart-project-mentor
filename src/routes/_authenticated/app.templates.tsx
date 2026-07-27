@@ -19,6 +19,8 @@ export const Route = createFileRoute("/_authenticated/app/templates")({
 const ORDER: TemplateKind[] = [
   "project_charter",
   "raid_log",
+  "stakeholder_register",
+  "raci_matrix",
   "project_schedule",
   "communication_plan",
   "risk_response_plan",
@@ -27,7 +29,6 @@ const ORDER: TemplateKind[] = [
   "training_plan",
   "status_report",
   "benefits_tracker",
-  "stakeholder_register",
   "resource_plan",
   "change_request",
   "meeting_agenda",
