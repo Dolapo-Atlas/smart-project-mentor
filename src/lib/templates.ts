@@ -11,7 +11,12 @@ export type TemplateKind =
   | "change_request"
   | "stakeholder_register"
   | "meeting_agenda"
-  | "lessons_learned";
+  | "lessons_learned"
+  | "project_schedule"
+  | "communication_plan"
+  | "risk_response_plan"
+  | "handover_note"
+  | "closure_report";
 
 export type FieldSpec = {
   key: string;
@@ -191,6 +196,81 @@ const EXTRA_TEMPLATES: Record<
   Exclude<TemplateKind, "raid_log" | "project_charter" | "status_report">,
   TemplateDef
 > = {
+  project_schedule: {
+    kind: "project_schedule",
+    label: "Project Schedule",
+    intro:
+      "Lay out the project timeline in-app — no upload needed. Cover phases, milestones, dependencies and the critical path. Be specific to this scenario.",
+    fields: [
+      { key: "period", label: "Schedule period", kind: "text", required: true, placeholder: "e.g. 3 Sep 2025 – 15 Dec 2025" },
+      { key: "phases", label: "Phases & durations", kind: "textarea", required: true, minChars: 80, placeholder: "Discovery (3 wks) · Design (4 wks) · Build (6 wks) · UAT (2 wks) · Go-Live (1 wk)" },
+      { key: "milestones", label: "Key milestones & dates", kind: "textarea", required: true, minChars: 80, placeholder: "Charter approved — 12 Sep\nDesign sign-off — 10 Oct\nUAT complete — 28 Nov\nGo-Live — 15 Dec", guidance: "At least 4 dated milestones." },
+      { key: "dependencies", label: "Dependencies & sequencing", kind: "textarea", required: true, minChars: 60, placeholder: "What must finish before what? Which items block the critical path?" },
+      { key: "critical_path", label: "Critical path", kind: "textarea", required: true, minChars: 40, placeholder: "Name the tasks that if slipped, slip go-live." },
+      { key: "assumptions", label: "Scheduling assumptions", kind: "textarea", minChars: 30, placeholder: "Vendor availability, team FTEs, environments ready, etc." },
+      { key: "buffer", label: "Buffer / contingency", kind: "textarea", minChars: 20, placeholder: "How much float have you built in and where?" },
+      { key: "owner", label: "Schedule owner (named)", kind: "text", required: true, placeholder: "Full name and role" },
+    ],
+  },
+  communication_plan: {
+    kind: "communication_plan",
+    label: "Communication Plan",
+    intro:
+      "Who hears what, from whom, how often, through which channel. A good plan pre-empts surprise — governance, sponsor and frontline all covered.",
+    fields: [
+      { key: "objectives", label: "Communication objectives", kind: "textarea", required: true, minChars: 60, placeholder: "What behaviours or awareness are you driving?" },
+      { key: "audiences", label: "Audiences", kind: "textarea", required: true, minChars: 80, placeholder: "Sponsor · SteerCo · Frontline · Vendor · IT — one per line with what they need." },
+      { key: "messages", label: "Key messages", kind: "textarea", required: true, minChars: 60, placeholder: "The 3–5 core messages you'll repeat across channels." },
+      { key: "channels_cadence", label: "Channels & cadence", kind: "textarea", required: true, minChars: 80, placeholder: "Weekly digest (email) · Monthly SteerCo (in-person) · Slack #project — with dates." },
+      { key: "owners", label: "Responsibilities (named)", kind: "textarea", required: true, minChars: 60, placeholder: "Who drafts, who approves, who sends — by name." },
+      { key: "feedback", label: "Feedback loops", kind: "textarea", minChars: 30, placeholder: "How do you know the message landed? Surveys, retros, drop-ins…" },
+      { key: "escalation", label: "Escalation path", kind: "textarea", minChars: 30, placeholder: "When comms fails or resistance appears, who steps in?" },
+    ],
+  },
+  risk_response_plan: {
+    kind: "risk_response_plan",
+    label: "Risk Response Plan",
+    intro:
+      "For each significant risk, name the response strategy (avoid, mitigate, transfer, accept), the trigger, the owner and the fallback. This complements the RAID Log.",
+    fields: [
+      { key: "scope", label: "Scope of this plan", kind: "textarea", required: true, minChars: 40, placeholder: "Which risks does this plan cover — all high/critical, or a subset?" },
+      { key: "top_risks", label: "Top risks & responses", kind: "textarea", required: true, minChars: 160, placeholder: "Risk 1 — Description\n  Strategy: Mitigate\n  Owner: Sarah Williams\n  Actions: …\n  Trigger: …\n  Fallback: …\n\nRisk 2 — …", guidance: "Cover at least 3 risks with strategy, owner, actions and trigger." },
+      { key: "monitoring", label: "Monitoring cadence", kind: "textarea", required: true, minChars: 40, placeholder: "How often are risks reviewed and by whom." },
+      { key: "escalation", label: "Escalation thresholds", kind: "textarea", required: true, minChars: 40, placeholder: "What conditions escalate a risk to the sponsor or steering committee?" },
+      { key: "residual", label: "Residual risk statement", kind: "textarea", minChars: 30, placeholder: "After mitigations, what risk remains that leadership must accept?" },
+      { key: "owner", label: "Plan owner (named)", kind: "text", required: true, placeholder: "Full name and role" },
+    ],
+  },
+  handover_note: {
+    kind: "handover_note",
+    label: "Handover Note",
+    intro:
+      "Transition the solution to the receiving team. Cover ownership, support routes, open items and knowledge sources — no hidden bus-factor.",
+    fields: [
+      { key: "receiving_team", label: "Receiving team", kind: "textarea", required: true, minChars: 40, placeholder: "Team name, lead, and how they will operate the solution day-to-day." },
+      { key: "scope_transferred", label: "What is being handed over", kind: "textarea", required: true, minChars: 60, placeholder: "System, processes, documentation, licences, contracts…" },
+      { key: "support_model", label: "Support model", kind: "textarea", required: true, minChars: 60, placeholder: "L1/L2/L3 routes, SLAs, on-call, escalation contacts." },
+      { key: "open_items", label: "Open items & known issues", kind: "textarea", required: true, minChars: 40, placeholder: "Anything the receiving team must inherit with eyes open." },
+      { key: "knowledge", label: "Knowledge sources", kind: "textarea", required: true, minChars: 40, placeholder: "Runbooks, wiki links, recordings, key contacts." },
+      { key: "signoff", label: "Sign-off (named)", kind: "text", required: true, placeholder: "Who from the receiving team accepts handover?" },
+    ],
+  },
+  closure_report: {
+    kind: "closure_report",
+    label: "Closure Report",
+    intro:
+      "The formal end-of-project record for the sponsor. Objective, evidenced, honest — this is what future teams and audits will read.",
+    fields: [
+      { key: "summary", label: "Executive summary", kind: "textarea", required: true, minChars: 80, placeholder: "One paragraph: what was delivered, over what period, against which objectives." },
+      { key: "objectives_status", label: "Objectives vs. outcome", kind: "textarea", required: true, minChars: 80, placeholder: "For each original objective — met / partially met / not met, with evidence." },
+      { key: "scope_delivered", label: "Scope delivered", kind: "textarea", required: true, minChars: 60, placeholder: "What was built, plus any scope changes accepted along the way." },
+      { key: "schedule_cost", label: "Schedule & cost performance", kind: "textarea", required: true, minChars: 60, placeholder: "Planned vs. actual dates and £ — quantify variance." },
+      { key: "benefits", label: "Benefits realised (or plan)", kind: "textarea", required: true, minChars: 60, placeholder: "Which benefits are already realised, which are tracked post-project and by whom." },
+      { key: "open_risks", label: "Residual risks & open items", kind: "textarea", required: true, minChars: 40 },
+      { key: "recommendations", label: "Recommendations", kind: "textarea", required: true, minChars: 40 },
+      { key: "sponsor_signoff", label: "Sponsor sign-off (named)", kind: "text", required: true, placeholder: "Full name and role" },
+    ],
+  },
   resource_plan: {
     kind: "resource_plan",
     label: "Resource Plan",
