@@ -16,7 +16,11 @@ export type TemplateKind =
   | "communication_plan"
   | "risk_response_plan"
   | "handover_note"
-  | "closure_report";
+  | "closure_report"
+  | "uat_plan"
+  | "cutover_plan"
+  | "training_plan"
+  | "benefits_tracker";
 
 export type FieldSpec = {
   key: string;
