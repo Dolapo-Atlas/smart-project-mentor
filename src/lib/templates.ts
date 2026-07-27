@@ -442,6 +442,10 @@ export function detectTemplateKind(task: {
   if (/risk response|risk mitigation plan|risk plan/.test(s)) return "risk_response_plan";
   if (/handover|hand[- ]?over|transition (note|plan)/.test(s)) return "handover_note";
   if (/closure report|close.?out report|final report|project closure/.test(s)) return "closure_report";
+  if (/\buat\b|user acceptance|test plan|test script/.test(s)) return "uat_plan";
+  if (/cutover|go.?live plan|runbook|deployment plan/.test(s)) return "cutover_plan";
+  if (/training plan|rollout plan|training & rollout|super.?user/.test(s)) return "training_plan";
+  if (/benefits (tracker|realisation|realization|register)|benefit tracking/.test(s)) return "benefits_tracker";
   return null;
 }
 
