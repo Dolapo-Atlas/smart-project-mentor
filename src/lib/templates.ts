@@ -370,6 +370,11 @@ export function detectTemplateKind(task: {
   if (/resource plan|resourcing|capacity plan|staffing plan/.test(s)) return "resource_plan";
   if (/meeting agenda|steerco agenda|kick[- ]?off (agenda|prep)|agenda\b/.test(s)) return "meeting_agenda";
   if (/lessons learned|retrospective|retro\b|post[- ]?mortem/.test(s)) return "lessons_learned";
+  if (/project schedule|schedule\b|gantt|timeline/.test(s)) return "project_schedule";
+  if (/communication plan|comms plan|communications plan/.test(s)) return "communication_plan";
+  if (/risk response|risk mitigation plan|risk plan/.test(s)) return "risk_response_plan";
+  if (/handover|hand[- ]?over|transition (note|plan)/.test(s)) return "handover_note";
+  if (/closure report|close.?out report|final report|project closure/.test(s)) return "closure_report";
   return null;
 }
 
