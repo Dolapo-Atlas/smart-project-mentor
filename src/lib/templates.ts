@@ -40,6 +40,138 @@ export type TemplateDef = {
   fields: FieldSpec[];
 };
 
+/**
+ * Per-template "Why you're on this page" content — shown as a WhyThisMatters
+ * panel on the generic template fill route, matching the Charter/RAID pattern.
+ */
+export const TEMPLATE_WHY: Record<TemplateKind, { title: string; body: string[]; tip?: string }> = {
+  project_charter: {
+    title: "Why you're writing a Charter",
+    body: [
+      "The Charter is the one-page contract with your sponsor: why this project exists, what 'done' looks like, who owns it, and what could go wrong.",
+      "Without it, scope drifts and risks arrive as surprises. Keep it specific to this scenario — not generic.",
+    ],
+    tip: "Fill in the fields in order. Each one builds on the last.",
+  },
+  raid_log: {
+    title: "Why you're keeping a RAID Log",
+    body: [
+      "RAID is how a project stays honest. Risks, Assumptions, Issues and Dependencies live in one place so nothing important is 'in someone's head'.",
+      "Governance will challenge this log — every high risk needs a named owner and a mitigation.",
+    ],
+  },
+  status_report: {
+    title: "Why you're writing a Status Report",
+    body: [
+      "The weekly status is how the sponsor stays confident (or gets a chance to help). A truthful amber is more useful than a hopeful green.",
+      "Concrete, dated achievements and named risk owners — no status theatre.",
+    ],
+    tip: "If RAG is amber or red, always name the decisions you need from the sponsor.",
+  },
+  resource_plan: {
+    title: "Why you're writing a Resource Plan",
+    body: [
+      "Delivery lives or dies on who is available, when, and for how long. This plan turns 'the team will do it' into named people, FTEs and dates.",
+      "It also surfaces gaps early — before they become slippage.",
+    ],
+  },
+  change_request: {
+    title: "Why you're raising a Change Request",
+    body: [
+      "Anything that moves scope, schedule or budget needs a written decision trail. A CR gives the change board enough context to say yes, no, or 'not yet'.",
+      "Always offer at least two options — never a single-option ask.",
+    ],
+  },
+  stakeholder_register: {
+    title: "Why you're building a Stakeholder Register",
+    body: [
+      "Projects fail on people more than on plans. The register maps who can make or break delivery — with interest, influence and how you'll engage each one.",
+      "Job titles aren't enough — name real people.",
+    ],
+  },
+  meeting_agenda: {
+    title: "Why you're writing a Meeting Agenda",
+    body: [
+      "A working agenda respects attendees' time and forces you to know what a good meeting outcome looks like before it starts.",
+      "Every item gets a purpose, an owner and a time-box — decisions, not status theatre.",
+    ],
+  },
+  lessons_learned: {
+    title: "Why you're capturing Lessons Learned",
+    body: [
+      "Retrospectives are how the next project inherits your scars. Honest patterns, root causes, and — critically — owned actions with dates.",
+      "Describe the pattern, not the person.",
+    ],
+  },
+  project_schedule: {
+    title: "Why you're building the Schedule",
+    body: [
+      "The schedule turns objectives into a sequence: phases, milestones, dependencies and a critical path anyone can point to.",
+      "It's also your early-warning system — if the critical path slips, go-live slips.",
+    ],
+    tip: "Anchor at least four milestones to specific dates.",
+  },
+  communication_plan: {
+    title: "Why you're writing a Comms Plan",
+    body: [
+      "People resist what they don't understand. A comms plan says who hears what, from whom, how often and through which channel — so nobody is surprised.",
+      "Cover governance, sponsor and frontline separately — one message doesn't fit all.",
+    ],
+  },
+  risk_response_plan: {
+    title: "Why you're writing a Risk Response Plan",
+    body: [
+      "Naming a risk isn't managing it. This plan pairs each significant risk with a strategy (avoid, mitigate, transfer, accept), a trigger, an owner and a fallback.",
+      "Governance can then challenge the plan — not just the list.",
+    ],
+  },
+  handover_note: {
+    title: "Why you're writing a Handover Note",
+    body: [
+      "The receiving team inherits the solution — including its quirks. A good handover means they can run it on day one without you.",
+      "Ownership, support routes, open items and where the knowledge lives — no hidden bus-factor.",
+    ],
+  },
+  closure_report: {
+    title: "Why you're writing a Closure Report",
+    body: [
+      "The Closure Report is the formal record of what was delivered — for the sponsor today, and for auditors and future teams tomorrow.",
+      "Objective, evidenced, honest: objectives vs. outcome, schedule vs. plan, cost vs. plan, benefits realised or tracked.",
+    ],
+  },
+  uat_plan: {
+    title: "Why you're writing a UAT Plan",
+    body: [
+      "User Acceptance Testing is the last chance for the people who actually use the system to say 'this works for our job'.",
+      "A weak UAT ships defects into hypercare. Clear entry/exit criteria, named testers, real scenarios and a defect triage route make the difference.",
+    ],
+    tip: "Exit criteria must include a named sign-off owner — no 'the business signed off'.",
+  },
+  cutover_plan: {
+    title: "Why you're writing a Cutover Plan",
+    body: [
+      "Go-live weekend is not the time to improvise. The cutover plan is a timed runbook — every step owned, every rollback rehearsed.",
+      "If something breaks at 03:00, the answer lives in this document, not in someone's memory.",
+    ],
+    tip: "Write rollback triggers before you write the go steps. If you can't roll back, don't go.",
+  },
+  training_plan: {
+    title: "Why you're writing a Training Plan",
+    body: [
+      "The system doesn't deliver benefits — trained people using it do. The plan turns 'we'll train them' into audiences, formats, waves, materials and competence checks.",
+      "Measure competence, not attendance. A signed register isn't the same as capability.",
+    ],
+  },
+  benefits_tracker: {
+    title: "Why you're building a Benefits Tracker",
+    body: [
+      "The sponsor didn't fund a system — they funded the outcomes it enables. The tracker keeps those outcomes visible after go-live, when the project team has moved on.",
+      "Every benefit gets a measure, a baseline, a target, an owner and a realisation date. If it doesn't, it won't happen.",
+    ],
+    tip: "Baselines have to exist before go-live — or you can't prove any benefit later.",
+  },
+};
+
 const CORE_TEMPLATES = {
   project_charter: {
     kind: "project_charter",
