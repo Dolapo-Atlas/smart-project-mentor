@@ -47,8 +47,8 @@ export type DayInReviewSummary = {
 const SLIDE_LABEL = ["What changed", "Wins & watch-outs", "What's next"];
 
 function fireConfetti() {
-  // Navy + orange burst — matches Atlas palette.
-  const end = Date.now() + 700;
+  // Navy + orange burst — matches Atlas palette. Runs long enough for screenshots.
+  const end = Date.now() + 5000;
   const colors = ["#F97316", "#0B132B", "#FFF8EF"];
   (function frame() {
     confetti({
@@ -57,6 +57,7 @@ function fireConfetti() {
       spread: 55,
       origin: { x: 0, y: 0.9 },
       colors,
+      disableForReducedMotion: true,
     });
     confetti({
       particleCount: 4,
@@ -64,6 +65,7 @@ function fireConfetti() {
       spread: 55,
       origin: { x: 1, y: 0.9 },
       colors,
+      disableForReducedMotion: true,
     });
     if (Date.now() < end) requestAnimationFrame(frame);
   })();
