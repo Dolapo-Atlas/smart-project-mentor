@@ -38,14 +38,9 @@ const OnboardingSchema = z.object({
   country: z.string().trim().min(1).max(80),
   career_goal: z.enum([
     "Project Coordinator",
-    "Project Manager",
-    "PMO Analyst",
-    "Business Analyst",
-    "Data Analyst",
-    "Scrum Master",
-    "Product Owner",
-    "Operations Manager",
-    "Customer Success Manager",
+    "Project Support Officer",
+    "Project Officer",
+    "Project Support Analyst",
   ]),
 });
 
@@ -148,7 +143,7 @@ export const getOverview = createServerFn({ method: "GET" })
     const [{ data: state }, { data: profile }, { count: unread }, { count: openTasks }, { count: docs }, { count: pendingReviews }, { data: recentDocs }, { data: recentMsgs }, { data: recentTasks }] =
       await Promise.all([
         supabase.from("simulation_state").select("*").eq("user_id", userId).maybeSingle(),
-        supabase.from("profiles").select("first_name,preferred_name,last_name,display_name").eq("id", userId).maybeSingle(),
+        supabase.from("profiles").select("first_name,preferred_name,last_name,display_name,role,career_goal,current_project_instance_id").eq("id", userId).maybeSingle(),
         supabase
           .from("inbox_messages")
           .select("*", { count: "exact", head: true })
