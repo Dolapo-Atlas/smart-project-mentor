@@ -99,7 +99,11 @@ export function ProjectBriefSheet({ open, onOpenChange }: Props) {
     tpl?.welcome_intro ??
     tpl?.description ??
     "Guide this project from initiation to closure, managing stakeholders, risks, issues and competing priorities.";
-  const roleTitle = "Project Coordinator";
+  const roleTitle =
+    ((overview?.profile as any)?.preferred_role as string | undefined)?.trim() ||
+    ((overview?.profile as any)?.role as string | undefined)?.trim() ||
+    ((overview?.profile as any)?.career_goal as string | undefined)?.trim() ||
+    "Project Coordinator";
   const activeId = activeAny?.id as string | undefined;
   const hasSeenBrief = useMemo(() => {
     if (typeof window === "undefined" || !activeId) return false;
