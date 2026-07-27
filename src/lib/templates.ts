@@ -20,7 +20,8 @@ export type TemplateKind =
   | "uat_plan"
   | "cutover_plan"
   | "training_plan"
-  | "benefits_tracker";
+  | "benefits_tracker"
+  | "raci_matrix";
 
 export type FieldSpec = {
   key: string;
@@ -169,6 +170,14 @@ export const TEMPLATE_WHY: Record<TemplateKind, { title: string; body: string[];
       "Every benefit gets a measure, a baseline, a target, an owner and a realisation date. If it doesn't, it won't happen.",
     ],
     tip: "Baselines have to exist before go-live — or you can't prove any benefit later.",
+  },
+  raci_matrix: {
+    title: "Why you're building a RACI Matrix",
+    body: [
+      "RACI answers the question that quietly kills projects: 'who actually does this, and who signs it off?' One row per deliverable, one column per stakeholder, and exactly one Accountable in every row.",
+      "It turns the Stakeholder Register from a list of people into a map of decision rights — so nothing important falls between two chairs.",
+    ],
+    tip: "Only one Accountable per row. Multiple A's mean nobody is really accountable.",
   },
 };
 
