@@ -9,6 +9,7 @@ import {
   setActiveProject,
   archiveProject,
 } from "@/lib/projects.functions";
+import { getProfile, updateProjectRole } from "@/lib/sim.functions";
 import { Button } from "@/components/ui/button";
 import {
   Heart,
@@ -36,6 +37,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+
+const ROLE_OPTIONS = [
+  "Project Coordinator",
+  "Project Support Officer",
+  "Project Officer",
+  "Project Support Analyst",
+] as const;
 
 export const Route = createFileRoute("/_authenticated/app/projects")({
   component: ProjectsPicker,
@@ -88,6 +106,8 @@ function ProjectsPicker() {
   const startFn = useServerFn(startProject);
   const setActiveFn = useServerFn(setActiveProject);
   const archiveFn = useServerFn(archiveProject);
+  const fetchProfile = useServerFn(getProfile);
+  const updateRoleFn = useServerFn(updateProjectRole);
 
   const [sort, setSort] = useState<"recommended" | "duration" | "difficulty">("recommended");
 
@@ -99,6 +119,30 @@ function ProjectsPicker() {
   const { data: instances = [] } = useQuery({
     queryKey: ["my-project-instances"],
     queryFn: () => fetchInstances(),
+  });
+
+  const { data: profile } = useQuery({
+    queryKey: ["profile"],
+    queryFn: () => fetchProfile(),
+  });
+  const currentRole =
+    ((profile as any)?.role as string | undefined) ||
+    ((profile as any)?.career_goal as string | undefined) ||
+    "Project Coordinator";
+  const roleLocked = instances.length > 0;
+  const [roleDialogOpen, setRoleDialogOpen] = useState(false);
+  const [pendingRole, setPendingRole] =
+    useState<(typeof ROLE_OPTIONS)[number]>(currentRole as (typeof ROLE_OPTIONS)[number]);
+
+  const updateRole = useMutation({
+    mutationFn: (role: (typeof ROLE_OPTIONS)[number]) => updateRoleFn({ data: { role } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["profile"] });
+      qc.invalidateQueries({ queryKey: ["overview"] });
+      toast.success("Role updated. The team will address you accordingly.");
+      setRoleDialogOpen(false);
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Couldn't update role"),
   });
 
   const start = useMutation({
@@ -159,6 +203,77 @@ function ProjectsPicker() {
 
   return (
     <div className="mx-auto w-full max-w-7xl px-6 py-10">
+      {/* Role banner */}
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-sm">
+        <div className="min-w-0">
+          <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+            Your role
+          </div>
+          <div className="mt-0.5 font-medium text-foreground">{currentRole}</div>
+          <div className="mt-0.5 text-xs text-muted-foreground">
+            {roleLocked
+              ? "Locked — your role travels with the project once it has started."
+              : "You can change this before starting a project. It only personalises how the team addresses you."}
+          </div>
+        </div>
+        <Dialog
+          open={roleDialogOpen}
+          onOpenChange={(o) => {
+            setRoleDialogOpen(o);
+            if (o) setPendingRole(currentRole as (typeof ROLE_OPTIONS)[number]);
+          }}
+        >
+          <DialogTrigger asChild>
+            <Button size="sm" variant="secondary" disabled={roleLocked}>
+              Change role
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Choose your role</DialogTitle>
+              <DialogDescription>
+                All four roles play the same Digital Care Records simulation with the
+                same tasks and stakeholders — only how the team addresses you changes.
+                Once you start a project, this is locked.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2">
+              <Label htmlFor="role-select">Role</Label>
+              <Select
+                value={pendingRole}
+                onValueChange={(v) => setPendingRole(v as (typeof ROLE_OPTIONS)[number])}
+              >
+                <SelectTrigger id="role-select">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ROLE_OPTIONS.map((r) => (
+                    <SelectItem key={r} value={r}>
+                      {r}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="ghost"
+                onClick={() => setRoleDialogOpen(false)}
+                disabled={updateRole.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => updateRole.mutate(pendingRole)}
+                disabled={updateRole.isPending || pendingRole === currentRole}
+              >
+                {updateRole.isPending ? "Saving…" : "Save role"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+
       {/* Hero */}
       <div className="grid gap-8 md:grid-cols-[1fr_auto] md:items-end">
         <div>
