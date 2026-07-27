@@ -24,14 +24,9 @@ export const Route = createFileRoute("/_authenticated/onboarding")({
 
 const CAREER_GOALS = [
   "Project Coordinator",
-  "Project Manager",
-  "PMO Analyst",
-  "Business Analyst",
-  "Data Analyst",
-  "Scrum Master",
-  "Product Owner",
-  "Operations Manager",
-  "Customer Success Manager",
+  "Project Support Officer",
+  "Project Officer",
+  "Project Support Analyst",
 ] as const;
 
 function Onboarding() {
@@ -125,7 +120,7 @@ function Onboarding() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="career_goal">Career goal</Label>
+            <Label htmlFor="career_goal">Your role on this project</Label>
             <Select
               value={form.career_goal}
               onValueChange={(v) =>
@@ -139,18 +134,15 @@ function Onboarding() {
                 {CAREER_GOALS.map((g) => (
                   <SelectItem key={g} value={g}>
                     {g}
-                    {g !== "Project Coordinator" && (
-                      <span className="ml-2 text-xs text-muted-foreground">
-                        — simulation coming soon
-                      </span>
-                    )}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              You'll be assigned this role across your simulation. Stakeholders, emails
-              and feedback will address you as a {form.career_goal}.
+              You'll join the Digital Care Records Rollout as a {form.career_goal}.
+              The simulation, tasks and stakeholders are the same for every role —
+              only how the team addresses you changes. You can change this before
+              starting your project; once it starts, your role is locked.
             </p>
           </div>
 
