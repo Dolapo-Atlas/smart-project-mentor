@@ -32,6 +32,9 @@ export const getAdminAnalytics = createServerFn({ method: "GET" })
     await assertAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+    const startOfToday0 = new Date();
+    void startOfToday0;
+
     const startOfToday = new Date();
     startOfToday.setHours(0, 0, 0, 0);
     const activeSince = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
