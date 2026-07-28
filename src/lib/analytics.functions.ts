@@ -9,12 +9,6 @@ async function assertAdmin(supabase: any, userId: string) {
   if (error || !data) throw new Response("Forbidden", { status: 403 });
 }
 
-export const getAdminAnalytics = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    return getAnalyticsImpl(context);
-  });
-
 export const listEarlySignups = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -32,7 +26,7 @@ export const listEarlySignups = createServerFn({ method: "GET" })
     return { total: count ?? 0, rows: data ?? [] };
   });
 
-const getAnalyticsImplInner = createServerFn({ method: "GET" })
+export const getAdminAnalytics = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context.supabase, context.userId);
