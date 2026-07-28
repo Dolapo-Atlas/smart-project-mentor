@@ -64,6 +64,58 @@ export function TaskBoard() {
   });
   const [selected, setSelected] = useState<Task | null>(null);
 
+  // First-run nudge: open the top open task's detail sheet automatically the
+  // first time a learner sees the board for a project, so they don't have to
+  // hunt for where to start. Runs once, only after the project brief has been
+  // seen, and never once they've completed a task.
+  const { data: activeProject } = useQuery<any>({
+    queryKey: ["active-project"],
+    enabled: false,
+  });
+  const autoOpenedRef = useRef(false);
+  useEffect(() => {
+    if (autoOpenedRef.current) return;
+    if (typeof window === "undefined") return;
+    const rows = data ?? [];
+    if (rows.length === 0) return;
+    const projectId = activeProject?.id ?? "default";
+    const key = `atlas.task-autoopen.${projectId}`;
+    if (window.localStorage.getItem(key) === "1") {
+      autoOpenedRef.current = true;
+      return;
+    }
+    // Wait until the brief has been read so two sheets never fight.
+    if (
+      activeProject?.id &&
+      window.localStorage.getItem(`atlas.brief-seen.${activeProject.id}`) !== "1"
+    ) {
+      return;
+    }
+    const DONE = ["submitted", "done", "approved", "completed", "closed"];
+    if (rows.some((r) => DONE.includes(r.status))) {
+      autoOpenedRef.current = true;
+      window.localStorage.setItem(key, "1");
+      return;
+    }
+    const RANK: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
+    const first =
+      rows.find((r) => r.status === "in_progress") ??
+      [...rows]
+        .filter((r) => !DONE.includes(r.status) && r.status !== "blocked")
+        .sort((a, b) => {
+          const pr = (RANK[b.priority] ?? 0) - (RANK[a.priority] ?? 0);
+          if (pr !== 0) return pr;
+          const ad = a.due_at ? +new Date(a.due_at) : Infinity;
+          const bd = b.due_at ? +new Date(b.due_at) : Infinity;
+          return ad - bd;
+        })[0];
+    if (!first) return;
+    autoOpenedRef.current = true;
+    window.localStorage.setItem(key, "1");
+    const t = window.setTimeout(() => setSelected(first), 600);
+    return () => window.clearTimeout(t);
+  }, [data, activeProject]);
+
   const grouped = useMemo(() => {
     const rows = data ?? [];
     return COLUMNS.map((c) => ({
