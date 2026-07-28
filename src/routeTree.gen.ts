@@ -52,6 +52,7 @@ import { Route as AuthenticatedAppCommsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAppCharterRouteImport } from './routes/_authenticated/app.charter'
 import { Route as AuthenticatedAppChangesRouteImport } from './routes/_authenticated/app.changes'
 import { Route as AuthenticatedAppBudgetRouteImport } from './routes/_authenticated/app.budget'
+import { Route as AuthenticatedAdminTrackingRouteImport } from './routes/_authenticated/admin.tracking'
 import { Route as AuthenticatedAdminSignupsRouteImport } from './routes/_authenticated/admin.signups'
 import { Route as AuthenticatedAdminMarketingRouteImport } from './routes/_authenticated/admin.marketing'
 import { Route as AuthenticatedAdminEvalsRouteImport } from './routes/_authenticated/admin.evals'
@@ -288,6 +289,12 @@ const AuthenticatedAppBudgetRoute = AuthenticatedAppBudgetRouteImport.update({
   path: '/budget',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAdminTrackingRoute =
+  AuthenticatedAdminTrackingRouteImport.update({
+    id: '/admin/tracking',
+    path: '/admin/tracking',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminSignupsRoute =
   AuthenticatedAdminSignupsRouteImport.update({
     id: '/admin/signups',
@@ -362,6 +369,7 @@ export interface FileRoutesByFullPath {
   '/admin/evals': typeof AuthenticatedAdminEvalsRoute
   '/admin/marketing': typeof AuthenticatedAdminMarketingRoute
   '/admin/signups': typeof AuthenticatedAdminSignupsRoute
+  '/admin/tracking': typeof AuthenticatedAdminTrackingRoute
   '/app/budget': typeof AuthenticatedAppBudgetRoute
   '/app/changes': typeof AuthenticatedAppChangesRoute
   '/app/charter': typeof AuthenticatedAppCharterRoute
@@ -415,6 +423,7 @@ export interface FileRoutesByTo {
   '/admin/evals': typeof AuthenticatedAdminEvalsRoute
   '/admin/marketing': typeof AuthenticatedAdminMarketingRoute
   '/admin/signups': typeof AuthenticatedAdminSignupsRoute
+  '/admin/tracking': typeof AuthenticatedAdminTrackingRoute
   '/app/budget': typeof AuthenticatedAppBudgetRoute
   '/app/changes': typeof AuthenticatedAppChangesRoute
   '/app/charter': typeof AuthenticatedAppCharterRoute
@@ -471,6 +480,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/evals': typeof AuthenticatedAdminEvalsRoute
   '/_authenticated/admin/marketing': typeof AuthenticatedAdminMarketingRoute
   '/_authenticated/admin/signups': typeof AuthenticatedAdminSignupsRoute
+  '/_authenticated/admin/tracking': typeof AuthenticatedAdminTrackingRoute
   '/_authenticated/app/budget': typeof AuthenticatedAppBudgetRoute
   '/_authenticated/app/changes': typeof AuthenticatedAppChangesRoute
   '/_authenticated/app/charter': typeof AuthenticatedAppCharterRoute
@@ -527,6 +537,7 @@ export interface FileRouteTypes {
     | '/admin/evals'
     | '/admin/marketing'
     | '/admin/signups'
+    | '/admin/tracking'
     | '/app/budget'
     | '/app/changes'
     | '/app/charter'
@@ -580,6 +591,7 @@ export interface FileRouteTypes {
     | '/admin/evals'
     | '/admin/marketing'
     | '/admin/signups'
+    | '/admin/tracking'
     | '/app/budget'
     | '/app/changes'
     | '/app/charter'
@@ -635,6 +647,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/evals'
     | '/_authenticated/admin/marketing'
     | '/_authenticated/admin/signups'
+    | '/_authenticated/admin/tracking'
     | '/_authenticated/app/budget'
     | '/_authenticated/app/changes'
     | '/_authenticated/app/charter'
@@ -998,6 +1011,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppBudgetRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/admin/tracking': {
+      id: '/_authenticated/admin/tracking'
+      path: '/admin/tracking'
+      fullPath: '/admin/tracking'
+      preLoaderRoute: typeof AuthenticatedAdminTrackingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/signups': {
       id: '/_authenticated/admin/signups'
       path: '/admin/signups'
@@ -1142,6 +1162,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminEvalsRoute: typeof AuthenticatedAdminEvalsRoute
   AuthenticatedAdminMarketingRoute: typeof AuthenticatedAdminMarketingRoute
   AuthenticatedAdminSignupsRoute: typeof AuthenticatedAdminSignupsRoute
+  AuthenticatedAdminTrackingRoute: typeof AuthenticatedAdminTrackingRoute
   AuthenticatedProjectIntroTemplateIdRoute: typeof AuthenticatedProjectIntroTemplateIdRoute
 }
 
@@ -1153,6 +1174,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminEvalsRoute: AuthenticatedAdminEvalsRoute,
   AuthenticatedAdminMarketingRoute: AuthenticatedAdminMarketingRoute,
   AuthenticatedAdminSignupsRoute: AuthenticatedAdminSignupsRoute,
+  AuthenticatedAdminTrackingRoute: AuthenticatedAdminTrackingRoute,
   AuthenticatedProjectIntroTemplateIdRoute:
     AuthenticatedProjectIntroTemplateIdRoute,
 }
