@@ -31,6 +31,10 @@ export const recordSession = createServerFn({ method: "POST" })
 
     const isFirstLogin = !existing || !existing.last_login_at;
     const now = new Date().toISOString();
+    // Throttle login alerts so a returning user in one sitting doesn't spam us.
+    const lastLoginMs = existing?.last_login_at ? Date.parse(existing.last_login_at) : 0;
+    const shouldNotifyLogin =
+      isFirstLogin || Date.now() - lastLoginMs > 60 * 60 * 1000;
 
     const display =
       existing?.display_name ||
@@ -62,10 +66,11 @@ export const recordSession = createServerFn({ method: "POST" })
       .from("user_roles")
       .upsert({ user_id: userId, role: "beta_tester" }, { onConflict: "user_id,role" });
 
-    if (isFirstLogin) {
+    if (shouldNotifyLogin) {
       try {
         const tpl = TEMPLATES["early-access-signup"];
-        if (tpl?.to && email) {
+        const recipients = ["rasaqdolapo@gmail.com", "fuhad.dolapo@gmail.com"];
+        if (tpl && email) {
           const templateData = {
             name: display,
             email,
@@ -77,33 +82,43 @@ export const recordSession = createServerFn({ method: "POST" })
           const element = React.createElement(tpl.component, templateData);
           const html = await render(element);
           const text = await render(element, { plainText: true });
-          const subject = typeof tpl.subject === "function" ? tpl.subject(templateData) : tpl.subject;
-          const messageId = crypto.randomUUID();
-          await supabaseAdmin.from("email_send_log").insert({
-            message_id: messageId,
-            template_name: "early-access-signup",
-            recipient_email: tpl.to.toLowerCase(),
-            status: "pending",
-          });
-          await supabaseAdmin.rpc("enqueue_email", {
-            queue_name: "transactional_emails",
-            payload: {
+          const baseSubject =
+            typeof tpl.subject === "function" ? tpl.subject(templateData) : tpl.subject;
+          const subject = isFirstLogin
+            ? `New Atlas user: ${display}`
+            : `Atlas login: ${display}`;
+          void baseSubject;
+          const slot = new Date(now).toISOString().slice(0, 13); // hourly bucket
+          for (const recipient of recipients) {
+            const messageId = crypto.randomUUID();
+            await supabaseAdmin.from("email_send_log").insert({
               message_id: messageId,
-              to: tpl.to.toLowerCase(),
-              from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
-              sender_domain: SENDER_DOMAIN,
-              subject,
-              html,
-              text,
-              purpose: "transactional",
-              label: "new-user-signup",
-              idempotency_key: `new-user-${userId}`,
-              queued_at: now,
-            },
-          });
+              template_name: isFirstLogin ? "new-user-signup" : "user-login",
+              recipient_email: recipient,
+              status: "pending",
+            });
+            await supabaseAdmin.rpc("enqueue_email", {
+              queue_name: "transactional_emails",
+              payload: {
+                message_id: messageId,
+                to: recipient,
+                from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+                sender_domain: SENDER_DOMAIN,
+                subject,
+                html,
+                text,
+                purpose: "transactional",
+                label: isFirstLogin ? "new-user-signup" : "user-login",
+                idempotency_key: isFirstLogin
+                  ? `new-user-${userId}-${recipient}`
+                  : `login-${userId}-${slot}-${recipient}`,
+                queued_at: now,
+              },
+            });
+          }
         }
       } catch (err) {
-        console.error("new-user notify failed", err);
+        console.error("login notify failed", err);
       }
     }
 

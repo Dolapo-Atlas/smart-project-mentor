@@ -52,6 +52,7 @@ import { Route as AuthenticatedAppCommsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAppCharterRouteImport } from './routes/_authenticated/app.charter'
 import { Route as AuthenticatedAppChangesRouteImport } from './routes/_authenticated/app.changes'
 import { Route as AuthenticatedAppBudgetRouteImport } from './routes/_authenticated/app.budget'
+import { Route as AuthenticatedAdminSignupsRouteImport } from './routes/_authenticated/admin.signups'
 import { Route as AuthenticatedAdminMarketingRouteImport } from './routes/_authenticated/admin.marketing'
 import { Route as AuthenticatedAdminEvalsRouteImport } from './routes/_authenticated/admin.evals'
 import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin.analytics'
@@ -287,6 +288,12 @@ const AuthenticatedAppBudgetRoute = AuthenticatedAppBudgetRouteImport.update({
   path: '/budget',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAdminSignupsRoute =
+  AuthenticatedAdminSignupsRouteImport.update({
+    id: '/admin/signups',
+    path: '/admin/signups',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminMarketingRoute =
   AuthenticatedAdminMarketingRouteImport.update({
     id: '/admin/marketing',
@@ -354,6 +361,7 @@ export interface FileRoutesByFullPath {
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/evals': typeof AuthenticatedAdminEvalsRoute
   '/admin/marketing': typeof AuthenticatedAdminMarketingRoute
+  '/admin/signups': typeof AuthenticatedAdminSignupsRoute
   '/app/budget': typeof AuthenticatedAppBudgetRoute
   '/app/changes': typeof AuthenticatedAppChangesRoute
   '/app/charter': typeof AuthenticatedAppCharterRoute
@@ -406,6 +414,7 @@ export interface FileRoutesByTo {
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/evals': typeof AuthenticatedAdminEvalsRoute
   '/admin/marketing': typeof AuthenticatedAdminMarketingRoute
+  '/admin/signups': typeof AuthenticatedAdminSignupsRoute
   '/app/budget': typeof AuthenticatedAppBudgetRoute
   '/app/changes': typeof AuthenticatedAppChangesRoute
   '/app/charter': typeof AuthenticatedAppCharterRoute
@@ -461,6 +470,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/_authenticated/admin/evals': typeof AuthenticatedAdminEvalsRoute
   '/_authenticated/admin/marketing': typeof AuthenticatedAdminMarketingRoute
+  '/_authenticated/admin/signups': typeof AuthenticatedAdminSignupsRoute
   '/_authenticated/app/budget': typeof AuthenticatedAppBudgetRoute
   '/_authenticated/app/changes': typeof AuthenticatedAppChangesRoute
   '/_authenticated/app/charter': typeof AuthenticatedAppCharterRoute
@@ -516,6 +526,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/evals'
     | '/admin/marketing'
+    | '/admin/signups'
     | '/app/budget'
     | '/app/changes'
     | '/app/charter'
@@ -568,6 +579,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/evals'
     | '/admin/marketing'
+    | '/admin/signups'
     | '/app/budget'
     | '/app/changes'
     | '/app/charter'
@@ -622,6 +634,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/analytics'
     | '/_authenticated/admin/evals'
     | '/_authenticated/admin/marketing'
+    | '/_authenticated/admin/signups'
     | '/_authenticated/app/budget'
     | '/_authenticated/app/changes'
     | '/_authenticated/app/charter'
@@ -985,6 +998,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppBudgetRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/admin/signups': {
+      id: '/_authenticated/admin/signups'
+      path: '/admin/signups'
+      fullPath: '/admin/signups'
+      preLoaderRoute: typeof AuthenticatedAdminSignupsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/marketing': {
       id: '/_authenticated/admin/marketing'
       path: '/admin/marketing'
@@ -1121,6 +1141,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminAnalyticsRoute: typeof AuthenticatedAdminAnalyticsRoute
   AuthenticatedAdminEvalsRoute: typeof AuthenticatedAdminEvalsRoute
   AuthenticatedAdminMarketingRoute: typeof AuthenticatedAdminMarketingRoute
+  AuthenticatedAdminSignupsRoute: typeof AuthenticatedAdminSignupsRoute
   AuthenticatedProjectIntroTemplateIdRoute: typeof AuthenticatedProjectIntroTemplateIdRoute
 }
 
@@ -1131,6 +1152,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminAnalyticsRoute: AuthenticatedAdminAnalyticsRoute,
   AuthenticatedAdminEvalsRoute: AuthenticatedAdminEvalsRoute,
   AuthenticatedAdminMarketingRoute: AuthenticatedAdminMarketingRoute,
+  AuthenticatedAdminSignupsRoute: AuthenticatedAdminSignupsRoute,
   AuthenticatedProjectIntroTemplateIdRoute:
     AuthenticatedProjectIntroTemplateIdRoute,
 }
@@ -1161,13 +1183,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

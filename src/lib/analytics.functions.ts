@@ -9,6 +9,23 @@ async function assertAdmin(supabase: any, userId: string) {
   if (error || !data) throw new Response("Forbidden", { status: 403 });
 }
 
+export const listEarlySignups = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error, count } = await supabaseAdmin
+      .from("early_access_signups")
+      .select(
+        "id, name, email, desired_role, country, experience_level, referral_code, referred_by_code, created_at",
+        { count: "exact" },
+      )
+      .order("created_at", { ascending: false })
+      .limit(500);
+    if (error) throw error;
+    return { total: count ?? 0, rows: data ?? [] };
+  });
+
 export const getAdminAnalytics = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
