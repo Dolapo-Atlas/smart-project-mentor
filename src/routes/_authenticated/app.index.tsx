@@ -17,6 +17,7 @@ import { ProjectSidePanel } from "@/components/dashboard/project-side-panel";
 import { ProjectBriefSheet } from "@/components/dashboard/project-brief-sheet";
 import { WelcomeBackPanel } from "@/components/dashboard/welcome-back-panel";
 import { PhaseReadinessPanel } from "@/components/dashboard/phase-readiness-panel";
+import { FirstWinPanel } from "@/components/dashboard/first-win-panel";
 import { useEffect, useRef, useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/app/")({
@@ -178,6 +179,7 @@ function Dashboard() {
 
       {focusMode ? (
         <div className="mx-auto max-w-2xl space-y-4">
+          <FirstWinPanel projectId={activeId} onOpenBrief={() => setBriefOpen(true)} />
           <div className="rounded-lg border border-accent-orange/30 bg-accent-orange/5 px-4 py-3 text-xs text-foreground/80">
             <span className="font-medium text-foreground">Focus mode.</span>{" "}
             One thing at a time. Everything else is still there — toggle the
@@ -188,6 +190,7 @@ function Dashboard() {
       ) : (
         <>
           <WelcomeBackPanel />
+          <FirstWinPanel projectId={activeId} onOpenBrief={() => setBriefOpen(true)} />
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
             <div className="min-w-0 space-y-6">
               <div className="atlas-rise atlas-rise-2"><ContinueCard /></div>
