@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/carousel";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import atlasLogo from "@/assets/atlas-logo.png.asset.json";
+import atlasMark from "@/assets/atlas-mark.png.asset.json";
 import { AutoDemo } from "@/components/auto-demo";
 import { HeroStage } from "@/components/landing/hero-stage";
 import { getReferralStats } from "@/lib/signup.functions";
@@ -170,8 +170,8 @@ function Nav({ scrolled }: { scrolled: boolean }) {
       ].join(" ")}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-10">
-        <Link to="/" className="flex items-center gap-2 font-display text-lg font-semibold tracking-tight">
-          <AtlasMark className="h-6 w-6" />
+        <Link to="/" className="flex items-center gap-2.5 font-display text-2xl font-semibold tracking-tight">
+          <AtlasMark className="h-10 w-10" />
           Atlas
         </Link>
         <nav className="hidden items-center gap-1 md:flex">
@@ -235,7 +235,7 @@ function OwnerOnlySignIn() {
 function AtlasMark({ className = "" }: { className?: string }) {
   return (
     <img
-      src={atlasLogo.url}
+      src={atlasMark.url}
       alt="Atlas"
       className={["object-contain", className].join(" ")}
       draggable={false}
@@ -262,6 +262,12 @@ function Hero() {
       <div className="mx-auto grid max-w-7xl items-center gap-14 px-5 sm:px-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:gap-20 lg:px-10">
         <div>
           <Reveal>
+            <div className="mb-6 flex items-center gap-3">
+              <AtlasMark className="h-14 w-14 sm:h-16 sm:w-16" />
+              <span className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+                Atlas
+              </span>
+            </div>
             <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card/70 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur">
               <span className="relative flex h-1.5 w-1.5">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent-orange opacity-60" />

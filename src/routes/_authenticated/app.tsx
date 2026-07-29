@@ -9,6 +9,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
+import atlasMark from "@/assets/atlas-mark.png.asset.json";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getOverview } from "@/lib/sim.functions";
@@ -250,8 +251,14 @@ function AppLayout() {
     <div className="min-h-screen bg-background text-foreground paper-texture">
       <div className="mx-auto grid min-h-screen max-w-[1400px] grid-cols-1 md:grid-cols-[260px_1fr]">
         <aside className="flex flex-col border-b border-sidebar-border bg-sidebar text-sidebar-foreground px-5 py-6 shadow-[1px_0_0_0_rgba(0,0,0,0.08)] md:border-b-0 md:border-r md:border-r-black/20">
-          <Link to="/app" className="font-display text-2xl font-semibold tracking-tight text-sidebar-foreground">
-            Atlas <span className="text-accent-orange">/</span>
+          <Link to="/app" className="flex items-center gap-2 font-display text-2xl font-semibold tracking-tight text-sidebar-foreground">
+            <img
+              src={atlasMark.url}
+              alt="Atlas"
+              className="h-8 w-8 object-contain"
+              draggable={false}
+            />
+            Atlas
           </Link>
           <div className="mt-1 text-xs uppercase tracking-[0.18em] text-sidebar-foreground/70">
             {overview?.state?.project_name ?? "Loading…"}
