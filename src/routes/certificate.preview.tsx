@@ -1,7 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { AtlasCertificate, type CertificateRecord } from "@/components/certificate/atlas-certificate";
-import { verificationUrl as verificationUrlFn } from "@/lib/certificates.server";
+
+function verificationUrl(code: string) {
+  return `https://atlassim.co/verify/${code}`;
+}
 
 const SAMPLE_CERT: CertificateRecord = {
   recipient_name: "Dolapo Rasaq",
