@@ -1140,6 +1140,12 @@ export const reviewDocument = createServerFn({ method: "POST" })
 ${pctx.domainGuard}
 
 Document title: "${doc.title}". Treat this as a workplace deliverable (e.g. Project Charter, Stakeholder Register, RAID Log, Status Report, Meeting Minutes, Change Request) and review it the way a sponsor or governance board would.
+${/work breakdown|\bwbs\b/i.test(doc.title ?? "")
+  ? `This is a Work Breakdown Structure. Assess specifically: (a) is the work decomposed far enough that each package could be owned and estimated, (b) are tasks measurable and deliverable rather than vague activities, (c) is anything important omitted from scope, (d) do the work packages plausibly support the milestones in the project schedule, (e) does it align with the project scope. Do not penalise it for lacking dates — the schedule owns timing, the WBS owns what is delivered.`
+  : ""}
+${/schedule|timeline|gantt/i.test(doc.title ?? "")
+  ? `This is a Project Schedule. Judge whether it carries enough task-level detail for governance approval. If it is essentially dates and phase names with no visible decomposition of the work, say so explicitly in the weaknesses and recommend producing a formal Work Breakdown Structure before approval.`
+  : ""}
 
 Recent previous reviews in this workspace: ${JSON.stringify(previousFeedback ?? [])}.
 Current document signals detected by the app: ${JSON.stringify(signals)}.
