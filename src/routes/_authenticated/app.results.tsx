@@ -3,9 +3,10 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { previewOutcome, finalizeRun, getMyOutcome } from "@/lib/outcomes.functions";
 import { Button } from "@/components/ui/button";
-import { Award, Share2, Download, ArrowRight, Sparkles, Trophy, AlertTriangle } from "lucide-react";
+import { Award, ArrowRight, Sparkles, Trophy, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
+import { CredentialPanel } from "@/components/certificate/credential-panel";
 
 export const Route = createFileRoute("/_authenticated/app/results")({
   component: ResultsPage,
@@ -23,10 +24,10 @@ function gradeStyle(g?: string) {
   switch (g) {
     case "Distinction":
       return { bg: "bg-emerald-500", text: "text-emerald-600", ring: "ring-emerald-200" };
+    case "Merit":
+      return { bg: "bg-teal-500", text: "text-teal-600", ring: "ring-teal-200" };
     case "Pass":
       return { bg: "bg-sky-500", text: "text-sky-600", ring: "ring-sky-200" };
-    case "Conditional":
-      return { bg: "bg-amber-500", text: "text-amber-600", ring: "ring-amber-200" };
     default:
       return { bg: "bg-rose-500", text: "text-rose-600", ring: "ring-rose-200" };
   }
@@ -140,6 +141,9 @@ function ResultsPage() {
         </div>
       )}
 
+      {/* Credential */}
+      {isClosed && <CredentialPanel />}
+
       {/* Actions */}
       <div className="mt-8 flex flex-wrap items-center gap-3">
         {!isClosed ? (
@@ -159,31 +163,6 @@ function ResultsPage() {
           </>
         ) : (
           <>
-            <Button asChild size="lg">
-              <Link to="/cert/$slug" params={{ slug: outcome.share_slug }} target="_blank">
-                <Award className="mr-2 h-4 w-4" />
-                View certificate
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                const url = `${window.location.origin}/cert/${outcome.share_slug}`;
-                navigator.clipboard.writeText(url);
-                toast.success("Share link copied");
-              }}
-            >
-              <Share2 className="mr-2 h-4 w-4" />
-              Copy share link
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => window.open(`/cert/${outcome.share_slug}?print=1`, "_blank")}
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Download (print to PDF)
-            </Button>
             <Button variant="link" asChild>
               <Link to="/app/projects">Start a new run</Link>
             </Button>
