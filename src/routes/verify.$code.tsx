@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { getPublicCredential } from "@/lib/certificates.functions";
 import { AtlasCertificate, formatDate } from "@/components/certificate/atlas-certificate";
-import atlasMark from "@/assets/atlas-mark.png";
+import atlasMarkAsset from "@/assets/atlas-mark.png.asset.json";
+const atlasMark = atlasMarkAsset.url;
 import { BadgeCheck, ShieldAlert, ShieldX, ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/verify/$code")({

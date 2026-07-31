@@ -1,4 +1,5 @@
-import atlasMark from "@/assets/atlas-mark.png";
+import atlasMarkAsset from "@/assets/atlas-mark.png.asset.json";
+const atlasMark = atlasMarkAsset.url;
 import founderSignature from "@/assets/founder-signature.png";
 
 export type CertificateRecord = {

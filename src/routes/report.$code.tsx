@@ -2,7 +2,8 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { getPublicCredential } from "@/lib/certificates.functions";
 import { formatDate } from "@/components/certificate/atlas-certificate";
-import atlasMark from "@/assets/atlas-mark.png";
+import atlasMarkAsset from "@/assets/atlas-mark.png.asset.json";
+const atlasMark = atlasMarkAsset.url;
 
 const AREA_LABELS: Record<string, string> = {
   knowledgeApplication: "Knowledge Application",
