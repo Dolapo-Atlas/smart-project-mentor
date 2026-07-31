@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { AdvanceTimeDialog } from "@/components/advance-time-dialog";
 import {
@@ -37,6 +37,18 @@ export function TimeControls({ compact = false }: { compact?: boolean }) {
     setMode(m);
     setOpen(true);
   }
+
+  // Allows other surfaces (e.g. Day in Review) to open a specific time control.
+  useEffect(() => {
+    function onExternal(e: Event) {
+      const m = (e as CustomEvent).detail as Mode;
+      if (!m) return;
+      setMode(m);
+      setTimeout(() => setOpen(true), 250);
+    }
+    window.addEventListener("atlas:advance-time", onExternal);
+    return () => window.removeEventListener("atlas:advance-time", onExternal);
+  }, []);
 
   const primary = BUTTONS[0];
   const secondary = BUTTONS[1];
