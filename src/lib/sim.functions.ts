@@ -1302,6 +1302,7 @@ Do not use the same wording as any recent inbox message. Do not write a generic 
     // conditional — a schedule that already shows decomposed work packages
     // never triggers it, so the WBS is never mandatory for every project.
     try {
+      const { maybeRequestWbs } = await import("./wbs.server");
       await maybeRequestWbs(supabase, userId, doc, excerpt, output.score);
     } catch (e) {
       console.error("WBS governance check failed", e);
