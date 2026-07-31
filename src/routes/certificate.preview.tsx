@@ -9,8 +9,8 @@ function verificationUrl(code: string) {
 const SAMPLE_CERT: CertificateRecord = {
   recipient_name: "Dolapo Rasaq",
   simulated_role: "Project Coordinator",
-  programme_name: "Atlas Digital Care Records Simulation",
-  project_name: "NHS Digital Care Records Rollout",
+  programme_name: "Atlas Digital Care Records Programme",
+  project_name: "Digital Care Records Rollout",
   simulated_budget: "£1,200,000",
   simulated_timeline: "12 weeks",
   completion_date: "2026-07-31",
@@ -27,7 +27,7 @@ const SAMPLE_CERT: CertificateRecord = {
     "Project Reporting & Governance",
     "Budget Awareness",
   ],
-  verification_code: "ATLAS-2026-PREVIEW01",
+  verification_code: "ATLAS-2026-A7F3K9D2M4",
   certificate_status: "valid",
 };
 
