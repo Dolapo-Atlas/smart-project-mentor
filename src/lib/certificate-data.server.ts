@@ -224,7 +224,10 @@ export async function buildCertificatePayload(
   const projectName = deNHS(
     (instRes.data as any)?.display_name || rawTitle,
   );
-  const programmeName = `Atlas ${deNHS(rawTitle).replace(/\bsimulation\b/gi, "").replace(/\s{2,}/g, " ").trim()} Programme`;
+  const programmeName = `Atlas ${deNHS(rawTitle)
+    .replace(/\b(simulation|rollout|project|programme)\b/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .trim()} Programme`;
 
   const recipientName =
     [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") ||
