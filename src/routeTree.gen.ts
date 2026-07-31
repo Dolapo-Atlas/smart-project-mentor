@@ -19,6 +19,7 @@ import { Route as VerifyCodeRouteImport } from './routes/verify.$code'
 import { Route as ReportCodeRouteImport } from './routes/report.$code'
 import { Route as InviteCodeRouteImport } from './routes/invite.$code'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
+import { Route as CertificatePreviewRouteImport } from './routes/certificate.preview'
 import { Route as CertificateCodeRouteImport } from './routes/certificate.$code'
 import { Route as CertSlugRouteImport } from './routes/cert.$slug'
 import { Route as AuthenticatedWelcomeRouteImport } from './routes/_authenticated/welcome'
@@ -114,6 +115,11 @@ const InviteCodeRoute = InviteCodeRouteImport.update({
 const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   id: '/email/unsubscribe',
   path: '/email/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CertificatePreviewRoute = CertificatePreviewRouteImport.update({
+  id: '/certificate/preview',
+  path: '/certificate/preview',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CertificateCodeRoute = CertificateCodeRouteImport.update({
@@ -382,6 +388,7 @@ export interface FileRoutesByFullPath {
   '/welcome': typeof AuthenticatedWelcomeRoute
   '/cert/$slug': typeof CertSlugRoute
   '/certificate/$code': typeof CertificateCodeRoute
+  '/certificate/preview': typeof CertificatePreviewRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/invite/$code': typeof InviteCodeRoute
   '/report/$code': typeof ReportCodeRoute
@@ -439,6 +446,7 @@ export interface FileRoutesByTo {
   '/welcome': typeof AuthenticatedWelcomeRoute
   '/cert/$slug': typeof CertSlugRoute
   '/certificate/$code': typeof CertificateCodeRoute
+  '/certificate/preview': typeof CertificatePreviewRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/invite/$code': typeof InviteCodeRoute
   '/report/$code': typeof ReportCodeRoute
@@ -499,6 +507,7 @@ export interface FileRoutesById {
   '/_authenticated/welcome': typeof AuthenticatedWelcomeRoute
   '/cert/$slug': typeof CertSlugRoute
   '/certificate/$code': typeof CertificateCodeRoute
+  '/certificate/preview': typeof CertificatePreviewRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/invite/$code': typeof InviteCodeRoute
   '/report/$code': typeof ReportCodeRoute
@@ -559,6 +568,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/cert/$slug'
     | '/certificate/$code'
+    | '/certificate/preview'
     | '/email/unsubscribe'
     | '/invite/$code'
     | '/report/$code'
@@ -616,6 +626,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/cert/$slug'
     | '/certificate/$code'
+    | '/certificate/preview'
     | '/email/unsubscribe'
     | '/invite/$code'
     | '/report/$code'
@@ -675,6 +686,7 @@ export interface FileRouteTypes {
     | '/_authenticated/welcome'
     | '/cert/$slug'
     | '/certificate/$code'
+    | '/certificate/preview'
     | '/email/unsubscribe'
     | '/invite/$code'
     | '/report/$code'
@@ -732,6 +744,7 @@ export interface RootRouteChildren {
   UnsubscribeRoute: typeof UnsubscribeRoute
   CertSlugRoute: typeof CertSlugRoute
   CertificateCodeRoute: typeof CertificateCodeRoute
+  CertificatePreviewRoute: typeof CertificatePreviewRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   InviteCodeRoute: typeof InviteCodeRoute
   ReportCodeRoute: typeof ReportCodeRoute
@@ -817,6 +830,13 @@ declare module '@tanstack/react-router' {
       path: '/email/unsubscribe'
       fullPath: '/email/unsubscribe'
       preLoaderRoute: typeof EmailUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/certificate/preview': {
+      id: '/certificate/preview'
+      path: '/certificate/preview'
+      fullPath: '/certificate/preview'
+      preLoaderRoute: typeof CertificatePreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/certificate/$code': {
@@ -1251,6 +1271,7 @@ const rootRouteChildren: RootRouteChildren = {
   UnsubscribeRoute: UnsubscribeRoute,
   CertSlugRoute: CertSlugRoute,
   CertificateCodeRoute: CertificateCodeRoute,
+  CertificatePreviewRoute: CertificatePreviewRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   InviteCodeRoute: InviteCodeRoute,
   ReportCodeRoute: ReportCodeRoute,
