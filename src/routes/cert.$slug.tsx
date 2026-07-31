@@ -1,9 +1,13 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { getPublicCertificate } from "@/lib/outcomes.functions";
+import { findCredentialForOutcomeSlug } from "@/lib/certificates-legacy.functions";
 
 export const Route = createFileRoute("/cert/$slug")({
   loader: async ({ params }) => {
+    // Legacy share links: forward to the verifiable credential when one exists.
+    const code = await findCredentialForOutcomeSlug({ data: { slug: params.slug } });
+    if (code) throw redirect({ to: "/certificate/$code", params: { code } });
     const row = await getPublicCertificate({ data: { slug: params.slug } });
     if (!row) throw notFound();
     return row;

@@ -15,8 +15,10 @@ import { Route as AuthCallbackRouteImport } from './routes/auth-callback'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as VerifyCodeRouteImport } from './routes/verify.$code'
 import { Route as InviteCodeRouteImport } from './routes/invite.$code'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
+import { Route as CertificateCodeRouteImport } from './routes/certificate.$code'
 import { Route as CertSlugRouteImport } from './routes/cert.$slug'
 import { Route as AuthenticatedWelcomeRouteImport } from './routes/_authenticated/welcome'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
@@ -93,6 +95,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const VerifyCodeRoute = VerifyCodeRouteImport.update({
+  id: '/verify/$code',
+  path: '/verify/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InviteCodeRoute = InviteCodeRouteImport.update({
   id: '/invite/$code',
   path: '/invite/$code',
@@ -101,6 +108,11 @@ const InviteCodeRoute = InviteCodeRouteImport.update({
 const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   id: '/email/unsubscribe',
   path: '/email/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CertificateCodeRoute = CertificateCodeRouteImport.update({
+  id: '/certificate/$code',
+  path: '/certificate/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CertSlugRoute = CertSlugRouteImport.update({
@@ -363,8 +375,10 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/welcome': typeof AuthenticatedWelcomeRoute
   '/cert/$slug': typeof CertSlugRoute
+  '/certificate/$code': typeof CertificateCodeRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/invite/$code': typeof InviteCodeRoute
+  '/verify/$code': typeof VerifyCodeRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/evals': typeof AuthenticatedAdminEvalsRoute
   '/admin/marketing': typeof AuthenticatedAdminMarketingRoute
@@ -417,8 +431,10 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/welcome': typeof AuthenticatedWelcomeRoute
   '/cert/$slug': typeof CertSlugRoute
+  '/certificate/$code': typeof CertificateCodeRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/invite/$code': typeof InviteCodeRoute
+  '/verify/$code': typeof VerifyCodeRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/evals': typeof AuthenticatedAdminEvalsRoute
   '/admin/marketing': typeof AuthenticatedAdminMarketingRoute
@@ -474,8 +490,10 @@ export interface FileRoutesById {
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/welcome': typeof AuthenticatedWelcomeRoute
   '/cert/$slug': typeof CertSlugRoute
+  '/certificate/$code': typeof CertificateCodeRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/invite/$code': typeof InviteCodeRoute
+  '/verify/$code': typeof VerifyCodeRoute
   '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/_authenticated/admin/evals': typeof AuthenticatedAdminEvalsRoute
   '/_authenticated/admin/marketing': typeof AuthenticatedAdminMarketingRoute
@@ -531,8 +549,10 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/welcome'
     | '/cert/$slug'
+    | '/certificate/$code'
     | '/email/unsubscribe'
     | '/invite/$code'
+    | '/verify/$code'
     | '/admin/analytics'
     | '/admin/evals'
     | '/admin/marketing'
@@ -585,8 +605,10 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/welcome'
     | '/cert/$slug'
+    | '/certificate/$code'
     | '/email/unsubscribe'
     | '/invite/$code'
+    | '/verify/$code'
     | '/admin/analytics'
     | '/admin/evals'
     | '/admin/marketing'
@@ -641,8 +663,10 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding'
     | '/_authenticated/welcome'
     | '/cert/$slug'
+    | '/certificate/$code'
     | '/email/unsubscribe'
     | '/invite/$code'
+    | '/verify/$code'
     | '/_authenticated/admin/analytics'
     | '/_authenticated/admin/evals'
     | '/_authenticated/admin/marketing'
@@ -695,8 +719,10 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   CertSlugRoute: typeof CertSlugRoute
+  CertificateCodeRoute: typeof CertificateCodeRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   InviteCodeRoute: typeof InviteCodeRoute
+  VerifyCodeRoute: typeof VerifyCodeRoute
   ApiPublicEarlyAccessRoute: typeof ApiPublicEarlyAccessRoute
   ApiPublicGeminiTestRoute: typeof ApiPublicGeminiTestRoute
   ApiPublicTtsRoute: typeof ApiPublicTtsRoute
@@ -752,6 +778,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/verify/$code': {
+      id: '/verify/$code'
+      path: '/verify/$code'
+      fullPath: '/verify/$code'
+      preLoaderRoute: typeof VerifyCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/invite/$code': {
       id: '/invite/$code'
       path: '/invite/$code'
@@ -764,6 +797,13 @@ declare module '@tanstack/react-router' {
       path: '/email/unsubscribe'
       fullPath: '/email/unsubscribe'
       preLoaderRoute: typeof EmailUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/certificate/$code': {
+      id: '/certificate/$code'
+      path: '/certificate/$code'
+      fullPath: '/certificate/$code'
+      preLoaderRoute: typeof CertificateCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cert/$slug': {
@@ -1190,8 +1230,10 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   CertSlugRoute: CertSlugRoute,
+  CertificateCodeRoute: CertificateCodeRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   InviteCodeRoute: InviteCodeRoute,
+  VerifyCodeRoute: VerifyCodeRoute,
   ApiPublicEarlyAccessRoute: ApiPublicEarlyAccessRoute,
   ApiPublicGeminiTestRoute: ApiPublicGeminiTestRoute,
   ApiPublicTtsRoute: ApiPublicTtsRoute,
