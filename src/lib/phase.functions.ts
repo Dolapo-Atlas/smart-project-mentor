@@ -315,6 +315,24 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
       );
       items = [
         { key: "schedule", label: "Project Schedule", pct: schedule, route: "/app/template/project_schedule" },
+        ...(() => {
+          // The WBS is only a deliverable once governance has asked for it
+          // (a WBS task exists) or the learner has started one. It is never
+          // mandatory by default.
+          const wbsRx = /work breakdown|\bwbs\b/i;
+          const wbsTasks = taskMatches(wbsRx);
+          const wbsDoc = docPct(wbsRx);
+          if (wbsTasks.length === 0 && wbsDoc === 0) return [];
+          return [
+            {
+              key: "wbs",
+              label: "Work Breakdown Structure",
+              pct: bestOf(wbsDoc, taskBestPct(wbsRx)),
+              route: "/app/template/wbs",
+              hint: "Requested at governance review — what work is delivered, not when",
+            },
+          ];
+        })(),
         { key: "resource", label: "Resource Plan", pct: resource, route: "/app/template/resource_plan" },
         { key: "budget", label: "Budget Baseline", pct: budgetPct, route: "/app/budget", hint: taskDoneHint(/budget|cost|forecast|baseline|cost.?to.?complete|financial|variance|contingency/i, "budget") ?? `${B.length}/5 lines` },
         { key: "comms", label: "Communication Plan", pct: commsPlan, route: "/app/template/communication_plan" },
