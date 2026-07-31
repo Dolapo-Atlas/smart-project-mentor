@@ -28,7 +28,7 @@ export function PhaseProgressCard({ compact = false }: { compact?: boolean }) {
       >
         <div>
           <div className="text-[10px] font-medium uppercase tracking-[0.16em] text-white/60">
-            Current phase
+            Deliverables · current phase
           </div>
           <div className="mt-0.5 font-display text-base text-white">{label}</div>
         </div>
@@ -47,6 +47,12 @@ export function PhaseProgressCard({ compact = false }: { compact?: boolean }) {
         />
       </div>
 
+      {(open || !compact) && (
+        <p className="mt-2 text-[10px] leading-snug text-white/45">
+          Deliverables only. To close the phase you must also clear open tasks, inbox and
+          document reviews.
+        </p>
+      )}
       {(open || !compact) && (
         <ul className="mt-4 space-y-2.5">
           {items.length === 0 ? (
