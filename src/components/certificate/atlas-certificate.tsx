@@ -167,9 +167,10 @@ export function AtlasCertificate({
         )}
 
         <p className="mx-auto mt-[2.2cqw] max-w-[86%] text-center text-[1.1cqw] leading-relaxed text-[#6B7280]">
-          This certificate confirms that the recipient completed a structured simulated
-          workplace experience and demonstrated practical capability across the areas
-          listed above. It records simulated experience and does not represent employment.
+          This credential confirms that the recipient completed a structured Atlas
+          simulated workplace experience and demonstrated practical capability across
+          the competencies listed above. It records simulated experience and does not
+          represent employment.
         </p>
 
         {/* Signature + verification */}
@@ -179,6 +180,7 @@ export function AtlasCertificate({
               src={founderSignature}
               alt="Signature of Dolapo Rasaq"
               className="mb-[0.3cqw] h-[4.5cqw] w-auto object-contain object-left"
+              style={{ filter: "brightness(0.45) contrast(1.35) saturate(0.85)" }}
             />
             <div className="w-[70%] border-t border-[#0B1F3A]" />
             <div className="mt-[0.6cqw] text-[1.3cqw] font-semibold text-[#0B1F3A]">
@@ -213,7 +215,10 @@ export function AtlasCertificate({
               <br />
               <span className="font-medium text-[#0B1F3A]">{cert.verification_code}</span>
               <br />
-              Verify at atlassim.co/verify
+              Verify at{" "}
+              <span className="break-all font-medium text-[#0B1F3A]">
+                atlassim.co/verify/{cert.verification_code}
+              </span>
             </div>
           </div>
         </footer>
