@@ -168,10 +168,14 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
     const docPct = (rx: RegExp) => {
       const match = D.filter((d) => rx.test(d.title ?? ""));
       if (match.length === 0) return 0;
-      const approved = match.some((d) => d.status === "approved");
-      if (approved) return 100;
-      const best = Math.max(0, ...match.map((d) => d.quality_score ?? 0));
-      if (best > 0) return Math.max(50, Math.min(95, best));
+      // Completion tracks whether the learner has actually delivered the
+      // artifact — not how well it scored. A submitted/reviewed/approved
+      // document is done; the quality score is feedback, not a blocker.
+      const DELIVERED = new Set(["approved", "reviewed", "submitted", "review", "completed", "done"]);
+      const delivered = match.some(
+        (d) => DELIVERED.has(String(d.status ?? "").toLowerCase()) || (d.quality_score ?? 0) > 0,
+      );
+      if (delivered) return 100;
       return 50;
     };
 
