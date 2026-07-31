@@ -22,6 +22,7 @@ const ORDER: TemplateKind[] = [
   "stakeholder_register",
   "raci_matrix",
   "project_schedule",
+  "wbs",
   "communication_plan",
   "risk_response_plan",
   "uat_plan",
