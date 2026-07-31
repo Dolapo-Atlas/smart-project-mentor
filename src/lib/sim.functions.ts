@@ -1297,6 +1297,16 @@ Do not use the same wording as any recent inbox message. Do not write a generic 
       body: reaction.body,
     });
 
+    // --- Governance: request a Work Breakdown Structure when a submitted
+    // Project Schedule is too high-level to approve. This is deliberately
+    // conditional — a schedule that already shows decomposed work packages
+    // never triggers it, so the WBS is never mandatory for every project.
+    try {
+      await maybeRequestWbs(supabase, userId, doc, excerpt, output.score);
+    } catch (e) {
+      console.error("WBS governance check failed", e);
+    }
+
     // Update stakeholder sentiment based on document quality. Each
     // stakeholder reacts to the slice of the score that matters to them.
     try {
