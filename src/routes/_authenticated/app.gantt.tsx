@@ -346,20 +346,6 @@ function GanttChart({
         </div>
       </div>
 
-      {/* Floating Ask Atlas helper */}
-      <div className="mt-6 flex justify-end">
-        <Button
-          variant="default"
-          size="sm"
-          className="gap-2 rounded-full bg-primary px-5 text-primary-foreground shadow-lg shadow-primary/15 transition-transform hover:-translate-y-0.5"
-          asChild
-        >
-          <Link to="/app/mentor">
-            <Sparkles className="h-3.5 w-3.5 text-accent-orange" />
-            Ask Atlas about this timeline
-          </Link>
-        </Button>
-      </div>
     </div>
   );
 }
