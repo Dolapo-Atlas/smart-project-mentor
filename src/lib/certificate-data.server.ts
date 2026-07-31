@@ -213,9 +213,21 @@ export async function buildCertificatePayload(
     .reduce((a: number, b: any) => a + Number(b.amount ?? 0), 0);
 
   const tpl = (instRes.data as any)?.project_templates;
-  const projectName =
-    (instRes.data as any)?.display_name || tpl?.title || outcome.template_title;
-  const programmeName = `Atlas ${tpl?.title || outcome.template_title} Programme`;
+  // Atlas is not affiliated with or endorsed by the NHS — never let that
+  // appear on an issued credential.
+  const deNHS = (s: string) =>
+    String(s ?? "")
+      .replace(/\bNHS\b/gi, "")
+      .replace(/\s{2,}/g, " ")
+      .trim();
+  const rawTitle = tpl?.title || outcome.template_title;
+  const projectName = deNHS(
+    (instRes.data as any)?.display_name || rawTitle,
+  );
+  const programmeName = `Atlas ${deNHS(rawTitle)
+    .replace(/\b(simulation|rollout|project|programme)\b/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .trim()} Programme`;
 
   const recipientName =
     [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") ||
