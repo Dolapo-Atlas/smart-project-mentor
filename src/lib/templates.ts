@@ -21,7 +21,8 @@ export type TemplateKind =
   | "cutover_plan"
   | "training_plan"
   | "benefits_tracker"
-  | "raci_matrix";
+  | "raci_matrix"
+  | "wbs";
 
 export type FieldSpec = {
   key: string;
@@ -111,6 +112,14 @@ export const TEMPLATE_WHY: Record<TemplateKind, { title: string; body: string[];
       "It's also your early-warning system — if the critical path slips, go-live slips.",
     ],
     tip: "Anchor at least four milestones to specific dates.",
+  },
+  wbs: {
+    title: "Why you're building a Work Breakdown Structure",
+    body: [
+      "The Project Schedule says WHEN work happens. The Work Breakdown Structure says WHAT is actually being delivered — decomposed into work packages and tasks small enough to own, estimate and verify.",
+      "Governance asks for a WBS when a schedule reads as a list of dates with no visible work underneath it. Every milestone on your schedule should trace back to work packages here.",
+    ],
+    tip: "Number everything (1, 1.1, 1.2, 2.1…) and give each work package one named owner and a testable acceptance criterion.",
   },
   communication_plan: {
     title: "Why you're writing a Comms Plan",
