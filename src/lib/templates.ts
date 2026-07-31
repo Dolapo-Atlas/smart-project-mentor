@@ -366,6 +366,22 @@ const EXTRA_TEMPLATES: Record<
       { key: "owner", label: "Schedule owner (named)", kind: "text", required: true, placeholder: "Full name and role" },
     ],
   },
+  wbs: {
+    kind: "wbs",
+    label: "Work Breakdown Structure (WBS)",
+    intro:
+      "Break the project into what is actually being delivered. The schedule says when; the WBS says what. Decompose deliverables into work packages, then into tasks small enough to own and verify.",
+    fields: [
+      { key: "deliverables", label: "Project deliverables", kind: "textarea", required: true, minChars: 80, placeholder: "1. Migrated care records\n2. Trained staff\n3. Live CRM environment", guidance: "The major outputs the project must hand over. Number them 1, 2, 3…" },
+      { key: "work_packages", label: "Level 1 work packages", kind: "textarea", required: true, minChars: 100, placeholder: "1.1 Data extraction & cleansing\n1.2 Migration dry-run\n2.1 Training material build", guidance: "Each deliverable broken into packages of work. Use decimal IDs." },
+      { key: "tasks", label: "Level 2 tasks", kind: "textarea", required: true, minChars: 120, placeholder: "1.1.1 Extract resident records from legacy system\n1.1.2 De-duplicate and validate against NHS number", guidance: "Small enough that one person can own it and you can tell when it's done." },
+      { key: "task_ids", label: "Task ID scheme", kind: "textarea", required: true, minChars: 40, placeholder: "1 = deliverable, 1.1 = work package, 1.1.1 = task. IDs are referenced in the schedule and RAID log.", guidance: "Explain your numbering so governance can trace a milestone back to work." },
+      { key: "owners", label: "Deliverable / package owners (named)", kind: "textarea", required: true, minChars: 60, placeholder: "1.1 — Priya Shah (Data Lead)\n2.1 — Margaret Doyle (Care Home Ops)" },
+      { key: "acceptance", label: "Acceptance criteria", kind: "textarea", required: true, minChars: 80, placeholder: "1.1 complete when 100% of resident records reconcile against the legacy extract with zero duplicates.", guidance: "Testable, not aspirational. How will you prove each package is done?" },
+      { key: "schedule_link", label: "How this supports the schedule milestones", kind: "textarea", minChars: 40, placeholder: "Milestone 'Migration dry-run complete — 10 Oct' is delivered by packages 1.1 and 1.2." },
+      { key: "notes", label: "Notes / assumptions", kind: "textarea", minChars: 30, placeholder: "Out-of-scope items, estimating assumptions, anything governance should challenge." },
+    ],
+  },
   communication_plan: {
     kind: "communication_plan",
     label: "Communication Plan",
@@ -620,6 +636,7 @@ export function detectTemplateKind(task: {
   if (/training plan|rollout plan|training & rollout|super.?user/.test(s)) return "training_plan";
   if (/benefits (tracker|realisation|realization|register)|benefit tracking/.test(s)) return "benefits_tracker";
   if (/\braci\b|responsibility (matrix|assignment)|decision rights/.test(s)) return "raci_matrix";
+  if (/\bwbs\b|work breakdown/.test(s)) return "wbs";
   return null;
 }
 
