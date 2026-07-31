@@ -293,3 +293,21 @@
     .atlas-phase-glow { animation: none !important; }
   }
 }
+
+/* ---- Credential print output (A4) ---- */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+  .print-sheet {
+    width: 210mm;
+    height: 297mm;
+    page-break-after: avoid;
+  }
+  .print-sheet .atlas-cert {
+    width: 210mm;
+    height: 297mm;
+    aspect-ratio: auto !important;
+  }
+}
