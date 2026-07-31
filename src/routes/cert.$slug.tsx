@@ -79,7 +79,9 @@ function Certificate() {
             <div className="mt-6 font-display text-5xl font-medium tracking-tight text-neutral-900 md:text-6xl">
               {cert.user_display_name ?? "Atlas Coordinator"}
             </div>
-            <div className="mt-2 text-sm text-neutral-500">acting as {cert.user_role}</div>
+            <div className="mt-2 text-sm text-neutral-500">
+              in the simulated role of {cert.user_role}
+            </div>
 
             <div className="mt-10 text-base text-neutral-600">
               has successfully completed the simulation
@@ -102,7 +104,7 @@ function Certificate() {
           </div>
 
           {/* Footer */}
-          <div className="relative absolute bottom-12 left-12 right-12 mt-12 flex items-end justify-between text-xs text-neutral-500">
+          <div className="absolute bottom-12 left-12 right-12 flex items-end justify-between text-xs text-neutral-500">
             <div>
               <div className="font-display text-lg font-medium text-neutral-900">Atlas</div>
               <div className="mt-0.5">atlassim.co</div>
