@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useMemo } from "react";
 import { listDocuments } from "@/lib/sim.functions";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CalendarRange, FileText, Sparkles } from "lucide-react";
+import { ArrowLeft, CalendarRange, FileText } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/app/gantt")({
   head: () => ({
