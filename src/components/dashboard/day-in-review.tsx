@@ -52,6 +52,10 @@ export type DayInReviewSummary = {
 
 const SLIDE_LABEL = ["What changed", "Wins & watch-outs", "What's next"];
 
+function cap(s: string) {
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+}
+
 function fireConfetti() {
   // Navy + orange burst — matches Atlas palette. Runs long enough for screenshots.
   const end = Date.now() + 5000;
