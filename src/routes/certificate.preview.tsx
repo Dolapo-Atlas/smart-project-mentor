@@ -64,7 +64,7 @@ function CertificatePreviewPage() {
           <AtlasCertificate
             cert={SAMPLE_CERT}
             qrCodeUrl={SAMPLE_QR}
-            verificationUrl={verificationUrlFn(SAMPLE_CERT.verification_code)}
+            verificationUrl={verificationUrl(SAMPLE_CERT.verification_code)}
           />
         </div>
 
