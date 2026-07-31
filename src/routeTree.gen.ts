@@ -16,6 +16,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as VerifyCodeRouteImport } from './routes/verify.$code'
+import { Route as ReportCodeRouteImport } from './routes/report.$code'
 import { Route as InviteCodeRouteImport } from './routes/invite.$code'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as CertificateCodeRouteImport } from './routes/certificate.$code'
@@ -98,6 +99,11 @@ const IndexRoute = IndexRouteImport.update({
 const VerifyCodeRoute = VerifyCodeRouteImport.update({
   id: '/verify/$code',
   path: '/verify/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReportCodeRoute = ReportCodeRouteImport.update({
+  id: '/report/$code',
+  path: '/report/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InviteCodeRoute = InviteCodeRouteImport.update({
@@ -378,6 +384,7 @@ export interface FileRoutesByFullPath {
   '/certificate/$code': typeof CertificateCodeRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/invite/$code': typeof InviteCodeRoute
+  '/report/$code': typeof ReportCodeRoute
   '/verify/$code': typeof VerifyCodeRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/evals': typeof AuthenticatedAdminEvalsRoute
@@ -434,6 +441,7 @@ export interface FileRoutesByTo {
   '/certificate/$code': typeof CertificateCodeRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/invite/$code': typeof InviteCodeRoute
+  '/report/$code': typeof ReportCodeRoute
   '/verify/$code': typeof VerifyCodeRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/evals': typeof AuthenticatedAdminEvalsRoute
@@ -493,6 +501,7 @@ export interface FileRoutesById {
   '/certificate/$code': typeof CertificateCodeRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/invite/$code': typeof InviteCodeRoute
+  '/report/$code': typeof ReportCodeRoute
   '/verify/$code': typeof VerifyCodeRoute
   '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/_authenticated/admin/evals': typeof AuthenticatedAdminEvalsRoute
@@ -552,6 +561,7 @@ export interface FileRouteTypes {
     | '/certificate/$code'
     | '/email/unsubscribe'
     | '/invite/$code'
+    | '/report/$code'
     | '/verify/$code'
     | '/admin/analytics'
     | '/admin/evals'
@@ -608,6 +618,7 @@ export interface FileRouteTypes {
     | '/certificate/$code'
     | '/email/unsubscribe'
     | '/invite/$code'
+    | '/report/$code'
     | '/verify/$code'
     | '/admin/analytics'
     | '/admin/evals'
@@ -666,6 +677,7 @@ export interface FileRouteTypes {
     | '/certificate/$code'
     | '/email/unsubscribe'
     | '/invite/$code'
+    | '/report/$code'
     | '/verify/$code'
     | '/_authenticated/admin/analytics'
     | '/_authenticated/admin/evals'
@@ -722,6 +734,7 @@ export interface RootRouteChildren {
   CertificateCodeRoute: typeof CertificateCodeRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   InviteCodeRoute: typeof InviteCodeRoute
+  ReportCodeRoute: typeof ReportCodeRoute
   VerifyCodeRoute: typeof VerifyCodeRoute
   ApiPublicEarlyAccessRoute: typeof ApiPublicEarlyAccessRoute
   ApiPublicGeminiTestRoute: typeof ApiPublicGeminiTestRoute
@@ -783,6 +796,13 @@ declare module '@tanstack/react-router' {
       path: '/verify/$code'
       fullPath: '/verify/$code'
       preLoaderRoute: typeof VerifyCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/report/$code': {
+      id: '/report/$code'
+      path: '/report/$code'
+      fullPath: '/report/$code'
+      preLoaderRoute: typeof ReportCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/invite/$code': {
@@ -1233,6 +1253,7 @@ const rootRouteChildren: RootRouteChildren = {
   CertificateCodeRoute: CertificateCodeRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   InviteCodeRoute: InviteCodeRoute,
+  ReportCodeRoute: ReportCodeRoute,
   VerifyCodeRoute: VerifyCodeRoute,
   ApiPublicEarlyAccessRoute: ApiPublicEarlyAccessRoute,
   ApiPublicGeminiTestRoute: ApiPublicGeminiTestRoute,
