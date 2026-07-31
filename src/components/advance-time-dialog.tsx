@@ -145,11 +145,8 @@ export function AdvanceTimeDialog({
               : "time.advance";
       insightToast(key, title, { kind: blockerCount > 0 && force ? "warning" : "success" });
       qc.invalidateQueries();
-      // Phase only advances when blockers are cleared AND the mode is
-      // sprint / steerco / go-live (see advanceTime in time.functions.ts).
-      const phaseChanged =
-        (mode === "sprint" || mode === "steerco" || mode === "golive") &&
-        blockerCount === 0;
+      // Trust the server: it reports whether the phase actually moved.
+      const phaseChanged = s.phaseChanged;
       const phaseGateMode = mode === "sprint" || mode === "steerco" || mode === "golive";
       const phaseBlocked = phaseGateMode && blockerCount > 0 && !phaseChanged;
       const blockerLines: string[] = [];
@@ -166,7 +163,10 @@ export function AdvanceTimeDialog({
         fromDay: s.fromDay,
         toDay: s.toDay,
         phase: s.phase,
+        previousPhase: s.previousPhase,
         phaseChanged,
+        readyForNextPhase: s.readyForNextPhase && !phaseChanged,
+        nextPhaseName: s.nextPhaseName ?? undefined,
         phaseBlocked,
         phaseBlockers: blockerLines,
         attemptedPhase:

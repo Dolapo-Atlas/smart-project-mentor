@@ -412,6 +412,16 @@ export const advanceTime = createServerFn({ method: "POST" })
         fromDay: startDay,
         toDay: newDay,
         phase: newPhase,
+        previousPhase: state.phase as string,
+        phaseChanged: newPhase !== state.phase,
+        // True when everything is clear and a next phase exists, but this mode
+        // (Next Day / Next Week) isn't a governance gate — so the learner just
+        // needs to run Steering Committee to actually move on.
+        readyForNextPhase:
+          readiness.blockerCount === 0 &&
+          newPhase === state.phase &&
+          nextPhase(state.phase) !== null,
+        nextPhaseName: nextPhase(newPhase) ?? null,
         healthChange,
         sentimentDeltas,
         reputationDelta,
