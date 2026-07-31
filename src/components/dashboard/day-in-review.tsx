@@ -31,6 +31,12 @@ export type DayInReviewSummary = {
   toDay: number;
   phase: string;
   phaseChanged: boolean;
+  /** Phase the learner was in before this advance. */
+  previousPhase?: string;
+  /** All blockers clear and a next phase exists, but this mode isn't a gate. */
+  readyForNextPhase?: boolean;
+  /** Name of the phase that's now unlockable. */
+  nextPhaseName?: string;
   /** True when the user attempted a phase-gate action (steerco/golive) but blockers stopped it. */
   phaseBlocked?: boolean;
   /** Human-readable list of what stopped the phase from advancing. */
@@ -94,7 +100,7 @@ export function DayInReview({
 
   useEffect(() => {
     if (!open || !summary) return;
-    if (summary.phaseChanged) {
+    if (summary.phaseChanged || summary.readyForNextPhase) {
       // Small celebration when a phase gate cleared.
       const t = window.setTimeout(fireConfetti, 220);
       return () => window.clearTimeout(t);
@@ -137,15 +143,19 @@ export function DayInReview({
           </div>
           <DialogTitle className="relative mt-2 font-display text-2xl font-semibold text-white">
             {summary.phaseChanged
-              ? `Phase cleared — welcome to ${summary.phase}.`
-              : summary.phaseBlocked
-                ? `Still in ${summary.phase}. Phase did not advance.`
-                : `Day ${summary.fromDay} → Day ${summary.toDay}`}
+              ? `${cap(summary.previousPhase ?? "Phase")} complete — welcome to ${cap(summary.phase)}.`
+              : summary.readyForNextPhase
+                ? `${cap(summary.phase)} is complete. 🎉`
+                : summary.phaseBlocked
+                  ? `Still in ${cap(summary.phase)}. Phase did not advance.`
+                  : `Day ${summary.fromDay} → Day ${summary.toDay}`}
           </DialogTitle>
           <DialogDescription className="relative mt-1 text-sm text-white/70">
             {summary.phaseBlocked && slide === 0
               ? `Time moved forward, but ${summary.attemptedPhase ?? "the next phase"} is gated.`
-              : SLIDE_LABEL[slide]}
+              : summary.readyForNextPhase && slide === 0
+                ? `Everything is cleared. Run Steering Committee to move into ${cap(summary.nextPhaseName ?? "the next phase")}.`
+                : SLIDE_LABEL[slide]}
           </DialogDescription>
           <div className="relative mt-4 flex gap-1.5">
             {Array.from({ length: total }).map((_, i) => (
@@ -168,6 +178,29 @@ export function DayInReview({
               variants={stagger}
               className="grid grid-cols-2 gap-3"
             >
+              {summary.readyForNextPhase ? (
+                <div className="col-span-2 rounded-xl border border-success/40 bg-success/5 px-4 py-3 text-sm">
+                  <div className="mb-1 flex items-center gap-2 font-medium text-success">
+                    <Sparkles className="h-4 w-4" />
+                    {cap(summary.phase)} phase complete
+                  </div>
+                  <p className="text-xs text-foreground/80">
+                    Every deliverable and blocker for {cap(summary.phase)} is cleared. Nothing
+                    else is holding you here — close it out at the governance gate.
+                  </p>
+                  <Button
+                    size="sm"
+                    className="mt-3"
+                    onClick={() => {
+                      onOpenChange(false);
+                      window.dispatchEvent(new CustomEvent("atlas:advance-time", { detail: "steerco" }));
+                    }}
+                  >
+                    Hold Steering Committee
+                    <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              ) : null}
               {summary.phaseBlocked && summary.phaseBlockers && summary.phaseBlockers.length > 0 ? (
                 <div className="col-span-2 rounded-xl border border-amber-500/40 bg-amber-500/5 px-4 py-3 text-sm">
                   <div className="mb-1 flex items-center gap-2 font-medium text-amber-700 dark:text-amber-400">
