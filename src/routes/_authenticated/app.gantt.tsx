@@ -110,24 +110,30 @@ function GanttPage() {
 
   return (
     <div className="mx-auto max-w-5xl pb-24">
+      {/* Header */}
       <Link
         to="/app"
-        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" /> Back to dashboard
       </Link>
 
-      <header className="mt-4 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Timeline view</div>
-          <h1 className="mt-1 font-display text-3xl font-semibold">Gantt Chart</h1>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            A visual read of your submitted <em>Project Schedule</em>. Milestones and phases with
-            dates are placed on a horizontal timeline. Edit the schedule to update this view — no
-            separate data to maintain.
+      <header className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="max-w-2xl">
+          <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent-orange">
+            Timeline View
+          </div>
+          <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+            Gantt Chart
+          </h1>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            A visual read of your submitted{" "}
+            <em className="font-medium not-italic text-foreground/80">Project Schedule</em>.
+            Milestones and phases are synchronized automatically — edit the schedule to update this
+            view.
           </p>
         </div>
-        <Button asChild variant="outline" size="sm">
+        <Button asChild variant="outline" size="sm" className="shrink-0 self-start rounded-xl">
           <Link to="/app/template/$kind" params={{ kind: "project_schedule" }}>
             <FileText className="mr-2 h-4 w-4" /> Edit schedule
           </Link>
@@ -137,33 +143,23 @@ function GanttPage() {
       {isLoading ? (
         <div className="mt-10 text-center text-sm text-muted-foreground">Loading schedule…</div>
       ) : !schedule ? (
-        <div className="mt-10 rounded-lg border border-dashed border-border bg-muted/30 p-8 text-center">
-          <CalendarRange className="mx-auto h-8 w-8 text-muted-foreground" />
-          <h2 className="mt-3 font-display text-lg font-semibold">No Project Schedule yet</h2>
-          <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
-            The Gantt view reads dated milestones from your submitted Project Schedule. Fill the
-            template first — you'll see bars appear here automatically.
-          </p>
-          <Button asChild className="mt-4">
-            <Link to="/app/template/$kind" params={{ kind: "project_schedule" }}>
-              Open Project Schedule
-            </Link>
-          </Button>
-        </div>
+        <EmptyState
+          icon={<CalendarRange className="mx-auto h-8 w-8 text-muted-foreground" />}
+          title="No Project Schedule yet"
+          description="The Gantt view reads dated milestones from your submitted Project Schedule. Fill the template first — you'll see bars appear here automatically."
+          cta="Open Project Schedule"
+          ctaTo="/app/template/$kind"
+          ctaParams={{ kind: "project_schedule" }}
+        />
       ) : rows.length === 0 || !range ? (
-        <div className="mt-10 rounded-lg border border-dashed border-border bg-muted/30 p-8 text-center">
-          <h2 className="font-display text-lg font-semibold">No dated milestones found</h2>
-          <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
-            Your Project Schedule is saved, but the Gantt renderer couldn't find dated lines
-            (e.g. <em>Charter approved — 12 Sep</em> or <em>2025-09-12</em>). Add dates to your
-            milestones and phases.
-          </p>
-          <Button asChild variant="outline" className="mt-4">
-            <Link to="/app/template/$kind" params={{ kind: "project_schedule" }}>
-              Edit schedule
-            </Link>
-          </Button>
-        </div>
+        <EmptyState
+          title="No dated milestones found"
+          description="Your Project Schedule is saved, but the Gantt renderer couldn't find dated lines (e.g. 'Charter approved — 12 Sep' or '2025-09-12'). Add dates to your milestones and phases."
+          cta="Edit schedule"
+          ctaTo="/app/template/$kind"
+          ctaParams={{ kind: "project_schedule" }}
+          variant="outline"
+        />
       ) : (
         <GanttChart rows={rows} range={range} />
       )}
@@ -171,8 +167,43 @@ function GanttPage() {
   );
 }
 
+function EmptyState({
+  icon,
+  title,
+  description,
+  cta,
+  ctaTo,
+  ctaParams,
+  variant = "default",
+}: {
+  icon?: React.ReactNode;
+  title: string;
+  description: string;
+  cta: string;
+  ctaTo: string;
+  ctaParams: Record<string, string>;
+  variant?: "default" | "outline";
+}) {
+  return (
+    <div className="mt-10 rounded-3xl border border-dashed border-border/70 bg-card/60 p-8 text-center backdrop-blur-sm">
+      {icon && <div className="mb-3">{icon}</div>}
+      <h2 className="font-display text-lg font-semibold">{title}</h2>
+      <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">{description}</p>
+      <Button asChild className="mt-5 rounded-xl" variant={variant}>
+        <Link to={ctaTo as any} params={ctaParams as any}>
+          {cta}
+        </Link>
+      </Button>
+    </div>
+  );
+}
+
 function formatShort(d: Date) {
   return d.toLocaleDateString(undefined, { day: "2-digit", month: "short" });
+}
+
+function formatMonth(d: Date) {
+  return d.toLocaleDateString(undefined, { month: "short" }).toUpperCase();
 }
 
 function GanttChart({
@@ -184,8 +215,6 @@ function GanttChart({
 }) {
   const pct = (t: number) => ((t - range.min) / range.span) * 100;
 
-  // Bucket rows into phase bars (start→next) so the timeline shows durations,
-  // while milestones stay as points.
   const phaseRows = rows.filter((r) => r.kind === "phase");
   const milestoneRows = rows.filter((r) => r.kind === "milestone");
 
@@ -205,87 +234,118 @@ function GanttChart({
   }
 
   return (
-    <div className="mt-6 rounded-lg border border-border bg-card p-4">
-      <div className="mb-3 flex items-center justify-between text-xs text-muted-foreground">
-        <span>{formatShort(new Date(range.min))}</span>
-        <span>{formatShort(new Date(range.max))}</span>
-      </div>
+    <div className="mt-8">
+      {/* Glass timeline card */}
+      <div className="relative overflow-hidden rounded-3xl border border-border/50 bg-card/80 shadow-xl shadow-primary/5 backdrop-blur-xl">
+        {/* Subtle top accent */}
+        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-accent-orange to-primary opacity-60" />
 
-      <div className="relative">
-        {/* Month gridlines */}
-        <div className="pointer-events-none absolute inset-0">
-          {gridDates.map((g, i) => (
-            <div
-              key={i}
-              className="absolute top-0 h-full border-l border-dashed border-border/60"
-              style={{ left: `${pct(+g)}%` }}
-            >
-              <div className="absolute -top-5 -translate-x-1/2 text-[10px] uppercase tracking-wider text-muted-foreground">
-                {g.toLocaleDateString(undefined, { month: "short" })}
-              </div>
+        {/* Scrollable timeline area */}
+        <div className="overflow-x-auto overflow-y-hidden">
+          <div className="relative min-w-[700px] p-6 sm:p-8">
+            {/* Date range header */}
+            <div className="mb-8 flex items-center justify-between text-xs font-medium text-muted-foreground">
+              <span className="rounded-full bg-secondary/60 px-2.5 py-1">
+                {formatShort(new Date(range.min))}
+              </span>
+              <span className="rounded-full bg-secondary/60 px-2.5 py-1">
+                {formatShort(new Date(range.max))}
+              </span>
             </div>
-          ))}
-        </div>
 
-        <div className="space-y-2 pt-6">
-          {phaseBars.length > 0 && (
-            <div>
-              <div className="mb-1 text-[11px] uppercase tracking-widest text-muted-foreground">
-                Phases
-              </div>
-              {phaseBars.map((b, i) => {
-                const left = pct(b.start);
-                const width = Math.max(pct(b.end) - left, 1.5);
-                return (
-                  <div key={i} className="relative h-8">
-                    <div
-                      className="absolute top-1.5 flex h-5 items-center overflow-hidden rounded-md bg-primary/90 px-2 text-[11px] font-medium text-primary-foreground"
-                      style={{ left: `${left}%`, width: `${width}%` }}
-                      title={`${b.label} · ${formatShort(new Date(b.start))} → ${formatShort(new Date(b.end))}`}
-                    >
-                      <span className="truncate">{b.label}</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {milestoneRows.length > 0 && (
-            <div className="pt-3">
-              <div className="mb-1 text-[11px] uppercase tracking-widest text-muted-foreground">
-                Milestones
-              </div>
-              {milestoneRows.map((m, i) => (
-                <div key={i} className="relative h-8">
-                  <div
-                    className="absolute top-2 flex -translate-x-1/2 items-center gap-1.5"
-                    style={{ left: `${pct(+m.date)}%` }}
-                    title={`${m.label} · ${formatShort(m.date)}`}
-                  >
-                    <span className="h-3 w-3 rotate-45 bg-accent-orange" />
-                  </div>
-                  <div
-                    className="absolute top-6 -translate-x-1/2 whitespace-nowrap text-[11px] text-foreground/80"
-                    style={{ left: `${pct(+m.date)}%` }}
-                  >
-                    {m.label} · {formatShort(m.date)}
+            {/* Month gridlines */}
+            <div className="pointer-events-none absolute inset-x-6 top-16 bottom-24 sm:inset-x-8">
+              {gridDates.map((g, i) => (
+                <div
+                  key={i}
+                  className="absolute top-0 h-full border-l border-dashed border-border/60"
+                  style={{ left: `${pct(+g)}%` }}
+                >
+                  <div className="absolute -top-6 -translate-x-1/2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    {formatMonth(g)}
                   </div>
                 </div>
               ))}
             </div>
-          )}
+
+            {/* Chart body */}
+            <div className="relative pt-8">
+              {/* Phase bars */}
+              {phaseBars.length > 0 && (
+                <div className="mb-10">
+                  <div className="mb-3 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                    Phases
+                  </div>
+                  <div className="space-y-3">
+                    {phaseBars.map((b, i) => {
+                      const left = pct(b.start);
+                      const width = Math.max(pct(b.end) - left, 1.5);
+                      return (
+                        <div key={i} className="relative h-7">
+                          <div
+                            className="absolute top-0 flex h-7 items-center overflow-hidden rounded-full bg-primary/90 px-3 text-[11px] font-semibold text-primary-foreground shadow-md shadow-primary/10 transition-transform hover:scale-[1.01]"
+                            style={{ left: `${left}%`, width: `${width}%` }}
+                            title={`${b.label} · ${formatShort(new Date(b.start))} → ${formatShort(new Date(b.end))}`}
+                          >
+                            <span className="truncate">{b.label}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Milestones */}
+              {milestoneRows.length > 0 && (
+                <div className="pt-2">
+                  <div className="mb-5 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                    Milestones
+                  </div>
+                  <div className="relative h-[180px]">
+                    {milestoneRows.map((m, i) => {
+                      // Stagger vertically so labels don't overlap
+                      const topPct = (i % 3) * 30;
+                      return (
+                        <div
+                          key={i}
+                          className="absolute flex -translate-x-1/2 flex-col items-center transition-transform hover:scale-105"
+                          style={{ left: `${pct(+m.date)}%`, top: `${topPct}%` }}
+                          title={`${m.label} · ${formatShort(m.date)}`}
+                        >
+                          <div className="relative">
+                            <div className="h-3.5 w-3.5 rotate-45 bg-accent-orange shadow-[0_0_14px_rgba(249,115,22,0.45)] ring-4 ring-accent-orange/15" />
+                          </div>
+                          <div className="mt-3 text-center">
+                            <p className="whitespace-nowrap text-[11px] font-bold text-foreground">
+                              {m.label}
+                            </p>
+                            <p className="whitespace-nowrap text-[10px] text-muted-foreground">
+                              {formatShort(m.date)}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Footer legend */}
+        <div className="flex items-center gap-6 border-t border-border/40 bg-secondary/30 px-6 py-4 sm:px-8">
+          <span className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <span className="h-2.5 w-4 rounded-full bg-primary/90" /> Phase
+          </span>
+          <span className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <span className="h-2.5 w-2.5 rotate-45 bg-accent-orange shadow-[0_0_8px_rgba(249,115,22,0.4)]" />{" "}
+            Milestone
+          </span>
         </div>
       </div>
 
-      <div className="mt-8 flex flex-wrap gap-4 text-xs text-muted-foreground">
-        <span className="inline-flex items-center gap-1.5">
-          <span className="h-3 w-4 rounded bg-primary/90" /> Phase
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <span className="h-3 w-3 rotate-45 bg-accent-orange" /> Milestone
-        </span>
-      </div>
     </div>
   );
 }
