@@ -14,11 +14,11 @@ type Breakdown = {
   reports: { score: number; weight: number; detail: string };
 };
 
-function grade(score: number): "Distinction" | "Pass" | "Conditional" | "Did Not Pass" {
+function grade(score: number): "Distinction" | "Merit" | "Pass" | "Not yet achieved" {
   if (score >= 85) return "Distinction";
+  if (score >= 75) return "Merit";
   if (score >= 60) return "Pass";
-  if (score >= 40) return "Conditional";
-  return "Did Not Pass";
+  return "Not yet achieved";
 }
 
 function clamp(n: number, lo = 0, hi = 100) {

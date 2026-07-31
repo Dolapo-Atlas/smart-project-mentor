@@ -204,6 +204,118 @@ export type Database = {
           },
         ]
       }
+      certificates: {
+        Row: {
+          certificate_status: string
+          competencies: Json
+          completion_date: string
+          created_at: string
+          development_areas: Json
+          grade: string
+          id: string
+          issued_at: string
+          outcome_id: string | null
+          overall_score: number
+          performance_breakdown: Json
+          programme_name: string
+          project_instance_id: string | null
+          project_name: string
+          recipient_name: string
+          revocation_reason: string | null
+          revoked_at: string | null
+          signature_version: string
+          simulated_budget: string | null
+          simulated_role: string
+          simulated_timeline: string | null
+          strengths: Json
+          superseded_by: string | null
+          template_version: string
+          updated_at: string
+          user_id: string
+          verification_code: string
+        }
+        Insert: {
+          certificate_status?: string
+          competencies?: Json
+          completion_date?: string
+          created_at?: string
+          development_areas?: Json
+          grade?: string
+          id?: string
+          issued_at?: string
+          outcome_id?: string | null
+          overall_score?: number
+          performance_breakdown?: Json
+          programme_name: string
+          project_instance_id?: string | null
+          project_name: string
+          recipient_name: string
+          revocation_reason?: string | null
+          revoked_at?: string | null
+          signature_version?: string
+          simulated_budget?: string | null
+          simulated_role: string
+          simulated_timeline?: string | null
+          strengths?: Json
+          superseded_by?: string | null
+          template_version?: string
+          updated_at?: string
+          user_id: string
+          verification_code: string
+        }
+        Update: {
+          certificate_status?: string
+          competencies?: Json
+          completion_date?: string
+          created_at?: string
+          development_areas?: Json
+          grade?: string
+          id?: string
+          issued_at?: string
+          outcome_id?: string | null
+          overall_score?: number
+          performance_breakdown?: Json
+          programme_name?: string
+          project_instance_id?: string | null
+          project_name?: string
+          recipient_name?: string
+          revocation_reason?: string | null
+          revoked_at?: string | null
+          signature_version?: string
+          simulated_budget?: string | null
+          simulated_role?: string
+          simulated_timeline?: string | null
+          strengths?: Json
+          superseded_by?: string | null
+          template_version?: string
+          updated_at?: string
+          user_id?: string
+          verification_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certificates_outcome_id_fkey"
+            columns: ["outcome_id"]
+            isOneToOne: false
+            referencedRelation: "project_outcomes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "certificates_project_instance_id_fkey"
+            columns: ["project_instance_id"]
+            isOneToOne: false
+            referencedRelation: "project_instances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "certificates_superseded_by_fkey"
+            columns: ["superseded_by"]
+            isOneToOne: false
+            referencedRelation: "certificates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       change_requests: {
         Row: {
           cost_impact: number
