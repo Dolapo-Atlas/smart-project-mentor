@@ -158,7 +158,7 @@ export const correctCertificateName = createServerFn({ method: "POST" })
       .from("certificates")
       .select("id", { count: "exact", head: true })
       .eq("user_id", userId)
-      .eq("project_instance_id", current.project_instance_id);
+      .eq("project_instance_id", current.project_instance_id as string);
     if ((count ?? 1) > 1) {
       throw new Error("A name correction has already been used for this credential.");
     }
