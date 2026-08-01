@@ -186,6 +186,22 @@ function Inbox() {
         </div>
       </header>
 
+      {onboardingMode && !onboardingDone && (
+        <div className="rounded-lg border border-accent-orange/40 bg-accent-orange/5 p-4">
+          <div className="text-[10px] uppercase tracking-[0.2em] text-accent-orange">
+            First workplace task
+          </div>
+          <h2 className="mt-1 font-display text-xl font-medium">
+            Read and respond to your first email
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Your Project Manager is waiting on you. Read the message on the
+            right, then use <span className="font-medium text-foreground">Write Response</span>{" "}
+            to reply. This closes out your first task.
+          </p>
+        </div>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
         <ul className="space-y-2">
           {(messages ?? []).length === 0 && (
