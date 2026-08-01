@@ -17,6 +17,7 @@ export const LEARNER_EVENTS = [
   "day_advanced",
   "unlock_screen_shown",
   "unlock_checkout_started",
+  "subscription_activated",
 ] as const;
 
 export type LearnerEvent = (typeof LEARNER_EVENTS)[number];
@@ -36,6 +37,7 @@ export const LEARNER_EVENT_LABELS: Record<LearnerEvent, string> = {
   day_advanced: "Advanced the clock",
   unlock_screen_shown: "Saw the unlock screen",
   unlock_checkout_started: "Started checkout",
+  subscription_activated: "Subscribed",
 };
 
 /**

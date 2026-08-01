@@ -46,7 +46,8 @@ export type FunnelEvent =
   | "first_email_prompt_shown"
   | "inbox_opened"
   | "first_reply_sent"
-  | "day_advanced";
+  | "day_advanced"
+  | "subscription_activated";
 
 /** Meta standard-event mapping so ad optimisation works out of the box. */
 const META_EVENTS: Partial<Record<FunnelEvent, { name: string; standard: boolean }>> = {
@@ -55,6 +56,7 @@ const META_EVENTS: Partial<Record<FunnelEvent, { name: string; standard: boolean
   checkout_started: { name: "InitiateCheckout", standard: true },
   purchase_completed: { name: "Purchase", standard: true },
   account_created: { name: "CompleteRegistration", standard: true },
+  subscription_activated: { name: "Subscribe", standard: true },
 };
 
 export function initTrackers() {

@@ -20,6 +20,7 @@ import { WelcomeBackPanel } from "@/components/dashboard/welcome-back-panel";
 import { PhaseReadinessPanel } from "@/components/dashboard/phase-readiness-panel";
 import { FirstWinPanel } from "@/components/dashboard/first-win-panel";
 import { UnlockScreen } from "@/components/dashboard/unlock-screen";
+import { SubscriptionNotices } from "@/components/dashboard/subscription-notices";
 import { getMyAccess } from "@/lib/access.functions";
 import { useEffect, useRef, useState } from "react";
 import { trackLearner } from "@/lib/learner-events";
@@ -195,6 +196,8 @@ function Dashboard() {
           </Button>
         </div>
       </header>
+
+      <SubscriptionNotices />
 
       <div className="atlas-rise atlas-rise-1">
         <TimeControls />
