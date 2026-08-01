@@ -86,7 +86,8 @@ export function EnrolDialog({
             Enrol in the Atlas Project Readiness Experience
           </DialogTitle>
           <DialogDescription>
-            {COUNTRY_META[country].label} pricing · {price} · secure payment
+            {COUNTRY_META[country].label} pricing · {price} per month · start free, pay when you
+            continue
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-4">
