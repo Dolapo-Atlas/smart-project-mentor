@@ -30,8 +30,6 @@ import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/ap
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as ApiPublicTtsRouteImport } from './routes/api/public/tts'
-import { Route as ApiPublicRazorpayWebhookRouteImport } from './routes/api/public/razorpay-webhook'
-import { Route as ApiPublicPaystackWebhookRouteImport } from './routes/api/public/paystack-webhook'
 import { Route as ApiPublicGeminiTestRouteImport } from './routes/api/public/gemini-test'
 import { Route as ApiPublicEarlyAccessRouteImport } from './routes/api/public/early-access'
 import { Route as AuthenticatedProjectIntroTemplateIdRouteImport } from './routes/_authenticated/project-intro.$templateId'
@@ -72,6 +70,7 @@ import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/l
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as AuthenticatedAppTemplateKindRouteImport } from './routes/_authenticated/app.template.$kind'
 
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
@@ -178,18 +177,6 @@ const ApiPublicTtsRoute = ApiPublicTtsRouteImport.update({
   path: '/api/public/tts',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicRazorpayWebhookRoute =
-  ApiPublicRazorpayWebhookRouteImport.update({
-    id: '/api/public/razorpay-webhook',
-    path: '/api/public/razorpay-webhook',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicPaystackWebhookRoute =
-  ApiPublicPaystackWebhookRouteImport.update({
-    id: '/api/public/paystack-webhook',
-    path: '/api/public/paystack-webhook',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const ApiPublicGeminiTestRoute = ApiPublicGeminiTestRouteImport.update({
   id: '/api/public/gemini-test',
   path: '/api/public/gemini-test',
@@ -409,6 +396,12 @@ const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   path: '/lovable/email/auth/preview',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedAppTemplateKindRoute =
   AuthenticatedAppTemplateKindRouteImport.update({
     id: '/template/$kind',
@@ -469,12 +462,11 @@ export interface FileRoutesByFullPath {
   '/project-intro/$templateId': typeof AuthenticatedProjectIntroTemplateIdRoute
   '/api/public/early-access': typeof ApiPublicEarlyAccessRoute
   '/api/public/gemini-test': typeof ApiPublicGeminiTestRoute
-  '/api/public/paystack-webhook': typeof ApiPublicPaystackWebhookRoute
-  '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/template/$kind': typeof AuthenticatedAppTemplateKindRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -533,12 +525,11 @@ export interface FileRoutesByTo {
   '/project-intro/$templateId': typeof AuthenticatedProjectIntroTemplateIdRoute
   '/api/public/early-access': typeof ApiPublicEarlyAccessRoute
   '/api/public/gemini-test': typeof ApiPublicGeminiTestRoute
-  '/api/public/paystack-webhook': typeof ApiPublicPaystackWebhookRoute
-  '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/template/$kind': typeof AuthenticatedAppTemplateKindRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -600,12 +591,11 @@ export interface FileRoutesById {
   '/_authenticated/project-intro/$templateId': typeof AuthenticatedProjectIntroTemplateIdRoute
   '/api/public/early-access': typeof ApiPublicEarlyAccessRoute
   '/api/public/gemini-test': typeof ApiPublicGeminiTestRoute
-  '/api/public/paystack-webhook': typeof ApiPublicPaystackWebhookRoute
-  '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/template/$kind': typeof AuthenticatedAppTemplateKindRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -667,12 +657,11 @@ export interface FileRouteTypes {
     | '/project-intro/$templateId'
     | '/api/public/early-access'
     | '/api/public/gemini-test'
-    | '/api/public/paystack-webhook'
-    | '/api/public/razorpay-webhook'
     | '/api/public/tts'
     | '/lovable/email/suppression'
     | '/app/'
     | '/app/template/$kind'
+    | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -731,12 +720,11 @@ export interface FileRouteTypes {
     | '/project-intro/$templateId'
     | '/api/public/early-access'
     | '/api/public/gemini-test'
-    | '/api/public/paystack-webhook'
-    | '/api/public/razorpay-webhook'
     | '/api/public/tts'
     | '/lovable/email/suppression'
     | '/app'
     | '/app/template/$kind'
+    | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -797,12 +785,11 @@ export interface FileRouteTypes {
     | '/_authenticated/project-intro/$templateId'
     | '/api/public/early-access'
     | '/api/public/gemini-test'
-    | '/api/public/paystack-webhook'
-    | '/api/public/razorpay-webhook'
     | '/api/public/tts'
     | '/lovable/email/suppression'
     | '/_authenticated/app/'
     | '/_authenticated/app/template/$kind'
+    | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -828,10 +815,9 @@ export interface RootRouteChildren {
   VerifyCodeRoute: typeof VerifyCodeRoute
   ApiPublicEarlyAccessRoute: typeof ApiPublicEarlyAccessRoute
   ApiPublicGeminiTestRoute: typeof ApiPublicGeminiTestRoute
-  ApiPublicPaystackWebhookRoute: typeof ApiPublicPaystackWebhookRoute
-  ApiPublicRazorpayWebhookRoute: typeof ApiPublicRazorpayWebhookRoute
   ApiPublicTtsRoute: typeof ApiPublicTtsRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
+  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
@@ -986,20 +972,6 @@ declare module '@tanstack/react-router' {
       path: '/api/public/tts'
       fullPath: '/api/public/tts'
       preLoaderRoute: typeof ApiPublicTtsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/razorpay-webhook': {
-      id: '/api/public/razorpay-webhook'
-      path: '/api/public/razorpay-webhook'
-      fullPath: '/api/public/razorpay-webhook'
-      preLoaderRoute: typeof ApiPublicRazorpayWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/paystack-webhook': {
-      id: '/api/public/paystack-webhook'
-      path: '/api/public/paystack-webhook'
-      fullPath: '/api/public/paystack-webhook'
-      preLoaderRoute: typeof ApiPublicPaystackWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/gemini-test': {
@@ -1282,6 +1254,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/app/template/$kind': {
       id: '/_authenticated/app/template/$kind'
       path: '/template/$kind'
@@ -1405,10 +1384,9 @@ const rootRouteChildren: RootRouteChildren = {
   VerifyCodeRoute: VerifyCodeRoute,
   ApiPublicEarlyAccessRoute: ApiPublicEarlyAccessRoute,
   ApiPublicGeminiTestRoute: ApiPublicGeminiTestRoute,
-  ApiPublicPaystackWebhookRoute: ApiPublicPaystackWebhookRoute,
-  ApiPublicRazorpayWebhookRoute: ApiPublicRazorpayWebhookRoute,
   ApiPublicTtsRoute: ApiPublicTtsRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
+  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
@@ -1418,13 +1396,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

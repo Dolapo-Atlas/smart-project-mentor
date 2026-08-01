@@ -687,7 +687,7 @@ function ProjectReadiness() {
                   {priceLabel ?? "—"}
                 </span>
                 <span className="pb-2 text-sm text-muted-foreground">
-                  one-time payment, only when you continue
+                  per month, cancel any time — you only pay when you continue
                 </span>
               </div>
 

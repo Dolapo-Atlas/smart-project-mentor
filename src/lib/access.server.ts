@@ -23,13 +23,34 @@ export interface AccessState {
   /** Free tier + preview consumed => further progress is gated. */
   locked: boolean;
   freePreviewCompletedAt: string | null;
+  /** Live subscription state, when the learner has one. */
+  subscription: {
+    status: string;
+    priceId: string;
+    currentPeriodEnd: string | null;
+    cancelAtPeriodEnd: boolean;
+  } | null;
+}
+
+const ACTIVE_STATUSES = ["active", "trialing", "past_due"];
+
+/** True while the learner has paid access, including a cancelled-but-paid period. */
+function subscriptionGrantsAccess(row: {
+  status: string;
+  current_period_end: string | null;
+}): boolean {
+  const endsInFuture =
+    !row.current_period_end || new Date(row.current_period_end).getTime() > Date.now();
+  if (ACTIVE_STATUSES.includes(row.status)) return endsInFuture;
+  if (row.status === "canceled") return endsInFuture && Boolean(row.current_period_end);
+  return false;
 }
 
 export async function getAccessState(
   supabase: SupabaseClient<any>,
   userId: string,
 ): Promise<AccessState> {
-  const [profileRes, tasksRes] = await Promise.all([
+  const [profileRes, tasksRes, subRes] = await Promise.all([
     supabase
       .from("profiles")
       .select("access_tier, unlocked_at, free_preview_completed_at")
@@ -40,13 +61,41 @@ export async function getAccessState(
       .select("id", { count: "exact", head: true })
       .eq("user_id", userId)
       .in("status", ["submitted", "reviewed", "done", "completed"]),
+    supabase
+      .from("subscriptions")
+      .select("status, price_id, current_period_end, cancel_at_period_end")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   const profile = (profileRes.data ?? null) as
     | { access_tier: string | null; unlocked_at: string | null; free_preview_completed_at: string | null }
     | null;
 
-  const tier = profile?.access_tier === "full" ? "full" : "free";
+  const subRow = (subRes.data ?? null) as
+    | {
+        status: string;
+        price_id: string;
+        current_period_end: string | null;
+        cancel_at_period_end: boolean | null;
+      }
+    | null;
+
+  const subscription = subRow
+    ? {
+        status: subRow.status,
+        priceId: subRow.price_id,
+        currentPeriodEnd: subRow.current_period_end,
+        cancelAtPeriodEnd: Boolean(subRow.cancel_at_period_end),
+      }
+    : null;
+
+  // Paid access comes from a live subscription, or from the grandfathered /
+  // manually granted `full` tier on the profile.
+  const subscribed = subRow ? subscriptionGrantsAccess(subRow) : false;
+  const tier = profile?.access_tier === "full" || subscribed ? "full" : "free";
   const workDone = tasksRes.count ?? 0;
   const previewComplete = workDone >= 1;
   let freePreviewCompletedAt = profile?.free_preview_completed_at ?? null;
@@ -67,6 +116,7 @@ export async function getAccessState(
     previewComplete,
     locked: tier === "free" && previewComplete,
     freePreviewCompletedAt,
+    subscription,
   };
 }
 
