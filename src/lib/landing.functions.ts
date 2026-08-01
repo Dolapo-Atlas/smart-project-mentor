@@ -66,7 +66,6 @@ export const startCheckout = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => checkoutSchema.parse(d))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { initPaystack, initRazorpay, gatewayConfigured } = await import("@/lib/payments.server");
 
     const { data: settings } = await supabaseAdmin
       .from("landing_settings")
@@ -79,7 +78,6 @@ export const startCheckout = createServerFn({ method: "POST" })
     }
 
     const meta = COUNTRY_META[data.country];
-    if (!meta.gateway) return { ok: false as const, reason: "unsupported_country" };
 
     const amount =
       data.country === "nigeria"
@@ -97,9 +95,9 @@ export const startCheckout = createServerFn({ method: "POST" })
       country: data.country,
       currency: meta.currency,
       amount,
-      provider: meta.gateway,
+      provider: "stripe",
       provider_ref: reference,
-      status: "pending",
+      status: "lead",
       utm: data.utm,
     });
     if (insertError) {
@@ -107,33 +105,11 @@ export const startCheckout = createServerFn({ method: "POST" })
       return { ok: false as const, reason: "enrolment_failed" };
     }
 
-    if (!gatewayConfigured(meta.gateway)) {
-      return { ok: false as const, reason: "gateway_not_configured", reference };
-    }
-
-    const callbackUrl = `${data.origin.replace(/\/$/, "")}/enrol/success?ref=${reference}`;
-    const result =
-      meta.gateway === "paystack"
-        ? await initPaystack({
-            email: data.email,
-            amountMajor: amount,
-            reference,
-            callbackUrl,
-            metadata: { reference, country: data.country, ...data.utm },
-          })
-        : await initRazorpay({
-            email: data.email,
-            name: data.fullName,
-            amountMajor: amount,
-            reference,
-            callbackUrl,
-            notes: { reference, country: data.country },
-          });
-
-    if (!result.ok || !result.url) {
-      return { ok: false as const, reason: result.error ?? "gateway_error", reference };
-    }
-    return { ok: true as const, url: result.url, reference, amount, currency: meta.currency };
+    // Atlas now sells inside the product: visitors sign up free, complete the
+    // first task, then subscribe from the unlock screen. This records the lead
+    // and sends them to sign-up rather than a pre-signup payment page.
+    const signupUrl = `${data.origin.replace(/\/$/, "")}/auth?ref=${reference}`;
+    return { ok: true as const, url: signupUrl, reference, amount, currency: meta.currency };
   });
 
 /** Status lookup used by the post-payment page. Only exposes non-sensitive fields. */
