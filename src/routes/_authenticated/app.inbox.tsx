@@ -142,11 +142,13 @@ function Inbox() {
         if (first) {
           try {
             await submitTask({ data: { id: first.id, submission: input.body } });
+            trackLearner("first_task_completed", { props: { via: "inbox_reply" } });
           } catch {
             // Non-blocking: the reply itself already landed.
           }
         }
       }
+      trackLearner("first_reply_sent", { props: { onboarding: onboardingMode } });
       qc.invalidateQueries({ queryKey: ["inbox"] });
       qc.invalidateQueries({ queryKey: ["comms"] });
       qc.invalidateQueries({ queryKey: ["overview"] });
