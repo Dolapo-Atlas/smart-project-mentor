@@ -18,6 +18,7 @@ import { ReadAloudButton } from "@/components/read-aloud-button";
 import { useVoiceSettings, useSpeech, personaForStakeholder } from "@/lib/voice";
 import { useEffect, useMemo } from "react";
 import { RationaleChip } from "@/components/insights/rationale-chip";
+import { trackLearner } from "@/lib/learner-events";
 import { insightToast } from "@/lib/insight-toast";
 import type { InsightKey } from "@/lib/pm-insights";
 import { DayInReview, type DayInReviewSummary } from "@/components/dashboard/day-in-review";
