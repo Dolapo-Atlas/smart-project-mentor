@@ -4,7 +4,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { listInbox, markRead, generateStakeholderMessage } from "@/lib/sim.functions";
 import { summonConflict } from "@/lib/pm.functions";
 import { sendComm } from "@/lib/comms.functions";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Sparkles, Mail, Flame, Reply, Send } from "lucide-react";
@@ -22,6 +23,10 @@ import { listTasksRich } from "@/lib/tasks.functions";
 import { useRoster, rosterByName } from "@/lib/roster";
 
 export const Route = createFileRoute("/_authenticated/app/inbox")({
+  validateSearch: (search: Record<string, unknown>) =>
+    z
+      .object({ onboarding: z.coerce.number().optional() })
+      .parse(search) as { onboarding?: number },
   component: Inbox,
 });
 
@@ -48,6 +53,8 @@ const LEGACY_SENDER_ROLE_MAP: Record<string, string> = {
 
 function Inbox() {
   const qc = useQueryClient();
+  const { onboarding } = Route.useSearch();
+  const onboardingMode = onboarding === 1;
   const { settings: voice } = useVoiceSettings();
   const fetchInbox = useServerFn(listInbox);
   const markFn = useServerFn(markRead);
@@ -60,6 +67,22 @@ function Inbox() {
   const { data: allTasks } = useQuery({ queryKey: ["tasks"], queryFn: () => fetchTasks() });
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected = messages?.find((m) => m.id === selectedId) ?? messages?.[0];
+  // Onboarding: jump straight to the first unread stakeholder email and open
+  // the response box so the expected action is unmistakable.
+  const [onboardingDone, setOnboardingDone] = useState(false);
+  useEffect(() => {
+    if (!onboardingMode || onboardingDone) return;
+    if (selectedId) return;
+    const list = messages ?? [];
+    if (list.length === 0) return;
+    const target =
+      [...list].reverse().find((m) => !m.read && m.sender_name !== "Project Update") ??
+      list[0];
+    if (target) {
+      setSelectedId(target.id);
+      setReplyOpen(true);
+    }
+  }, [onboardingMode, onboardingDone, messages, selectedId]);
   const linkedTasks = (allTasks ?? []).filter(
     (t: any) => selected && t.source_ref === selected.id,
   );
