@@ -3,9 +3,13 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect } from "react";
 import { CheckCircle2, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { UnlockScreen } from "@/components/dashboard/unlock-screen";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { getMyAccess } from "@/lib/access.functions";
+import { createPortalSession } from "@/utils/payments.functions";
+import { getStripeEnvironment, paymentsConfigured } from "@/lib/stripe";
 import { trackLearner } from "@/lib/learner-events";
 
 export const Route = createFileRoute("/_authenticated/app/unlock")({
@@ -32,6 +36,7 @@ export const Route = createFileRoute("/_authenticated/app/unlock")({
 
 function UnlockPage() {
   const fetchAccess = useServerFn(getMyAccess);
+  const openPortal = useServerFn(createPortalSession);
   const { data: access, isLoading } = useQuery({
     queryKey: ["my-access"],
     queryFn: () => fetchAccess(),
@@ -44,7 +49,27 @@ function UnlockPage() {
   }, [access]);
 
   const returningFromCheckout =
-    typeof window !== "undefined" && new URLSearchParams(window.location.search).has("ref");
+    typeof window !== "undefined" &&
+    (new URLSearchParams(window.location.search).has("session_id") ||
+      new URLSearchParams(window.location.search).has("ref"));
+
+  async function manageBilling() {
+    try {
+      const res = await openPortal({
+        data: {
+          returnUrl: `${window.location.origin}/app/unlock`,
+          environment: getStripeEnvironment(),
+        },
+      });
+      if ("error" in res) {
+        toast.error(res.error);
+        return;
+      }
+      window.open(res.url, "_blank");
+    } catch {
+      toast.error("We couldn't open your billing settings just then.");
+    }
+  }
 
   if (isLoading) {
     return (
@@ -65,15 +90,30 @@ function UnlockPage() {
           The whole Digital Care Records project is open to you — every phase, every
           deliverable, every gate, right through to your credential.
         </p>
-        <Button asChild size="lg" className="mt-8 rounded-full">
-          <Link to="/app">Back to my project</Link>
-        </Button>
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
+          <Button asChild size="lg" className="rounded-full">
+            <Link to="/app">Back to my project</Link>
+          </Button>
+          {access.subscription && paymentsConfigured() && (
+            <Button size="lg" variant="outline" className="rounded-full" onClick={manageBilling}>
+              Manage my subscription
+            </Button>
+          )}
+        </div>
+        {access.subscription?.cancelAtPeriodEnd && access.subscription.currentPeriodEnd && (
+          <p className="mt-4 text-sm text-muted-foreground">
+            Your subscription ends on{" "}
+            {new Date(access.subscription.currentPeriodEnd).toLocaleDateString()} — you keep full
+            access until then.
+          </p>
+        )}
       </div>
     );
   }
 
   return (
     <div className="space-y-6 py-4">
+      <PaymentTestModeBanner />
       {returningFromCheckout && (
         <div className="mx-auto max-w-3xl rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
           <Loader2 className="mr-2 inline h-4 w-4 animate-spin" aria-hidden />
