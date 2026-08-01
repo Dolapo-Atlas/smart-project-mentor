@@ -25,9 +25,9 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { AutoDemo } from "@/components/auto-demo";
-import { DemoVideo, ATLAS_DEMO_URL } from "@/components/landing/demo-video";
+import { ATLAS_DEMO_POSTER } from "@/components/landing/demo-video";
+import { PlayCircle } from "lucide-react";
 import { HeroStage } from "@/components/landing/hero-stage";
-import { EnrolDialog } from "@/components/landing/enrol-dialog";
 import { AtlasNav, AtlasFooter, Reveal, EXPERIENCE_NAV } from "@/components/landing/atlas-chrome";
 import { AtlasCertificate } from "@/components/certificate/atlas-certificate";
 import { getPublicOffer, COUNTRY_META, type CountryKey } from "@/lib/landing.functions";
@@ -304,16 +304,14 @@ function ProjectReadiness() {
     return `${meta.symbol}${offer.prices[country].toLocaleString()}`;
   }, [country, offer]);
 
+  // New funnel: sign up free, do the first real task inside Atlas, then pay to
+  // continue. No card is asked for on this page.
   const openEnrol = (source: string) => {
     track("primary_cta_click", { source, country });
-    if (!enrolmentOpen) {
-      document.getElementById("price")?.scrollIntoView({ behavior: "smooth", block: "start" });
-      return;
-    }
-    setEnrolOpen(true);
+    window.location.href = "/auth";
   };
 
-  const ctaLabel = "Start Your Atlas Experience";
+  const ctaLabel = "Start free — no card needed";
 
   return (
     <div className="min-h-screen bg-background text-foreground antialiased">
