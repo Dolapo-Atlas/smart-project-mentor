@@ -310,5 +310,15 @@ export const getLearnerTracking = createServerFn({ method: "GET" })
         Date.now() - new Date(r.lastActiveAt).getTime() > 3 * 24 * 60 * 60 * 1000,
     ).length;
 
-    return { rows, funnel, byPhase, stalled };
+    return {
+      rows,
+      funnel,
+      byPhase,
+      stalled,
+      recordedFunnel,
+      biggestDrop,
+      availableSources,
+      trackedLearners: firstSeen.size,
+      filters: { source: sourceFilter ?? "all", sinceDays: sinceDays ?? 0 },
+    };
   });
