@@ -15,6 +15,8 @@ export const LEARNER_EVENTS = [
   "first_reply_sent",
   "first_task_completed",
   "day_advanced",
+  "unlock_screen_shown",
+  "unlock_checkout_started",
 ] as const;
 
 export type LearnerEvent = (typeof LEARNER_EVENTS)[number];
@@ -32,6 +34,8 @@ export const LEARNER_EVENT_LABELS: Record<LearnerEvent, string> = {
   first_reply_sent: "Sent first reply",
   first_task_completed: "Completed first task",
   day_advanced: "Advanced the clock",
+  unlock_screen_shown: "Saw the unlock screen",
+  unlock_checkout_started: "Started checkout",
 };
 
 /**
@@ -48,4 +52,5 @@ export const ONCE_PER_LEARNER: readonly LearnerEvent[] = [
   "inbox_opened",
   "first_reply_sent",
   "first_task_completed",
+  "unlock_screen_shown",
 ];

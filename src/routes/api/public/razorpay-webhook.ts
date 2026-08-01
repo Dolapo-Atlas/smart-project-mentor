@@ -43,6 +43,8 @@ export const Route = createFileRoute("/api/public/razorpay-webhook")({
           console.error("razorpay webhook update failed", error);
           return new Response("Update failed", { status: 500 });
         }
+        const { fulfilUnlock } = await import("@/lib/unlock.server");
+        await fulfilUnlock(reference, status as "paid" | "failed");
         return new Response("ok");
       },
     },

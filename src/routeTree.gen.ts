@@ -36,6 +36,7 @@ import { Route as ApiPublicGeminiTestRouteImport } from './routes/api/public/gem
 import { Route as ApiPublicEarlyAccessRouteImport } from './routes/api/public/early-access'
 import { Route as AuthenticatedProjectIntroTemplateIdRouteImport } from './routes/_authenticated/project-intro.$templateId'
 import { Route as AuthenticatedAppWorkplaceToolsRouteImport } from './routes/_authenticated/app.workplace-tools'
+import { Route as AuthenticatedAppUnlockRouteImport } from './routes/_authenticated/app.unlock'
 import { Route as AuthenticatedAppTemplatesRouteImport } from './routes/_authenticated/app.templates'
 import { Route as AuthenticatedAppTasksRouteImport } from './routes/_authenticated/app.tasks'
 import { Route as AuthenticatedAppStakeholdersRouteImport } from './routes/_authenticated/app.stakeholders'
@@ -211,6 +212,11 @@ const AuthenticatedAppWorkplaceToolsRoute =
     path: '/workplace-tools',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppUnlockRoute = AuthenticatedAppUnlockRouteImport.update({
+  id: '/unlock',
+  path: '/unlock',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const AuthenticatedAppTemplatesRoute =
   AuthenticatedAppTemplatesRouteImport.update({
     id: '/templates',
@@ -458,6 +464,7 @@ export interface FileRoutesByFullPath {
   '/app/stakeholders': typeof AuthenticatedAppStakeholdersRoute
   '/app/tasks': typeof AuthenticatedAppTasksRoute
   '/app/templates': typeof AuthenticatedAppTemplatesRoute
+  '/app/unlock': typeof AuthenticatedAppUnlockRoute
   '/app/workplace-tools': typeof AuthenticatedAppWorkplaceToolsRoute
   '/project-intro/$templateId': typeof AuthenticatedProjectIntroTemplateIdRoute
   '/api/public/early-access': typeof ApiPublicEarlyAccessRoute
@@ -521,6 +528,7 @@ export interface FileRoutesByTo {
   '/app/stakeholders': typeof AuthenticatedAppStakeholdersRoute
   '/app/tasks': typeof AuthenticatedAppTasksRoute
   '/app/templates': typeof AuthenticatedAppTemplatesRoute
+  '/app/unlock': typeof AuthenticatedAppUnlockRoute
   '/app/workplace-tools': typeof AuthenticatedAppWorkplaceToolsRoute
   '/project-intro/$templateId': typeof AuthenticatedProjectIntroTemplateIdRoute
   '/api/public/early-access': typeof ApiPublicEarlyAccessRoute
@@ -587,6 +595,7 @@ export interface FileRoutesById {
   '/_authenticated/app/stakeholders': typeof AuthenticatedAppStakeholdersRoute
   '/_authenticated/app/tasks': typeof AuthenticatedAppTasksRoute
   '/_authenticated/app/templates': typeof AuthenticatedAppTemplatesRoute
+  '/_authenticated/app/unlock': typeof AuthenticatedAppUnlockRoute
   '/_authenticated/app/workplace-tools': typeof AuthenticatedAppWorkplaceToolsRoute
   '/_authenticated/project-intro/$templateId': typeof AuthenticatedProjectIntroTemplateIdRoute
   '/api/public/early-access': typeof ApiPublicEarlyAccessRoute
@@ -653,6 +662,7 @@ export interface FileRouteTypes {
     | '/app/stakeholders'
     | '/app/tasks'
     | '/app/templates'
+    | '/app/unlock'
     | '/app/workplace-tools'
     | '/project-intro/$templateId'
     | '/api/public/early-access'
@@ -716,6 +726,7 @@ export interface FileRouteTypes {
     | '/app/stakeholders'
     | '/app/tasks'
     | '/app/templates'
+    | '/app/unlock'
     | '/app/workplace-tools'
     | '/project-intro/$templateId'
     | '/api/public/early-access'
@@ -781,6 +792,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/stakeholders'
     | '/_authenticated/app/tasks'
     | '/_authenticated/app/templates'
+    | '/_authenticated/app/unlock'
     | '/_authenticated/app/workplace-tools'
     | '/_authenticated/project-intro/$templateId'
     | '/api/public/early-access'
@@ -1016,6 +1028,13 @@ declare module '@tanstack/react-router' {
       path: '/workplace-tools'
       fullPath: '/app/workplace-tools'
       preLoaderRoute: typeof AuthenticatedAppWorkplaceToolsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/unlock': {
+      id: '/_authenticated/app/unlock'
+      path: '/unlock'
+      fullPath: '/app/unlock'
+      preLoaderRoute: typeof AuthenticatedAppUnlockRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/templates': {
@@ -1298,6 +1317,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppStakeholdersRoute: typeof AuthenticatedAppStakeholdersRoute
   AuthenticatedAppTasksRoute: typeof AuthenticatedAppTasksRoute
   AuthenticatedAppTemplatesRoute: typeof AuthenticatedAppTemplatesRoute
+  AuthenticatedAppUnlockRoute: typeof AuthenticatedAppUnlockRoute
   AuthenticatedAppWorkplaceToolsRoute: typeof AuthenticatedAppWorkplaceToolsRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
   AuthenticatedAppTemplateKindRoute: typeof AuthenticatedAppTemplateKindRoute
@@ -1328,6 +1348,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppStakeholdersRoute: AuthenticatedAppStakeholdersRoute,
   AuthenticatedAppTasksRoute: AuthenticatedAppTasksRoute,
   AuthenticatedAppTemplatesRoute: AuthenticatedAppTemplatesRoute,
+  AuthenticatedAppUnlockRoute: AuthenticatedAppUnlockRoute,
   AuthenticatedAppWorkplaceToolsRoute: AuthenticatedAppWorkplaceToolsRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
   AuthenticatedAppTemplateKindRoute: AuthenticatedAppTemplateKindRoute,

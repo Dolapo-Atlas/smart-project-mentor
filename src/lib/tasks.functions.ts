@@ -293,6 +293,9 @@ export const submitTaskWithWork = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    // Free preview allows one completed task; further submissions need the unlock.
+    const { assertProgrammeAccess } = await import("@/lib/access.server");
+    await assertProgrammeAccess(supabase, userId);
     // Reject structurally empty submissions early with a clear message.
     // Template submissions encode as JSON; plain free-text submissions are raw strings.
     const raw = data.submission.trim();

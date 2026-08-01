@@ -25,9 +25,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { AutoDemo } from "@/components/auto-demo";
-import { DemoVideo, ATLAS_DEMO_URL } from "@/components/landing/demo-video";
+import { ATLAS_DEMO_POSTER } from "@/components/landing/demo-video";
 import { HeroStage } from "@/components/landing/hero-stage";
-import { EnrolDialog } from "@/components/landing/enrol-dialog";
 import { AtlasNav, AtlasFooter, Reveal, EXPERIENCE_NAV } from "@/components/landing/atlas-chrome";
 import { AtlasCertificate } from "@/components/certificate/atlas-certificate";
 import { getPublicOffer, COUNTRY_META, type CountryKey } from "@/lib/landing.functions";
@@ -171,7 +170,7 @@ const PRICE_INCLUDES = [
   "Detailed performance report",
   "Verifiable Atlas credential",
   "Interview reflection guide",
-  "Immediate access after payment",
+  "Free first task before you pay anything",
 ];
 
 const SAMPLE_SCORES: Array<[string, number]> = [
@@ -272,7 +271,6 @@ function ProjectReadiness() {
   const [country, setCountry] = useState<CountryKey>(
     () => normaliseCountry(search.country) ?? normaliseCountry(search.utm_country) ?? "international",
   );
-  const [enrolOpen, setEnrolOpen] = useState(false);
   const [showSticky, setShowSticky] = useState(false);
   const heroRef = useRef<HTMLDivElement | null>(null);
 
@@ -294,7 +292,6 @@ function ProjectReadiness() {
   }, []);
 
   const offer = offerQuery.data;
-  const enrolmentOpen = offer?.enrolmentOpen ?? true;
   const headline =
     HEADLINES[search.variant ?? offer?.heroVariant ?? "interview"] ?? HEADLINES["interview"]!;
 
@@ -304,16 +301,14 @@ function ProjectReadiness() {
     return `${meta.symbol}${offer.prices[country].toLocaleString()}`;
   }, [country, offer]);
 
+  // New funnel: sign up free, do the first real task inside Atlas, then pay to
+  // continue. No card is asked for on this page.
   const openEnrol = (source: string) => {
     track("primary_cta_click", { source, country });
-    if (!enrolmentOpen) {
-      document.getElementById("price")?.scrollIntoView({ behavior: "smooth", block: "start" });
-      return;
-    }
-    setEnrolOpen(true);
+    window.location.href = "/auth";
   };
 
-  const ctaLabel = "Start Your Atlas Experience";
+  const ctaLabel = "Start free — no card needed";
 
   return (
     <div className="min-h-screen bg-background text-foreground antialiased">
@@ -370,11 +365,13 @@ function ProjectReadiness() {
             </Reveal>
             <Reveal delay={320}>
               <p className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                <span>{priceLabel ? `${COUNTRY_META[country].label} · ${priceLabel}` : "Local pricing"}</span>
+                <span>Free to start · no card needed</span>
                 <span aria-hidden>·</span>
-                <span>One-time payment</span>
-                <span aria-hidden>·</span>
-                <span>Immediate access</span>
+                <span>
+                  {priceLabel
+                    ? `${priceLabel} to continue (${COUNTRY_META[country].label})`
+                    : "Local pricing to continue"}
+                </span>
                 <span aria-hidden>·</span>
                 <span>Complete at your own pace</span>
               </p>
@@ -477,7 +474,6 @@ function ProjectReadiness() {
 
       {/* ---------------------------------------------------------- DEMO */}
       <ExperienceSection
-        videoUrl={offer?.videoUrl ?? ATLAS_DEMO_URL}
         ctaLabel={ctaLabel}
         onCta={() => openEnrol("video")}
       />
@@ -690,7 +686,9 @@ function ProjectReadiness() {
                 <span className="font-display text-[clamp(2.6rem,6vw,4rem)] font-medium leading-none">
                   {priceLabel ?? "—"}
                 </span>
-                <span className="pb-2 text-sm text-muted-foreground">one-time payment</span>
+                <span className="pb-2 text-sm text-muted-foreground">
+                  one-time payment, only when you continue
+                </span>
               </div>
 
               <ul className="mt-8 grid gap-3 sm:grid-cols-2">
@@ -711,7 +709,7 @@ function ProjectReadiness() {
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </button>
               <p className="mt-4 text-center text-xs text-muted-foreground">
-                One-time payment · Immediate access · Complete at your own pace
+                Sign up free · Do your first real task · Pay only if you continue
               </p>
               {offer?.checkoutNote && (
                 <p className="mt-2 text-center text-xs text-muted-foreground">{offer.checkoutNote}</p>
@@ -773,7 +771,7 @@ function ProjectReadiness() {
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </button>
             <p className="mt-4 text-xs text-primary-foreground/70">
-              One-time payment · Immediate access after payment
+              Free to start · No card needed · Pay only when you continue
             </p>
           </Reveal>
         </div>
@@ -797,31 +795,25 @@ function ProjectReadiness() {
             onClick={() => openEnrol("sticky")}
             className="shrink-0 rounded-full bg-accent-orange px-4 py-2.5 text-xs font-medium text-accent-orange-foreground"
           >
-            Start Experience
+            Start free
           </button>
         </div>
       </div>
       <div className="h-16 md:hidden" aria-hidden />
 
-      {priceLabel && (
-        <EnrolDialog
-          open={enrolOpen}
-          onOpenChange={setEnrolOpen}
-          country={country}
-          price={priceLabel}
-        />
-      )}
     </div>
   );
 }
 
-/** Product demonstration — the centrepiece, presented in a navy Atlas container. */
+/**
+ * Product demonstration. The full walkthrough video lives on the homepage —
+ * here we show one strong still with a play affordance that links back to it,
+ * so the same video is never presented twice in one funnel.
+ */
 function ExperienceSection({
-  videoUrl,
   ctaLabel,
   onCta,
 }: {
-  videoUrl: string | null;
   ctaLabel: string;
   onCta: () => void;
 }) {
@@ -850,11 +842,28 @@ function ExperienceSection({
           <div className="mt-12 grid items-center gap-10 lg:grid-cols-[minmax(0,360px)_1fr]">
             <div>
               <div className="rounded-[28px] border border-primary-foreground/15 bg-primary-foreground/5 p-3 shadow-[0_60px_160px_-60px_rgba(0,0,0,0.7)]">
-                {videoUrl ? (
-                  <DemoVideo src={videoUrl} onPlay={() => track("video_played")} />
-                ) : (
-                  <AutoDemo />
-                )}
+                <a
+                  href="/#walkthrough"
+                  onClick={() => track("primary_cta_click", { source: "watch_demo" })}
+                  className="group relative mx-auto block w-full max-w-[360px] overflow-hidden rounded-[24px]"
+                  style={{ aspectRatio: "9 / 16" }}
+                  aria-label="Watch the Atlas walkthrough on the homepage"
+                >
+                  <img
+                    src={ATLAS_DEMO_POSTER}
+                    alt="Atlas workspace during the Digital Care Records project"
+                    width={720}
+                    height={1280}
+                    loading="lazy"
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                  <span className="absolute inset-0 grid place-items-center bg-primary/35 transition-colors group-hover:bg-primary/20">
+                    <PlayCircle className="h-14 w-14 text-white drop-shadow" aria-hidden />
+                  </span>
+                  <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-4 pb-3 pt-8 text-[13px] font-medium text-white">
+                    Watch the 60-second walkthrough
+                  </span>
+                </a>
               </div>
               <p className="mx-auto mt-4 max-w-[360px] text-center text-[13px] leading-relaxed text-primary-foreground/70">
                 In 60 seconds: you run a real project end to end, and leave with proof you can do the job.
