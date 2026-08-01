@@ -19,6 +19,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as VerifyCodeRouteImport } from './routes/verify.$code'
 import { Route as ReportCodeRouteImport } from './routes/report.$code'
 import { Route as InviteCodeRouteImport } from './routes/invite.$code'
+import { Route as EnrolSuccessRouteImport } from './routes/enrol.success'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as CertificatePreviewRouteImport } from './routes/certificate.preview'
 import { Route as CertificateCodeRouteImport } from './routes/certificate.$code'
@@ -118,6 +119,11 @@ const ReportCodeRoute = ReportCodeRouteImport.update({
 const InviteCodeRoute = InviteCodeRouteImport.update({
   id: '/invite/$code',
   path: '/invite/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EnrolSuccessRoute = EnrolSuccessRouteImport.update({
+  id: '/enrol/success',
+  path: '/enrol/success',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
@@ -411,6 +417,7 @@ export interface FileRoutesByFullPath {
   '/certificate/$code': typeof CertificateCodeRoute
   '/certificate/preview': typeof CertificatePreviewRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/enrol/success': typeof EnrolSuccessRoute
   '/invite/$code': typeof InviteCodeRoute
   '/report/$code': typeof ReportCodeRoute
   '/verify/$code': typeof VerifyCodeRoute
@@ -472,6 +479,7 @@ export interface FileRoutesByTo {
   '/certificate/$code': typeof CertificateCodeRoute
   '/certificate/preview': typeof CertificatePreviewRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/enrol/success': typeof EnrolSuccessRoute
   '/invite/$code': typeof InviteCodeRoute
   '/report/$code': typeof ReportCodeRoute
   '/verify/$code': typeof VerifyCodeRoute
@@ -536,6 +544,7 @@ export interface FileRoutesById {
   '/certificate/$code': typeof CertificateCodeRoute
   '/certificate/preview': typeof CertificatePreviewRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/enrol/success': typeof EnrolSuccessRoute
   '/invite/$code': typeof InviteCodeRoute
   '/report/$code': typeof ReportCodeRoute
   '/verify/$code': typeof VerifyCodeRoute
@@ -600,6 +609,7 @@ export interface FileRouteTypes {
     | '/certificate/$code'
     | '/certificate/preview'
     | '/email/unsubscribe'
+    | '/enrol/success'
     | '/invite/$code'
     | '/report/$code'
     | '/verify/$code'
@@ -661,6 +671,7 @@ export interface FileRouteTypes {
     | '/certificate/$code'
     | '/certificate/preview'
     | '/email/unsubscribe'
+    | '/enrol/success'
     | '/invite/$code'
     | '/report/$code'
     | '/verify/$code'
@@ -724,6 +735,7 @@ export interface FileRouteTypes {
     | '/certificate/$code'
     | '/certificate/preview'
     | '/email/unsubscribe'
+    | '/enrol/success'
     | '/invite/$code'
     | '/report/$code'
     | '/verify/$code'
@@ -785,6 +797,7 @@ export interface RootRouteChildren {
   CertificateCodeRoute: typeof CertificateCodeRoute
   CertificatePreviewRoute: typeof CertificatePreviewRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
+  EnrolSuccessRoute: typeof EnrolSuccessRoute
   InviteCodeRoute: typeof InviteCodeRoute
   ReportCodeRoute: typeof ReportCodeRoute
   VerifyCodeRoute: typeof VerifyCodeRoute
@@ -871,6 +884,13 @@ declare module '@tanstack/react-router' {
       path: '/invite/$code'
       fullPath: '/invite/$code'
       preLoaderRoute: typeof InviteCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/enrol/success': {
+      id: '/enrol/success'
+      path: '/enrol/success'
+      fullPath: '/enrol/success'
+      preLoaderRoute: typeof EnrolSuccessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/email/unsubscribe': {
@@ -1336,6 +1356,7 @@ const rootRouteChildren: RootRouteChildren = {
   CertificateCodeRoute: CertificateCodeRoute,
   CertificatePreviewRoute: CertificatePreviewRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
+  EnrolSuccessRoute: EnrolSuccessRoute,
   InviteCodeRoute: InviteCodeRoute,
   ReportCodeRoute: ReportCodeRoute,
   VerifyCodeRoute: VerifyCodeRoute,
