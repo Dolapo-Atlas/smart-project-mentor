@@ -94,14 +94,23 @@ const PHASE_ORDER = ["Initiation", "Planning", "Execution", "Monitoring", "Closu
  */
 export const getLearnerTracking = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator((input?: { source?: string; sinceDays?: number }) => input ?? {})
+  .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const [profilesRes, instancesRes, tasksRes, docsRes, chartersRes] = await Promise.all([
+    const sinceDays = data?.sinceDays && data.sinceDays > 0 ? data.sinceDays : null;
+    const sinceIso = sinceDays
+      ? new Date(Date.now() - sinceDays * 24 * 60 * 60 * 1000).toISOString()
+      : null;
+    const sourceFilter = data?.source && data.source !== "all" ? data.source : null;
+
+    const [profilesRes, instancesRes, tasksRes, docsRes, chartersRes, eventsRes] = await Promise.all([
       supabaseAdmin
         .from("profiles")
-        .select("id, display_name, email, role, country, sign_up_at, last_login_at, last_active_at, onboarded")
+        .select(
+          "id, display_name, email, role, country, sign_up_at, last_login_at, last_active_at, onboarded, campaign",
+        )
         .order("last_active_at", { ascending: false, nullsFirst: false })
         .limit(500),
       supabaseAdmin
@@ -111,6 +120,11 @@ export const getLearnerTracking = createServerFn({ method: "GET" })
       supabaseAdmin.from("tasks").select("user_id, status"),
       supabaseAdmin.from("documents").select("user_id"),
       supabaseAdmin.from("project_charters").select("user_id, approval_status, submitted_at"),
+      supabaseAdmin
+        .from("learner_events")
+        .select("user_id, event, campaign, created_at")
+        .order("created_at", { ascending: true })
+        .limit(20000),
     ]);
 
     const profiles = profilesRes.data ?? [];
