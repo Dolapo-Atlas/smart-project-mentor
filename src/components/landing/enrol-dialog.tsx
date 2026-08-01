@@ -67,7 +67,8 @@ export function EnrolDialog({
         gateway_not_configured:
           "Payments are being finalised for this market. Your details are saved — we'll email you the checkout link shortly.",
       };
-      setError(messages[res.reason] ?? "We couldn't open checkout. Please try again in a moment.");
+      const reason = "reason" in res && typeof res.reason === "string" ? res.reason : "";
+      setError(messages[reason] ?? "We couldn't open checkout. Please try again in a moment.");
     } catch (err) {
       console.error(err);
       toast.error("Checkout failed to open. Please try again.");
