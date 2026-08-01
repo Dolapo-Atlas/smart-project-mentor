@@ -26,7 +26,6 @@ import {
 } from "@/components/ui/accordion";
 import { AutoDemo } from "@/components/auto-demo";
 import { ATLAS_DEMO_POSTER } from "@/components/landing/demo-video";
-import { PlayCircle } from "lucide-react";
 import { HeroStage } from "@/components/landing/hero-stage";
 import { AtlasNav, AtlasFooter, Reveal, EXPERIENCE_NAV } from "@/components/landing/atlas-chrome";
 import { AtlasCertificate } from "@/components/certificate/atlas-certificate";
@@ -475,7 +474,6 @@ function ProjectReadiness() {
 
       {/* ---------------------------------------------------------- DEMO */}
       <ExperienceSection
-        videoUrl={offer?.videoUrl ?? ATLAS_DEMO_URL}
         ctaLabel={ctaLabel}
         onCta={() => openEnrol("video")}
       />
@@ -801,25 +799,19 @@ function ProjectReadiness() {
       </div>
       <div className="h-16 md:hidden" aria-hidden />
 
-      {priceLabel && (
-        <EnrolDialog
-          open={enrolOpen}
-          onOpenChange={setEnrolOpen}
-          country={country}
-          price={priceLabel}
-        />
-      )}
     </div>
   );
 }
 
-/** Product demonstration — the centrepiece, presented in a navy Atlas container. */
+/**
+ * Product demonstration. The full walkthrough video lives on the homepage —
+ * here we show one strong still with a play affordance that links back to it,
+ * so the same video is never presented twice in one funnel.
+ */
 function ExperienceSection({
-  videoUrl,
   ctaLabel,
   onCta,
 }: {
-  videoUrl: string | null;
   ctaLabel: string;
   onCta: () => void;
 }) {
@@ -848,11 +840,28 @@ function ExperienceSection({
           <div className="mt-12 grid items-center gap-10 lg:grid-cols-[minmax(0,360px)_1fr]">
             <div>
               <div className="rounded-[28px] border border-primary-foreground/15 bg-primary-foreground/5 p-3 shadow-[0_60px_160px_-60px_rgba(0,0,0,0.7)]">
-                {videoUrl ? (
-                  <DemoVideo src={videoUrl} onPlay={() => track("video_played")} />
-                ) : (
-                  <AutoDemo />
-                )}
+                <a
+                  href="/#walkthrough"
+                  onClick={() => track("primary_cta_click", { source: "watch_demo" })}
+                  className="group relative mx-auto block w-full max-w-[360px] overflow-hidden rounded-[24px]"
+                  style={{ aspectRatio: "9 / 16" }}
+                  aria-label="Watch the Atlas walkthrough on the homepage"
+                >
+                  <img
+                    src={ATLAS_DEMO_POSTER}
+                    alt="Atlas workspace during the Digital Care Records project"
+                    width={720}
+                    height={1280}
+                    loading="lazy"
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                  <span className="absolute inset-0 grid place-items-center bg-primary/35 transition-colors group-hover:bg-primary/20">
+                    <PlayCircle className="h-14 w-14 text-white drop-shadow" aria-hidden />
+                  </span>
+                  <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-4 pb-3 pt-8 text-[13px] font-medium text-white">
+                    Watch the 60-second walkthrough
+                  </span>
+                </a>
               </div>
               <p className="mx-auto mt-4 max-w-[360px] text-center text-[13px] leading-relaxed text-primary-foreground/70">
                 In 60 seconds: you run a real project end to end, and leave with proof you can do the job.
