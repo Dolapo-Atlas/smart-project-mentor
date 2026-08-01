@@ -71,10 +71,10 @@ const signupSchema = z.object({
 /* ------------------------------------------------------------------ */
 
 const NAV_LINKS = [
-  { href: "#features", label: "Features" },
-  { href: "#how", label: "How it Works" },
+  { href: "#how", label: "How It Works" },
   { href: "#experience", label: "Experience" },
-  { href: "#about", label: "About" },
+  { href: "#readiness", label: "What You Receive" },
+  { href: "/project-readiness#price", label: "Pricing" },
   { href: "#faq", label: "FAQ" },
 ];
 
@@ -96,6 +96,7 @@ function Landing() {
         <AutoDemo />
         <Features />
         <HowItWorks />
+        <ReadinessOffer />
         <Experience />
         <WhyAtlas />
         <Founder />
