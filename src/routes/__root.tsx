@@ -18,6 +18,10 @@ import "@fontsource/fraunces/700.css";
 import "@fontsource/inter/400.css";
 import "@fontsource/inter/500.css";
 import "@fontsource/inter/600.css";
+import frauncesLatin600 from "@fontsource/fraunces/files/fraunces-latin-600-normal.woff2?url";
+import frauncesLatin400 from "@fontsource/fraunces/files/fraunces-latin-400-normal.woff2?url";
+import interLatin400 from "@fontsource/inter/files/inter-latin-400-normal.woff2?url";
+import interLatin500 from "@fontsource/inter/files/inter-latin-500-normal.woff2?url";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -102,6 +106,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
+      // Preload the fonts used above the fold so text is laid out with the real
+      // metrics on first paint — without this the page visibly reflows/jumps
+      // when Fraunces/Inter swap in.
+      { rel: "preload", href: frauncesLatin600, as: "font", type: "font/woff2", crossOrigin: "anonymous" },
+      { rel: "preload", href: frauncesLatin400, as: "font", type: "font/woff2", crossOrigin: "anonymous" },
+      { rel: "preload", href: interLatin400, as: "font", type: "font/woff2", crossOrigin: "anonymous" },
+      { rel: "preload", href: interLatin500, as: "font", type: "font/woff2", crossOrigin: "anonymous" },
     ],
   }),
   shellComponent: RootShell,

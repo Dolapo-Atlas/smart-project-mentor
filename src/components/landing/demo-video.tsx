@@ -48,18 +48,23 @@ export function DemoVideo({
   }, [src]);
 
   return (
-    <div className={`relative mx-auto w-full max-w-[360px] overflow-hidden rounded-[24px] ${className}`}>
+    <div
+      className={`relative mx-auto w-full max-w-[360px] overflow-hidden rounded-[24px] bg-black/5 ${className}`}
+      style={{ aspectRatio: "9 / 16" }}
+    >
       <video
         ref={ref}
         src={src}
         poster={ATLAS_DEMO_POSTER}
+        width={720}
+        height={1280}
         muted
         playsInline
         loop
         controls
         preload="metadata"
         aria-label="Atlas product walkthrough"
-        className="block w-full rounded-[24px]"
+        className="absolute inset-0 block h-full w-full rounded-[24px] object-cover"
       />
       {!playing && (
         <button

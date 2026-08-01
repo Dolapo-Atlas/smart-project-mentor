@@ -147,16 +147,16 @@ export function AutoDemo() {
           </div>
 
           {/* Body */}
-          <div className="grid min-h-[460px] grid-cols-1 md:grid-cols-[1.05fr_1fr]">
+          <div className="grid grid-cols-1 md:grid-cols-[1.05fr_1fr]">
             {/* LEFT: inbox + email */}
-            <div className="border-b border-border/60 p-5 md:border-b-0 md:border-r">
+            <div className="h-[440px] overflow-hidden border-b border-border/60 p-5 md:h-[700px] md:border-b-0 md:border-r">
               <div className="mb-3 flex items-center gap-2 text-xs text-muted-foreground">
                 <Mail className="h-3.5 w-3.5" /> Inbox · {showEmail ? "1 new" : "0 new"}
               </div>
 
               {/* Empty state placeholder */}
               {!showEmail && (
-                <div className="grid h-[380px] place-items-center rounded-lg border border-dashed border-border bg-background/40 text-xs text-muted-foreground">
+                <div className="grid h-[340px] place-items-center rounded-lg border border-dashed border-border bg-background/40 text-xs text-muted-foreground md:h-[600px]">
                   Waiting for stakeholder activity…
                 </div>
               )}
@@ -215,13 +215,13 @@ export function AutoDemo() {
             </div>
 
             {/* RIGHT: tasks → submission → AI score → sentiment */}
-            <div className="relative p-5">
+            <div className="relative h-[760px] overflow-hidden p-5 md:h-[700px]">
               <div className="mb-3 flex items-center gap-2 text-xs text-muted-foreground">
                 <Sparkles className="h-3.5 w-3.5" /> Linked work
               </div>
 
               {!showTasks && (
-                <div className="grid h-[380px] place-items-center rounded-lg border border-dashed border-border bg-background/40 px-6 text-center text-xs text-muted-foreground">
+                <div className="grid h-[660px] place-items-center rounded-lg border border-dashed border-border bg-background/40 px-6 text-center text-xs text-muted-foreground md:h-[600px]">
                   Reading the email…<br />
                   <span className="mt-1 text-[10px]">Atlas turns stakeholder messages into concrete coordinator tasks.</span>
                 </div>
