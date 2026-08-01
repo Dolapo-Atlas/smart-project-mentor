@@ -41,6 +41,8 @@ export type FunnelEvent =
   | "project_created"
   | "brief_opened"
   | "brief_closed"
+  | "unlock_screen_shown"
+  | "unlock_checkout_started"
   | "first_email_prompt_shown"
   | "inbox_opened"
   | "first_reply_sent"

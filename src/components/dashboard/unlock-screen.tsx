@@ -57,7 +57,7 @@ export function UnlockScreen({ compact = false }: { compact?: boolean }) {
 
   async function unlock() {
     setBusy(true);
-    trackLearner("unlock_checkout_started", { country });
+    trackLearner("unlock_checkout_started", { props: { country } });
     try {
       const res = await startCheckout({
         data: { country, origin: window.location.origin },
