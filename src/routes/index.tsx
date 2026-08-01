@@ -1944,8 +1944,22 @@ function DemoWalkthrough() {
     <section id="walkthrough" className="relative border-y border-border bg-card/40 py-20 sm:py-28">
       <div className="mx-auto grid max-w-7xl items-center gap-12 px-5 sm:px-6 lg:grid-cols-[minmax(0,380px)_1fr] lg:gap-20 lg:px-10">
         <Reveal>
-          <div className="rounded-[28px] border border-border bg-card p-3 shadow-[0_40px_120px_-50px_rgba(11,19,43,0.35)]">
-            <DemoVideo />
+          <div>
+            <div className="rounded-[28px] border border-border bg-card p-3 shadow-[0_40px_120px_-50px_rgba(11,19,43,0.35)]">
+              <DemoVideo />
+            </div>
+            <p className="mx-auto mt-4 max-w-[360px] text-center text-[13px] leading-relaxed text-muted-foreground">
+              In 60 seconds: you run a real project end to end, and leave with proof you can do the job.
+            </p>
+            <div className="mx-auto mt-5 max-w-[360px]">
+              <Link
+                to="/project-readiness"
+                className="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-all hover:-translate-y-0.5"
+              >
+                Start Your Atlas Experience
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              </Link>
+            </div>
           </div>
         </Reveal>
         <div>
