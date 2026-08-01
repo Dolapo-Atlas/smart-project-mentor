@@ -1180,6 +1180,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          access_tier: string
           avatar_url: string | null
           campaign: Json
           career_goal: string | null
@@ -1190,6 +1191,7 @@ export type Database = {
           display_name: string | null
           email: string | null
           first_name: string | null
+          free_preview_completed_at: string | null
           id: string
           last_active_at: string | null
           last_login_at: string | null
@@ -1201,8 +1203,10 @@ export type Database = {
           role: string
           sign_up_at: string
           start_date: string | null
+          unlocked_at: string | null
         }
         Insert: {
+          access_tier?: string
           avatar_url?: string | null
           campaign?: Json
           career_goal?: string | null
@@ -1213,6 +1217,7 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           first_name?: string | null
+          free_preview_completed_at?: string | null
           id: string
           last_active_at?: string | null
           last_login_at?: string | null
@@ -1224,8 +1229,10 @@ export type Database = {
           role?: string
           sign_up_at?: string
           start_date?: string | null
+          unlocked_at?: string | null
         }
         Update: {
+          access_tier?: string
           avatar_url?: string | null
           campaign?: Json
           career_goal?: string | null
@@ -1236,6 +1243,7 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           first_name?: string | null
+          free_preview_completed_at?: string | null
           id?: string
           last_active_at?: string | null
           last_login_at?: string | null
@@ -1247,6 +1255,7 @@ export type Database = {
           role?: string
           sign_up_at?: string
           start_date?: string | null
+          unlocked_at?: string | null
         }
         Relationships: [
           {
@@ -1257,6 +1266,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      programme_purchases: {
+        Row: {
+          amount: number
+          country: string
+          created_at: string
+          currency: string
+          id: string
+          metadata: Json
+          paid_at: string | null
+          provider: string
+          provider_ref: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          country: string
+          created_at?: string
+          currency: string
+          id?: string
+          metadata?: Json
+          paid_at?: string | null
+          provider: string
+          provider_ref: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          country?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          metadata?: Json
+          paid_at?: string | null
+          provider?: string
+          provider_ref?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       project_chapters: {
         Row: {
