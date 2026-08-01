@@ -149,7 +149,7 @@ export function AutoDemo() {
           {/* Body */}
           <div className="grid min-h-[460px] grid-cols-1 md:grid-cols-[1.05fr_1fr]">
             {/* LEFT: inbox + email */}
-            <div className="border-b border-border/60 p-5 md:border-b-0 md:border-r">
+            <div className="min-h-[470px] border-b border-border/60 p-5 md:border-b-0 md:border-r">
               <div className="mb-3 flex items-center gap-2 text-xs text-muted-foreground">
                 <Mail className="h-3.5 w-3.5" /> Inbox · {showEmail ? "1 new" : "0 new"}
               </div>
@@ -215,7 +215,7 @@ export function AutoDemo() {
             </div>
 
             {/* RIGHT: tasks → submission → AI score → sentiment */}
-            <div className="relative p-5">
+            <div className="relative min-h-[660px] p-5">
               <div className="mb-3 flex items-center gap-2 text-xs text-muted-foreground">
                 <Sparkles className="h-3.5 w-3.5" /> Linked work
               </div>
