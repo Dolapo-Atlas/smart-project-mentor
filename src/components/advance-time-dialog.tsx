@@ -132,6 +132,7 @@ export function AdvanceTimeDialog({
         return;
       }
       const s = res.summary!;
+      trackLearner("day_advanced", { props: { mode, days: s.days, toDay: s.toDay } });
       const title =
         `Advanced ${s.days} day${s.days === 1 ? "" : "s"} → Day ${s.toDay}` +
         (s.healthChange ? ` · Health ${s.healthChange.from} → ${s.healthChange.to}` : "") +
