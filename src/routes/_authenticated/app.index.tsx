@@ -15,6 +15,7 @@ import { TaskSummaryStrip } from "@/components/dashboard/task-summary-strip";
 import { TaskBoard } from "@/components/dashboard/task-board";
 import { ProjectSidePanel } from "@/components/dashboard/project-side-panel";
 import { ProjectBriefSheet } from "@/components/dashboard/project-brief-sheet";
+import { FirstEmailPrompt } from "@/components/dashboard/first-email-prompt";
 import { WelcomeBackPanel } from "@/components/dashboard/welcome-back-panel";
 import { PhaseReadinessPanel } from "@/components/dashboard/phase-readiness-panel";
 import { FirstWinPanel } from "@/components/dashboard/first-win-panel";
@@ -38,6 +39,10 @@ function Dashboard() {
   });
 
   const [briefOpen, setBriefOpen] = useState(false);
+  const [emailPromptOpen, setEmailPromptOpen] = useState(false);
+  // True only for the first-run brief, so closing it hands the learner to the
+  // inbox instead of dropping them on the dashboard with no direction.
+  const firstRunBriefRef = useRef(false);
   const [focusMode, setFocusMode] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     return window.localStorage.getItem("atlas.focus-mode") === "1";
@@ -60,8 +65,17 @@ function Dashboard() {
     if (window.localStorage.getItem(key) === "1") return;
     autoOpenedRef.current = activeId;
     setBriefOpen(true);
+    firstRunBriefRef.current = true;
     window.localStorage.setItem(key, "1");
   }, [activeId]);
+
+  const handleBriefOpenChange = (next: boolean) => {
+    setBriefOpen(next);
+    if (!next && firstRunBriefRef.current) {
+      firstRunBriefRef.current = false;
+      setEmailPromptOpen(true);
+    }
+  };
 
   const summon = useMutation({
     mutationFn: () => genMessage(),
@@ -204,7 +218,12 @@ function Dashboard() {
           </div>
         </>
       )}
-      <ProjectBriefSheet open={briefOpen} onOpenChange={setBriefOpen} />
+      <ProjectBriefSheet
+        open={briefOpen}
+        onOpenChange={handleBriefOpenChange}
+        firstRun={firstRunBriefRef.current}
+      />
+      <FirstEmailPrompt open={emailPromptOpen} onOpenChange={setEmailPromptOpen} />
     </div>
   );
 }

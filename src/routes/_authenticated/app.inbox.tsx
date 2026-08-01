@@ -4,7 +4,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { listInbox, markRead, generateStakeholderMessage } from "@/lib/sim.functions";
 import { summonConflict } from "@/lib/pm.functions";
 import { sendComm } from "@/lib/comms.functions";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Sparkles, Mail, Flame, Reply, Send } from "lucide-react";
@@ -18,10 +19,14 @@ import { ReadAloudButton } from "@/components/read-aloud-button";
 import { useVoiceSettings } from "@/lib/voice";
 import { Link } from "@tanstack/react-router";
 import { useServerFn as useServerFn2 } from "@tanstack/react-start";
-import { listTasksRich } from "@/lib/tasks.functions";
+import { listTasksRich, submitTaskWithWork } from "@/lib/tasks.functions";
 import { useRoster, rosterByName } from "@/lib/roster";
 
 export const Route = createFileRoute("/_authenticated/app/inbox")({
+  validateSearch: (search: Record<string, unknown>) =>
+    z
+      .object({ onboarding: z.coerce.number().optional() })
+      .parse(search) as { onboarding?: number },
   component: Inbox,
 });
 
@@ -48,6 +53,8 @@ const LEGACY_SENDER_ROLE_MAP: Record<string, string> = {
 
 function Inbox() {
   const qc = useQueryClient();
+  const { onboarding } = Route.useSearch();
+  const onboardingMode = onboarding === 1;
   const { settings: voice } = useVoiceSettings();
   const fetchInbox = useServerFn(listInbox);
   const markFn = useServerFn(markRead);
@@ -60,6 +67,22 @@ function Inbox() {
   const { data: allTasks } = useQuery({ queryKey: ["tasks"], queryFn: () => fetchTasks() });
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected = messages?.find((m) => m.id === selectedId) ?? messages?.[0];
+  // Onboarding: jump straight to the first unread stakeholder email and open
+  // the response box so the expected action is unmistakable.
+  const [onboardingDone, setOnboardingDone] = useState(false);
+  useEffect(() => {
+    if (!onboardingMode || onboardingDone) return;
+    if (selectedId) return;
+    const list = messages ?? [];
+    if (list.length === 0) return;
+    const target =
+      [...list].reverse().find((m) => !m.read && m.sender_name !== "Project Update") ??
+      list[0];
+    if (target) {
+      setSelectedId(target.id);
+      setReplyOpen(true);
+    }
+  }, [onboardingMode, onboardingDone, messages, selectedId]);
   const linkedTasks = (allTasks ?? []).filter(
     (t: any) => selected && t.source_ref === selected.id,
   );
@@ -94,6 +117,7 @@ function Inbox() {
   });
 
   const sendFn = useServerFn(sendComm);
+  const submitTask = useServerFn(submitTaskWithWork);
   const [replyOpen, setReplyOpen] = useState(false);
   const [replyBody, setReplyBody] = useState("");
   const reply = useMutation({
@@ -106,13 +130,37 @@ function Inbox() {
           body: input.body,
         },
       }),
-    onSuccess: () => {
+    onSuccess: async (_res, input) => {
+      // Onboarding: replying closes out the linked first task using the normal
+      // submission path, so progress and consequences behave as usual.
+      if (onboardingMode && linkedTasks.length > 0) {
+        const first = linkedTasks.find(
+          (t: any) => !["done", "approved", "submitted", "closed"].includes(t.status),
+        );
+        if (first) {
+          try {
+            await submitTask({ data: { id: first.id, submission: input.body } });
+          } catch {
+            // Non-blocking: the reply itself already landed.
+          }
+        }
+      }
       qc.invalidateQueries({ queryKey: ["inbox"] });
       qc.invalidateQueries({ queryKey: ["comms"] });
       qc.invalidateQueries({ queryKey: ["overview"] });
       qc.invalidateQueries({ queryKey: ["stakeholders"] });
       qc.invalidateQueries({ queryKey: ["next-action"] });
-      toast.success("Reply sent. Watch your inbox for their response.");
+      qc.invalidateQueries({ queryKey: ["tasks"] });
+      qc.invalidateQueries({ queryKey: ["whats-next"] });
+      qc.invalidateQueries({ queryKey: ["phase-progress"] });
+      if (onboardingMode) {
+        setOnboardingDone(true);
+        toast.success(
+          "First response sent. Your Project Manager will come back to you — head to Tasks for your next move.",
+        );
+      } else {
+        toast.success("Reply sent. Watch your inbox for their response.");
+      }
       setReplyOpen(false);
       setReplyBody("");
     },
@@ -138,6 +186,39 @@ function Inbox() {
         </div>
       </header>
 
+      {onboardingMode && onboardingDone && (
+        <div className="rounded-lg border border-emerald-500/40 bg-emerald-500/5 p-4">
+          <div className="text-[10px] uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-400">
+            First task complete
+          </div>
+          <h2 className="mt-1 font-display text-xl font-medium">
+            Response sent — you’re officially on the project.
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Your Project Manager has your reply and will respond in the inbox.
+            Next: pick up your Initiation deliverables.
+          </p>
+          <Button asChild className="mt-3">
+            <Link to="/app/tasks">Go to my tasks</Link>
+          </Button>
+        </div>
+      )}
+      {onboardingMode && !onboardingDone && (
+        <div className="rounded-lg border border-accent-orange/40 bg-accent-orange/5 p-4">
+          <div className="text-[10px] uppercase tracking-[0.2em] text-accent-orange">
+            First workplace task
+          </div>
+          <h2 className="mt-1 font-display text-xl font-medium">
+            Read and respond to your first email
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Your Project Manager is waiting on you. Read the message on the
+            right, then use <span className="font-medium text-foreground">Write Response</span>{" "}
+            to reply. This closes out your first task.
+          </p>
+        </div>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
         <ul className="space-y-2">
           {(messages ?? []).length === 0 && (
@@ -152,6 +233,7 @@ function Inbox() {
           )}
           {messages?.map((m) => {
             const active = selected?.id === m.id;
+            const highlight = onboardingMode && !onboardingDone && !m.read;
             return (
               <li key={m.id}>
                 <button
@@ -159,7 +241,11 @@ function Inbox() {
                     active
                       ? "border-foreground bg-card shadow-sm"
                       : "border-border bg-card/60 hover:bg-card"
-                  } ${!m.read ? "bg-primary/5" : ""}`}
+                  } ${!m.read ? "bg-primary/5" : ""} ${
+                    highlight
+                      ? "ring-2 ring-accent-orange ring-offset-2 ring-offset-background"
+                      : ""
+                  }`}
                   onClick={() => {
                     setSelectedId(m.id);
                     if (!m.read) mark.mutate(m.id);
@@ -267,13 +353,17 @@ function Inbox() {
                     <div className="mt-8 border-t border-border pt-6">
                       {role && (
                         <Button
-                          variant="outline"
+                          variant={onboardingMode && !onboardingDone ? "default" : "outline"}
+                          size={onboardingMode && !onboardingDone ? "lg" : "default"}
                           onClick={() => {
                             setReplyOpen(true);
                             setReplyBody("");
                           }}
                         >
-                          <Reply className="mr-2 h-4 w-4" /> Reply to {selected.sender_name}
+                          <Reply className="mr-2 h-4 w-4" />
+                          {onboardingMode && !onboardingDone
+                            ? "Write Response"
+                            : `Reply to ${selected.sender_name}`}
                         </Button>
                       )}
                       <DelegatePanel
