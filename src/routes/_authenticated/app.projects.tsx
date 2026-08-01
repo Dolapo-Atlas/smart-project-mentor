@@ -10,6 +10,7 @@ import {
   archiveProject,
 } from "@/lib/projects.functions";
 import { getProfile, updateProjectRole } from "@/lib/sim.functions";
+import { trackLearner } from "@/lib/learner-events";
 import { Button } from "@/components/ui/button";
 import {
   Heart,
