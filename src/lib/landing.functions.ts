@@ -174,6 +174,11 @@ export const claimEnrolment = createServerFn({ method: "POST" })
       return { ok: false as const, reason: "already_claimed" };
     }
     await supabaseAdmin.from("enrolments").update({ user_id: context.userId }).eq("id", row.id);
+    // A paid enrolment also grants full in-app access.
+    await supabaseAdmin
+      .from("profiles")
+      .update({ access_tier: "full", unlocked_at: new Date().toISOString() })
+      .eq("id", context.userId);
     return { ok: true as const };
   });
 
