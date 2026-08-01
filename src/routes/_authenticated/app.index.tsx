@@ -20,6 +20,7 @@ import { WelcomeBackPanel } from "@/components/dashboard/welcome-back-panel";
 import { PhaseReadinessPanel } from "@/components/dashboard/phase-readiness-panel";
 import { FirstWinPanel } from "@/components/dashboard/first-win-panel";
 import { useEffect, useRef, useState } from "react";
+import { trackLearner } from "@/lib/learner-events";
 
 export const Route = createFileRoute("/_authenticated/app/")({
   component: Dashboard,
@@ -67,12 +68,15 @@ function Dashboard() {
     setBriefOpen(true);
     firstRunBriefRef.current = true;
     window.localStorage.setItem(key, "1");
+    trackLearner("brief_opened", { projectInstanceId: activeId });
   }, [activeId]);
 
   const handleBriefOpenChange = (next: boolean) => {
     setBriefOpen(next);
     if (!next && firstRunBriefRef.current) {
       firstRunBriefRef.current = false;
+      trackLearner("brief_closed", { projectInstanceId: activeId ?? null });
+      trackLearner("first_email_prompt_shown", { projectInstanceId: activeId ?? null });
       setEmailPromptOpen(true);
     }
   };
