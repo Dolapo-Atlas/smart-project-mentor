@@ -191,13 +191,13 @@ function Nav({ scrolled }: { scrolled: boolean }) {
             to="/auth"
             className="inline-flex rounded-full px-4 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
-            Sign in
+            Log In
           </Link>
           <Link
-            to="/auth"
+            to="/project-readiness"
             className="group inline-flex items-center gap-1.5 rounded-full bg-accent-orange px-4 py-2 text-sm font-medium text-accent-orange-foreground shadow-[0_1px_0_rgba(255,255,255,0.25)_inset,0_8px_24px_-12px_rgba(217,119,6,0.6)] transition-all hover:-translate-y-0.5 hover:shadow-[0_1px_0_rgba(255,255,255,0.3)_inset,0_12px_28px_-12px_rgba(217,119,6,0.7)]"
           >
-            Get started
+            Start Experience
             <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
           </Link>
         </div>
@@ -274,7 +274,7 @@ function Hero() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent-orange opacity-60" />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent-orange" />
               </span>
-              Founder access is open
+              Atlas Project Readiness Experience — available now
             </span>
           </Reveal>
           <Reveal delay={80}>
@@ -291,18 +291,18 @@ function Hero() {
           <Reveal delay={240}>
             <div className="mt-9 flex flex-wrap items-center gap-3">
               <Link
-                to="/auth"
+                to="/project-readiness"
                 className="group inline-flex items-center gap-2 rounded-full bg-accent-orange px-6 py-3 text-sm font-medium text-accent-orange-foreground shadow-[0_1px_0_rgba(255,255,255,0.25)_inset,0_12px_30px_-12px_rgba(217,119,6,0.6)] transition-all hover:-translate-y-0.5 hover:shadow-[0_1px_0_rgba(255,255,255,0.3)_inset,0_18px_36px_-12px_rgba(217,119,6,0.7)]"
               >
-                Start your first project
+                Start Your Atlas Experience
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
               <a
-                href="#demo"
+                href="#how"
                 className="group inline-flex items-center gap-2 rounded-full border border-border bg-card/70 px-6 py-3 text-sm font-medium text-foreground backdrop-blur transition-all hover:-translate-y-0.5 hover:bg-card"
               >
                 <PlayCircle className="h-4 w-4 text-accent-orange" />
-                Experience Atlas
+                See How It Works
               </a>
             </div>
           </Reveal>
@@ -316,7 +316,7 @@ function Hero() {
                 </span>
               </div>
               <div className="hidden items-center gap-2 text-xs text-muted-foreground sm:flex">
-                <Sparkles className="h-3.5 w-3.5 text-accent-orange" /> Free for the first 100 sign-ups
+                <Sparkles className="h-3.5 w-3.5 text-accent-orange" /> One-time payment · Immediate access
               </div>
             </div>
           </Reveal>
