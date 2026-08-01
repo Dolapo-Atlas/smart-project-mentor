@@ -305,7 +305,8 @@ function AdminTracking() {
       <div className="mt-6 flex flex-wrap gap-2 text-xs text-muted-foreground">
         <Badge variant="secondary">Tip</Badge>
         <span>
-          "Saw brief, never started work" is the biggest leak to fix — that's onboarding friction, not content.
+          Read the recorded funnel first. A long gap before a step means confusion; a big drop means the step
+          itself is the problem.
         </span>
       </div>
     </div>
