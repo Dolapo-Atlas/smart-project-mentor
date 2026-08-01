@@ -813,33 +813,6 @@ function ProjectReadiness() {
 
 /** Product demonstration — the centrepiece, presented in a navy Atlas container. */
 function ExperienceSection({ videoUrl }: { videoUrl: string | null }) {
-  const ref = useRef<HTMLVideoElement | null>(null);
-  const [playing, setPlaying] = useState(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry) return;
-        if (entry.isIntersecting) {
-          el.play()
-            .then(() => {
-              setPlaying(true);
-              track("video_played");
-            })
-            .catch(() => setPlaying(false));
-        } else {
-          el.pause();
-          setPlaying(false);
-        }
-      },
-      { threshold: 0.4 },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, [videoUrl]);
-
   return (
     <section id="experience" className="relative overflow-hidden bg-primary py-20 text-primary-foreground sm:py-28">
       <div
@@ -862,34 +835,23 @@ function ExperienceSection({ videoUrl }: { videoUrl: string | null }) {
         </Reveal>
 
         <Reveal delay={140}>
-          <div className="mt-12 overflow-hidden rounded-[28px] border border-primary-foreground/15 bg-primary-foreground/5 p-3 shadow-[0_60px_160px_-60px_rgba(0,0,0,0.7)]">
-            {videoUrl ? (
-              <div className="relative overflow-hidden rounded-[20px]">
-                <video
-                  ref={ref}
-                  src={videoUrl}
-                  muted
-                  playsInline
-                  loop
-                  preload="metadata"
-                  controls
-                  aria-label="Atlas product walkthrough with captions"
-                  className="w-full"
-                />
-                {!playing && (
-                  <button
-                    type="button"
-                    onClick={() => ref.current?.play()}
-                    className="absolute inset-0 grid place-items-center bg-primary/30"
-                    aria-label="Play the Atlas product video"
-                  >
-                    <PlayCircle className="h-14 w-14 text-primary-foreground" aria-hidden />
-                  </button>
-                )}
-              </div>
-            ) : (
-              <AutoDemo />
-            )}
+          <div className="mt-12 grid items-center gap-10 lg:grid-cols-[minmax(0,360px)_1fr]">
+            <div className="rounded-[28px] border border-primary-foreground/15 bg-primary-foreground/5 p-3 shadow-[0_60px_160px_-60px_rgba(0,0,0,0.7)]">
+              {videoUrl ? (
+                <DemoVideo src={videoUrl} onPlay={() => track("video_played")} />
+              ) : (
+                <AutoDemo />
+              )}
+            </div>
+            <div className="rounded-[28px] border border-primary-foreground/10 bg-primary-foreground/5 p-7">
+              <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/60">In the walkthrough</p>
+              <ul className="mt-5 space-y-3 text-[15px] leading-relaxed text-primary-foreground/85">
+                <li>Reading a live project brief and picking your first task</li>
+                <li>Responding to stakeholders and handling pushback</li>
+                <li>Filling real deliverables — charter, schedule, RAID log</li>
+                <li>Taking your work to a Steering Committee gate</li>
+              </ul>
+            </div>
           </div>
         </Reveal>
       </div>
