@@ -170,7 +170,7 @@ const PRICE_INCLUDES = [
   "Detailed performance report",
   "Verifiable Atlas credential",
   "Interview reflection guide",
-  "Immediate access after payment",
+  "Free first task before you pay anything",
 ];
 
 const SAMPLE_SCORES: Array<[string, number]> = [
@@ -365,11 +365,13 @@ function ProjectReadiness() {
             </Reveal>
             <Reveal delay={320}>
               <p className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                <span>{priceLabel ? `${COUNTRY_META[country].label} · ${priceLabel}` : "Local pricing"}</span>
+                <span>Free to start · no card needed</span>
                 <span aria-hidden>·</span>
-                <span>One-time payment</span>
-                <span aria-hidden>·</span>
-                <span>Immediate access</span>
+                <span>
+                  {priceLabel
+                    ? `${priceLabel} to continue (${COUNTRY_META[country].label})`
+                    : "Local pricing to continue"}
+                </span>
                 <span aria-hidden>·</span>
                 <span>Complete at your own pace</span>
               </p>
