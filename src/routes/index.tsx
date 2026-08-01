@@ -35,6 +35,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import atlasMark from "@/assets/atlas-mark.png.asset.json";
 import { AutoDemo } from "@/components/auto-demo";
+import { DemoVideo } from "@/components/landing/demo-video";
 import { HeroStage } from "@/components/landing/hero-stage";
 import { getReferralStats } from "@/lib/signup.functions";
 
@@ -94,6 +95,7 @@ function Landing() {
         <Hero />
         <SocialProof />
         <AutoDemo />
+        <DemoWalkthrough />
         <Features />
         <HowItWorks />
         <ReadinessOffer />
