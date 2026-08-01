@@ -25,6 +25,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { AutoDemo } from "@/components/auto-demo";
+import { DemoVideo, ATLAS_DEMO_URL } from "@/components/landing/demo-video";
 import { HeroStage } from "@/components/landing/hero-stage";
 import { EnrolDialog } from "@/components/landing/enrol-dialog";
 import { AtlasNav, AtlasFooter, Reveal, EXPERIENCE_NAV } from "@/components/landing/atlas-chrome";
@@ -475,7 +476,7 @@ function ProjectReadiness() {
       </section>
 
       {/* ---------------------------------------------------------- DEMO */}
-      <ExperienceSection videoUrl={offer?.videoUrl ?? null} />
+      <ExperienceSection videoUrl={offer?.videoUrl ?? ATLAS_DEMO_URL} />
 
       {/* ------------------------------------------------------- JOURNEY */}
       <section id="how-it-works" className="py-20 sm:py-28">
