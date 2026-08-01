@@ -825,12 +825,12 @@ function ExperienceSection({ videoUrl }: { videoUrl: string | null }) {
       />
       <div className="relative mx-auto max-w-6xl px-5 sm:px-6 lg:px-10">
         <Reveal className="max-w-3xl">
-          <p className="text-xs uppercase tracking-[0.22em] text-accent-orange">The product</p>
+          <p className="text-xs uppercase tracking-[0.22em] text-accent-orange">A word from the founder</p>
           <h2 className="mt-4 font-display text-[clamp(1.85rem,3.6vw,2.9rem)] font-medium leading-[1.1] tracking-[-0.02em]">
-            See what managing a project inside Atlas looks like
+            What you are buying, explained by the founder
           </h2>
           <p className="mt-5 text-[16px] leading-relaxed text-primary-foreground/85">
-            You are not watching someone else manage the project. You are making the decisions.
+            Dolapo Rasaq walks through the experience and what you will be doing inside it. Tap to play with sound.
           </p>
         </Reveal>
 
@@ -844,7 +844,7 @@ function ExperienceSection({ videoUrl }: { videoUrl: string | null }) {
               )}
             </div>
             <div className="rounded-[28px] border border-primary-foreground/10 bg-primary-foreground/5 p-7">
-              <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/60">In the walkthrough</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/60">What you will be doing</p>
               <ul className="mt-5 space-y-3 text-[15px] leading-relaxed text-primary-foreground/85">
                 <li>Reading a live project brief and picking your first task</li>
                 <li>Responding to stakeholders and handling pushback</li>
