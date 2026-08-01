@@ -20,6 +20,7 @@ import { useVoiceSettings } from "@/lib/voice";
 import { Link } from "@tanstack/react-router";
 import { useServerFn as useServerFn2 } from "@tanstack/react-start";
 import { listTasksRich, submitTaskWithWork } from "@/lib/tasks.functions";
+import { trackLearner } from "@/lib/learner-events";
 import { useRoster, rosterByName } from "@/lib/roster";
 
 export const Route = createFileRoute("/_authenticated/app/inbox")({
@@ -75,6 +76,7 @@ function Inbox() {
     if (selectedId) return;
     const list = messages ?? [];
     if (list.length === 0) return;
+    trackLearner("inbox_opened", { props: { onboarding: true } });
     const target =
       [...list].reverse().find((m) => !m.read && m.sender_name !== "Project Update") ??
       list[0];
