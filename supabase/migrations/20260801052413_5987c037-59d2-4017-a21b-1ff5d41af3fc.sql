@@ -1,0 +1,1 @@
+UPDATE public.landing_settings SET price_ngn = 20000, price_inr = 1499, price_usd = 10 WHERE id = 1;

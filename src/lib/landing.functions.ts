@@ -7,7 +7,12 @@ export type CountryKey = "nigeria" | "india" | "international";
 export const COUNTRY_META: Record<CountryKey, { label: string; currency: string; symbol: string; gateway: "paystack" | "razorpay" | null }> = {
   nigeria: { label: "Nigeria", currency: "NGN", symbol: "₦", gateway: "paystack" },
   india: { label: "India", currency: "INR", symbol: "₹", gateway: "razorpay" },
-  international: { label: "International", currency: "USD", symbol: "$", gateway: null },
+  international: {
+    label: "United Kingdom & other markets",
+    currency: "GBP",
+    symbol: "£",
+    gateway: null,
+  },
 };
 
 /** Public offer payload for the sales page: prices, places left, campaign flags. */
@@ -27,9 +32,9 @@ export const getPublicOffer = createServerFn({ method: "GET" }).handler(async ()
 
   return {
     prices: {
-      nigeria: s?.price_ngn ?? 10000,
-      india: s?.price_inr ?? 799,
-      international: s?.price_usd ?? 25,
+      nigeria: s?.price_ngn ?? 20000,
+      india: s?.price_inr ?? 1499,
+      international: s?.price_usd ?? 10,
     },
     foundingPlaces: s?.founding_places ?? 50,
     placesTaken: {
@@ -78,8 +83,8 @@ export const startCheckout = createServerFn({ method: "POST" })
 
     const amount =
       data.country === "nigeria"
-        ? (settings?.price_ngn ?? 10000)
-        : (settings?.price_inr ?? 799);
+        ? (settings?.price_ngn ?? 20000)
+        : (settings?.price_inr ?? 1499);
 
     const reference = `ATLAS-${data.country.slice(0, 2).toUpperCase()}-${Date.now().toString(36).toUpperCase()}-${Math.random()
       .toString(36)
