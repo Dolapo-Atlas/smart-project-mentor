@@ -19,6 +19,8 @@ import { FirstEmailPrompt } from "@/components/dashboard/first-email-prompt";
 import { WelcomeBackPanel } from "@/components/dashboard/welcome-back-panel";
 import { PhaseReadinessPanel } from "@/components/dashboard/phase-readiness-panel";
 import { FirstWinPanel } from "@/components/dashboard/first-win-panel";
+import { UnlockScreen } from "@/components/dashboard/unlock-screen";
+import { getMyAccess } from "@/lib/access.functions";
 import { useEffect, useRef, useState } from "react";
 import { trackLearner } from "@/lib/learner-events";
 
@@ -32,12 +34,15 @@ function Dashboard() {
   const fetchOverview = useServerFn(getOverview);
   const genMessage = useServerFn(generateStakeholderMessage);
   const fetchActive = useServerFn(getActiveProject);
+  const fetchAccess = useServerFn(getMyAccess);
 
   const { data: overview } = useQuery({ queryKey: ["overview"], queryFn: () => fetchOverview() });
   const { data: active, isSuccess: activeLoaded } = useQuery({
     queryKey: ["active-project"],
     queryFn: () => fetchActive(),
   });
+  const { data: access } = useQuery({ queryKey: ["my-access"], queryFn: () => fetchAccess() });
+  const locked = access?.locked === true;
 
   const [briefOpen, setBriefOpen] = useState(false);
   const [emailPromptOpen, setEmailPromptOpen] = useState(false);
@@ -194,6 +199,12 @@ function Dashboard() {
       <div className="atlas-rise atlas-rise-1">
         <TimeControls />
       </div>
+
+      {locked && (
+        <div className="atlas-rise atlas-rise-1">
+          <UnlockScreen compact />
+        </div>
+      )}
 
       {focusMode ? (
         <div className="mx-auto max-w-2xl space-y-4">
