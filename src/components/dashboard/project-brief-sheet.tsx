@@ -30,6 +30,8 @@ import {
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** First run: the CTA just closes the brief so the next prompt can appear. */
+  firstRun?: boolean;
 };
 
 const PHASE_LABEL: Record<string, string> = {
@@ -61,7 +63,7 @@ const TOOLS: { label: string; to: string }[] = [
   { label: "Progress", to: "/app/progress" },
 ];
 
-export function ProjectBriefSheet({ open, onOpenChange }: Props) {
+export function ProjectBriefSheet({ open, onOpenChange, firstRun }: Props) {
   const fetchActive = useServerFn(getActiveProject);
   const fetchOverview = useServerFn(getOverview);
   const fetchNext = useServerFn(listWhatsNext);
@@ -310,12 +312,19 @@ export function ProjectBriefSheet({ open, onOpenChange }: Props) {
           </Section>
 
           <div className="flex flex-wrap items-center gap-3 border-t border-border pt-5">
-            <Button asChild onClick={() => onOpenChange(false)}>
-              <Link to="/app/tasks">
+            {firstRun ? (
+              <Button size="lg" onClick={() => onOpenChange(false)}>
                 <ArrowRight className="mr-2 h-4 w-4" />
-                {primaryCta}
-              </Link>
-            </Button>
+                I’ve read the brief
+              </Button>
+            ) : (
+              <Button asChild onClick={() => onOpenChange(false)}>
+                <Link to="/app/tasks">
+                  <ArrowRight className="mr-2 h-4 w-4" />
+                  {primaryCta}
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
       </SheetContent>
