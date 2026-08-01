@@ -1,8 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { completeOnboarding } from "@/lib/sim.functions";
+import { trackLearner } from "@/lib/learner-events";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,9 +43,16 @@ function Onboarding() {
 
   const mut = useMutation({
     mutationFn: () => submit({ data: form }),
-    onSuccess: () => navigate({ to: "/app/projects" }),
+    onSuccess: () => {
+      trackLearner("role_selected", { props: { role: form.career_goal } });
+      navigate({ to: "/app/projects" });
+    },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Could not save profile"),
   });
+
+  useEffect(() => {
+    trackLearner("onboarding_started");
+  }, []);
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
