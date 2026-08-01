@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { getActiveProject } from "@/lib/projects.functions";
+import { trackLearner } from "@/lib/learner-events";
 
 export const Route = createFileRoute("/auth-callback")({
   component: AuthCallback,
@@ -30,6 +31,8 @@ function AuthCallback() {
 
       sessionStorage.removeItem("oauth_intent");
       sessionStorage.removeItem("oauth_pending");
+
+      trackLearner("signed_in", { props: { via: "oauth" } });
 
       let hasActiveProject = false;
       try {
