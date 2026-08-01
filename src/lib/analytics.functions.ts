@@ -132,6 +132,92 @@ export const getLearnerTracking = createServerFn({ method: "GET" })
     const tasks = tasksRes.data ?? [];
     const docs = docsRes.data ?? [];
     const charters = chartersRes.data ?? [];
+    const events = (eventsRes.data ?? []) as Array<{
+      user_id: string;
+      event: string;
+      campaign: Record<string, string> | null;
+      created_at: string;
+    }>;
+
+    // ---- Recorded funnel (events, not inference) -------------------------
+
+    const sourceOf = (campaign: Record<string, string> | null | undefined) =>
+      (campaign && (campaign["utm_source"] || campaign["source"])) || "direct";
+
+    const profileSource = new Map<string, string>();
+    for (const p of profiles as any[]) profileSource.set(p.id, sourceOf(p.campaign));
+
+    const availableSources = Array.from(
+      new Set([...profileSource.values(), ...events.map((e) => sourceOf(e.campaign))]),
+    ).sort();
+
+    // First occurrence of each event per learner, honouring the filters.
+    const firstSeen = new Map<string, Map<LearnerEvent, number>>();
+    for (const e of events) {
+      if (sinceIso && e.created_at < sinceIso) continue;
+      if (sourceFilter) {
+        const src = profileSource.get(e.user_id) ?? sourceOf(e.campaign);
+        if (src !== sourceFilter) continue;
+      }
+      if (!LEARNER_EVENTS.includes(e.event as LearnerEvent)) continue;
+      const ev = e.event as LearnerEvent;
+      let perUser = firstSeen.get(e.user_id);
+      if (!perUser) {
+        perUser = new Map();
+        firstSeen.set(e.user_id, perUser);
+      }
+      const t = new Date(e.created_at).getTime();
+      const existing = perUser.get(ev);
+      if (existing === undefined || t < existing) perUser.set(ev, t);
+    }
+
+    const median = (nums: number[]) => {
+      if (!nums.length) return null;
+      const s = [...nums].sort((a, b) => a - b);
+      const mid = Math.floor(s.length / 2);
+      return s.length % 2 ? s[mid]! : Math.round((s[mid - 1]! + s[mid]!) / 2);
+    };
+
+    const recordedFunnel = LEARNER_EVENTS.map((ev, i) => {
+      const reached = Array.from(firstSeen.values()).filter((m) => m.has(ev));
+      const prev = i > 0 ? LEARNER_EVENTS[i - 1]! : null;
+      const gaps: number[] = [];
+      if (prev) {
+        for (const m of firstSeen.values()) {
+          const a = m.get(prev);
+          const b = m.get(ev);
+          if (a !== undefined && b !== undefined && b >= a) gaps.push(b - a);
+        }
+      }
+      const medianGapMs = median(gaps);
+      return {
+        event: ev,
+        label: LEARNER_EVENT_LABELS[ev],
+        value: reached.length,
+        medianGapSeconds: medianGapMs === null ? null : Math.round(medianGapMs / 1000),
+      };
+    });
+
+    // Where each tracked learner currently sits (last recorded step).
+    const stalledAt = new Map<string, LearnerEvent>();
+    for (const [uid, m] of firstSeen.entries()) {
+      let last: LearnerEvent | null = null;
+      for (const ev of LEARNER_EVENTS) if (m.has(ev)) last = ev;
+      if (last) stalledAt.set(uid, last);
+    }
+
+    const biggestDrop = (() => {
+      let worst: { from: string; to: string; lost: number; pct: number } | null = null;
+      for (let i = 1; i < recordedFunnel.length; i++) {
+        const a = recordedFunnel[i - 1]!;
+        const b = recordedFunnel[i]!;
+        if (a.value === 0) continue;
+        const lost = a.value - b.value;
+        const pct = Math.round((lost / a.value) * 100);
+        if (!worst || lost > worst.lost) worst = { from: a.label, to: b.label, lost, pct };
+      }
+      return worst;
+    })();
 
     const countBy = <T,>(rows: T[], key: (r: T) => string | null) => {
       const m = new Map<string, number>();
