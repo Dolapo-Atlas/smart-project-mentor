@@ -271,7 +271,6 @@ function ProjectReadiness() {
   const [country, setCountry] = useState<CountryKey>(
     () => normaliseCountry(search.country) ?? normaliseCountry(search.utm_country) ?? "international",
   );
-  const [enrolOpen, setEnrolOpen] = useState(false);
   const [showSticky, setShowSticky] = useState(false);
   const heroRef = useRef<HTMLDivElement | null>(null);
 
