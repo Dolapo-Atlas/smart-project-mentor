@@ -3,17 +3,24 @@ import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowRight, Check, Lock } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { getUnlockPricing, startUnlockCheckout } from "@/lib/access.functions";
+import { getUnlockPricing } from "@/lib/access.functions";
 import { trackLearner } from "@/lib/learner-events";
+import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
+import {
+  PLANS,
+  type PlanInterval,
+  type PlanRegion,
+  formatPlanPrice,
+  guessRegion,
+  planFor,
+} from "@/lib/plans";
+import { paymentsConfigured } from "@/lib/stripe";
 
-type CountryKey = "nigeria" | "india" | "international";
-
-const COUNTRIES: Array<{ key: CountryKey; label: string; symbol: string }> = [
-  { key: "nigeria", label: "Nigeria", symbol: "₦" },
-  { key: "india", label: "India", symbol: "₹" },
-  { key: "international", label: "UK & other markets", symbol: "£" },
+const REGIONS: Array<{ key: PlanRegion; label: string }> = [
+  { key: "nigeria", label: "Nigeria" },
+  { key: "india", label: "India" },
+  { key: "international", label: "UK & other markets" },
 ];
 
 const INCLUDES = [
@@ -25,57 +32,30 @@ const INCLUDES = [
   "Your verifiable Atlas credential on atlassim.co",
 ];
 
-function guessCountry(): CountryKey {
-  if (typeof window === "undefined") return "international";
-  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone ?? "";
-  if (tz.includes("Lagos")) return "nigeria";
-  if (tz.includes("Kolkata") || tz.includes("Calcutta")) return "india";
-  return "international";
-}
-
 /**
  * Shown once the free preview is complete. Presentation + checkout only —
  * it does not touch simulation logic.
  */
 export function UnlockScreen({ compact = false }: { compact?: boolean }) {
   const fetchPricing = useServerFn(getUnlockPricing);
-  const startCheckout = useServerFn(startUnlockCheckout);
-  const [country, setCountry] = useState<CountryKey>(() => guessCountry());
-  const [busy, setBusy] = useState(false);
+  const [region, setRegion] = useState<PlanRegion>(() => guessRegion());
+  const [interval, setInterval] = useState<PlanInterval>("monthly");
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
 
   const { data: pricing } = useQuery({
     queryKey: ["unlock-pricing"],
     queryFn: () => fetchPricing(),
   });
 
-  const priceLabel = useMemo(() => {
-    if (!pricing) return null;
-    const meta = COUNTRIES.find((c) => c.key === country)!;
-    const amount = pricing[country] as number;
-    return `${meta.symbol}${amount.toLocaleString()}`;
-  }, [pricing, country]);
+  const plan = useMemo(() => planFor(region, interval), [region, interval]);
+  const monthly = PLANS[region].monthly;
+  const configured = paymentsConfigured();
 
-  async function unlock() {
-    setBusy(true);
-    trackLearner("unlock_checkout_started", { props: { country } });
-    try {
-      const res = await startCheckout({
-        data: { country, origin: window.location.origin },
-      });
-      if (res.ok && res.url) {
-        window.location.href = res.url;
-        return;
-      }
-      toast.error(
-        res.reason === "gateway_not_configured"
-          ? "Card payments for this region are being switched on. Email hello@atlassim.co and we'll unlock your account manually today."
-          : "We couldn't open checkout just then. Please try again in a moment.",
-      );
-    } catch {
-      toast.error("We couldn't open checkout just then. Please try again in a moment.");
-    } finally {
-      setBusy(false);
-    }
+  function openCheckout() {
+    trackLearner("unlock_checkout_started", {
+      props: { country: region, interval, priceId: plan.priceId },
+    });
+    setCheckoutOpen(true);
   }
 
   return (
@@ -108,14 +88,17 @@ export function UnlockScreen({ compact = false }: { compact?: boolean }) {
       </p>
 
       <div className="mt-7 flex flex-wrap gap-2">
-        {COUNTRIES.map((c) => (
+        {REGIONS.map((c) => (
           <button
             key={c.key}
             type="button"
-            onClick={() => setCountry(c.key)}
+            onClick={() => {
+              setRegion(c.key);
+              setCheckoutOpen(false);
+            }}
             className={[
               "rounded-full border px-4 py-2 text-sm transition-colors",
-              country === c.key
+              region === c.key
                 ? "border-primary bg-primary text-primary-foreground"
                 : "border-border bg-background/70 text-muted-foreground hover:text-foreground",
             ].join(" ")}
@@ -125,11 +108,40 @@ export function UnlockScreen({ compact = false }: { compact?: boolean }) {
         ))}
       </div>
 
-      <div className="mt-6 flex items-end gap-3">
+      <div className="mt-4 inline-flex rounded-full border border-border bg-background/70 p-1">
+        {(["monthly", "yearly"] as PlanInterval[]).map((i) => (
+          <button
+            key={i}
+            type="button"
+            onClick={() => {
+              setInterval(i);
+              setCheckoutOpen(false);
+            }}
+            className={[
+              "rounded-full px-4 py-1.5 text-sm capitalize transition-colors",
+              interval === i
+                ? "bg-accent-orange text-accent-orange-foreground"
+                : "text-muted-foreground hover:text-foreground",
+            ].join(" ")}
+          >
+            {i}
+            {i === "yearly" && (
+              <span className="ml-2 text-[11px] uppercase tracking-[0.14em] opacity-80">
+                2 months free
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-5 flex items-end gap-3">
         <span className="font-display text-[clamp(2.2rem,5vw,3.2rem)] font-medium leading-none">
-          {priceLabel ?? "—"}
+          {formatPlanPrice(plan)}
         </span>
-        <span className="pb-2 text-sm text-muted-foreground">one-time payment</span>
+        <span className="pb-2 text-sm text-muted-foreground">
+          per {interval === "monthly" ? "month" : "year"}
+          {interval === "yearly" && ` · ${formatPlanPrice(monthly)}/month billed monthly`}
+        </span>
       </div>
 
       <ul className="mt-7 grid gap-3 sm:grid-cols-2">
@@ -141,18 +153,29 @@ export function UnlockScreen({ compact = false }: { compact?: boolean }) {
         ))}
       </ul>
 
-      <Button
-        size="lg"
-        onClick={unlock}
-        disabled={busy}
-        className="group mt-8 w-full gap-2 rounded-full bg-accent-orange text-accent-orange-foreground hover:bg-accent-orange/90"
-      >
-        {busy ? "Opening secure checkout…" : "Unlock the full experience"}
-        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-      </Button>
-      <p className="mt-3 text-center text-xs text-muted-foreground">
-        One-time payment · Your progress and preview work are kept · Complete at your own pace
-      </p>
+      {!checkoutOpen ? (
+        <>
+          <Button
+            size="lg"
+            onClick={openCheckout}
+            disabled={!configured}
+            className="group mt-8 w-full gap-2 rounded-full bg-accent-orange text-accent-orange-foreground hover:bg-accent-orange/90"
+          >
+            Unlock the full experience
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+          </Button>
+          <p className="mt-3 text-center text-xs text-muted-foreground">
+            {configured
+              ? "Cancel any time · Your progress and preview work are kept · Complete at your own pace"
+              : "Checkout is being switched on. Email hello@atlassim.co and we'll unlock your account today."}
+          </p>
+        </>
+      ) : (
+        <StripeEmbeddedCheckout
+          priceId={plan.priceId}
+          returnUrl={`${window.location.origin}/app/unlock?session_id={CHECKOUT_SESSION_ID}`}
+        />
+      )}
       {pricing?.checkoutNote && (
         <p className="mt-2 text-center text-xs text-muted-foreground">{pricing.checkoutNote}</p>
       )}
