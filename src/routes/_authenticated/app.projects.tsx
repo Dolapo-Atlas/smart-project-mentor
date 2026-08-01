@@ -10,6 +10,7 @@ import {
   archiveProject,
 } from "@/lib/projects.functions";
 import { getProfile, updateProjectRole } from "@/lib/sim.functions";
+import { trackLearner } from "@/lib/learner-events";
 import { Button } from "@/components/ui/button";
 import {
   Heart,
@@ -149,6 +150,10 @@ function ProjectsPicker() {
     mutationFn: (templateId: string) => startFn({ data: { templateId } }),
     onSuccess: (res: any) => {
       qc.invalidateQueries();
+      trackLearner("project_created", {
+        projectInstanceId: res?.projectInstanceId ?? res?.id ?? null,
+        props: { templateId: res?.templateId ?? null },
+      });
       if (res?.requiresIntro && res?.templateId) {
         navigate({ to: "/project-intro/$templateId", params: { templateId: res.templateId } });
       } else {

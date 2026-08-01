@@ -18,6 +18,7 @@ import { ReadAloudButton } from "@/components/read-aloud-button";
 import { useVoiceSettings, useSpeech, personaForStakeholder } from "@/lib/voice";
 import { useEffect, useMemo } from "react";
 import { RationaleChip } from "@/components/insights/rationale-chip";
+import { trackLearner } from "@/lib/learner-events";
 import { insightToast } from "@/lib/insight-toast";
 import type { InsightKey } from "@/lib/pm-insights";
 import { DayInReview, type DayInReviewSummary } from "@/components/dashboard/day-in-review";
@@ -131,6 +132,7 @@ export function AdvanceTimeDialog({
         return;
       }
       const s = res.summary!;
+      trackLearner("day_advanced", { props: { mode, days: s.days, toDay: s.toDay } });
       const title =
         `Advanced ${s.days} day${s.days === 1 ? "" : "s"} → Day ${s.toDay}` +
         (s.healthChange ? ` · Health ${s.healthChange.from} → ${s.healthChange.to}` : "") +

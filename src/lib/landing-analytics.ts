@@ -32,7 +32,19 @@ export type FunnelEvent =
   | "video_completed"
   | "faq_opened"
   | "country_selected"
-  | "credential_generated";
+  | "credential_generated"
+  // In-app journey steps (see learner-events.shared.ts). Mirrored to GA4/Meta
+  // so ad optimisation can target learners who actually start work.
+  | "signed_in"
+  | "onboarding_started"
+  | "role_selected"
+  | "project_created"
+  | "brief_opened"
+  | "brief_closed"
+  | "first_email_prompt_shown"
+  | "inbox_opened"
+  | "first_reply_sent"
+  | "day_advanced";
 
 /** Meta standard-event mapping so ad optimisation works out of the box. */
 const META_EVENTS: Partial<Record<FunnelEvent, { name: string; standard: boolean }>> = {

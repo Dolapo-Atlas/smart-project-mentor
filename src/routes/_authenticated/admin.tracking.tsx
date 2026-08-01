@@ -1,6 +1,7 @@
 import { createFileRoute, redirect, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getLearnerTracking } from "@/lib/analytics.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,11 +41,27 @@ function stageTone(stage: string) {
   return "bg-orange-100 text-orange-900";
 }
 
+function humanGap(seconds: number | null) {
+  if (seconds === null) return "—";
+  if (seconds < 60) return `${seconds}s`;
+  if (seconds < 3600) return `${Math.round(seconds / 60)}m`;
+  if (seconds < 86400) return `${Math.round(seconds / 3600)}h`;
+  return `${Math.round(seconds / 86400)}d`;
+}
+
+const RANGES = [
+  { label: "All time", days: 0 },
+  { label: "Last 7 days", days: 7 },
+  { label: "Last 30 days", days: 30 },
+] as const;
+
 function AdminTracking() {
   const fetchTracking = useServerFn(getLearnerTracking);
+  const [source, setSource] = useState("all");
+  const [sinceDays, setSinceDays] = useState(0);
   const q = useQuery({
-    queryKey: ["admin-tracking"],
-    queryFn: () => fetchTracking(),
+    queryKey: ["admin-tracking", source, sinceDays],
+    queryFn: () => fetchTracking({ data: { source, sinceDays } }),
     refetchInterval: 60_000,
   });
 
@@ -56,8 +73,10 @@ function AdminTracking() {
     );
   }
 
-  const { rows, funnel, byPhase, stalled } = q.data;
+  const { rows, funnel, byPhase, stalled, recordedFunnel, biggestDrop, availableSources, trackedLearners } =
+    q.data;
   const top = funnel[0]?.value || 1;
+  const recordedTop = recordedFunnel[0]?.value || 1;
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">
@@ -102,9 +121,91 @@ function AdminTracking() {
         </Card>
       </div>
 
+      <section className="mt-8 rounded-xl border border-border bg-card p-5">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="font-medium">First-session drop-off (recorded)</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Built from actual recorded steps. {trackedLearners} learner
+              {trackedLearners === 1 ? "" : "s"} tracked. "Gap" is the median time from the step above.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <select
+              aria-label="Traffic source"
+              value={source}
+              onChange={(e) => setSource(e.target.value)}
+              className="rounded-md border border-border bg-background px-2 py-1 text-xs"
+            >
+              <option value="all">All sources</option>
+              {availableSources.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+            <select
+              aria-label="Date range"
+              value={sinceDays}
+              onChange={(e) => setSinceDays(Number(e.target.value))}
+              className="rounded-md border border-border bg-background px-2 py-1 text-xs"
+            >
+              {RANGES.map((r) => (
+                <option key={r.days} value={r.days}>
+                  {r.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {trackedLearners === 0 ? (
+          <p className="mt-6 rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+            No steps recorded yet. This fills in as learners sign in and move through their first session.
+          </p>
+        ) : (
+          <>
+            {biggestDrop && (
+              <div className="mt-4 rounded-lg border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-900">
+                Biggest leak: <strong>{biggestDrop.lost}</strong> learners ({biggestDrop.pct}%) stop between
+                “{biggestDrop.from}” and “{biggestDrop.to}”.
+              </div>
+            )}
+            <div className="mt-4 space-y-3">
+              {recordedFunnel.map((f, i) => {
+                const prev = i > 0 ? recordedFunnel[i - 1] : null;
+                const lostPct =
+                  prev && prev.value > 0 ? Math.round(((prev.value - f.value) / prev.value) * 100) : 0;
+                return (
+                  <div key={f.event}>
+                    <div className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
+                      <span>{f.label}</span>
+                      <span className="text-muted-foreground">
+                        {f.value} · {Math.round((f.value / recordedTop) * 100)}%
+                        {prev ? ` · −${lostPct}%` : ""}
+                        {prev ? ` · gap ${humanGap(f.medianGapSeconds)}` : ""}
+                      </span>
+                    </div>
+                    <div className="mt-1 h-2 rounded-full bg-muted">
+                      <div
+                        className="h-2 rounded-full bg-primary transition-all"
+                        style={{ width: `${Math.max(2, (f.value / recordedTop) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </section>
+
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <div className="rounded-xl border border-border bg-card p-5">
-          <h2 className="font-medium">Drop-off funnel</h2>
+          <h2 className="font-medium">Drop-off funnel (inferred)</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Reconstructed from saved work. Useful for learners who signed up before tracking started.
+          </p>
           <div className="mt-4 space-y-3">
             {funnel.map((f) => (
               <div key={f.label}>
@@ -156,6 +257,8 @@ function AdminTracking() {
             <tr>
               <th className="px-4 py-3">Learner</th>
               <th className="px-4 py-3">Stopped at</th>
+              <th className="px-4 py-3">Last recorded step</th>
+              <th className="px-4 py-3">Source</th>
               <th className="px-4 py-3">Phase</th>
               <th className="px-4 py-3">Tasks</th>
               <th className="px-4 py-3">Docs</th>
@@ -175,6 +278,8 @@ function AdminTracking() {
                     {r.stage}
                   </span>
                 </td>
+                <td className="px-4 py-3 text-muted-foreground">{r.lastStep ?? "—"}</td>
+                <td className="px-4 py-3 text-muted-foreground">{r.source}</td>
                 <td className="px-4 py-3 text-muted-foreground">{r.phase ?? "—"}</td>
                 <td className="px-4 py-3 text-muted-foreground">
                   {r.tasksDone}/{r.tasksTotal}
@@ -188,7 +293,7 @@ function AdminTracking() {
             ))}
             {!rows.length && (
               <tr>
-                <td colSpan={7} className="px-4 py-10 text-center text-muted-foreground">
+                <td colSpan={9} className="px-4 py-10 text-center text-muted-foreground">
                   No learners yet.
                 </td>
               </tr>
@@ -200,7 +305,8 @@ function AdminTracking() {
       <div className="mt-6 flex flex-wrap gap-2 text-xs text-muted-foreground">
         <Badge variant="secondary">Tip</Badge>
         <span>
-          "Saw brief, never started work" is the biggest leak to fix — that's onboarding friction, not content.
+          Read the recorded funnel first. A long gap before a step means confusion; a big drop means the step
+          itself is the problem.
         </span>
       </div>
     </div>
