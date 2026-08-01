@@ -683,6 +683,57 @@ export type Database = {
         }
         Relationships: []
       }
+      enrolments: {
+        Row: {
+          amount: number
+          country: string
+          created_at: string
+          currency: string
+          email: string
+          full_name: string | null
+          id: string
+          paid_at: string | null
+          provider: string
+          provider_ref: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+          utm: Json
+        }
+        Insert: {
+          amount: number
+          country: string
+          created_at?: string
+          currency: string
+          email: string
+          full_name?: string | null
+          id?: string
+          paid_at?: string | null
+          provider: string
+          provider_ref?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          utm?: Json
+        }
+        Update: {
+          amount?: number
+          country?: string
+          created_at?: string
+          currency?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          paid_at?: string | null
+          provider?: string
+          provider_ref?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          utm?: Json
+        }
+        Relationships: []
+      }
       inbox_messages: {
         Row: {
           body: string
@@ -732,6 +783,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      landing_settings: {
+        Row: {
+          checkout_note: string | null
+          enrolment_open: boolean
+          founding_places: number
+          hero_variant: string
+          id: number
+          price_inr: number
+          price_ngn: number
+          price_usd: number
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          checkout_note?: string | null
+          enrolment_open?: boolean
+          founding_places?: number
+          hero_variant?: string
+          id?: number
+          price_inr?: number
+          price_ngn?: number
+          price_usd?: number
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          checkout_note?: string | null
+          enrolment_open?: boolean
+          founding_places?: number
+          hero_variant?: string
+          id?: number
+          price_inr?: number
+          price_ngn?: number
+          price_usd?: number
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: []
       }
       lessons_learned_docs: {
         Row: {

@@ -19,8 +19,10 @@ export interface TemplateEntry {
  */
 import { template as earlyAccessSignup } from './early-access-signup'
 import { template as earlyAccessWelcome } from './early-access-welcome'
+import { template as enrolmentConfirmation } from './enrolment-confirmation'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'early-access-signup': earlyAccessSignup,
   'early-access-welcome': earlyAccessWelcome,
+  'enrolment-confirmation': enrolmentConfirmation,
 }

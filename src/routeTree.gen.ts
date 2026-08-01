@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as ProjectReadinessRouteImport } from './routes/project-readiness'
 import { Route as AuthCallbackRouteImport } from './routes/auth-callback'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -18,6 +19,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as VerifyCodeRouteImport } from './routes/verify.$code'
 import { Route as ReportCodeRouteImport } from './routes/report.$code'
 import { Route as InviteCodeRouteImport } from './routes/invite.$code'
+import { Route as EnrolSuccessRouteImport } from './routes/enrol.success'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as CertificatePreviewRouteImport } from './routes/certificate.preview'
 import { Route as CertificateCodeRouteImport } from './routes/certificate.$code'
@@ -28,6 +30,8 @@ import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/ap
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as ApiPublicTtsRouteImport } from './routes/api/public/tts'
+import { Route as ApiPublicRazorpayWebhookRouteImport } from './routes/api/public/razorpay-webhook'
+import { Route as ApiPublicPaystackWebhookRouteImport } from './routes/api/public/paystack-webhook'
 import { Route as ApiPublicGeminiTestRouteImport } from './routes/api/public/gemini-test'
 import { Route as ApiPublicEarlyAccessRouteImport } from './routes/api/public/early-access'
 import { Route as AuthenticatedProjectIntroTemplateIdRouteImport } from './routes/_authenticated/project-intro.$templateId'
@@ -59,6 +63,7 @@ import { Route as AuthenticatedAppBudgetRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAdminTrackingRouteImport } from './routes/_authenticated/admin.tracking'
 import { Route as AuthenticatedAdminSignupsRouteImport } from './routes/_authenticated/admin.signups'
 import { Route as AuthenticatedAdminMarketingRouteImport } from './routes/_authenticated/admin.marketing'
+import { Route as AuthenticatedAdminLandingRouteImport } from './routes/_authenticated/admin.landing'
 import { Route as AuthenticatedAdminEvalsRouteImport } from './routes/_authenticated/admin.evals'
 import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin.analytics'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
@@ -76,6 +81,11 @@ const UnsubscribeRoute = UnsubscribeRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjectReadinessRoute = ProjectReadinessRouteImport.update({
+  id: '/project-readiness',
+  path: '/project-readiness',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
@@ -110,6 +120,11 @@ const ReportCodeRoute = ReportCodeRouteImport.update({
 const InviteCodeRoute = InviteCodeRouteImport.update({
   id: '/invite/$code',
   path: '/invite/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EnrolSuccessRoute = EnrolSuccessRouteImport.update({
+  id: '/enrol/success',
+  path: '/enrol/success',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
@@ -162,6 +177,18 @@ const ApiPublicTtsRoute = ApiPublicTtsRouteImport.update({
   path: '/api/public/tts',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicRazorpayWebhookRoute =
+  ApiPublicRazorpayWebhookRouteImport.update({
+    id: '/api/public/razorpay-webhook',
+    path: '/api/public/razorpay-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPaystackWebhookRoute =
+  ApiPublicPaystackWebhookRouteImport.update({
+    id: '/api/public/paystack-webhook',
+    path: '/api/public/paystack-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicGeminiTestRoute = ApiPublicGeminiTestRouteImport.update({
   id: '/api/public/gemini-test',
   path: '/api/public/gemini-test',
@@ -331,6 +358,12 @@ const AuthenticatedAdminMarketingRoute =
     path: '/admin/marketing',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminLandingRoute =
+  AuthenticatedAdminLandingRouteImport.update({
+    id: '/admin/landing',
+    path: '/admin/landing',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminEvalsRoute = AuthenticatedAdminEvalsRouteImport.update({
   id: '/admin/evals',
   path: '/admin/evals',
@@ -381,6 +414,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/auth-callback': typeof AuthCallbackRoute
+  '/project-readiness': typeof ProjectReadinessRoute
   '/reset-password': typeof ResetPasswordRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
@@ -390,11 +424,13 @@ export interface FileRoutesByFullPath {
   '/certificate/$code': typeof CertificateCodeRoute
   '/certificate/preview': typeof CertificatePreviewRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/enrol/success': typeof EnrolSuccessRoute
   '/invite/$code': typeof InviteCodeRoute
   '/report/$code': typeof ReportCodeRoute
   '/verify/$code': typeof VerifyCodeRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/evals': typeof AuthenticatedAdminEvalsRoute
+  '/admin/landing': typeof AuthenticatedAdminLandingRoute
   '/admin/marketing': typeof AuthenticatedAdminMarketingRoute
   '/admin/signups': typeof AuthenticatedAdminSignupsRoute
   '/admin/tracking': typeof AuthenticatedAdminTrackingRoute
@@ -426,6 +462,8 @@ export interface FileRoutesByFullPath {
   '/project-intro/$templateId': typeof AuthenticatedProjectIntroTemplateIdRoute
   '/api/public/early-access': typeof ApiPublicEarlyAccessRoute
   '/api/public/gemini-test': typeof ApiPublicGeminiTestRoute
+  '/api/public/paystack-webhook': typeof ApiPublicPaystackWebhookRoute
+  '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/app/': typeof AuthenticatedAppIndexRoute
@@ -440,6 +478,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/auth-callback': typeof AuthCallbackRoute
+  '/project-readiness': typeof ProjectReadinessRoute
   '/reset-password': typeof ResetPasswordRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
@@ -448,11 +487,13 @@ export interface FileRoutesByTo {
   '/certificate/$code': typeof CertificateCodeRoute
   '/certificate/preview': typeof CertificatePreviewRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/enrol/success': typeof EnrolSuccessRoute
   '/invite/$code': typeof InviteCodeRoute
   '/report/$code': typeof ReportCodeRoute
   '/verify/$code': typeof VerifyCodeRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/evals': typeof AuthenticatedAdminEvalsRoute
+  '/admin/landing': typeof AuthenticatedAdminLandingRoute
   '/admin/marketing': typeof AuthenticatedAdminMarketingRoute
   '/admin/signups': typeof AuthenticatedAdminSignupsRoute
   '/admin/tracking': typeof AuthenticatedAdminTrackingRoute
@@ -484,6 +525,8 @@ export interface FileRoutesByTo {
   '/project-intro/$templateId': typeof AuthenticatedProjectIntroTemplateIdRoute
   '/api/public/early-access': typeof ApiPublicEarlyAccessRoute
   '/api/public/gemini-test': typeof ApiPublicGeminiTestRoute
+  '/api/public/paystack-webhook': typeof ApiPublicPaystackWebhookRoute
+  '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/app': typeof AuthenticatedAppIndexRoute
@@ -500,6 +543,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/auth-callback': typeof AuthCallbackRoute
+  '/project-readiness': typeof ProjectReadinessRoute
   '/reset-password': typeof ResetPasswordRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
@@ -509,11 +553,13 @@ export interface FileRoutesById {
   '/certificate/$code': typeof CertificateCodeRoute
   '/certificate/preview': typeof CertificatePreviewRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/enrol/success': typeof EnrolSuccessRoute
   '/invite/$code': typeof InviteCodeRoute
   '/report/$code': typeof ReportCodeRoute
   '/verify/$code': typeof VerifyCodeRoute
   '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/_authenticated/admin/evals': typeof AuthenticatedAdminEvalsRoute
+  '/_authenticated/admin/landing': typeof AuthenticatedAdminLandingRoute
   '/_authenticated/admin/marketing': typeof AuthenticatedAdminMarketingRoute
   '/_authenticated/admin/signups': typeof AuthenticatedAdminSignupsRoute
   '/_authenticated/admin/tracking': typeof AuthenticatedAdminTrackingRoute
@@ -545,6 +591,8 @@ export interface FileRoutesById {
   '/_authenticated/project-intro/$templateId': typeof AuthenticatedProjectIntroTemplateIdRoute
   '/api/public/early-access': typeof ApiPublicEarlyAccessRoute
   '/api/public/gemini-test': typeof ApiPublicGeminiTestRoute
+  '/api/public/paystack-webhook': typeof ApiPublicPaystackWebhookRoute
+  '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
@@ -561,6 +609,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/auth-callback'
+    | '/project-readiness'
     | '/reset-password'
     | '/unsubscribe'
     | '/app'
@@ -570,11 +619,13 @@ export interface FileRouteTypes {
     | '/certificate/$code'
     | '/certificate/preview'
     | '/email/unsubscribe'
+    | '/enrol/success'
     | '/invite/$code'
     | '/report/$code'
     | '/verify/$code'
     | '/admin/analytics'
     | '/admin/evals'
+    | '/admin/landing'
     | '/admin/marketing'
     | '/admin/signups'
     | '/admin/tracking'
@@ -606,6 +657,8 @@ export interface FileRouteTypes {
     | '/project-intro/$templateId'
     | '/api/public/early-access'
     | '/api/public/gemini-test'
+    | '/api/public/paystack-webhook'
+    | '/api/public/razorpay-webhook'
     | '/api/public/tts'
     | '/lovable/email/suppression'
     | '/app/'
@@ -620,6 +673,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/auth-callback'
+    | '/project-readiness'
     | '/reset-password'
     | '/unsubscribe'
     | '/onboarding'
@@ -628,11 +682,13 @@ export interface FileRouteTypes {
     | '/certificate/$code'
     | '/certificate/preview'
     | '/email/unsubscribe'
+    | '/enrol/success'
     | '/invite/$code'
     | '/report/$code'
     | '/verify/$code'
     | '/admin/analytics'
     | '/admin/evals'
+    | '/admin/landing'
     | '/admin/marketing'
     | '/admin/signups'
     | '/admin/tracking'
@@ -664,6 +720,8 @@ export interface FileRouteTypes {
     | '/project-intro/$templateId'
     | '/api/public/early-access'
     | '/api/public/gemini-test'
+    | '/api/public/paystack-webhook'
+    | '/api/public/razorpay-webhook'
     | '/api/public/tts'
     | '/lovable/email/suppression'
     | '/app'
@@ -679,6 +737,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/auth-callback'
+    | '/project-readiness'
     | '/reset-password'
     | '/unsubscribe'
     | '/_authenticated/app'
@@ -688,11 +747,13 @@ export interface FileRouteTypes {
     | '/certificate/$code'
     | '/certificate/preview'
     | '/email/unsubscribe'
+    | '/enrol/success'
     | '/invite/$code'
     | '/report/$code'
     | '/verify/$code'
     | '/_authenticated/admin/analytics'
     | '/_authenticated/admin/evals'
+    | '/_authenticated/admin/landing'
     | '/_authenticated/admin/marketing'
     | '/_authenticated/admin/signups'
     | '/_authenticated/admin/tracking'
@@ -724,6 +785,8 @@ export interface FileRouteTypes {
     | '/_authenticated/project-intro/$templateId'
     | '/api/public/early-access'
     | '/api/public/gemini-test'
+    | '/api/public/paystack-webhook'
+    | '/api/public/razorpay-webhook'
     | '/api/public/tts'
     | '/lovable/email/suppression'
     | '/_authenticated/app/'
@@ -740,17 +803,21 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
+  ProjectReadinessRoute: typeof ProjectReadinessRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   CertSlugRoute: typeof CertSlugRoute
   CertificateCodeRoute: typeof CertificateCodeRoute
   CertificatePreviewRoute: typeof CertificatePreviewRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
+  EnrolSuccessRoute: typeof EnrolSuccessRoute
   InviteCodeRoute: typeof InviteCodeRoute
   ReportCodeRoute: typeof ReportCodeRoute
   VerifyCodeRoute: typeof VerifyCodeRoute
   ApiPublicEarlyAccessRoute: typeof ApiPublicEarlyAccessRoute
   ApiPublicGeminiTestRoute: typeof ApiPublicGeminiTestRoute
+  ApiPublicPaystackWebhookRoute: typeof ApiPublicPaystackWebhookRoute
+  ApiPublicRazorpayWebhookRoute: typeof ApiPublicRazorpayWebhookRoute
   ApiPublicTtsRoute: typeof ApiPublicTtsRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -774,6 +841,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/project-readiness': {
+      id: '/project-readiness'
+      path: '/project-readiness'
+      fullPath: '/project-readiness'
+      preLoaderRoute: typeof ProjectReadinessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth-callback': {
@@ -823,6 +897,13 @@ declare module '@tanstack/react-router' {
       path: '/invite/$code'
       fullPath: '/invite/$code'
       preLoaderRoute: typeof InviteCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/enrol/success': {
+      id: '/enrol/success'
+      path: '/enrol/success'
+      fullPath: '/enrol/success'
+      preLoaderRoute: typeof EnrolSuccessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/email/unsubscribe': {
@@ -893,6 +974,20 @@ declare module '@tanstack/react-router' {
       path: '/api/public/tts'
       fullPath: '/api/public/tts'
       preLoaderRoute: typeof ApiPublicTtsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/razorpay-webhook': {
+      id: '/api/public/razorpay-webhook'
+      path: '/api/public/razorpay-webhook'
+      fullPath: '/api/public/razorpay-webhook'
+      preLoaderRoute: typeof ApiPublicRazorpayWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/paystack-webhook': {
+      id: '/api/public/paystack-webhook'
+      path: '/api/public/paystack-webhook'
+      fullPath: '/api/public/paystack-webhook'
+      preLoaderRoute: typeof ApiPublicPaystackWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/gemini-test': {
@@ -1112,6 +1207,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminMarketingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/landing': {
+      id: '/_authenticated/admin/landing'
+      path: '/admin/landing'
+      fullPath: '/admin/landing'
+      preLoaderRoute: typeof AuthenticatedAdminLandingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/evals': {
       id: '/_authenticated/admin/evals'
       path: '/admin/evals'
@@ -1240,6 +1342,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedWelcomeRoute: typeof AuthenticatedWelcomeRoute
   AuthenticatedAdminAnalyticsRoute: typeof AuthenticatedAdminAnalyticsRoute
   AuthenticatedAdminEvalsRoute: typeof AuthenticatedAdminEvalsRoute
+  AuthenticatedAdminLandingRoute: typeof AuthenticatedAdminLandingRoute
   AuthenticatedAdminMarketingRoute: typeof AuthenticatedAdminMarketingRoute
   AuthenticatedAdminSignupsRoute: typeof AuthenticatedAdminSignupsRoute
   AuthenticatedAdminTrackingRoute: typeof AuthenticatedAdminTrackingRoute
@@ -1252,6 +1355,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedWelcomeRoute: AuthenticatedWelcomeRoute,
   AuthenticatedAdminAnalyticsRoute: AuthenticatedAdminAnalyticsRoute,
   AuthenticatedAdminEvalsRoute: AuthenticatedAdminEvalsRoute,
+  AuthenticatedAdminLandingRoute: AuthenticatedAdminLandingRoute,
   AuthenticatedAdminMarketingRoute: AuthenticatedAdminMarketingRoute,
   AuthenticatedAdminSignupsRoute: AuthenticatedAdminSignupsRoute,
   AuthenticatedAdminTrackingRoute: AuthenticatedAdminTrackingRoute,
@@ -1267,17 +1371,21 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   AuthCallbackRoute: AuthCallbackRoute,
+  ProjectReadinessRoute: ProjectReadinessRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   CertSlugRoute: CertSlugRoute,
   CertificateCodeRoute: CertificateCodeRoute,
   CertificatePreviewRoute: CertificatePreviewRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
+  EnrolSuccessRoute: EnrolSuccessRoute,
   InviteCodeRoute: InviteCodeRoute,
   ReportCodeRoute: ReportCodeRoute,
   VerifyCodeRoute: VerifyCodeRoute,
   ApiPublicEarlyAccessRoute: ApiPublicEarlyAccessRoute,
   ApiPublicGeminiTestRoute: ApiPublicGeminiTestRoute,
+  ApiPublicPaystackWebhookRoute: ApiPublicPaystackWebhookRoute,
+  ApiPublicRazorpayWebhookRoute: ApiPublicRazorpayWebhookRoute,
   ApiPublicTtsRoute: ApiPublicTtsRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
