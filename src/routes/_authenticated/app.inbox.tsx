@@ -19,7 +19,7 @@ import { ReadAloudButton } from "@/components/read-aloud-button";
 import { useVoiceSettings } from "@/lib/voice";
 import { Link } from "@tanstack/react-router";
 import { useServerFn as useServerFn2 } from "@tanstack/react-start";
-import { listTasksRich } from "@/lib/tasks.functions";
+import { listTasksRich, submitTaskWithWork } from "@/lib/tasks.functions";
 import { useRoster, rosterByName } from "@/lib/roster";
 
 export const Route = createFileRoute("/_authenticated/app/inbox")({
