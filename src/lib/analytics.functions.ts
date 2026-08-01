@@ -279,6 +279,11 @@ export const getLearnerTracking = createServerFn({ method: "GET" })
         documents: docCount.get(p.id) ?? 0,
         charterSubmitted: charterSubmitted.has(p.id),
         stage,
+        source: profileSource.get(p.id) ?? "direct",
+        lastStep: (() => {
+          const ev = stalledAt.get(p.id);
+          return ev ? LEARNER_EVENT_LABELS[ev] : null;
+        })(),
       };
     });
 
