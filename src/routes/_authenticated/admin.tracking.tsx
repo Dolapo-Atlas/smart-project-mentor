@@ -123,7 +123,10 @@ function AdminTracking() {
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <div className="rounded-xl border border-border bg-card p-5">
-          <h2 className="font-medium">Drop-off funnel</h2>
+          <h2 className="font-medium">Drop-off funnel (inferred)</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Reconstructed from saved work. Useful for learners who signed up before tracking started.
+          </p>
           <div className="mt-4 space-y-3">
             {funnel.map((f) => (
               <div key={f.label}>
