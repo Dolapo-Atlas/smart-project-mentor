@@ -186,6 +186,23 @@ function Inbox() {
         </div>
       </header>
 
+      {onboardingMode && onboardingDone && (
+        <div className="rounded-lg border border-emerald-500/40 bg-emerald-500/5 p-4">
+          <div className="text-[10px] uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-400">
+            First task complete
+          </div>
+          <h2 className="mt-1 font-display text-xl font-medium">
+            Response sent — you’re officially on the project.
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Your Project Manager has your reply and will respond in the inbox.
+            Next: pick up your Initiation deliverables.
+          </p>
+          <Button asChild className="mt-3">
+            <Link to="/app/tasks">Go to my tasks</Link>
+          </Button>
+        </div>
+      )}
       {onboardingMode && !onboardingDone && (
         <div className="rounded-lg border border-accent-orange/40 bg-accent-orange/5 p-4">
           <div className="text-[10px] uppercase tracking-[0.2em] text-accent-orange">
