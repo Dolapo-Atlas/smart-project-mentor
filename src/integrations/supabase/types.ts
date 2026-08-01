@@ -823,6 +823,44 @@ export type Database = {
         }
         Relationships: []
       }
+      learner_events: {
+        Row: {
+          campaign: Json
+          created_at: string
+          event: string
+          id: string
+          project_instance_id: string | null
+          props: Json
+          user_id: string
+        }
+        Insert: {
+          campaign?: Json
+          created_at?: string
+          event: string
+          id?: string
+          project_instance_id?: string | null
+          props?: Json
+          user_id: string
+        }
+        Update: {
+          campaign?: Json
+          created_at?: string
+          event?: string
+          id?: string
+          project_instance_id?: string | null
+          props?: Json
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learner_events_project_instance_id_fkey"
+            columns: ["project_instance_id"]
+            isOneToOne: false
+            referencedRelation: "project_instances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lessons_learned_docs: {
         Row: {
           approval_status: string
@@ -1143,6 +1181,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          campaign: Json
           career_goal: string | null
           company: string
           country: string | null
@@ -1165,6 +1204,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          campaign?: Json
           career_goal?: string | null
           company?: string
           country?: string | null
@@ -1187,6 +1227,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          campaign?: Json
           career_goal?: string | null
           company?: string
           country?: string | null
