@@ -117,6 +117,7 @@ function Inbox() {
   });
 
   const sendFn = useServerFn(sendComm);
+  const submitTask = useServerFn(submitTaskWithWork);
   const [replyOpen, setReplyOpen] = useState(false);
   const [replyBody, setReplyBody] = useState("");
   const reply = useMutation({
@@ -129,13 +130,37 @@ function Inbox() {
           body: input.body,
         },
       }),
-    onSuccess: () => {
+    onSuccess: async (_res, input) => {
+      // Onboarding: replying closes out the linked first task using the normal
+      // submission path, so progress and consequences behave as usual.
+      if (onboardingMode && linkedTasks.length > 0) {
+        const first = linkedTasks.find(
+          (t: any) => !["done", "approved", "submitted", "closed"].includes(t.status),
+        );
+        if (first) {
+          try {
+            await submitTask({ data: { id: first.id, submission: input.body } });
+          } catch {
+            // Non-blocking: the reply itself already landed.
+          }
+        }
+      }
       qc.invalidateQueries({ queryKey: ["inbox"] });
       qc.invalidateQueries({ queryKey: ["comms"] });
       qc.invalidateQueries({ queryKey: ["overview"] });
       qc.invalidateQueries({ queryKey: ["stakeholders"] });
       qc.invalidateQueries({ queryKey: ["next-action"] });
-      toast.success("Reply sent. Watch your inbox for their response.");
+      qc.invalidateQueries({ queryKey: ["tasks"] });
+      qc.invalidateQueries({ queryKey: ["whats-next"] });
+      qc.invalidateQueries({ queryKey: ["phase-progress"] });
+      if (onboardingMode) {
+        setOnboardingDone(true);
+        toast.success(
+          "First response sent. Your Project Manager will come back to you — head to Tasks for your next move.",
+        );
+      } else {
+        toast.success("Reply sent. Watch your inbox for their response.");
+      }
       setReplyOpen(false);
       setReplyBody("");
     },
