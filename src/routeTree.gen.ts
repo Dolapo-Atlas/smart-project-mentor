@@ -28,6 +28,7 @@ import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/ap
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as ApiPublicTtsRouteImport } from './routes/api/public/tts'
+import { Route as ApiPublicRazorpayWebhookRouteImport } from './routes/api/public/razorpay-webhook'
 import { Route as ApiPublicPaystackWebhookRouteImport } from './routes/api/public/paystack-webhook'
 import { Route as ApiPublicGeminiTestRouteImport } from './routes/api/public/gemini-test'
 import { Route as ApiPublicEarlyAccessRouteImport } from './routes/api/public/early-access'
@@ -163,6 +164,12 @@ const ApiPublicTtsRoute = ApiPublicTtsRouteImport.update({
   path: '/api/public/tts',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicRazorpayWebhookRoute =
+  ApiPublicRazorpayWebhookRouteImport.update({
+    id: '/api/public/razorpay-webhook',
+    path: '/api/public/razorpay-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicPaystackWebhookRoute =
   ApiPublicPaystackWebhookRouteImport.update({
     id: '/api/public/paystack-webhook',
@@ -434,6 +441,7 @@ export interface FileRoutesByFullPath {
   '/api/public/early-access': typeof ApiPublicEarlyAccessRoute
   '/api/public/gemini-test': typeof ApiPublicGeminiTestRoute
   '/api/public/paystack-webhook': typeof ApiPublicPaystackWebhookRoute
+  '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/app/': typeof AuthenticatedAppIndexRoute
@@ -493,6 +501,7 @@ export interface FileRoutesByTo {
   '/api/public/early-access': typeof ApiPublicEarlyAccessRoute
   '/api/public/gemini-test': typeof ApiPublicGeminiTestRoute
   '/api/public/paystack-webhook': typeof ApiPublicPaystackWebhookRoute
+  '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/app': typeof AuthenticatedAppIndexRoute
@@ -555,6 +564,7 @@ export interface FileRoutesById {
   '/api/public/early-access': typeof ApiPublicEarlyAccessRoute
   '/api/public/gemini-test': typeof ApiPublicGeminiTestRoute
   '/api/public/paystack-webhook': typeof ApiPublicPaystackWebhookRoute
+  '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
@@ -617,6 +627,7 @@ export interface FileRouteTypes {
     | '/api/public/early-access'
     | '/api/public/gemini-test'
     | '/api/public/paystack-webhook'
+    | '/api/public/razorpay-webhook'
     | '/api/public/tts'
     | '/lovable/email/suppression'
     | '/app/'
@@ -676,6 +687,7 @@ export interface FileRouteTypes {
     | '/api/public/early-access'
     | '/api/public/gemini-test'
     | '/api/public/paystack-webhook'
+    | '/api/public/razorpay-webhook'
     | '/api/public/tts'
     | '/lovable/email/suppression'
     | '/app'
@@ -737,6 +749,7 @@ export interface FileRouteTypes {
     | '/api/public/early-access'
     | '/api/public/gemini-test'
     | '/api/public/paystack-webhook'
+    | '/api/public/razorpay-webhook'
     | '/api/public/tts'
     | '/lovable/email/suppression'
     | '/_authenticated/app/'
@@ -765,6 +778,7 @@ export interface RootRouteChildren {
   ApiPublicEarlyAccessRoute: typeof ApiPublicEarlyAccessRoute
   ApiPublicGeminiTestRoute: typeof ApiPublicGeminiTestRoute
   ApiPublicPaystackWebhookRoute: typeof ApiPublicPaystackWebhookRoute
+  ApiPublicRazorpayWebhookRoute: typeof ApiPublicRazorpayWebhookRoute
   ApiPublicTtsRoute: typeof ApiPublicTtsRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -907,6 +921,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/tts'
       fullPath: '/api/public/tts'
       preLoaderRoute: typeof ApiPublicTtsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/razorpay-webhook': {
+      id: '/api/public/razorpay-webhook'
+      path: '/api/public/razorpay-webhook'
+      fullPath: '/api/public/razorpay-webhook'
+      preLoaderRoute: typeof ApiPublicRazorpayWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/paystack-webhook': {
@@ -1300,6 +1321,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicEarlyAccessRoute: ApiPublicEarlyAccessRoute,
   ApiPublicGeminiTestRoute: ApiPublicGeminiTestRoute,
   ApiPublicPaystackWebhookRoute: ApiPublicPaystackWebhookRoute,
+  ApiPublicRazorpayWebhookRoute: ApiPublicRazorpayWebhookRoute,
   ApiPublicTtsRoute: ApiPublicTtsRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
