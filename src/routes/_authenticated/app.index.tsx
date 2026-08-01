@@ -218,7 +218,11 @@ function Dashboard() {
           </div>
         </>
       )}
-      <ProjectBriefSheet open={briefOpen} onOpenChange={handleBriefOpenChange} />
+      <ProjectBriefSheet
+        open={briefOpen}
+        onOpenChange={handleBriefOpenChange}
+        firstRun={firstRunBriefRef.current}
+      />
       <FirstEmailPrompt open={emailPromptOpen} onOpenChange={setEmailPromptOpen} />
     </div>
   );
