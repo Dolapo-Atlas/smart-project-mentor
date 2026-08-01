@@ -793,7 +793,7 @@ function ProjectReadiness() {
             onClick={() => openEnrol("sticky")}
             className="shrink-0 rounded-full bg-accent-orange px-4 py-2.5 text-xs font-medium text-accent-orange-foreground"
           >
-            Start Experience
+            Start free
           </button>
         </div>
       </div>
