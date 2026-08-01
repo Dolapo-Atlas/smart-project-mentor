@@ -1,6 +1,7 @@
 import { createFileRoute, redirect, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getLearnerTracking } from "@/lib/analytics.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,11 +41,27 @@ function stageTone(stage: string) {
   return "bg-orange-100 text-orange-900";
 }
 
+function humanGap(seconds: number | null) {
+  if (seconds === null) return "—";
+  if (seconds < 60) return `${seconds}s`;
+  if (seconds < 3600) return `${Math.round(seconds / 60)}m`;
+  if (seconds < 86400) return `${Math.round(seconds / 3600)}h`;
+  return `${Math.round(seconds / 86400)}d`;
+}
+
+const RANGES = [
+  { label: "All time", days: 0 },
+  { label: "Last 7 days", days: 7 },
+  { label: "Last 30 days", days: 30 },
+] as const;
+
 function AdminTracking() {
   const fetchTracking = useServerFn(getLearnerTracking);
+  const [source, setSource] = useState("all");
+  const [sinceDays, setSinceDays] = useState(0);
   const q = useQuery({
-    queryKey: ["admin-tracking"],
-    queryFn: () => fetchTracking(),
+    queryKey: ["admin-tracking", source, sinceDays],
+    queryFn: () => fetchTracking({ data: { source, sinceDays } }),
     refetchInterval: 60_000,
   });
 
@@ -56,8 +73,10 @@ function AdminTracking() {
     );
   }
 
-  const { rows, funnel, byPhase, stalled } = q.data;
+  const { rows, funnel, byPhase, stalled, recordedFunnel, biggestDrop, availableSources, trackedLearners } =
+    q.data;
   const top = funnel[0]?.value || 1;
+  const recordedTop = recordedFunnel[0]?.value || 1;
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">
