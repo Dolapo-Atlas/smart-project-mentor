@@ -121,6 +121,85 @@ function AdminTracking() {
         </Card>
       </div>
 
+      <section className="mt-8 rounded-xl border border-border bg-card p-5">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="font-medium">First-session drop-off (recorded)</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Built from actual recorded steps. {trackedLearners} learner
+              {trackedLearners === 1 ? "" : "s"} tracked. "Gap" is the median time from the step above.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <select
+              aria-label="Traffic source"
+              value={source}
+              onChange={(e) => setSource(e.target.value)}
+              className="rounded-md border border-border bg-background px-2 py-1 text-xs"
+            >
+              <option value="all">All sources</option>
+              {availableSources.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+            <select
+              aria-label="Date range"
+              value={sinceDays}
+              onChange={(e) => setSinceDays(Number(e.target.value))}
+              className="rounded-md border border-border bg-background px-2 py-1 text-xs"
+            >
+              {RANGES.map((r) => (
+                <option key={r.days} value={r.days}>
+                  {r.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {trackedLearners === 0 ? (
+          <p className="mt-6 rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+            No steps recorded yet. This fills in as learners sign in and move through their first session.
+          </p>
+        ) : (
+          <>
+            {biggestDrop && (
+              <div className="mt-4 rounded-lg border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-900">
+                Biggest leak: <strong>{biggestDrop.lost}</strong> learners ({biggestDrop.pct}%) stop between
+                “{biggestDrop.from}” and “{biggestDrop.to}”.
+              </div>
+            )}
+            <div className="mt-4 space-y-3">
+              {recordedFunnel.map((f, i) => {
+                const prev = i > 0 ? recordedFunnel[i - 1] : null;
+                const lostPct =
+                  prev && prev.value > 0 ? Math.round(((prev.value - f.value) / prev.value) * 100) : 0;
+                return (
+                  <div key={f.event}>
+                    <div className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
+                      <span>{f.label}</span>
+                      <span className="text-muted-foreground">
+                        {f.value} · {Math.round((f.value / recordedTop) * 100)}%
+                        {prev ? ` · −${lostPct}%` : ""}
+                        {prev ? ` · gap ${humanGap(f.medianGapSeconds)}` : ""}
+                      </span>
+                    </div>
+                    <div className="mt-1 h-2 rounded-full bg-muted">
+                      <div
+                        className="h-2 rounded-full bg-primary transition-all"
+                        style={{ width: `${Math.max(2, (f.value / recordedTop) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </section>
+
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <div className="rounded-xl border border-border bg-card p-5">
           <h2 className="font-medium">Drop-off funnel (inferred)</h2>
