@@ -292,7 +292,6 @@ function ProjectReadiness() {
   }, []);
 
   const offer = offerQuery.data;
-  const enrolmentOpen = offer?.enrolmentOpen ?? true;
   const headline =
     HEADLINES[search.variant ?? offer?.heroVariant ?? "interview"] ?? HEADLINES["interview"]!;
 
@@ -685,7 +684,9 @@ function ProjectReadiness() {
                 <span className="font-display text-[clamp(2.6rem,6vw,4rem)] font-medium leading-none">
                   {priceLabel ?? "—"}
                 </span>
-                <span className="pb-2 text-sm text-muted-foreground">one-time payment</span>
+                <span className="pb-2 text-sm text-muted-foreground">
+                  one-time payment, only when you continue
+                </span>
               </div>
 
               <ul className="mt-8 grid gap-3 sm:grid-cols-2">
@@ -706,7 +707,7 @@ function ProjectReadiness() {
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </button>
               <p className="mt-4 text-center text-xs text-muted-foreground">
-                One-time payment · Immediate access · Complete at your own pace
+                Sign up free · Do your first real task · Pay only if you continue
               </p>
               {offer?.checkoutNote && (
                 <p className="mt-2 text-center text-xs text-muted-foreground">{offer.checkoutNote}</p>
