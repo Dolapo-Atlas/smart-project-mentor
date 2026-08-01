@@ -121,6 +121,10 @@ export const advanceTime = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
+    // Free preview boundary: advancing the clock is "continuing the experience".
+    const { assertProgrammeAccess } = await import("@/lib/access.server");
+    await assertProgrammeAccess(supabase, userId);
+
     // Readiness check
     const readiness = await getReadiness();
     if (!data.force && readiness.blockerCount > 0 && data.mode !== "day") {

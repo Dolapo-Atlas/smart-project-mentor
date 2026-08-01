@@ -38,6 +38,9 @@ export const Route = createFileRoute("/api/public/paystack-webhook")({
           console.error("paystack webhook update failed", error);
           return new Response("Update failed", { status: 500 });
         }
+        // In-app "unlock full experience" purchases live in their own table.
+        const { fulfilUnlock } = await import("@/lib/unlock.server");
+        await fulfilUnlock(reference, status as "paid" | "failed");
         return new Response("ok");
       },
     },
