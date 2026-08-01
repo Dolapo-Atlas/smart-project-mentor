@@ -1950,17 +1950,17 @@ function DemoWalkthrough() {
         </Reveal>
         <div>
           <Reveal delay={100}>
-            <p className="text-xs uppercase tracking-[0.22em] text-accent-orange">Walkthrough</p>
+            <p className="text-xs uppercase tracking-[0.22em] text-accent-orange">A word from the founder</p>
           </Reveal>
           <Reveal delay={150}>
             <h2 className="mt-4 font-display text-[clamp(1.8rem,3.4vw,2.7rem)] font-medium leading-[1.1] tracking-[-0.02em]">
-              See what a day inside Atlas actually looks like
+              Why Atlas exists, in Dolapo&rsquo;s own words
             </h2>
           </Reveal>
           <Reveal delay={200}>
             <p className="mt-5 max-w-xl text-[16px] leading-relaxed text-muted-foreground">
-              A short tour of the live project: the brief, the tasks, the stakeholders who push back and the
-              deliverables you complete before a Steering Committee gate.
+              Dolapo Rasaq explains the gap Atlas was built to close: knowing the theory but never having
+              handled a real project, a difficult stakeholder or a deliverable under pressure. Tap to play with sound.
             </p>
           </Reveal>
           <Reveal delay={250}>
