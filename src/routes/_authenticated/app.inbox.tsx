@@ -336,13 +336,17 @@ function Inbox() {
                     <div className="mt-8 border-t border-border pt-6">
                       {role && (
                         <Button
-                          variant="outline"
+                          variant={onboardingMode && !onboardingDone ? "default" : "outline"}
+                          size={onboardingMode && !onboardingDone ? "lg" : "default"}
                           onClick={() => {
                             setReplyOpen(true);
                             setReplyBody("");
                           }}
                         >
-                          <Reply className="mr-2 h-4 w-4" /> Reply to {selected.sender_name}
+                          <Reply className="mr-2 h-4 w-4" />
+                          {onboardingMode && !onboardingDone
+                            ? "Write Response"
+                            : `Reply to ${selected.sender_name}`}
                         </Button>
                       )}
                       <DelegatePanel
