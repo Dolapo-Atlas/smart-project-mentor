@@ -476,7 +476,11 @@ function ProjectReadiness() {
       </section>
 
       {/* ---------------------------------------------------------- DEMO */}
-      <ExperienceSection videoUrl={offer?.videoUrl ?? ATLAS_DEMO_URL} />
+      <ExperienceSection
+        videoUrl={offer?.videoUrl ?? ATLAS_DEMO_URL}
+        ctaLabel={ctaLabel}
+        onCta={() => openEnrol("video")}
+      />
 
       {/* ------------------------------------------------------- JOURNEY */}
       <section id="how-it-works" className="py-20 sm:py-28">
@@ -812,7 +816,15 @@ function ProjectReadiness() {
 }
 
 /** Product demonstration — the centrepiece, presented in a navy Atlas container. */
-function ExperienceSection({ videoUrl }: { videoUrl: string | null }) {
+function ExperienceSection({
+  videoUrl,
+  ctaLabel,
+  onCta,
+}: {
+  videoUrl: string | null;
+  ctaLabel: string;
+  onCta: () => void;
+}) {
   return (
     <section id="experience" className="relative overflow-hidden bg-primary py-20 text-primary-foreground sm:py-28">
       <div
@@ -836,12 +848,27 @@ function ExperienceSection({ videoUrl }: { videoUrl: string | null }) {
 
         <Reveal delay={140}>
           <div className="mt-12 grid items-center gap-10 lg:grid-cols-[minmax(0,360px)_1fr]">
-            <div className="rounded-[28px] border border-primary-foreground/15 bg-primary-foreground/5 p-3 shadow-[0_60px_160px_-60px_rgba(0,0,0,0.7)]">
-              {videoUrl ? (
-                <DemoVideo src={videoUrl} onPlay={() => track("video_played")} />
-              ) : (
-                <AutoDemo />
-              )}
+            <div>
+              <div className="rounded-[28px] border border-primary-foreground/15 bg-primary-foreground/5 p-3 shadow-[0_60px_160px_-60px_rgba(0,0,0,0.7)]">
+                {videoUrl ? (
+                  <DemoVideo src={videoUrl} onPlay={() => track("video_played")} />
+                ) : (
+                  <AutoDemo />
+                )}
+              </div>
+              <p className="mx-auto mt-4 max-w-[360px] text-center text-[13px] leading-relaxed text-primary-foreground/70">
+                In 60 seconds: you run a real project end to end, and leave with proof you can do the job.
+              </p>
+              <div className="mx-auto mt-5 max-w-[360px]">
+                <button
+                  type="button"
+                  onClick={onCta}
+                  className="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-accent-orange px-6 py-3 text-sm font-medium text-accent-orange-foreground shadow-[0_1px_0_rgba(255,255,255,0.25)_inset,0_12px_30px_-12px_rgba(217,119,6,0.6)] transition-all hover:-translate-y-0.5"
+                >
+                  {ctaLabel}
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                </button>
+              </div>
             </div>
             <div className="rounded-[28px] border border-primary-foreground/10 bg-primary-foreground/5 p-7">
               <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/60">What you will be doing</p>
