@@ -216,6 +216,7 @@ function Inbox() {
           )}
           {messages?.map((m) => {
             const active = selected?.id === m.id;
+            const highlight = onboardingMode && !onboardingDone && !m.read;
             return (
               <li key={m.id}>
                 <button
@@ -223,7 +224,11 @@ function Inbox() {
                     active
                       ? "border-foreground bg-card shadow-sm"
                       : "border-border bg-card/60 hover:bg-card"
-                  } ${!m.read ? "bg-primary/5" : ""}`}
+                  } ${!m.read ? "bg-primary/5" : ""} ${
+                    highlight
+                      ? "ring-2 ring-accent-orange ring-offset-2 ring-offset-background"
+                      : ""
+                  }`}
                   onClick={() => {
                     setSelectedId(m.id);
                     if (!m.read) mark.mutate(m.id);
