@@ -315,7 +315,7 @@ function ProjectReadiness() {
       <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur">
         <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-5 py-3">
           <Link to="/" className="flex min-w-0 items-center gap-2">
-            <img src={atlasMark.src} alt="Atlas" className="h-8 w-8 shrink-0" />
+            <img src={atlasMark.url} alt="Atlas" className="h-8 w-8 shrink-0" />
             <span className="truncate font-display text-lg font-medium">Atlas</span>
           </Link>
           <Button size="sm" onClick={() => openEnrol("nav")}>
