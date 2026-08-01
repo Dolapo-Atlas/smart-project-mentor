@@ -149,6 +149,10 @@ function ProjectsPicker() {
     mutationFn: (templateId: string) => startFn({ data: { templateId } }),
     onSuccess: (res: any) => {
       qc.invalidateQueries();
+      trackLearner("project_created", {
+        projectInstanceId: res?.projectInstanceId ?? res?.id ?? null,
+        props: { templateId: res?.templateId ?? null },
+      });
       if (res?.requiresIntro && res?.templateId) {
         navigate({ to: "/project-intro/$templateId", params: { templateId: res.templateId } });
       } else {
