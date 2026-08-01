@@ -35,6 +35,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import atlasMark from "@/assets/atlas-mark.png.asset.json";
 import { AutoDemo } from "@/components/auto-demo";
+import { DemoVideo } from "@/components/landing/demo-video";
 import { HeroStage } from "@/components/landing/hero-stage";
 import { getReferralStats } from "@/lib/signup.functions";
 
@@ -94,6 +95,7 @@ function Landing() {
         <Hero />
         <SocialProof />
         <AutoDemo />
+        <DemoWalkthrough />
         <Features />
         <HowItWorks />
         <ReadinessOffer />
@@ -1928,6 +1930,51 @@ function ReadinessOffer() {
             </Link>
           </div>
         </Reveal>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Product walkthrough video                                          */
+/* ------------------------------------------------------------------ */
+
+function DemoWalkthrough() {
+  return (
+    <section id="walkthrough" className="relative border-y border-border bg-card/40 py-20 sm:py-28">
+      <div className="mx-auto grid max-w-7xl items-center gap-12 px-5 sm:px-6 lg:grid-cols-[minmax(0,380px)_1fr] lg:gap-20 lg:px-10">
+        <Reveal>
+          <div className="rounded-[28px] border border-border bg-card p-3 shadow-[0_40px_120px_-50px_rgba(11,19,43,0.35)]">
+            <DemoVideo />
+          </div>
+        </Reveal>
+        <div>
+          <Reveal delay={100}>
+            <p className="text-xs uppercase tracking-[0.22em] text-accent-orange">A word from the founder</p>
+          </Reveal>
+          <Reveal delay={150}>
+            <h2 className="mt-4 font-display text-[clamp(1.8rem,3.4vw,2.7rem)] font-medium leading-[1.1] tracking-[-0.02em]">
+              Why Atlas exists, in Dolapo&rsquo;s own words
+            </h2>
+          </Reveal>
+          <Reveal delay={200}>
+            <p className="mt-5 max-w-xl text-[16px] leading-relaxed text-muted-foreground">
+              Dolapo Rasaq explains the gap Atlas was built to close: knowing the theory but never having
+              handled a real project, a difficult stakeholder or a deliverable under pressure. Tap to play with sound.
+            </p>
+          </Reveal>
+          <Reveal delay={250}>
+            <div className="mt-8">
+              <Link
+                to="/project-readiness"
+                className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-all hover:-translate-y-0.5"
+              >
+                Start Your Atlas Experience
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              </Link>
+            </div>
+          </Reveal>
+        </div>
       </div>
     </section>
   );
