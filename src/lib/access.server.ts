@@ -25,6 +25,7 @@ export interface AccessState {
   freePreviewCompletedAt: string | null;
   /** Live subscription state, when the learner has one. */
   subscription: {
+    id: string;
     status: string;
     priceId: string;
     currentPeriodEnd: string | null;
@@ -63,7 +64,7 @@ export async function getAccessState(
       .in("status", ["submitted", "reviewed", "done", "completed"]),
     supabase
       .from("subscriptions")
-      .select("status, price_id, current_period_end, cancel_at_period_end")
+      .select("id, status, price_id, current_period_end, cancel_at_period_end")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(1)
@@ -76,6 +77,7 @@ export async function getAccessState(
 
   const subRow = (subRes.data ?? null) as
     | {
+        id: string;
         status: string;
         price_id: string;
         current_period_end: string | null;
@@ -85,6 +87,7 @@ export async function getAccessState(
 
   const subscription = subRow
     ? {
+        id: subRow.id,
         status: subRow.status,
         priceId: subRow.price_id,
         currentPeriodEnd: subRow.current_period_end,
