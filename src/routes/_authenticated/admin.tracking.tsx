@@ -257,6 +257,8 @@ function AdminTracking() {
             <tr>
               <th className="px-4 py-3">Learner</th>
               <th className="px-4 py-3">Stopped at</th>
+              <th className="px-4 py-3">Last recorded step</th>
+              <th className="px-4 py-3">Source</th>
               <th className="px-4 py-3">Phase</th>
               <th className="px-4 py-3">Tasks</th>
               <th className="px-4 py-3">Docs</th>
@@ -276,6 +278,8 @@ function AdminTracking() {
                     {r.stage}
                   </span>
                 </td>
+                <td className="px-4 py-3 text-muted-foreground">{r.lastStep ?? "—"}</td>
+                <td className="px-4 py-3 text-muted-foreground">{r.source}</td>
                 <td className="px-4 py-3 text-muted-foreground">{r.phase ?? "—"}</td>
                 <td className="px-4 py-3 text-muted-foreground">
                   {r.tasksDone}/{r.tasksTotal}
@@ -289,7 +293,7 @@ function AdminTracking() {
             ))}
             {!rows.length && (
               <tr>
-                <td colSpan={7} className="px-4 py-10 text-center text-muted-foreground">
+                <td colSpan={9} className="px-4 py-10 text-center text-muted-foreground">
                   No learners yet.
                 </td>
               </tr>
