@@ -10,6 +10,14 @@ export const getMyAccess = createServerFn({ method: "GET" })
   });
 
 /** Editable note shown under the unlock checkout. Prices live in `@/lib/plans`. */
+export const markFreePreviewComplete = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { markPreviewConsumed } = await import("@/lib/access.server");
+    return markPreviewConsumed(context.supabase, context.userId);
+  });
+
+/** Editable note shown under the unlock checkout. Prices live in `@/lib/plans`. */
 export const getUnlockPricing = createServerFn({ method: "GET" }).handler(async () => {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data } = await supabaseAdmin
