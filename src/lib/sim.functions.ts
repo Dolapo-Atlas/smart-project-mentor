@@ -840,6 +840,8 @@ export const recordDocument = createServerFn({ method: "POST" })
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
+    const { assertProgrammeAccess } = await import("./access.server");
+    await assertProgrammeAccess(context.supabase, context.userId);
     const { data: doc, error } = await context.supabase
       .from("documents")
       .insert({ user_id: context.userId, status: "pending", ...data })
