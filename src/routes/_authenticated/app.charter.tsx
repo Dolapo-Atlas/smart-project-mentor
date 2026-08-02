@@ -32,6 +32,8 @@ import {
 import { TEMPLATES, evaluateCharter } from "@/lib/templates";
 import { getOverview } from "@/lib/sim.functions";
 import { getTaskById } from "@/lib/tasks.functions";
+import { isPaywallError } from "@/lib/paywall";
+import { useNavigate } from "@tanstack/react-router";
 import { TaskContextPanel } from "@/components/mentor/task-context-panel";
 import { WhyThisMatters } from "@/components/why-this-matters";
 
@@ -83,6 +85,7 @@ function inferFocusFields(taskText: string): string[] {
 function CharterPage() {
   const qc = useQueryClient();
   const search = useSearch({ from: "/_authenticated/app/charter" });
+  const paywallNavigate = useNavigate();
 
   const getOrCreate = useServerFn(getOrCreateCharter);
   const saveFn = useServerFn(saveCharterDraft);
@@ -187,7 +190,14 @@ function CharterPage() {
       setDirty(false);
       toast.success(`Charter v${r.version} submitted to sponsor for approval.`);
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Submit failed"),
+    onError: (e) => {
+      if (isPaywallError(e)) {
+        toast.info("Your free preview is complete — unlock to keep going.");
+        paywallNavigate({ to: "/app/unlock" });
+        return;
+      }
+      toast.error(e instanceof Error ? e.message : "Submit failed");
+    },
   });
 
   function setField(key: string, v: string) {

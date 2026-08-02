@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { recordDocument, reviewDocument } from "@/lib/sim.functions";
 import { TEMPLATES, TEMPLATE_WHY, type TemplateKind, evaluateGenericTemplate } from "@/lib/templates";
+import { isPaywallError } from "@/lib/paywall";
 import { WhyThisMatters } from "@/components/why-this-matters";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -79,7 +80,14 @@ function TemplateFillPage() {
       }
       navigate({ to: "/app" });
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Save failed"),
+    onError: (e) => {
+      if (isPaywallError(e)) {
+        toast.info("Your free preview is complete — unlock to keep going.");
+        navigate({ to: "/app/unlock" });
+        return;
+      }
+      toast.error(e instanceof Error ? e.message : "Save failed");
+    },
   });
 
   if (!template) {

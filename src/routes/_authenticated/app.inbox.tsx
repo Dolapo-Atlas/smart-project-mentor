@@ -20,6 +20,7 @@ import { useVoiceSettings } from "@/lib/voice";
 import { Link } from "@tanstack/react-router";
 import { useServerFn as useServerFn2 } from "@tanstack/react-start";
 import { listTasksRich, submitTaskWithWork } from "@/lib/tasks.functions";
+import { markFreePreviewComplete } from "@/lib/access.functions";
 import { trackLearner } from "@/lib/learner-events";
 import { useRoster, rosterByName } from "@/lib/roster";
 
@@ -120,6 +121,7 @@ function Inbox() {
 
   const sendFn = useServerFn(sendComm);
   const submitTask = useServerFn(submitTaskWithWork);
+  const markPreviewFn = useServerFn(markFreePreviewComplete);
   const [replyOpen, setReplyOpen] = useState(false);
   const [replyBody, setReplyBody] = useState("");
   const reply = useMutation({
@@ -146,6 +148,16 @@ function Inbox() {
           } catch {
             // Non-blocking: the reply itself already landed.
           }
+        }
+      }
+      if (onboardingMode) {
+        // The reply itself is the first finished piece of work, so it consumes
+        // the free preview even when no task row was linked to the email.
+        try {
+          await markPreviewFn();
+          qc.invalidateQueries({ queryKey: ["access"] });
+        } catch {
+          // Non-blocking.
         }
       }
       trackLearner("first_reply_sent", { props: { onboarding: onboardingMode } });

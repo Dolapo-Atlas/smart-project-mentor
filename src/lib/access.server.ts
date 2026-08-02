@@ -61,7 +61,7 @@ export async function getAccessState(
       .from("tasks")
       .select("id", { count: "exact", head: true })
       .eq("user_id", userId)
-      .in("status", ["submitted", "reviewed", "done", "completed"]),
+      .in("status", ["submitted", "reviewed", "done", "completed", "approved", "closed"]),
     supabase
       .from("subscriptions")
       .select("id, status, price_id, current_period_end, cancel_at_period_end")
@@ -100,8 +100,10 @@ export async function getAccessState(
   const subscribed = subRow ? subscriptionGrantsAccess(subRow) : false;
   const tier = profile?.access_tier === "full" || subscribed ? "full" : "free";
   const workDone = tasksRes.count ?? 0;
-  const previewComplete = workDone >= 1;
   let freePreviewCompletedAt = profile?.free_preview_completed_at ?? null;
+  // The preview is consumed by the first finished piece of work — a submitted
+  // task, or the onboarding email reply, which stamps the profile directly.
+  const previewComplete = workDone >= 1 || Boolean(freePreviewCompletedAt);
 
   // Stamp the moment the preview is consumed (idempotent).
   if (tier === "free" && previewComplete && !freePreviewCompletedAt) {
@@ -121,6 +123,23 @@ export async function getAccessState(
     freePreviewCompletedAt,
     subscription,
   };
+}
+
+/** Throws when the learner has used up the free preview and has not paid. */
+export async function markPreviewConsumed(
+  supabase: SupabaseClient<any>,
+  userId: string,
+): Promise<AccessState> {
+  const state = await getAccessState(supabase, userId);
+  if (!state.freePreviewCompletedAt) {
+    const now = new Date().toISOString();
+    await supabase
+      .from("profiles")
+      .update({ free_preview_completed_at: now })
+      .eq("id", userId);
+    return { ...state, freePreviewCompletedAt: now, previewComplete: true, locked: state.tier === "free" };
+  }
+  return state;
 }
 
 /** Throws when the learner has used up the free preview and has not paid. */

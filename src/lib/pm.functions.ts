@@ -615,6 +615,10 @@ export const submitGate = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    {
+      const { assertProgrammeAccess } = await import("./access.server");
+      await assertProgrammeAccess(supabase, userId);
+    }
 
     // Pull artefacts for the AI panel
     const [{ data: docs }, { data: raid }, { data: reports }, { data: gates }] = await Promise.all([

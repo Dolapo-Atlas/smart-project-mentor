@@ -120,6 +120,8 @@ export const submitCharter = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    const { assertProgrammeAccess } = await import("./access.server");
+    await assertProgrammeAccess(supabase, userId);
     const { data: charter } = await supabase
       .from("project_charters")
       .select("*")
