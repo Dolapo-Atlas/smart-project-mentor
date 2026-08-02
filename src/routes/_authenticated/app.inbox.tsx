@@ -148,6 +148,16 @@ function Inbox() {
           }
         }
       }
+      if (onboardingMode) {
+        // The reply itself is the first finished piece of work, so it consumes
+        // the free preview even when no task row was linked to the email.
+        try {
+          await markPreviewFn();
+          qc.invalidateQueries({ queryKey: ["access"] });
+        } catch {
+          // Non-blocking.
+        }
+      }
       trackLearner("first_reply_sent", { props: { onboarding: onboardingMode } });
       qc.invalidateQueries({ queryKey: ["inbox"] });
       qc.invalidateQueries({ queryKey: ["comms"] });
