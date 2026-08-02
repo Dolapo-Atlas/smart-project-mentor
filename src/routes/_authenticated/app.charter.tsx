@@ -85,6 +85,7 @@ function inferFocusFields(taskText: string): string[] {
 function CharterPage() {
   const qc = useQueryClient();
   const search = useSearch({ from: "/_authenticated/app/charter" });
+  const paywallNavigate = useNavigate();
 
   const getOrCreate = useServerFn(getOrCreateCharter);
   const saveFn = useServerFn(saveCharterDraft);
