@@ -20,6 +20,7 @@ import { useVoiceSettings } from "@/lib/voice";
 import { Link } from "@tanstack/react-router";
 import { useServerFn as useServerFn2 } from "@tanstack/react-start";
 import { listTasksRich, submitTaskWithWork } from "@/lib/tasks.functions";
+import { markFreePreviewComplete } from "@/lib/access.functions";
 import { trackLearner } from "@/lib/learner-events";
 import { useRoster, rosterByName } from "@/lib/roster";
 
@@ -120,6 +121,7 @@ function Inbox() {
 
   const sendFn = useServerFn(sendComm);
   const submitTask = useServerFn(submitTaskWithWork);
+  const markPreviewFn = useServerFn(markFreePreviewComplete);
   const [replyOpen, setReplyOpen] = useState(false);
   const [replyBody, setReplyBody] = useState("");
   const reply = useMutation({
