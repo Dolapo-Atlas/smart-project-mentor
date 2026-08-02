@@ -126,6 +126,23 @@ export async function getAccessState(
 }
 
 /** Throws when the learner has used up the free preview and has not paid. */
+export async function markPreviewConsumed(
+  supabase: SupabaseClient<any>,
+  userId: string,
+): Promise<AccessState> {
+  const state = await getAccessState(supabase, userId);
+  if (!state.freePreviewCompletedAt) {
+    const now = new Date().toISOString();
+    await supabase
+      .from("profiles")
+      .update({ free_preview_completed_at: now })
+      .eq("id", userId);
+    return { ...state, freePreviewCompletedAt: now, previewComplete: true, locked: state.tier === "free" };
+  }
+  return state;
+}
+
+/** Throws when the learner has used up the free preview and has not paid. */
 export async function assertProgrammeAccess(
   supabase: SupabaseClient<any>,
   userId: string,
