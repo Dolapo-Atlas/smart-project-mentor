@@ -449,7 +449,7 @@ function AuthPage() {
               isSignup ? "bg-accent-orange text-accent-orange-foreground hover:bg-accent-orange/90" : "",
             ].join(" ")}
           >
-            {loading ? "..." : isSignup ? "Create account — it's free" : "Log in"}
+            {loading ? "..." : isSignup ? "Create account — start free preview" : "Log in"}
           </Button>
         </form>
 
