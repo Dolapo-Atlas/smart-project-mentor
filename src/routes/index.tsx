@@ -1864,11 +1864,12 @@ function SectionHeader({
 /*  Project Readiness Experience (paid offer)                          */
 /* ------------------------------------------------------------------ */
 
-const READINESS_PRICES = [
-  { label: "Nigeria", price: "₦20,000" },
-  { label: "India", price: "₹1,499" },
-  { label: "UK & other markets", price: "£10" },
-];
+// Single source of truth: the same plan definitions the unlock screen and
+// Stripe checkout use, so the homepage can never quote a stale price.
+const READINESS_PRICES = (["nigeria", "india", "international"] as const).map((region) => ({
+  label: region === "international" ? "UK & other markets" : PLANS[region].label,
+  price: formatPlanPrice(PLANS[region].oneTime),
+}));
 
 const READINESS_INCLUDES = [
   "Full Digital Care Records Rollout",
