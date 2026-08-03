@@ -6,9 +6,12 @@ import {
   createStripeClient,
   getStripeErrorMessage,
 } from "@/lib/stripe.server";
-import { PLAN_PRICE_IDS } from "@/lib/plans";
+import { PLAN_PRICE_IDS, PROGRAMME_ID, PROGRAMME_NAME } from "@/lib/plans";
 
-type CheckoutSessionResult = { clientSecret: string } | { error: string };
+type CheckoutSessionResult =
+  | { clientSecret: string }
+  | { alreadyPaid: true }
+  | { error: string };
 type PortalSessionResult = { url: string } | { error: string };
 
 const envSchema = z.enum(["sandbox", "live"]);
@@ -56,12 +59,17 @@ async function resolveOrCreateCustomer(
   return created.id;
 }
 
-/** Opens an embedded subscription checkout for the signed-in learner. */
+/** Opens an embedded one-time checkout for the signed-in learner. */
 export const createCheckoutSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => checkoutSchema.parse(d))
   .handler(async ({ data, context }): Promise<CheckoutSessionResult> => {
     try {
+      // Never charge a learner who already owns the programme.
+      const { getAccessState } = await import("@/lib/access.server");
+      const access = await getAccessState(context.supabase, context.userId);
+      if (access.tier === "full") return { alreadyPaid: true };
+
       const stripe = createStripeClient(data.environment);
 
       const prices = await stripe.prices.list({ lookup_keys: [data.priceId] });
@@ -70,26 +78,46 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
 
       const { data: profile } = await context.supabase
         .from("profiles")
-        .select("email")
+        .select("*")
         .eq("id", context.userId)
         .maybeSingle();
 
+      const p = (profile ?? {}) as Record<string, unknown>;
+      const email = (p["email"] as string | null) ?? undefined;
+      const role =
+        (p["preferred_role"] as string | null) ??
+        (p["role"] as string | null) ??
+        (p["career_goal"] as string | null) ??
+        "";
+      const country = (p["country"] as string | null) ?? "";
+
       const customerId = await resolveOrCreateCustomer(stripe, {
-        email: (profile?.email as string | null) ?? undefined,
+        email,
         userId: context.userId,
       });
 
+      const metadata: Record<string, string> = {
+        userId: context.userId,
+        userEmail: email ?? "",
+        programmeId: PROGRAMME_ID,
+        programmeName: PROGRAMME_NAME,
+        selectedRole: role,
+        selectedCountry: country,
+        selectedCurrency: (price.currency ?? "").toUpperCase(),
+        priceId: data.priceId,
+      };
+
       const session = await stripe.checkout.sessions.create({
         line_items: [{ price: price.id, quantity: 1 }],
-        mode: "subscription",
+        mode: "payment",
         ui_mode: "embedded_page",
         return_url: data.returnUrl,
         customer: customerId,
         // UK seller: the provider handles tax calculation, filing and
         // remittance, fraud, disputes and buyer support.
         managed_payments: { enabled: true },
-        metadata: { userId: context.userId },
-        subscription_data: { metadata: { userId: context.userId } },
+        metadata,
+        payment_intent_data: { description: PROGRAMME_NAME, metadata },
       } as any);
 
       return { clientSecret: session.client_secret ?? "" };

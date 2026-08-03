@@ -76,10 +76,35 @@ async function markCanceled(subscription: any, env: StripeEnv) {
   }
 }
 
+/**
+ * One-time programme purchase. Access is granted ONLY here, from a
+ * signature-verified provider event — never from the success redirect.
+ */
+async function fulfilOneTimePurchase(session: any) {
+  const userId = session.metadata?.userId;
+  if (!userId) {
+    console.error("checkout session without userId metadata", session.id);
+    return;
+  }
+  // Unpaid = delayed-notification method still settling; wait for the async event.
+  if (session.payment_status === "unpaid") return;
+
+  const supabase = await admin();
+  const { error } = await supabase
+    .from("profiles")
+    .update({ access_tier: "full", unlocked_at: new Date().toISOString() })
+    .eq("id", userId);
+  if (error) console.error("programme unlock failed", error);
+}
+
 async function handleWebhook(req: Request, env: StripeEnv) {
   const event = await verifyWebhook(req, env);
 
   switch (event.type) {
+    case "checkout.session.completed":
+    case "checkout.session.async_payment_succeeded":
+      await fulfilOneTimePurchase(event.data.object);
+      break;
     case "customer.subscription.created":
     case "customer.subscription.updated":
       await upsertSubscription(event.data.object, env);

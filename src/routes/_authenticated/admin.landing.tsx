@@ -117,7 +117,7 @@ function AdminLanding() {
         <div>
           <h1 className="font-display text-3xl font-medium">Sales page controls</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Live settings for /project-readiness — prices, places, campaign variant and enrolment.
+            Live settings for the enrolment funnel — prices, places, campaign variant and enrolment.
           </p>
         </div>
         <Link to="/admin/tracking" className="text-sm font-medium text-primary underline-offset-4 hover:underline">

@@ -1,12 +1,15 @@
 /**
- * Atlas programme subscription catalogue.
+ * Atlas programme catalogue — a single ONE-TIME unlock per market.
  *
  * Price IDs are the human-readable lookup keys created in the payment
  * provider; they are identical in test and live. Amounts are in major units
  * purely for display — the provider holds the authoritative amount.
  */
 export type PlanRegion = "nigeria" | "india" | "international";
-export type PlanInterval = "monthly" | "yearly";
+
+export const PROGRAMME_ID = "atlas_readiness_experience";
+export const PROGRAMME_NAME =
+  "Atlas Project Readiness Experience — Digital Care Records Rollout";
 
 export interface PlanPrice {
   priceId: string;
@@ -15,47 +18,42 @@ export interface PlanPrice {
   symbol: string;
 }
 
-export const PLANS: Record<PlanRegion, {
-  label: string;
-  currency: string;
-  symbol: string;
-  monthly: PlanPrice;
-  yearly: PlanPrice;
-}> = {
+export const PLANS: Record<
+  PlanRegion,
+  { label: string; currency: string; symbol: string; oneTime: PlanPrice }
+> = {
   nigeria: {
     label: "Nigeria",
     currency: "NGN",
     symbol: "₦",
-    monthly: { priceId: "atlas_ngn_monthly", amount: 20000, currency: "NGN", symbol: "₦" },
-    yearly: { priceId: "atlas_ngn_yearly", amount: 200000, currency: "NGN", symbol: "₦" },
+    oneTime: { priceId: "atlas_onetime_ngn", amount: 25000, currency: "NGN", symbol: "₦" },
   },
   india: {
     label: "India",
     currency: "INR",
     symbol: "₹",
-    monthly: { priceId: "atlas_inr_monthly", amount: 1499, currency: "INR", symbol: "₹" },
-    yearly: { priceId: "atlas_inr_yearly", amount: 14990, currency: "INR", symbol: "₹" },
+    oneTime: { priceId: "atlas_onetime_inr", amount: 1499, currency: "INR", symbol: "₹" },
   },
   international: {
-    label: "International",
+    label: "United Kingdom & other markets",
     currency: "GBP",
     symbol: "£",
-    monthly: { priceId: "atlas_gbp_monthly", amount: 10, currency: "GBP", symbol: "£" },
-    yearly: { priceId: "atlas_gbp_yearly", amount: 100, currency: "GBP", symbol: "£" },
+    oneTime: { priceId: "atlas_onetime_gbp", amount: 24.99, currency: "GBP", symbol: "£" },
   },
 };
 
-export const PLAN_PRICE_IDS = Object.values(PLANS).flatMap((p) => [
-  p.monthly.priceId,
-  p.yearly.priceId,
-]);
+export const PLAN_PRICE_IDS = Object.values(PLANS).map((p) => p.oneTime.priceId);
 
-export function planFor(region: PlanRegion, interval: PlanInterval): PlanPrice {
-  return PLANS[region][interval];
+export function planFor(region: PlanRegion): PlanPrice {
+  return PLANS[region].oneTime;
 }
 
 export function formatPlanPrice(price: PlanPrice): string {
-  return `${price.symbol}${price.amount.toLocaleString()}`;
+  const decimals = Number.isInteger(price.amount) ? 0 : 2;
+  return `${price.symbol}${price.amount.toLocaleString(undefined, {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  })}`;
 }
 
 /** Best-effort region guess from the browser locale / timezone. */

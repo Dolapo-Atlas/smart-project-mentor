@@ -88,7 +88,7 @@ function EnrolSuccess() {
           confirmation link.
         </p>
         <Button asChild className="mt-6">
-          <Link to="/project-readiness">Back to enrolment</Link>
+          <Link to="/auth">Back to enrolment</Link>
         </Button>
       </Shell>
     );
@@ -142,7 +142,7 @@ function EnrolSuccess() {
           try again — reference {ref}.
         </p>
         <Button asChild className="mt-6">
-          <Link to="/project-readiness">Try again</Link>
+          <Link to="/auth">Try again</Link>
         </Button>
       </Shell>
     );
