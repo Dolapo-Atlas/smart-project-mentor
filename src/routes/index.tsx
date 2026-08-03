@@ -93,6 +93,7 @@ function Landing() {
       <Nav scrolled={scrolled} />
       <main>
         <Hero />
+        <ExperienceGap />
         <SocialProof />
         <AutoDemo />
         <DemoWalkthrough />
@@ -276,27 +277,27 @@ function Hero() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent-orange opacity-60" />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent-orange" />
               </span>
-              Atlas Project Readiness Experience — available now
+              Atlas Project Readiness Experience — Available Now
             </span>
           </Reveal>
           <Reveal delay={80}>
             <h1 className="mt-6 font-display text-[clamp(2.6rem,6.2vw,5.25rem)] font-medium leading-[1.02] tracking-[-0.02em] text-foreground">
-              Experience the workplace before you&rsquo;re{" "}
-              <span className="italic text-accent-orange">in it</span>.
+              Recruiters can tell when your answers are{" "}
+              <span className="italic text-accent-orange">only theoretical</span>.
             </h1>
           </Reveal>
           <Reveal delay={160}>
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">
-              Atlas drops you into a real project. Your sponsor emails you at 8pm. Finance pushes back on your budget. A vendor slips a deadline. You decide what happens next, and you get to see how it plays out.
+              You&rsquo;ve studied the theory and earned the certifications. Atlas helps you practise realistic project situations, build practical judgement and prepare stronger interview answers.
             </p>
           </Reveal>
           <Reveal delay={240}>
             <div className="mt-9 flex flex-wrap items-center gap-3">
               <Link
-                to="/project-readiness"
+                to="/auth"
                 className="group inline-flex items-center gap-2 rounded-full bg-accent-orange px-6 py-3 text-sm font-medium text-accent-orange-foreground shadow-[0_1px_0_rgba(255,255,255,0.25)_inset,0_12px_30px_-12px_rgba(217,119,6,0.6)] transition-all hover:-translate-y-0.5 hover:shadow-[0_1px_0_rgba(255,255,255,0.3)_inset,0_18px_36px_-12px_rgba(217,119,6,0.7)]"
               >
-                Start Your Atlas Experience
+                Start Your First Project Scenario
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
               <a
@@ -304,23 +305,15 @@ function Hero() {
                 className="group inline-flex items-center gap-2 rounded-full border border-border bg-card/70 px-6 py-3 text-sm font-medium text-foreground backdrop-blur transition-all hover:-translate-y-0.5 hover:bg-card"
               >
                 <PlayCircle className="h-4 w-4 text-accent-orange" />
-                See How It Works
+                See How Atlas Works
               </a>
             </div>
           </Reveal>
           <Reveal delay={320}>
-            <div className="mt-10 flex flex-wrap items-center gap-4">
-              <div className="inline-flex items-center gap-2 rounded-full border border-accent-orange/30 bg-accent-orange/10 px-4 py-2 text-sm font-semibold text-foreground shadow-[0_8px_24px_-12px_color-mix(in_oklab,var(--accent-orange)_50%,transparent)]">
-                <ShieldCheck className="h-4 w-4 text-accent-orange" />
-                <span>
-                  Learn by doing.{" "}
-                  <span className="italic text-accent-orange">Not by watching.</span>
-                </span>
-              </div>
-              <div className="hidden items-center gap-2 text-xs text-muted-foreground sm:flex">
-                <Sparkles className="h-3.5 w-3.5 text-accent-orange" /> One-time payment · Immediate access
-              </div>
-            </div>
+            <p className="mt-7 flex items-center gap-2 text-xs leading-relaxed text-muted-foreground/90 sm:text-[13px]">
+              <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-accent-orange" />
+              Realistic workplace scenarios · Performance feedback · Verifiable Atlas credential
+            </p>
           </Reveal>
         </div>
 
@@ -335,6 +328,49 @@ function Hero() {
 /* ------------------------------------------------------------------ */
 /*  Social proof                                                       */
 /* ------------------------------------------------------------------ */
+
+const GAP_POINTS = [
+  "Manage a realistic workplace project",
+  "Respond to stakeholder emails",
+  "Handle risks, tasks and changing priorities",
+  "Make decisions and experience the consequences",
+  "Build practical judgement and interview confidence",
+];
+
+function ExperienceGap() {
+  return (
+    <section className="border-t border-border/60 py-20 sm:py-24">
+      <div className="mx-auto grid max-w-6xl gap-12 px-5 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:gap-20 lg:px-10">
+        <Reveal>
+          <h2 className="font-display text-[clamp(1.9rem,3.6vw,3rem)] font-medium leading-[1.08] tracking-[-0.015em] text-foreground">
+            The problem is not always knowledge. It is the{" "}
+            <span className="italic text-accent-orange">experience gap</span>.
+          </h2>
+          <p className="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
+            When a recruiter asks how you would handle a difficult stakeholder, an unresolved risk or a delayed project, memorised answers are often not enough. Atlas gives you realistic project situations to work through before your interview or first project role exposes that gap.
+          </p>
+          <Link
+            to="/auth"
+            className="group mt-9 inline-flex items-center gap-2 rounded-full bg-accent-orange px-6 py-3 text-sm font-medium text-accent-orange-foreground transition-all hover:-translate-y-0.5"
+          >
+            Start Your First Project Scenario
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+          </Link>
+        </Reveal>
+        <Reveal delay={120}>
+          <ul className="space-y-4 lg:pt-3">
+            {GAP_POINTS.map((point) => (
+              <li key={point} className="flex items-start gap-3 border-b border-border/50 pb-4 last:border-0">
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-accent-orange" />
+                <span className="text-base leading-snug text-foreground">{point}</span>
+              </li>
+            ))}
+          </ul>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
 
 function SocialProof() {
   return (
