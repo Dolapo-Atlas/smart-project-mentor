@@ -83,7 +83,6 @@ export function SubscriptionNotices() {
           plan: plan?.label,
           amount: plan?.amount,
           region: plan?.region,
-          interval: plan?.interval,
           price_id: sub.priceId,
           started_at: new Date().toISOString(),
         },
