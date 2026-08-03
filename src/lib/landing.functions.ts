@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { PLANS } from "@/lib/plans";
 
 export type CountryKey = "nigeria" | "india" | "international";
 
@@ -32,9 +33,11 @@ export const getPublicOffer = createServerFn({ method: "GET" }).handler(async ()
 
   return {
     prices: {
-      nigeria: s?.price_ngn ?? 20000,
-      india: s?.price_inr ?? 1499,
-      international: s?.price_usd ?? 10,
+      // Fall back to the canonical plan prices so a missing settings row can
+      // never resurface an old price.
+      nigeria: s?.price_ngn ?? PLANS.nigeria.oneTime.amount,
+      india: s?.price_inr ?? PLANS.india.oneTime.amount,
+      international: s?.price_usd ?? PLANS.international.oneTime.amount,
     },
     foundingPlaces: s?.founding_places ?? 50,
     placesTaken: {
@@ -81,8 +84,8 @@ export const startCheckout = createServerFn({ method: "POST" })
 
     const amount =
       data.country === "nigeria"
-        ? (settings?.price_ngn ?? 20000)
-        : (settings?.price_inr ?? 1499);
+        ? (settings?.price_ngn ?? PLANS.nigeria.oneTime.amount)
+        : (settings?.price_inr ?? PLANS.india.oneTime.amount);
 
     const reference = `ATLAS-${data.country.slice(0, 2).toUpperCase()}-${Date.now().toString(36).toUpperCase()}-${Math.random()
       .toString(36)
