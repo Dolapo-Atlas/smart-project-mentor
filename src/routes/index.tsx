@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { PLANS, formatPlanPrice } from "@/lib/plans";
 import {
   ArrowRight,
   Mail,
