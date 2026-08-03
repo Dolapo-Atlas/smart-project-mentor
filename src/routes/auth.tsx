@@ -311,7 +311,7 @@ function AuthPage() {
           </p>
           <ul className="mt-8 space-y-3 text-sm">
             {(isSignup
-              ? ["Free to start — no card required", "First workplace task in under 5 minutes", "Verifiable credential on completion"]
+              ? ["Start free preview — no card required", "First workplace task in under 5 minutes", "Unlock full access when you're ready"]
               : ["Your project state is saved day by day", "Deliverables and feedback kept in place", "Secure sign-in with Google, Apple or SSO"]
             ).map((line) => (
               <li key={line} className="flex items-start gap-3">
@@ -364,7 +364,7 @@ function AuthPage() {
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
             {isSignup
-              ? "Free to start. Your first workplace task is waiting."
+              ? "Start your free preview. Your first workplace task is waiting."
               : "Enter your details to return to your programme."}
           </p>
         </div>
@@ -449,7 +449,7 @@ function AuthPage() {
               isSignup ? "bg-accent-orange text-accent-orange-foreground hover:bg-accent-orange/90" : "",
             ].join(" ")}
           >
-            {loading ? "..." : isSignup ? "Create account — it's free" : "Log in"}
+            {loading ? "..." : isSignup ? "Create account — start free preview" : "Log in"}
           </Button>
         </form>
 
