@@ -18,6 +18,9 @@ export function StripeEmbeddedCheckout({ priceId, returnUrl }: Props) {
       },
     });
     if ("error" in result) throw new Error(result.error);
+    if ("alreadyPaid" in result) {
+      throw new Error("You already have full access — no further payment is needed.");
+    }
     if (!result.clientSecret) throw new Error("Checkout could not be opened.");
     return result.clientSecret;
   };

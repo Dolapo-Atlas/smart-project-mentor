@@ -82,15 +82,14 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         .eq("id", context.userId)
         .maybeSingle();
 
-      const email = (profile?.["email"] as string | null) ?? undefined;
+      const p = (profile ?? {}) as Record<string, unknown>;
+      const email = (p["email"] as string | null) ?? undefined;
       const role =
-        (profile?.["preferred_role"] as string | null) ??
-        (profile?.["role"] as string | null) ??
+        (p["preferred_role"] as string | null) ??
+        (p["role"] as string | null) ??
+        (p["career_goal"] as string | null) ??
         "";
-      const country =
-        (profile?.["country"] as string | null) ??
-        (profile?.["region"] as string | null) ??
-        "";
+      const country = (p["country"] as string | null) ?? "";
 
       const customerId = await resolveOrCreateCustomer(stripe, {
         email,
