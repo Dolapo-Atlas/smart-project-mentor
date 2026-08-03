@@ -281,9 +281,9 @@ function Hero() {
             </span>
           </Reveal>
           <Reveal delay={80}>
-            <h1 className="mt-6 font-display text-[clamp(2.6rem,6.2vw,5.25rem)] font-medium leading-[1.02] tracking-[-0.02em] text-foreground">
+            <h1 className="mt-6 font-display text-[clamp(2.6rem,6.2vw,5.25rem)] font-semibold leading-[1.02] tracking-[-0.02em] text-foreground">
               Recruiters can tell when your answers are{" "}
-              <span className="italic text-accent-orange">only theoretical</span>.
+              <span className="font-bold text-accent-orange">only theoretical</span>.
             </h1>
           </Reveal>
           <Reveal delay={160}>
@@ -342,9 +342,9 @@ function ExperienceGap() {
     <section className="border-t border-border/60 py-20 sm:py-24">
       <div className="mx-auto grid max-w-6xl gap-12 px-5 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:gap-20 lg:px-10">
         <Reveal>
-          <h2 className="font-display text-[clamp(1.9rem,3.6vw,3rem)] font-medium leading-[1.08] tracking-[-0.015em] text-foreground">
+          <h2 className="font-display text-[clamp(1.9rem,3.6vw,3rem)] font-semibold leading-[1.08] tracking-[-0.015em] text-foreground">
             The problem is not always knowledge. It is the{" "}
-            <span className="italic text-accent-orange">experience gap</span>.
+            <span className="font-bold text-accent-orange">experience gap</span>.
           </h2>
           <p className="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
             When a recruiter asks how you would handle a difficult stakeholder, an unresolved risk or a delayed project, memorised answers are often not enough. Atlas gives you realistic project situations to work through before your interview or first project role exposes that gap.
