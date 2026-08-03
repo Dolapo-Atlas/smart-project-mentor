@@ -48,6 +48,8 @@ export const issueCertificate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
+    const { assertProgrammeAccess } = await import("@/lib/access.server");
+    await assertProgrammeAccess(supabase, userId);
     const { buildCertificatePayload } = await import("@/lib/certificate-data.server");
     const { generateVerificationCode, qrDataUrl, verificationUrl } = await import(
       "@/lib/certificates.server"

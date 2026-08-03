@@ -16,6 +16,8 @@ export const PAYWALL_MESSAGE =
 export interface AccessState {
   tier: "free" | "full";
   unlockedAt: string | null;
+  /** How the access was granted: purchase, grandfathered, admin, or none. */
+  accessSource: "purchase" | "grandfathered" | "admin" | "none";
   /** Number of tasks the learner has submitted or completed. */
   workDone: number;
   /** Free preview consumed: first task finished. */
@@ -23,6 +25,17 @@ export interface AccessState {
   /** Free tier + preview consumed => further progress is gated. */
   locked: boolean;
   freePreviewCompletedAt: string | null;
+  /** The one-time programme purchase on this account, when there is one. */
+  purchase: {
+    id: string;
+    status: string;
+    amount: number;
+    currency: string;
+    country: string | null;
+    paidAt: string | null;
+    refundedAt: string | null;
+    disputedAt: string | null;
+  } | null;
   /** Live subscription state, when the learner has one. */
   subscription: {
     id: string;
@@ -51,10 +64,10 @@ export async function getAccessState(
   supabase: SupabaseClient<any>,
   userId: string,
 ): Promise<AccessState> {
-  const [profileRes, tasksRes, subRes] = await Promise.all([
+  const [profileRes, tasksRes, subRes, purchaseRes] = await Promise.all([
     supabase
       .from("profiles")
-      .select("access_tier, unlocked_at, free_preview_completed_at")
+      .select("access_tier, access_source, unlocked_at, free_preview_completed_at")
       .eq("id", userId)
       .maybeSingle(),
     supabase
@@ -69,10 +82,22 @@ export async function getAccessState(
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    supabase
+      .from("programme_purchases")
+      .select("id, status, amount, currency, country, paid_at, refunded_at, disputed_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   const profile = (profileRes.data ?? null) as
-    | { access_tier: string | null; unlocked_at: string | null; free_preview_completed_at: string | null }
+    | {
+        access_tier: string | null;
+        access_source: string | null;
+        unlocked_at: string | null;
+        free_preview_completed_at: string | null;
+      }
     | null;
 
   const subRow = (subRes.data ?? null) as
@@ -92,6 +117,30 @@ export async function getAccessState(
         priceId: subRow.price_id,
         currentPeriodEnd: subRow.current_period_end,
         cancelAtPeriodEnd: Boolean(subRow.cancel_at_period_end),
+      }
+    : null;
+
+  const purchaseRow = (purchaseRes.data ?? null) as null | {
+    id: string;
+    status: string;
+    amount: number;
+    currency: string;
+    country: string | null;
+    paid_at: string | null;
+    refunded_at: string | null;
+    disputed_at: string | null;
+  };
+
+  const purchase = purchaseRow
+    ? {
+        id: purchaseRow.id,
+        status: purchaseRow.status,
+        amount: purchaseRow.amount,
+        currency: purchaseRow.currency,
+        country: purchaseRow.country,
+        paidAt: purchaseRow.paid_at,
+        refundedAt: purchaseRow.refunded_at,
+        disputedAt: purchaseRow.disputed_at,
       }
     : null;
 
@@ -117,10 +166,12 @@ export async function getAccessState(
   return {
     tier,
     unlockedAt: profile?.unlocked_at ?? null,
+    accessSource: ((profile?.access_source ?? "none") as AccessState["accessSource"]),
     workDone,
     previewComplete,
     locked: tier === "free" && previewComplete,
     freePreviewCompletedAt,
+    purchase,
     subscription,
   };
 }

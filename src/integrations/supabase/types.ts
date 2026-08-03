@@ -1180,6 +1180,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          access_source: string
           access_tier: string
           avatar_url: string | null
           campaign: Json
@@ -1206,6 +1207,7 @@ export type Database = {
           unlocked_at: string | null
         }
         Insert: {
+          access_source?: string
           access_tier?: string
           avatar_url?: string | null
           campaign?: Json
@@ -1232,6 +1234,7 @@ export type Database = {
           unlocked_at?: string | null
         }
         Update: {
+          access_source?: string
           access_tier?: string
           avatar_url?: string | null
           campaign?: Json
@@ -1270,42 +1273,51 @@ export type Database = {
       programme_purchases: {
         Row: {
           amount: number
+          amount_refunded: number
           country: string
           created_at: string
           currency: string
+          disputed_at: string | null
           id: string
           metadata: Json
           paid_at: string | null
           provider: string
           provider_ref: string
+          refunded_at: string | null
           status: string
           updated_at: string
           user_id: string
         }
         Insert: {
           amount: number
+          amount_refunded?: number
           country: string
           created_at?: string
           currency: string
+          disputed_at?: string | null
           id?: string
           metadata?: Json
           paid_at?: string | null
           provider: string
           provider_ref: string
+          refunded_at?: string | null
           status?: string
           updated_at?: string
           user_id: string
         }
         Update: {
           amount?: number
+          amount_refunded?: number
           country?: string
           created_at?: string
           currency?: string
+          disputed_at?: string | null
           id?: string
           metadata?: Json
           paid_at?: string | null
           provider?: string
           provider_ref?: string
+          refunded_at?: string | null
           status?: string
           updated_at?: string
           user_id?: string
