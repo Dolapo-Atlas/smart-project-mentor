@@ -364,7 +364,7 @@ function AuthPage() {
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
             {isSignup
-              ? "Free to start. Your first workplace task is waiting."
+              ? "Start your free preview. Your first workplace task is waiting."
               : "Enter your details to return to your programme."}
           </p>
         </div>
