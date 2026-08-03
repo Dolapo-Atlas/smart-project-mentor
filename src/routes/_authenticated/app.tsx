@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
-import { Mail, ListChecks, LayoutDashboard, LogOut, ArrowLeft, ShieldAlert, FileBarChart2, Contact, FolderKanban, MoreHorizontal, FileText, Users, Wallet, Activity, Gauge, Gavel, Award, Send, GitPullRequest, CheckCircle2, Compass, Settings, Shield, UserCheck, Megaphone, Sparkles, PauseCircle, Camera, LayoutTemplate } from "lucide-react";
+import { Mail, ListChecks, LayoutDashboard, LogOut, ArrowLeft, ShieldAlert, FileBarChart2, Contact, FolderKanban, MoreHorizontal, FileText, Users, Wallet, Activity, Gauge, Gavel, Award, Send, GitPullRequest, CheckCircle2, Compass, Settings, Shield, UserCheck, Megaphone, Sparkles, PauseCircle, Camera, LayoutTemplate, CreditCard } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -141,6 +141,7 @@ const MORE_GROUPS: NavGroup[] = [
     items: [
       { to: "/app/gemini", label: "Gemini AI features", icon: Sparkles },
       { to: "/app/workplace-tools", label: "Workplace tools", icon: Sparkles },
+      { to: "/app/account", label: "Account & purchase", icon: CreditCard },
       { to: "/app/settings", label: "Settings", icon: Settings },
     ],
   },

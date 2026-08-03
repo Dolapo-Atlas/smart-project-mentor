@@ -29,3 +29,15 @@ export const getUnlockPricing = createServerFn({ method: "GET" }).handler(async 
     checkoutNote: (data?.checkout_note ?? null) as string | null,
   };
 });
+/**
+ * Permanently deletes the signed-in learner's account and all of their data.
+ * Cascading foreign keys on auth.users remove the simulation records with it.
+ */
+export const deleteMyAccount = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(context.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true as const };
+  });

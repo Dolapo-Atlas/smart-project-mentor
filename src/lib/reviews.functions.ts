@@ -28,6 +28,8 @@ export const generatePerformanceReview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
+    const { assertProgrammeAccess } = await import("@/lib/access.server");
+    await assertProgrammeAccess(supabase, userId);
 
     const { data: state } = await supabase
       .from("simulation_state")

@@ -24,7 +24,11 @@ export async function fulfilUnlock(reference: string, status: "paid" | "failed")
   const userId = (purchase as { user_id: string }).user_id;
   const { error } = await supabaseAdmin
     .from("profiles")
-    .update({ access_tier: "full", unlocked_at: new Date().toISOString() })
+    .update({
+      access_tier: "full",
+      access_source: "purchase",
+      unlocked_at: new Date().toISOString(),
+    })
     .eq("id", userId);
   if (error) console.error("unlock grant failed", error);
 }

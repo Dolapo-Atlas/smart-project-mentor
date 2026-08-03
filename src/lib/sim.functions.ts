@@ -1098,6 +1098,8 @@ export const reviewDocument = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ document_id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    const { assertProgrammeAccess } = await import("./access.server");
+    await assertProgrammeAccess(supabase, userId);
     const { data: doc } = await supabase
       .from("documents")
       .select("*")

@@ -127,27 +127,31 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     }
   });
 
-/** Opens the hosted billing portal so learners can manage or cancel. */
+/**
+ * Opens the hosted billing portal so learners can download their receipt and
+ * see their payment history. Resolved from the provider customer record (keyed
+ * on `metadata.userId`) rather than a subscription row, because Atlas sells a
+ * one-time unlock and never creates subscriptions.
+ */
 export const createPortalSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
     z.object({ returnUrl: z.string().url().max(500).optional(), environment: envSchema }).parse(d),
   )
   .handler(async ({ data, context }): Promise<PortalSessionResult> => {
-    const { data: sub } = await context.supabase
-      .from("subscriptions")
-      .select("stripe_customer_id")
-      .eq("user_id", context.userId)
-      .eq("environment", data.environment)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    const customerId = (sub?.stripe_customer_id as string | undefined) ?? null;
-    if (!customerId) return { error: "We couldn't find a subscription on your account." };
-
     try {
       const stripe = createStripeClient(data.environment);
+
+      if (!/^[a-zA-Z0-9_-]+$/.test(context.userId)) return { error: "Invalid account." };
+      const found = await stripe.customers.search({
+        query: `metadata['userId']:'${context.userId}'`,
+        limit: 1,
+      });
+      const customerId = found.data[0]?.id;
+      if (!customerId) {
+        return { error: "We couldn't find a payment on your account yet." };
+      }
+
       const portal = await stripe.billingPortal.sessions.create({
         customer: customerId,
         ...(data.returnUrl && { return_url: data.returnUrl }),

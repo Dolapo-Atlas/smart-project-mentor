@@ -342,6 +342,8 @@ export const submitRaidLog = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
+    const { assertProgrammeAccess } = await import("./access.server");
+    await assertProgrammeAccess(supabase, userId);
 
     const { data: items } = await supabase
       .from("raid_items")

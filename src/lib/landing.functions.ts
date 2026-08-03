@@ -153,7 +153,11 @@ export const claimEnrolment = createServerFn({ method: "POST" })
     // A paid enrolment also grants full in-app access.
     await supabaseAdmin
       .from("profiles")
-      .update({ access_tier: "full", unlocked_at: new Date().toISOString() })
+      .update({
+        access_tier: "full",
+        access_source: "purchase",
+        unlocked_at: new Date().toISOString(),
+      })
       .eq("id", context.userId);
     return { ok: true as const };
   });
