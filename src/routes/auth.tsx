@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { AtlasMark } from "@/components/landing/atlas-chrome";
+import { CheckCircle2, Sparkles, ShieldCheck } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -262,31 +264,117 @@ function AuthPage() {
     );
   }
 
+  const isSignup = mode === "signup";
+
   return (
-    <div className="min-h-screen bg-background paper-texture">
-      <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
-        <Link to="/" className="font-display text-lg font-semibold">
-          Atlas <span className="text-primary">/</span>
+    <div className="min-h-screen bg-background paper-texture lg:grid lg:grid-cols-[1.05fr_1fr]">
+      {/* Editorial panel — content and accent change per mode */}
+      <aside
+        className={[
+          "relative hidden overflow-hidden px-12 py-14 lg:flex lg:flex-col lg:justify-between",
+          isSignup ? "bg-navy text-navy-foreground" : "bg-secondary text-foreground",
+        ].join(" ")}
+      >
+        <div
+          aria-hidden
+          className={[
+            "pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full blur-3xl",
+            isSignup ? "bg-accent-orange/25" : "bg-primary/10",
+          ].join(" ")}
+        />
+        <Link to="/" className="relative flex items-center gap-3">
+          <AtlasMark className="h-10 w-10" />
+          <span className="font-display text-xl font-semibold tracking-tight">Atlas</span>
         </Link>
-        <button
-          type="button"
-          onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-          className="text-sm text-muted-foreground hover:text-foreground"
-        >
-          {mode === "signin" ? "Sign up" : "Sign in"}
-        </button>
-      </header>
-      <main className="mx-auto flex max-w-md flex-col gap-6 px-6 pb-16 pt-8">
-        <h1 className="text-center font-display text-3xl font-semibold tracking-tight">
-          {mode === "signin" ? "Log in to Atlas" : "Create your Atlas account"}
-        </h1>
+
+        <div className="relative max-w-md">
+          <span
+            className={[
+              "inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]",
+              isSignup
+                ? "bg-accent-orange/20 text-accent-orange"
+                : "bg-primary/10 text-primary",
+            ].join(" ")}
+          >
+            {isSignup ? <Sparkles className="h-3.5 w-3.5" /> : <ShieldCheck className="h-3.5 w-3.5" />}
+            {isSignup ? "New account" : "Welcome back"}
+          </span>
+          <h2 className="mt-6 font-display text-4xl leading-tight font-semibold tracking-tight">
+            {isSignup
+              ? "Start your first day on a real programme."
+              : "Pick up exactly where you left off."}
+          </h2>
+          <p className={["mt-4 text-sm leading-relaxed", isSignup ? "text-navy-foreground/75" : "text-muted-foreground"].join(" ")}>
+            {isSignup
+              ? "Atlas puts you inside a live digital care records programme — real emails, real stakeholders, real consequences."
+              : "Your project, tasks, inbox and progress are waiting in the state you left them."}
+          </p>
+          <ul className="mt-8 space-y-3 text-sm">
+            {(isSignup
+              ? ["Free to start — no card required", "First workplace task in under 5 minutes", "Verifiable credential on completion"]
+              : ["Your project state is saved day by day", "Deliverables and feedback kept in place", "Secure sign-in with Google, Apple or SSO"]
+            ).map((line) => (
+              <li key={line} className="flex items-start gap-3">
+                <CheckCircle2
+                  className={["mt-0.5 h-4 w-4 shrink-0", isSignup ? "text-accent-orange" : "text-primary"].join(" ")}
+                />
+                <span className={isSignup ? "text-navy-foreground/85" : "text-muted-foreground"}>{line}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <p className={["relative text-xs", isSignup ? "text-navy-foreground/55" : "text-muted-foreground"].join(" ")}>
+          atlassim.co — workplace experience simulation
+        </p>
+      </aside>
+
+      <main className="flex min-h-screen flex-col px-6 py-8 sm:px-10 lg:px-14">
+        <header className="flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2 lg:invisible">
+            <AtlasMark className="h-8 w-8" />
+            <span className="font-display text-lg font-semibold">Atlas</span>
+          </Link>
+          <div className="flex items-center gap-2 text-sm">
+            <span className="hidden text-muted-foreground sm:inline">
+              {isSignup ? "Already have an account?" : "New to Atlas?"}
+            </span>
+            <button
+              type="button"
+              onClick={() => setMode(isSignup ? "signin" : "signup")}
+              className="rounded-full border border-border px-4 py-1.5 font-medium transition hover:bg-muted/50"
+            >
+              {isSignup ? "Log in" : "Create account"}
+            </button>
+          </div>
+        </header>
+
+        <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-6 py-10">
+        <div>
+          <p
+            className={[
+              "text-[11px] font-semibold uppercase tracking-[0.18em]",
+              isSignup ? "text-accent-orange" : "text-primary",
+            ].join(" ")}
+          >
+            {isSignup ? "Step 1 of 2 — create account" : "Sign in"}
+          </p>
+          <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight">
+            {isSignup ? "Create your Atlas account" : "Log in to Atlas"}
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {isSignup
+              ? "Free to start. Your first workplace task is waiting."
+              : "Enter your details to return to your programme."}
+          </p>
+        </div>
 
         <div className="space-y-3">
           <button
             type="button"
             onClick={handleGoogle}
             disabled={loading}
-            className="flex w-full items-center justify-center gap-3 rounded-lg border border-border bg-background px-4 py-3 text-sm font-medium transition hover:bg-muted/40 disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:opacity-50"
           >
             <GoogleIcon />
             {mode === "signin" ? "Log in with Google" : "Sign up with Google"}
@@ -295,7 +383,7 @@ function AuthPage() {
             type="button"
             onClick={handleApple}
             disabled={loading}
-            className="flex w-full items-center justify-center gap-3 rounded-lg border border-border bg-background px-4 py-3 text-sm font-medium transition hover:bg-muted/40 disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:opacity-50"
           >
             <AppleIcon />
             {mode === "signin" ? "Log in with Apple" : "Sign up with Apple"}
@@ -304,7 +392,7 @@ function AuthPage() {
             type="button"
             onClick={handleSSO}
             disabled={loading}
-            className="flex w-full items-center justify-center gap-3 rounded-lg border border-border bg-background px-4 py-3 text-sm font-medium transition hover:bg-muted/40 disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:opacity-50"
           >
             <SSOIcon />
             {mode === "signin" ? "Log in with SSO" : "Sign up with SSO"}
@@ -315,7 +403,7 @@ function AuthPage() {
           <div className="h-px flex-1 bg-border" /> or <div className="h-px flex-1 bg-border" />
         </div>
 
-        <form onSubmit={handleEmail} className="space-y-4">
+        <form onSubmit={handleEmail} className="space-y-4 rounded-2xl border border-border/70 bg-card/70 p-5 shadow-sm">
           <div className="space-y-2">
             <Label htmlFor="email" className="text-sm">Work email</Label>
             <Input
@@ -329,7 +417,9 @@ function AuthPage() {
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="password" className="text-sm">Password</Label>
+              <Label htmlFor="password" className="text-sm">
+                {isSignup ? "Create a password" : "Password"}
+              </Label>
               <button
                 type="button"
                 onClick={() => setShowPassword((s) => !s)}
@@ -346,20 +436,33 @@ function AuthPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
+            {isSignup && (
+              <p className="text-xs text-muted-foreground">At least 6 characters.</p>
+            )}
           </div>
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading ? "..." : "Continue"}
+          <Button
+            type="submit"
+            size="lg"
+            disabled={loading}
+            className={[
+              "w-full transition",
+              isSignup ? "bg-accent-orange text-accent-orange-foreground hover:bg-accent-orange/90" : "",
+            ].join(" ")}
+          >
+            {loading ? "..." : isSignup ? "Create account — it's free" : "Log in"}
           </Button>
         </form>
 
-        <button
-          type="button"
-          onClick={handlePasswordReset}
-          disabled={resetLoading || loading}
-          className="text-center text-sm font-medium text-primary underline-offset-4 hover:underline disabled:opacity-50"
-        >
-          {resetLoading ? "Sending password link…" : "Set or reset email password"}
-        </button>
+        {!isSignup && (
+          <button
+            type="button"
+            onClick={handlePasswordReset}
+            disabled={resetLoading || loading}
+            className="text-center text-sm font-medium text-primary underline-offset-4 hover:underline disabled:opacity-50"
+          >
+            {resetLoading ? "Sending password link…" : "Set or reset email password"}
+          </button>
+        )}
 
         <p className="text-center text-xs text-muted-foreground">
           By continuing, you agree to Atlas's{" "}
@@ -367,6 +470,7 @@ function AuthPage() {
           and{" "}
           <Link to="/" className="underline underline-offset-2 hover:text-foreground">Privacy Policy</Link>.
         </p>
+        </div>
       </main>
     </div>
   );
