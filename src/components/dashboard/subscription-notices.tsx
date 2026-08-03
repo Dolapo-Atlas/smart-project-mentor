@@ -49,7 +49,7 @@ export function SubscriptionNotices() {
 
     setCelebrating(true);
     confetti({ particleCount: 140, spread: 80, origin: { y: 0.3 }, ticks: 260 });
-    trackLearner("programme_unlocked", {
+    trackLearner("subscription_activated", {
       props: { amount: purchase.amount, currency: purchase.currency },
     });
 
