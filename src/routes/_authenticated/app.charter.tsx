@@ -36,10 +36,27 @@ import { isPaywallError } from "@/lib/paywall";
 import { useNavigate } from "@tanstack/react-router";
 import { TaskContextPanel } from "@/components/mentor/task-context-panel";
 import { WhyThisMatters } from "@/components/why-this-matters";
+import { UnlockScreen } from "@/components/dashboard/unlock-screen";
+import { getMyAccess } from "@/lib/access.functions";
+import { Lock } from "lucide-react";
 
 const searchSchema = z.object({
   task: z.string().uuid().optional(),
+  checkout: z.enum(["success", "cancel"]).optional(),
+  session_id: z.string().optional(),
 });
+
+/**
+ * Free preview: the learner writes the opening half of the Charter. The
+ * remaining sections stay visible but locked until the programme is unlocked.
+ */
+const FREE_FIELD_KEYS = new Set([
+  "title",
+  "purpose",
+  "objectives",
+  "success_criteria",
+  "scope_in",
+]);
 
 export const Route = createFileRoute("/_authenticated/app/charter")({
   validateSearch: searchSchema,
@@ -106,6 +123,10 @@ function CharterPage() {
     queryKey: ["overview"],
     queryFn: () => overviewFn(),
   });
+  const fetchAccess = useServerFn(getMyAccess);
+  const accessQuery = useQuery({ queryKey: ["my-access"], queryFn: () => fetchAccess() });
+  const hasFullAccess = accessQuery.data?.tier === "full";
+
   const taskQuery = useQuery({
     queryKey: ["task-by-id", search.task ?? null],
     queryFn: () => fetchTask({ data: { id: search.task! } }),
@@ -192,8 +213,8 @@ function CharterPage() {
     },
     onError: (e) => {
       if (isPaywallError(e)) {
-        toast.info("Your free preview is complete — unlock to keep going.");
-        paywallNavigate({ to: "/app/unlock" });
+        toast.info("Unlock the full experience to submit your Charter.");
+        document.getElementById("charter-unlock")?.scrollIntoView({ behavior: "smooth" });
         return;
       }
       toast.error(e instanceof Error ? e.message : "Submit failed");
@@ -339,7 +360,30 @@ function CharterPage() {
             const rest = focusSet
               ? template.fields.filter((f) => !focusSet.has(f.key))
               : [];
-            const renderField = (f: (typeof template.fields)[number]) => (
+            const renderField = (f: (typeof template.fields)[number]) => {
+              const isLocked = !hasFullAccess && !FREE_FIELD_KEYS.has(f.key);
+              if (isLocked) {
+                return (
+                  <div
+                    key={f.key}
+                    className="relative overflow-hidden rounded-lg border border-dashed border-border bg-muted/30 p-4"
+                  >
+                    <div className="pointer-events-none select-none opacity-40 blur-[2px]">
+                      <div className="text-sm font-semibold">{f.label}</div>
+                      {f.guidance && (
+                        <div className="mt-0.5 text-xs text-muted-foreground">{f.guidance}</div>
+                      )}
+                      <div className="mt-2 h-20 rounded-md border border-border bg-background" />
+                    </div>
+                    <div className="absolute inset-0 grid place-items-center">
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-accent-orange/40 bg-card px-3 py-1 text-[11px] text-accent-orange">
+                        <Lock className="h-3 w-3" aria-hidden /> Locked — unlock to complete
+                      </span>
+                    </div>
+                  </div>
+                );
+              }
+              return (
               <div
                 key={f.key}
                 className={`rounded-lg border p-4 ${
@@ -378,6 +422,7 @@ function CharterPage() {
                 ) : null}
               </div>
             );
+            };
             return (
               <div className="space-y-4">
                 {focusSet && (
@@ -445,6 +490,49 @@ function CharterPage() {
             })}
           </div>
         )}
+
+        {search.checkout === "success" && (
+          <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-4 text-sm">
+            <div className="font-semibold text-emerald-800 dark:text-emerald-300">
+              Payment successful. Your full Atlas experience is now unlocked.
+            </div>
+            <Button className="mt-3" size="sm" onClick={() => accessQuery.refetch()}>
+              Continue Project Charter
+            </Button>
+          </div>
+        )}
+        {search.checkout === "cancel" && !hasFullAccess && (
+          <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm">
+            <div className="font-semibold text-amber-800 dark:text-amber-300">
+              Your payment was not completed. Your project progress has been saved.
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                onClick={() =>
+                  document
+                    .getElementById("charter-unlock")
+                    ?.scrollIntoView({ behavior: "smooth" })
+                }
+              >
+                Try Payment Again
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => paywallNavigate({ to: "/app" })}>
+                Return to Workspace
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {!hasFullAccess && accessQuery.isSuccess && (
+          <div id="charter-unlock" className="scroll-mt-8">
+            <UnlockScreen
+              compact
+              returnUrl={`${typeof window !== "undefined" ? window.location.origin : ""}/app/charter?checkout=success&session_id={CHECKOUT_SESSION_ID}`}
+              onReturnToWorkspace={() => paywallNavigate({ to: "/app" })}
+            />
+          </div>
+        )}
       </div>
 
       <aside className="space-y-4">
@@ -471,13 +559,26 @@ function CharterPage() {
             >
               <Save className="mr-2 h-3.5 w-3.5" /> Save draft
             </Button>
-            <Button
-              size="sm"
-              onClick={() => submitMutation.mutate()}
-              disabled={submitMutation.isPending || completionPct < 40}
-            >
-              <Send className="mr-2 h-3.5 w-3.5" /> Submit for approval
-            </Button>
+            {hasFullAccess ? (
+              <Button
+                size="sm"
+                onClick={() => submitMutation.mutate()}
+                disabled={submitMutation.isPending || completionPct < 40}
+              >
+                <Send className="mr-2 h-3.5 w-3.5" /> Submit for approval
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                onClick={() =>
+                  document
+                    .getElementById("charter-unlock")
+                    ?.scrollIntoView({ behavior: "smooth" })
+                }
+              >
+                <Lock className="mr-2 h-3.5 w-3.5" /> Unlock to submit
+              </Button>
+            )}
           </div>
           {completionPct < 40 && (
             <div className="mt-2 flex items-start gap-1 text-[11px] text-amber-700 dark:text-amber-300">
