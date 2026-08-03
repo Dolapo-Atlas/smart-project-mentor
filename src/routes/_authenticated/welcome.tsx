@@ -128,7 +128,7 @@ function Welcome() {
             <div className="mt-10 flex justify-center">
               <Button
                 size="lg"
-                onClick={() => navigate({ to: "/app/inbox" })}
+                onClick={() => navigate({ to: "/app" })}
                 className="px-8"
               >
                 Enter Workplace

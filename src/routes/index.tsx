@@ -75,7 +75,6 @@ const NAV_LINKS = [
   { href: "#how", label: "How It Works" },
   { href: "#experience", label: "Experience" },
   { href: "#readiness", label: "What You Receive" },
-  { href: "/project-readiness#price", label: "Pricing" },
   { href: "#faq", label: "FAQ" },
 ];
 
@@ -197,7 +196,7 @@ function Nav({ scrolled }: { scrolled: boolean }) {
             Log In
           </Link>
           <Link
-            to="/project-readiness"
+            to="/auth"
             className="group inline-flex items-center gap-1.5 rounded-full bg-accent-orange px-4 py-2 text-sm font-medium text-accent-orange-foreground shadow-[0_1px_0_rgba(255,255,255,0.25)_inset,0_8px_24px_-12px_rgba(217,119,6,0.6)] transition-all hover:-translate-y-0.5 hover:shadow-[0_1px_0_rgba(255,255,255,0.3)_inset,0_12px_28px_-12px_rgba(217,119,6,0.7)]"
           >
             Start Experience
@@ -1920,7 +1919,7 @@ function ReadinessOffer() {
           <Reveal delay={280}>
             <div className="mt-10 flex flex-wrap items-center gap-3">
               <Link
-                to="/project-readiness"
+                to="/auth"
                 className="group inline-flex items-center gap-2 rounded-full bg-accent-orange px-6 py-3.5 text-sm font-medium text-accent-orange-foreground shadow-[0_1px_0_rgba(255,255,255,0.25)_inset,0_14px_34px_-14px_rgba(0,0,0,0.5)] transition-all hover:-translate-y-0.5"
               >
                 Start Your Atlas Experience
@@ -1952,7 +1951,7 @@ function ReadinessOffer() {
               </span>
             </div>
             <Link
-              to="/project-readiness"
+              to="/auth"
               className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-accent-orange underline-offset-4 hover:underline"
             >
               View programme details
@@ -1983,7 +1982,7 @@ function DemoWalkthrough() {
             </p>
             <div className="mx-auto mt-5 max-w-[360px]">
               <Link
-                to="/project-readiness"
+                to="/auth"
                 className="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-all hover:-translate-y-0.5"
               >
                 Start Your Atlas Experience
@@ -2010,7 +2009,7 @@ function DemoWalkthrough() {
           <Reveal delay={250}>
             <div className="mt-8">
               <Link
-                to="/project-readiness"
+                to="/auth"
                 className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-all hover:-translate-y-0.5"
               >
                 Start Your Atlas Experience

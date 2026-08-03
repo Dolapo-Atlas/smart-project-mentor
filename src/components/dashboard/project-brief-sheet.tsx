@@ -315,7 +315,7 @@ export function ProjectBriefSheet({ open, onOpenChange, firstRun }: Props) {
             {firstRun ? (
               <Button size="lg" onClick={() => onOpenChange(false)}>
                 <ArrowRight className="mr-2 h-4 w-4" />
-                I’ve read the brief
+                I’ve Read the Project Brief
               </Button>
             ) : (
               <Button asChild onClick={() => onOpenChange(false)}>
