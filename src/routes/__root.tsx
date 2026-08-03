@@ -11,15 +11,15 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import "@fontsource/fraunces/400.css";
-import "@fontsource/fraunces/500.css";
-import "@fontsource/fraunces/600.css";
-import "@fontsource/fraunces/700.css";
+import "@fontsource/space-grotesk/400.css";
+import "@fontsource/space-grotesk/500.css";
+import "@fontsource/space-grotesk/600.css";
+import "@fontsource/space-grotesk/700.css";
 import "@fontsource/inter/400.css";
 import "@fontsource/inter/500.css";
 import "@fontsource/inter/600.css";
-import frauncesLatin600 from "@fontsource/fraunces/files/fraunces-latin-600-normal.woff2?url";
-import frauncesLatin400 from "@fontsource/fraunces/files/fraunces-latin-400-normal.woff2?url";
+import spaceGroteskLatin600 from "@fontsource/space-grotesk/files/space-grotesk-latin-600-normal.woff2?url";
+import spaceGroteskLatin400 from "@fontsource/space-grotesk/files/space-grotesk-latin-400-normal.woff2?url";
 import interLatin400 from "@fontsource/inter/files/inter-latin-400-normal.woff2?url";
 import interLatin500 from "@fontsource/inter/files/inter-latin-500-normal.woff2?url";
 import { supabase } from "@/integrations/supabase/client";
@@ -108,9 +108,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       // Preload the fonts used above the fold so text is laid out with the real
       // metrics on first paint — without this the page visibly reflows/jumps
-      // when Fraunces/Inter swap in.
-      { rel: "preload", href: frauncesLatin600, as: "font", type: "font/woff2", crossOrigin: "anonymous" },
-      { rel: "preload", href: frauncesLatin400, as: "font", type: "font/woff2", crossOrigin: "anonymous" },
+      // when Space Grotesk/Inter swap in.
+      { rel: "preload", href: spaceGroteskLatin600, as: "font", type: "font/woff2", crossOrigin: "anonymous" },
+      { rel: "preload", href: spaceGroteskLatin400, as: "font", type: "font/woff2", crossOrigin: "anonymous" },
       { rel: "preload", href: interLatin400, as: "font", type: "font/woff2", crossOrigin: "anonymous" },
       { rel: "preload", href: interLatin500, as: "font", type: "font/woff2", crossOrigin: "anonymous" },
     ],
