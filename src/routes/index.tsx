@@ -275,9 +275,9 @@ function Hero() {
             </span>
           </Reveal>
           <Reveal delay={80}>
-            <h1 className="mt-6 font-display text-[clamp(2.6rem,6.2vw,5.25rem)] font-medium leading-[1.02] tracking-[-0.02em] text-foreground">
+            <h1 className="mt-6 font-display text-[clamp(2.6rem,6.2vw,5.25rem)] font-bold leading-[1.02] tracking-[-0.02em] text-foreground">
               Recruiters can tell when your answers are{" "}
-              <span className="italic text-accent-orange">only theoretical</span>.
+              <span className="text-accent-orange">only theoretical</span>.
             </h1>
           </Reveal>
           <Reveal delay={160}>
