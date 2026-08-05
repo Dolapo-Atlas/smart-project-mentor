@@ -224,9 +224,10 @@ function Inbox() {
             Read and respond to your first email
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Your Project Manager is waiting on you. Read the message on the
-            right, then use <span className="font-medium text-foreground">Write Response</span>{" "}
-            to reply. This closes out your first task.
+            Your Project Manager is waiting on you. Open the highlighted email
+            on the left, read it properly, then use{" "}
+            <span className="font-medium text-foreground">Write Response</span> to
+            reply. This closes out your first task.
           </p>
         </div>
       )}
@@ -424,7 +425,10 @@ function Inbox() {
             </>
           ) : (
             <div className="flex h-full items-center justify-center text-muted-foreground">
-              <Mail className="mr-2 h-4 w-4" /> Select a message
+              <Mail className="mr-2 h-4 w-4" />{" "}
+              {onboardingMode && !onboardingDone
+                ? "Open the highlighted email to read it"
+                : "Select a message"}
             </div>
           )}
         </article>
