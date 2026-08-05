@@ -292,7 +292,10 @@ function AccountPage() {
           </section>
 
           {/* Danger zone */}
-          <section className="rounded-xl border border-destructive/30 bg-destructive/5 p-5">
+          <section
+            id="close-account"
+            className="scroll-mt-24 rounded-xl border border-destructive/30 bg-destructive/5 p-5"
+          >
             <div className="flex items-start gap-3">
               <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
               <div className="min-w-0 flex-1">
