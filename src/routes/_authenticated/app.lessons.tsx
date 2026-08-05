@@ -29,6 +29,7 @@ import {
 import { TEMPLATES, evaluateGenericTemplate } from "@/lib/templates";
 import { getOverview } from "@/lib/sim.functions";
 import { WhyThisMatters } from "@/components/why-this-matters";
+import { LockedModuleGate } from "@/components/dashboard/locked-module-gate";
 
 const searchSchema = z.object({
   task: z.string().uuid().optional(),
@@ -46,7 +47,7 @@ export const Route = createFileRoute("/_authenticated/app/lessons")({
       },
     ],
   }),
-  component: LessonsPage,
+  component: LessonsRoute,
 });
 
 const STATUS_STYLES: Record<string, string> = {
@@ -54,6 +55,14 @@ const STATUS_STYLES: Record<string, string> = {
   approved: "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
   changes_requested: "border-orange-500/40 bg-orange-500/10 text-orange-700 dark:text-orange-300",
 };
+
+function LessonsRoute() {
+  return (
+    <LockedModuleGate>
+      <LessonsPage />
+    </LockedModuleGate>
+  );
+}
 
 function LessonsPage() {
   const qc = useQueryClient();

@@ -20,6 +20,7 @@ import {
 } from "@/lib/stakeholder-register.functions";
 import { TEMPLATES } from "@/lib/templates";
 import { WhyThisMatters } from "@/components/why-this-matters";
+import { LockedModuleGate } from "@/components/dashboard/locked-module-gate";
 
 const stakeholdersSearchSchema = z.object({
   task: z.string().uuid().optional(),
@@ -28,7 +29,7 @@ const stakeholdersSearchSchema = z.object({
 
 export const Route = createFileRoute("/_authenticated/app/stakeholders")({
   validateSearch: stakeholdersSearchSchema,
-  component: StakeholdersPage,
+  component: StakeholdersRoute,
 });
 
 function sentimentMeta(s: number) {
@@ -37,6 +38,14 @@ function sentimentMeta(s: number) {
   if (s >= -19) return { label: "Neutral", color: "text-muted-foreground", bar: "bg-slate-400" };
   if (s >= -59) return { label: "Frustrated", color: "text-orange-500", bar: "bg-orange-500" };
   return { label: "Hostile", color: "text-red-600", bar: "bg-red-500" };
+}
+
+function StakeholdersRoute() {
+  return (
+    <LockedModuleGate>
+      <StakeholdersPage />
+    </LockedModuleGate>
+  );
 }
 
 function StakeholdersPage() {
