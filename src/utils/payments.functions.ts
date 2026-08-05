@@ -129,17 +129,19 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       if (
         !expected ||
         price.unit_amount !== expected.amount ||
-        providerCurrency !== expected.currency
+        providerCurrency !== expected.currency ||
+        price.tax_behavior !== "inclusive"
       ) {
         console.error("checkout price safety check failed", {
           priceId: data.priceId,
           providerAmount: price.unit_amount,
           providerCurrency,
+          providerTaxBehavior: price.tax_behavior,
           expectedAmount: expected?.amount,
           expectedCurrency: expected?.currency,
         });
         return {
-          error: "Checkout is temporarily unavailable because the payment amount does not match the advertised price. You have not been charged.",
+          error: "Checkout is temporarily unavailable because the final payment total does not match the advertised tax-inclusive price. You have not been charged.",
         };
       }
 
