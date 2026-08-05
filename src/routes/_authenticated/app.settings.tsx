@@ -44,6 +44,20 @@ function SettingsPage() {
         <h1 className="font-display text-4xl font-medium">Settings</h1>
       </header>
 
+      <section className="rounded-lg border border-destructive/30 bg-destructive/5 p-6">
+        <h2 className="font-display text-xl font-medium">Account</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Manage your access and purchase, or permanently delete your Atlas account and all of its
+          data.
+        </p>
+        <a
+          href="/app/account#close-account"
+          className="mt-4 inline-flex items-center gap-2 rounded-md border border-destructive/40 px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/10"
+        >
+          Delete my account
+        </a>
+      </section>
+
       <section className="rounded-lg border border-border bg-card p-6">
         <h2 className="font-display text-xl font-medium">Voice mode</h2>
         <p className="mt-1 text-sm text-muted-foreground">
