@@ -11,6 +11,7 @@ import { getMyAccess } from "@/lib/access.functions";
 import { createPortalSession } from "@/utils/payments.functions";
 import { getStripeEnvironment, paymentsConfigured } from "@/lib/stripe";
 import { trackLearner } from "@/lib/learner-events";
+import { formatMinor } from "@/lib/money";
 
 export const Route = createFileRoute("/_authenticated/app/unlock")({
   component: UnlockPage,
