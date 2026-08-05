@@ -26,6 +26,7 @@ import { ProjectBriefSheet } from "@/components/dashboard/project-brief-sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useRef } from "react";
 import { PhaseProgressCard } from "@/components/dashboard/phase-progress-card";
+import { LockedModuleGate } from "@/components/dashboard/locked-module-gate";
 
 export const Route = createFileRoute("/_authenticated/app")({
   component: AppLayout,
@@ -155,6 +156,31 @@ function normalisePhase(p?: string | null): keyof typeof PHASE_NAV {
   if (k.startsWith("mon")) return "monitoring";
   if (k.startsWith("clos")) return "closure";
   return "execution";
+}
+
+/**
+ * Home, Inbox and Tasks form the free workplace preview. Account, settings,
+ * project selection and checkout must also remain reachable. Every other
+ * workspace route is premium and is centrally gated here, so a newly added
+ * module cannot accidentally ship without a paywall wrapper.
+ *
+ * Charter is the one intentional exception: its own screen exposes only the
+ * free first half and replaces the remaining sections with the unlock panel.
+ */
+function isPremiumWorkspaceRoute(pathname: string): boolean {
+  const freeRoutes = new Set([
+    "/app",
+    "/app/inbox",
+    "/app/tasks",
+    "/app/charter",
+    "/app/unlock",
+    "/app/account",
+    "/app/settings",
+    "/app/projects",
+  ]);
+  if (freeRoutes.has(pathname)) return false;
+  if (pathname.startsWith("/app/projects/")) return false;
+  return pathname.startsWith("/app/");
 }
 
 function AppLayout() {
@@ -452,7 +478,13 @@ function AppLayout() {
               </button>
             )}
           </div>
-          <Outlet />
+          {isPremiumWorkspaceRoute(pathname) ? (
+            <LockedModuleGate>
+              <Outlet />
+            </LockedModuleGate>
+          ) : (
+            <Outlet />
+          )}
         </main>
       </div>
       {showTour && (
