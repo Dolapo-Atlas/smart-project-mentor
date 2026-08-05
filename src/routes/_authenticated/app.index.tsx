@@ -221,8 +221,13 @@ function Dashboard() {
       </div>
 
       {focusMode ? (
-        <div className="mx-auto max-w-2xl space-y-4">
-          <FirstWinPanel projectId={activeId} onOpenBrief={() => setBriefOpen(true)} />
+        <div
+          className={`mx-auto max-w-2xl space-y-4 ${firstRunActive ? "hidden" : ""}`}
+          aria-hidden={firstRunActive}
+        >
+          {!firstRunActive && (
+            <FirstWinPanel projectId={activeId} onOpenBrief={() => setBriefOpen(true)} />
+          )}
           <div className="rounded-lg border border-accent-orange/30 bg-accent-orange/5 px-4 py-3 text-xs text-foreground/80">
             <span className="font-medium text-foreground">Focus mode.</span>{" "}
             One thing at a time. Everything else is still there — toggle the
@@ -231,7 +236,10 @@ function Dashboard() {
           <div className="atlas-rise atlas-rise-2"><ContinueCard /></div>
         </div>
       ) : (
-        <>
+        <div
+          className={firstRunActive ? "hidden" : "space-y-6"}
+          aria-hidden={firstRunActive}
+        >
           {!firstRunActive && <WelcomeBackPanel />}
           {!firstRunActive && (
             <FirstWinPanel projectId={activeId} onOpenBrief={() => setBriefOpen(true)} />
@@ -247,7 +255,7 @@ function Dashboard() {
               <ProjectSidePanel />
             </div>
           </div>
-        </>
+        </div>
       )}
       <ProjectBriefSheet
         open={briefOpen}
