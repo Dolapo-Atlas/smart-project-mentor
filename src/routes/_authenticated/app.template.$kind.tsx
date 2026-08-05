@@ -11,6 +11,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, CheckCircle2, Loader2, Save, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import {
+  ExampleDialog,
+  FirstTimeChoiceCard,
+  GuidedCoachStrip,
+  useFirstTimeMode,
+} from "@/components/onboarding/first-time-task";
 
 export const Route = createFileRoute("/_authenticated/app/template/$kind")({
   component: TemplateFillPage,
@@ -35,6 +41,9 @@ function TemplateFillPage() {
       return {};
     }
   });
+
+  const firstTime = useFirstTimeMode(`template.${kind}`);
+  const [exampleOpen, setExampleOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
