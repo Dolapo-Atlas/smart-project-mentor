@@ -6,9 +6,9 @@ import { getMyAccess } from "@/lib/access.functions";
 import { UnlockScreen } from "@/components/dashboard/unlock-screen";
 
 /**
- * Wraps a module that lives beyond the free preview. When the learner's free
- * preview is used up and they haven't paid, the unlock panel replaces the
- * module instead of letting them keep working.
+ * Wraps a premium module. The free preview is limited to its explicit routes
+ * (Home, Inbox, Tasks and the first half of Charter), so every unpaid learner
+ * sees checkout here even before they finish that preview.
  */
 export function LockedModuleGate({ children }: { children: ReactNode }) {
   const fetchAccess = useServerFn(getMyAccess);
@@ -29,7 +29,7 @@ export function LockedModuleGate({ children }: { children: ReactNode }) {
 
   // Fail closed: a premium module must never render while access could not be
   // verified. The unlock screen remains the safe, actionable destination.
-  if (isError || !access || access.locked) {
+  if (isError || !access || access.tier !== "full") {
     return (
       <div className="py-4">
         <UnlockScreen />
