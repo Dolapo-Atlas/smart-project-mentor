@@ -232,8 +232,10 @@ function Dashboard() {
         </div>
       ) : (
         <>
-          <WelcomeBackPanel />
-          <FirstWinPanel projectId={activeId} onOpenBrief={() => setBriefOpen(true)} />
+          {!firstRunActive && <WelcomeBackPanel />}
+          {!firstRunActive && (
+            <FirstWinPanel projectId={activeId} onOpenBrief={() => setBriefOpen(true)} />
+          )}
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
             <div className="min-w-0 space-y-6">
               <div className="atlas-rise atlas-rise-2"><ContinueCard /></div>
@@ -252,7 +254,7 @@ function Dashboard() {
         onOpenChange={handleBriefOpenChange}
         firstRun={firstRunBriefRef.current}
       />
-      <FirstEmailPrompt open={emailPromptOpen} onOpenChange={setEmailPromptOpen} />
+      <FirstEmailPrompt open={emailPromptOpen} onOpenChange={handleEmailPromptOpenChange} />
     </div>
   );
 }
