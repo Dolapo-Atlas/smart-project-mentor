@@ -7,6 +7,7 @@ export const LEARNER_EVENTS = [
   "signed_in",
   "onboarding_started",
   "role_selected",
+  "orientation_completed",
   "project_created",
   "brief_opened",
   "brief_closed",
@@ -27,6 +28,7 @@ export const LEARNER_EVENT_LABELS: Record<LearnerEvent, string> = {
   signed_in: "Signed in",
   onboarding_started: "Opened onboarding",
   role_selected: "Chose a role",
+  orientation_completed: "Finished orientation",
   project_created: "Started a project",
   brief_opened: "Opened the brief",
   brief_closed: "Finished the brief",
@@ -47,6 +49,7 @@ export const LEARNER_EVENT_LABELS: Record<LearnerEvent, string> = {
 export const ONCE_PER_LEARNER: readonly LearnerEvent[] = [
   "onboarding_started",
   "role_selected",
+  "orientation_completed",
   "project_created",
   "brief_opened",
   "brief_closed",
