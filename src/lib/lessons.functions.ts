@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireProgrammeAccess } from "@/lib/programme-access.middleware";
 import { z } from "zod";
 import { TEMPLATES, evaluateGenericTemplate, encodeSubmission, type Readiness } from "./templates";
 import { markSubmittedArtifactTasks } from "./task-sync.server";
@@ -70,7 +71,7 @@ export const getOrCreateLessons = createServerFn({ method: "POST" })
   });
 
 export const saveLessonsDraft = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) =>
     z
       .object({
@@ -114,7 +115,7 @@ export const listLessonsVersions = createServerFn({ method: "GET" })
   });
 
 export const submitLessons = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;

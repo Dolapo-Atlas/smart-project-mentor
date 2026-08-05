@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireProgrammeAccess } from "@/lib/programme-access.middleware";
 import { applyCompetencyStatus } from "./learning.functions";
 import { z } from "zod";
 import { generateObject, generateText } from "ai";
@@ -144,7 +145,7 @@ export const listStatusReports = createServerFn({ method: "GET" })
   });
 
 export const upsertStatusReport = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) =>
     z.object({
       week_start: z.string().optional(),
@@ -345,7 +346,7 @@ export const listBudget = createServerFn({ method: "GET" })
   });
 
 export const addBudgetLine = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) =>
     z.object({
       category: z.string().min(1),
@@ -374,7 +375,7 @@ export const addBudgetLine = createServerFn({ method: "POST" })
   });
 
 export const deleteBudgetLine = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase
@@ -401,7 +402,7 @@ export const listChangeRequests = createServerFn({ method: "GET" })
   });
 
 export const generateChangeRequest = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .handler(async ({ context }) => {
     const Schema = z.object({
       title: z.string(),
@@ -431,7 +432,7 @@ Be specific to the project domain: name a concrete scope change (e.g. add a modu
   });
 
 export const decideChangeRequest = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) =>
     z.object({
       id: z.string().uuid(),
@@ -526,7 +527,7 @@ export const decideChangeRequest = createServerFn({ method: "POST" })
   });
 
 export const createChangeRequest = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) =>
     z.object({
       title: z.string().min(3).max(140),
@@ -729,7 +730,7 @@ export const listMeetings = createServerFn({ method: "GET" })
   });
 
 export const createMeeting = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) =>
     z.object({
       kind: z.enum(["standup", "steering", "vendor", "retro"]),
@@ -780,7 +781,7 @@ export const listAttendeeRoster = createServerFn({ method: "GET" })
   });
 
 export const addMeetingAttendee = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) =>
     z.object({
       id: z.string().uuid(),
@@ -825,7 +826,7 @@ export const addMeetingAttendee = createServerFn({ method: "POST" })
   });
 
 export const removeMeetingAttendee = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) =>
     z.object({ id: z.string().uuid(), role_key: z.string() }).parse(d),
   )
@@ -843,7 +844,7 @@ export const removeMeetingAttendee = createServerFn({ method: "POST" })
   });
 
 export const startMeeting = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const meeting = await loadMeeting(context.supabase, context.userId, data.id);
@@ -886,7 +887,7 @@ Open the meeting in 1-2 sentences. Greet the room, name what we're here to resol
   });
 
 export const speakInMeeting = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) =>
     z.object({ id: z.string().uuid(), body: z.string().min(1) }).parse(d),
   )
@@ -908,7 +909,7 @@ export const speakInMeeting = createServerFn({ method: "POST" })
   });
 
 export const noteInMeeting = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) =>
     z.object({ id: z.string().uuid(), body: z.string().min(1) }).parse(d),
   )
@@ -929,7 +930,7 @@ export const noteInMeeting = createServerFn({ method: "POST" })
   });
 
 export const advanceMeeting = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) =>
     z.object({
       id: z.string().uuid(),
@@ -996,7 +997,7 @@ Speak ONLY as ${speaker.name}. 1-3 sentences. Stay in character. React to what w
   });
 
 export const holdMeeting = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) =>
     z.object({
       id: z.string().uuid(),
@@ -1061,7 +1062,7 @@ ${data.minutes ?? "(none)"}`,
   });
 
 export const autoMinutes = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const meeting = await loadMeeting(context.supabase, context.userId, data.id);
@@ -1114,7 +1115,7 @@ SUMMARY:
   });
 
 export const sendMinutesToAttendees = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const supabase = context.supabase;
@@ -1231,7 +1232,7 @@ const AREA_TO_ROUTE_LOCAL: Record<string, string> = {
 };
 
 export const extractMeetingActionItems = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
@@ -1292,7 +1293,7 @@ Return only the JSON.`;
 /* ============= CONFLICTING STAKEHOLDER ============= */
 
 export const summonConflict = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     const [{ data: state }, { data: profile }, { data: recentMsgs }, { data: recentCRs }] =
@@ -1399,7 +1400,7 @@ export const getStakeholders = createServerFn({ method: "GET" })
   });
 
 export const updateStakeholder = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: { name: string; sentimentDelta?: number; addConcern?: string; removeConcern?: string; notes?: string; bumpInteraction?: boolean }) => d)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
@@ -1515,7 +1516,7 @@ ${name}`,
 }
 
 export const repairStakeholderRelationship = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) => z.object({ name: z.string().min(1) }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;

@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireProgrammeAccess } from "@/lib/programme-access.middleware";
 import { z } from "zod";
 
 /**
@@ -68,7 +69,7 @@ const AwardSchema = z.object({
 });
 
 export const awardSkill = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) => AwardSchema.parse(d))
   .handler(async ({ data, context }) => {
     const def = SKILL_CATALOG.find((s) => s.key === data.skill_key);

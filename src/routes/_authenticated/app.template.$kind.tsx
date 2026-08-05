@@ -17,10 +17,19 @@ import {
   GuidedCoachStrip,
   useFirstTimeMode,
 } from "@/components/onboarding/first-time-task";
+import { LockedModuleGate } from "@/components/dashboard/locked-module-gate";
 
 export const Route = createFileRoute("/_authenticated/app/template/$kind")({
-  component: TemplateFillPage,
+  component: TemplateFillRoute,
 });
+
+function TemplateFillRoute() {
+  return (
+    <LockedModuleGate>
+      <TemplateFillPage />
+    </LockedModuleGate>
+  );
+}
 
 function TemplateFillPage() {
   const { kind } = useParams({ from: "/_authenticated/app/template/$kind" }) as { kind: string };
