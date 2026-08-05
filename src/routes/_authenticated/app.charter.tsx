@@ -39,6 +39,12 @@ import { WhyThisMatters } from "@/components/why-this-matters";
 import { UnlockScreen } from "@/components/dashboard/unlock-screen";
 import { getMyAccess } from "@/lib/access.functions";
 import { Lock } from "lucide-react";
+import {
+  ExampleDialog,
+  FirstTimeChoiceCard,
+  GuidedCoachStrip,
+  useFirstTimeMode,
+} from "@/components/onboarding/first-time-task";
 
 const searchSchema = z.object({
   task: z.string().uuid().optional(),
@@ -331,6 +337,42 @@ function CharterPage() {
         </header>
 
         <TaskContextPanel taskId={search.task} />
+
+        {firstTime.hydrated && !firstTime.decided && (
+          <FirstTimeChoiceCard
+            label="Project Charter"
+            onChoose={(m) => {
+              firstTime.setMode(m);
+              if (m === "example") setCharterExampleOpen(true);
+            }}
+          />
+        )}
+
+        {firstTime.mode === "guided" && (
+          <GuidedCoachStrip
+            fields={template.fields}
+            values={form as Record<string, string>}
+            onDismiss={() => firstTime.setMode("self")}
+          />
+        )}
+
+        {firstTime.decided && firstTime.mode !== "guided" && (
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={() => firstTime.setMode("guided")}>
+              Guide me step-by-step
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setCharterExampleOpen(true)}>
+              Show me an example
+            </Button>
+          </div>
+        )}
+
+        <ExampleDialog
+          open={charterExampleOpen}
+          onOpenChange={setCharterExampleOpen}
+          label="Project Charter"
+          fields={template.fields}
+        />
 
         <WhyThisMatters
           storageKey="charter"
