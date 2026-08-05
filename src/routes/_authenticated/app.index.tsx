@@ -216,9 +216,11 @@ function Dashboard() {
 
       <SubscriptionNotices />
 
-      <div className="atlas-rise atlas-rise-1">
-        <TimeControls />
-      </div>
+      {!firstRunActive && (
+        <div className="atlas-rise atlas-rise-1">
+          <TimeControls />
+        </div>
+      )}
 
       {focusMode ? (
         <div
