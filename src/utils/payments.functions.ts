@@ -6,7 +6,12 @@ import {
   createStripeClient,
   getStripeErrorMessage,
 } from "@/lib/stripe.server";
-import { PLAN_PRICE_IDS, PROGRAMME_ID, PROGRAMME_NAME } from "@/lib/plans";
+import {
+  PLAN_PRICE_EXPECTATIONS,
+  PLAN_PRICE_IDS,
+  PROGRAMME_ID,
+  PROGRAMME_NAME,
+} from "@/lib/plans";
 
 type CheckoutSessionResult =
   | { clientSecret: string }
@@ -114,6 +119,28 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       if (!price) return { error: "That plan is not available yet. Please try again shortly." };
       if (price.recurring) {
         return { error: "That plan is misconfigured as a subscription. Please contact support." };
+      }
+
+      // Fail closed if the provider catalogue ever drifts again. Checkout
+      // still charges the provider Price object below; this guard prevents an
+      // incorrect active price from ever reaching the learner.
+      const expected = PLAN_PRICE_EXPECTATIONS[data.priceId];
+      const providerCurrency = (price.currency ?? "").toUpperCase();
+      if (
+        !expected ||
+        price.unit_amount !== expected.amount ||
+        providerCurrency !== expected.currency
+      ) {
+        console.error("checkout price safety check failed", {
+          priceId: data.priceId,
+          providerAmount: price.unit_amount,
+          providerCurrency,
+          expectedAmount: expected?.amount,
+          expectedCurrency: expected?.currency,
+        });
+        return {
+          error: "Checkout is temporarily unavailable because the payment amount does not match the advertised price. You have not been charged.",
+        };
       }
 
       const { data: profile } = await context.supabase
