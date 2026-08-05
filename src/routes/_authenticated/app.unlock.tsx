@@ -67,7 +67,7 @@ function UnlockPage() {
       }
       window.open(res.url, "_blank");
     } catch {
-      toast.error("We couldn't open your billing settings just then.");
+      toast.error("We couldn't open your receipt just then.");
     }
   }
 
@@ -94,9 +94,9 @@ function UnlockPage() {
           <Button asChild size="lg" className="rounded-full">
             <Link to="/app">Back to my project</Link>
           </Button>
-          {access.subscription && paymentsConfigured() && (
+          {access.purchase?.status === "paid" && paymentsConfigured() && (
             <Button size="lg" variant="outline" className="rounded-full" onClick={manageBilling}>
-              Manage my subscription
+              View my receipt
             </Button>
           )}
         </div>
