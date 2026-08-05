@@ -143,6 +143,46 @@ function TemplateFillPage() {
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{template.intro}</p>
       </header>
 
+      {firstTime.hydrated && !firstTime.decided && (
+        <div className="mt-6">
+          <FirstTimeChoiceCard
+            label={template.label}
+            onChoose={(m) => {
+              firstTime.setMode(m);
+              if (m === "example") setExampleOpen(true);
+            }}
+          />
+        </div>
+      )}
+
+      {firstTime.mode === "guided" && (
+        <div className="mt-6">
+          <GuidedCoachStrip
+            fields={template.fields}
+            values={values}
+            onDismiss={() => firstTime.setMode("self")}
+          />
+        </div>
+      )}
+
+      {firstTime.decided && firstTime.mode !== "guided" && (
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" onClick={() => firstTime.setMode("guided")}>
+            Guide me step-by-step
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => setExampleOpen(true)}>
+            Show me an example
+          </Button>
+        </div>
+      )}
+
+      <ExampleDialog
+        open={exampleOpen}
+        onOpenChange={setExampleOpen}
+        label={template.label}
+        fields={template.fields}
+      />
+
       {(() => {
         const why = TEMPLATE_WHY[kind as TemplateKind];
         if (!why) return null;
