@@ -38,6 +38,7 @@ export type FunnelEvent =
   | "signed_in"
   | "onboarding_started"
   | "role_selected"
+  | "orientation_completed"
   | "project_created"
   | "brief_opened"
   | "brief_closed"

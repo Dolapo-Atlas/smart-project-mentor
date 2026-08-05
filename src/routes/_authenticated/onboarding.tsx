@@ -45,7 +45,7 @@ function Onboarding() {
     mutationFn: () => submit({ data: form }),
     onSuccess: () => {
       trackLearner("role_selected", { props: { role: form.career_goal } });
-      navigate({ to: "/app/projects" });
+      navigate({ to: "/orientation" });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Could not save profile"),
   });

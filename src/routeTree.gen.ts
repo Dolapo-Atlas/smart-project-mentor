@@ -24,6 +24,7 @@ import { Route as CertificatePreviewRouteImport } from './routes/certificate.pre
 import { Route as CertificateCodeRouteImport } from './routes/certificate.$code'
 import { Route as CertSlugRouteImport } from './routes/cert.$slug'
 import { Route as AuthenticatedWelcomeRouteImport } from './routes/_authenticated/welcome'
+import { Route as AuthenticatedOrientationRouteImport } from './routes/_authenticated/orientation'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
@@ -147,6 +148,12 @@ const AuthenticatedWelcomeRoute = AuthenticatedWelcomeRouteImport.update({
   path: '/welcome',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedOrientationRoute =
+  AuthenticatedOrientationRouteImport.update({
+    id: '/orientation',
+    path: '/orientation',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
@@ -417,6 +424,7 @@ export interface FileRoutesByFullPath {
   '/unsubscribe': typeof UnsubscribeRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/orientation': typeof AuthenticatedOrientationRoute
   '/welcome': typeof AuthenticatedWelcomeRoute
   '/cert/$slug': typeof CertSlugRoute
   '/certificate/$code': typeof CertificateCodeRoute
@@ -480,6 +488,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/orientation': typeof AuthenticatedOrientationRoute
   '/welcome': typeof AuthenticatedWelcomeRoute
   '/cert/$slug': typeof CertSlugRoute
   '/certificate/$code': typeof CertificateCodeRoute
@@ -546,6 +555,7 @@ export interface FileRoutesById {
   '/unsubscribe': typeof UnsubscribeRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/orientation': typeof AuthenticatedOrientationRoute
   '/_authenticated/welcome': typeof AuthenticatedWelcomeRoute
   '/cert/$slug': typeof CertSlugRoute
   '/certificate/$code': typeof CertificateCodeRoute
@@ -612,6 +622,7 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/app'
     | '/onboarding'
+    | '/orientation'
     | '/welcome'
     | '/cert/$slug'
     | '/certificate/$code'
@@ -675,6 +686,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/unsubscribe'
     | '/onboarding'
+    | '/orientation'
     | '/welcome'
     | '/cert/$slug'
     | '/certificate/$code'
@@ -740,6 +752,7 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/_authenticated/app'
     | '/_authenticated/onboarding'
+    | '/_authenticated/orientation'
     | '/_authenticated/welcome'
     | '/cert/$slug'
     | '/certificate/$code'
@@ -929,6 +942,13 @@ declare module '@tanstack/react-router' {
       path: '/welcome'
       fullPath: '/welcome'
       preLoaderRoute: typeof AuthenticatedWelcomeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/orientation': {
+      id: '/_authenticated/orientation'
+      path: '/orientation'
+      fullPath: '/orientation'
+      preLoaderRoute: typeof AuthenticatedOrientationRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/onboarding': {
@@ -1340,6 +1360,7 @@ const AuthenticatedAppRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppRoute: typeof AuthenticatedAppRouteWithChildren
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedOrientationRoute: typeof AuthenticatedOrientationRoute
   AuthenticatedWelcomeRoute: typeof AuthenticatedWelcomeRoute
   AuthenticatedAdminAnalyticsRoute: typeof AuthenticatedAdminAnalyticsRoute
   AuthenticatedAdminEvalsRoute: typeof AuthenticatedAdminEvalsRoute
@@ -1353,6 +1374,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppRoute: AuthenticatedAppRouteWithChildren,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedOrientationRoute: AuthenticatedOrientationRoute,
   AuthenticatedWelcomeRoute: AuthenticatedWelcomeRoute,
   AuthenticatedAdminAnalyticsRoute: AuthenticatedAdminAnalyticsRoute,
   AuthenticatedAdminEvalsRoute: AuthenticatedAdminEvalsRoute,
@@ -1396,13 +1418,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
