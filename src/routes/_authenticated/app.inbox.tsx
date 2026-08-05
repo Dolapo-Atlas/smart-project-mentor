@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { listInbox, markRead, generateStakeholderMessage } from "@/lib/sim.functions";
 import { summonConflict } from "@/lib/pm.functions";
 import { sendComm } from "@/lib/comms.functions";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -68,24 +68,19 @@ function Inbox() {
   const fetchTasks = useServerFn2(listTasksRich);
   const { data: allTasks } = useQuery({ queryKey: ["tasks"], queryFn: () => fetchTasks() });
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const selected = messages?.find((m) => m.id === selectedId) ?? messages?.[0];
-  // Onboarding: jump straight to the first unread stakeholder email and open
-  // the response box so the expected action is unmistakable.
+  // On day one nothing is auto-opened: the learner has to open the email
+  // themselves, so it is only marked read once they have actually read it.
+  const selected =
+    messages?.find((m) => m.id === selectedId) ??
+    (onboardingMode ? undefined : messages?.[0]);
   const [onboardingDone, setOnboardingDone] = useState(false);
+  const trackedOpenRef = useRef(false);
   useEffect(() => {
-    if (!onboardingMode || onboardingDone) return;
-    if (selectedId) return;
-    const list = messages ?? [];
-    if (list.length === 0) return;
+    if (!onboardingMode || trackedOpenRef.current) return;
+    if ((messages ?? []).length === 0) return;
+    trackedOpenRef.current = true;
     trackLearner("inbox_opened", { props: { onboarding: true } });
-    const target =
-      [...list].reverse().find((m) => !m.read && m.sender_name !== "Project Update") ??
-      list[0];
-    if (target) {
-      setSelectedId(target.id);
-      setReplyOpen(true);
-    }
-  }, [onboardingMode, onboardingDone, messages, selectedId]);
+  }, [onboardingMode, messages]);
   const linkedTasks = (allTasks ?? []).filter(
     (t: any) => selected && t.source_ref === selected.id,
   );
@@ -156,6 +151,7 @@ function Inbox() {
         try {
           await markPreviewFn();
           qc.invalidateQueries({ queryKey: ["access"] });
+          qc.invalidateQueries({ queryKey: ["my-access"] });
         } catch {
           // Non-blocking.
         }
@@ -228,9 +224,10 @@ function Inbox() {
             Read and respond to your first email
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Your Project Manager is waiting on you. Read the message on the
-            right, then use <span className="font-medium text-foreground">Write Response</span>{" "}
-            to reply. This closes out your first task.
+            Your Project Manager is waiting on you. Open the highlighted email
+            on the left, read it properly, then use{" "}
+            <span className="font-medium text-foreground">Write Response</span> to
+            reply. This closes out your first task.
           </p>
         </div>
       )}
@@ -428,7 +425,10 @@ function Inbox() {
             </>
           ) : (
             <div className="flex h-full items-center justify-center text-muted-foreground">
-              <Mail className="mr-2 h-4 w-4" /> Select a message
+              <Mail className="mr-2 h-4 w-4" />{" "}
+              {onboardingMode && !onboardingDone
+                ? "Open the highlighted email to read it"
+                : "Select a message"}
             </div>
           )}
         </article>

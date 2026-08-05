@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Send, Paperclip, ChevronRight, Upload, Loader2 } from "lucide-react";
 import { StakeholderHoverAvatar as StakeholderAvatar } from "@/components/stakeholder-card";
+import { LockedModuleGate } from "@/components/dashboard/locked-module-gate";
 
 export const Route = createFileRoute("/_authenticated/app/comms")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -19,7 +20,7 @@ export const Route = createFileRoute("/_authenticated/app/comms")({
     prefill_title: typeof search.prefill_title === "string" ? search.prefill_title : undefined,
     prefill_body: typeof search.prefill_body === "string" ? search.prefill_body : undefined,
   }),
-  component: Comms,
+  component: GatedComms,
 });
 
 type MsgType = "Update" | "Escalation" | "Request" | "FYI";
@@ -332,5 +333,13 @@ function Comms() {
         </ul>
       </section>
     </div>
+  );
+}
+
+function GatedComms() {
+  return (
+    <LockedModuleGate>
+      <Comms />
+    </LockedModuleGate>
   );
 }

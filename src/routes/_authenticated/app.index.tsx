@@ -59,6 +59,14 @@ function Dashboard() {
   const activeId = (active as any)?.id as string | undefined;
   const autoOpenedRef = useRef<string | null>(null);
 
+  // Marks the day-one sequence (brief -> first email prompt) as finished so the
+  // guided tour and the secondary panels can appear without stacking overlays.
+  const markFirstRunDone = (id?: string) => {
+    if (typeof window === "undefined" || !id) return;
+    window.localStorage.setItem(`atlas.first-run-done.${id}`, "1");
+    window.dispatchEvent(new Event("atlas:first-run-done"));
+  };
+
   // Auto-open the Project Brief the first time the user lands on the
   // dashboard for a given project instance. Uses localStorage so returning
   // users are not interrupted.
@@ -67,7 +75,10 @@ function Dashboard() {
     if (typeof window === "undefined") return;
     if (autoOpenedRef.current === activeId) return;
     const key = `atlas.brief-seen.${activeId}`;
-    if (window.localStorage.getItem(key) === "1") return;
+    if (window.localStorage.getItem(key) === "1") {
+      markFirstRunDone(activeId);
+      return;
+    }
     autoOpenedRef.current = activeId;
     setBriefOpen(true);
     firstRunBriefRef.current = true;
@@ -84,6 +95,14 @@ function Dashboard() {
       setEmailPromptOpen(true);
     }
   };
+
+  const handleEmailPromptOpenChange = (next: boolean) => {
+    setEmailPromptOpen(next);
+    if (!next) markFirstRunDone(activeId);
+  };
+
+  // While a first-run overlay is on screen, keep the page behind it quiet.
+  const firstRunActive = briefOpen || emailPromptOpen;
 
   const summon = useMutation({
     mutationFn: () => genMessage(),
@@ -213,8 +232,10 @@ function Dashboard() {
         </div>
       ) : (
         <>
-          <WelcomeBackPanel />
-          <FirstWinPanel projectId={activeId} onOpenBrief={() => setBriefOpen(true)} />
+          {!firstRunActive && <WelcomeBackPanel />}
+          {!firstRunActive && (
+            <FirstWinPanel projectId={activeId} onOpenBrief={() => setBriefOpen(true)} />
+          )}
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
             <div className="min-w-0 space-y-6">
               <div className="atlas-rise atlas-rise-2"><ContinueCard /></div>
@@ -233,7 +254,7 @@ function Dashboard() {
         onOpenChange={handleBriefOpenChange}
         firstRun={firstRunBriefRef.current}
       />
-      <FirstEmailPrompt open={emailPromptOpen} onOpenChange={setEmailPromptOpen} />
+      <FirstEmailPrompt open={emailPromptOpen} onOpenChange={handleEmailPromptOpenChange} />
     </div>
   );
 }

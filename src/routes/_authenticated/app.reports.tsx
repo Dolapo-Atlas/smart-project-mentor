@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { Send, Save, Download, FileText, CheckCircle2, FileClock } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
 import reportsEmpty from "@/assets/illustrations/reports-empty.png.asset.json";
+import { LockedModuleGate } from "@/components/dashboard/locked-module-gate";
 
 const reportsSearchSchema = z.object({
   task: z.string().uuid().optional(),
@@ -23,7 +24,7 @@ const reportsSearchSchema = z.object({
 
 export const Route = createFileRoute("/_authenticated/app/reports")({
   validateSearch: reportsSearchSchema,
-  component: Reports,
+  component: GatedReports,
 });
 
 type Rag = "green" | "amber" | "red";
@@ -408,5 +409,13 @@ function Field({ label, value, setValue, placeholder }: { label: string; value: 
       <div className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted-foreground">{label}</div>
       <Textarea value={value} onChange={(e) => setValue(e.target.value)} placeholder={placeholder} className="min-h-[100px]" />
     </div>
+  );
+}
+
+function GatedReports() {
+  return (
+    <LockedModuleGate>
+      <Reports />
+    </LockedModuleGate>
   );
 }

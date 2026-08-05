@@ -4,9 +4,10 @@ import { useServerFn } from "@tanstack/react-start";
 import { generatePerformanceReview, listReviews } from "@/lib/reviews.functions";
 import { Button } from "@/components/ui/button";
 import { Award, Loader2, Sparkles, TrendingUp, Users, Brain } from "lucide-react";
+import { LockedModuleGate } from "@/components/dashboard/locked-module-gate";
 
 export const Route = createFileRoute("/_authenticated/app/reviews")({
-  component: ReviewsPage,
+  component: GatedReviewsPage,
 });
 
 function scoreColor(n: number) {
@@ -151,5 +152,13 @@ function ScoreChip({
         {label}
       </div>
     </div>
+  );
+}
+
+function GatedReviewsPage() {
+  return (
+    <LockedModuleGate>
+      <ReviewsPage />
+    </LockedModuleGate>
   );
 }

@@ -11,12 +11,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
+import { LockedModuleGate } from "@/components/dashboard/locked-module-gate";
 
 const budgetSearchSchema = z.object({ task: z.string().uuid().optional() });
 
 export const Route = createFileRoute("/_authenticated/app/budget")({
   validateSearch: budgetSearchSchema,
-  component: Budget,
+  component: GatedBudget,
 });
 
 const TOTAL_BUDGET = 500_000;
@@ -261,5 +262,13 @@ function Stat({ label, value, sub, tone }: { label: string; value: string; sub?:
       <div className={`mt-2 font-display text-2xl font-medium ${tone ?? ""}`}>{value}</div>
       {sub && <div className="mt-1 text-xs text-muted-foreground">{sub}</div>}
     </div>
+  );
+}
+
+function GatedBudget() {
+  return (
+    <LockedModuleGate>
+      <Budget />
+    </LockedModuleGate>
   );
 }

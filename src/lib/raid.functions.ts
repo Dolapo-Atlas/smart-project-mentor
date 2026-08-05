@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { requireProgrammeAccess } from "@/lib/programme-access.middleware";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { loadRoster, rosterByRole, type RosterMember } from "./roster";
@@ -258,7 +259,7 @@ export const listRaid = createServerFn({ method: "GET" })
   });
 
 export const createRaid = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) =>
     z.object({
       kind: Kind,

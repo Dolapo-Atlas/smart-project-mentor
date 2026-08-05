@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { listDocuments } from "@/lib/sim.functions";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, CalendarRange, FileText } from "lucide-react";
+import { LockedModuleGate } from "@/components/dashboard/locked-module-gate";
 
 export const Route = createFileRoute("/_authenticated/app/gantt")({
   head: () => ({
@@ -17,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/app/gantt")({
       },
     ],
   }),
-  component: GanttPage,
+  component: GatedGanttPage,
 });
 
 type Row = { label: string; date: Date; kind: "milestone" | "phase" };
@@ -347,5 +348,13 @@ function GanttChart({
       </div>
 
     </div>
+  );
+}
+
+function GatedGanttPage() {
+  return (
+    <LockedModuleGate>
+      <GanttPage />
+    </LockedModuleGate>
   );
 }

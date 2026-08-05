@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { StakeholderSelect } from "@/components/stakeholder-select";
 import { format } from "date-fns";
 import { z } from "zod";
+import { LockedModuleGate } from "@/components/dashboard/locked-module-gate";
 
 const raidSearchSchema = z.object({
   task: z.string().uuid().optional(),
@@ -27,7 +28,7 @@ const raidSearchSchema = z.object({
 
 export const Route = createFileRoute("/_authenticated/app/raid")({
   validateSearch: raidSearchSchema,
-  component: RaidPage,
+  component: GatedRaidPage,
 });
 
 type Kind = "risk" | "assumption" | "issue" | "dependency";
@@ -500,5 +501,13 @@ function RaidPage() {
       </div>
 
     </div>
+  );
+}
+
+function GatedRaidPage() {
+  return (
+    <LockedModuleGate>
+      <RaidPage />
+    </LockedModuleGate>
   );
 }
