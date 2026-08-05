@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { listInbox, markRead, generateStakeholderMessage } from "@/lib/sim.functions";
 import { summonConflict } from "@/lib/pm.functions";
 import { sendComm } from "@/lib/comms.functions";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -151,6 +151,7 @@ function Inbox() {
         try {
           await markPreviewFn();
           qc.invalidateQueries({ queryKey: ["access"] });
+          qc.invalidateQueries({ queryKey: ["my-access"] });
         } catch {
           // Non-blocking.
         }
