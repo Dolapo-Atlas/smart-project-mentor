@@ -1866,101 +1866,101 @@ function SectionHeader({
 /* ------------------------------------------------------------------ */
 
 // Single source of truth: the same plan definitions the unlock screen and
-// Stripe checkout use, so the homepage can never quote a stale price.
+// checkout use, so the homepage can never quote a stale price.
 const READINESS_PRICES = (["nigeria", "india", "international"] as const).map((region) => ({
-  label: region === "international" ? "UK & other markets" : PLANS[region].label,
+  region,
+  label: PLANS[region].label,
   price: formatPlanPrice(PLANS[region].oneTime),
 }));
 
-const READINESS_INCLUDES = [
-  "Full Digital Care Records Rollout",
-  "Workplace assignments and stakeholder scenarios",
-  "Performance feedback and detailed report",
-  "Verifiable Atlas credential",
-  "Interview reflection guide",
-  "Immediate access after payment",
+const READINESS_OUTCOMES = [
+  "Build practical judgement through realistic project situations",
+  "Practise responding when stakeholders disagree or priorities change",
+  "Strengthen how you explain project decisions in interviews",
+  "Understand how your decisions affect project health and delivery",
+  "Identify where your judgement is strong and where it still needs work",
+  "Develop simulated-project examples you can discuss honestly",
+  "Receive structured feedback throughout the experience",
+  "Complete the programme with a final performance report and verifiable Atlas credential",
 ];
+
+function rememberRegion(region: string) {
+  try {
+    window.localStorage.setItem("atlas.region", region);
+  } catch {
+    /* storage unavailable — checkout still lets the learner pick */
+  }
+}
 
 function ReadinessOffer() {
   return (
-    <section id="readiness" className="relative overflow-hidden bg-primary py-24 text-primary-foreground sm:py-32">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(55% 60% at 85% 5%, color-mix(in oklab, var(--accent-orange) 18%, transparent), transparent 70%)",
-        }}
-      />
-      <div className="relative mx-auto grid max-w-7xl gap-14 px-5 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:gap-20 lg:px-10">
-        <div>
+    <section id="readiness" className="relative bg-background py-24 sm:py-32">
+      <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-10">
+        <div className="mx-auto max-w-2xl text-center">
           <Reveal>
-            <p className="text-xs uppercase tracking-[0.22em] text-accent-orange">Get full access</p>
-          </Reveal>
-          <Reveal delay={100}>
-            <h2 className="mt-4 font-display text-[clamp(1.9rem,3.8vw,3rem)] font-medium leading-[1.08] tracking-[-0.02em]">
-              Atlas Project Readiness Experience
+            <h2 className="font-display text-[clamp(1.9rem,3.8vw,3rem)] font-medium leading-[1.08] tracking-[-0.02em] text-primary">
+              Choose Your Local Price
             </h2>
           </Reveal>
-          <Reveal delay={160}>
-            <p className="mt-6 max-w-xl text-[17px] leading-relaxed text-primary-foreground/85">
-              Complete the Digital Care Records workplace experience, receive performance feedback and
-              earn a verifiable Atlas credential.
+          <Reveal delay={120}>
+            <p className="mt-5 text-[16px] leading-relaxed text-muted-foreground">
+              One payment gives you full access to the complete Atlas Project Readiness Experience.
+              No subscription. Nothing renews automatically.
             </p>
-          </Reveal>
-          <Reveal delay={220}>
-            <ul className="mt-9 grid gap-3 sm:grid-cols-2">
-              {READINESS_INCLUDES.map((i) => (
-                <li key={i} className="flex items-start gap-3 text-[15px] leading-relaxed text-primary-foreground/90">
-                  <Check className="mt-1 h-4 w-4 shrink-0 text-accent-orange" aria-hidden />
-                  <span>{i}</span>
-                </li>
-              ))}
-            </ul>
-          </Reveal>
-          <Reveal delay={280}>
-            <div className="mt-10 flex flex-wrap items-center gap-3">
-              <Link
-                to="/auth"
-                className="group inline-flex items-center gap-2 rounded-full bg-accent-orange px-6 py-3.5 text-sm font-medium text-accent-orange-foreground shadow-[0_1px_0_rgba(255,255,255,0.25)_inset,0_14px_34px_-14px_rgba(0,0,0,0.5)] transition-all hover:-translate-y-0.5"
-              >
-                Start Your Atlas Experience
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-              </Link>
-              <span className="text-xs text-primary-foreground/70">
-                One-time payment · Immediate access · Complete at your own pace
-              </span>
-            </div>
           </Reveal>
         </div>
 
-        <Reveal delay={180}>
-          <div className="rounded-[28px] border border-primary-foreground/15 bg-primary-foreground/5 p-7 backdrop-blur sm:p-9">
-            <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/60">Local pricing</p>
-            <ul className="mt-6 divide-y divide-primary-foreground/10">
-              {READINESS_PRICES.map((p) => (
-                <li key={p.label} className="flex items-baseline justify-between gap-4 py-4">
-                  <span className="text-[15px] text-primary-foreground/85">{p.label}</span>
-                  <span className="font-display text-2xl font-medium">{p.price}</span>
-                </li>
-              ))}
-            </ul>
-            <div className="mt-6 flex items-start gap-3 rounded-2xl bg-primary-foreground/5 p-5 text-xs leading-relaxed text-primary-foreground/75">
-              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-accent-orange" aria-hidden />
-              <span>
-                Secure payment in your local currency. Atlas provides simulated workplace experience —
-                it is not employment and is not an accredited qualification.
-              </span>
-            </div>
-            <Link
-              to="/auth"
-              className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-accent-orange underline-offset-4 hover:underline"
-            >
-              View programme details
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          </div>
+        <div className="mt-14 grid gap-5 sm:gap-6 lg:grid-cols-3">
+          {READINESS_PRICES.map((p, i) => (
+            <Reveal key={p.region} delay={120 + i * 90}>
+              <div className="flex h-full flex-col rounded-[26px] border border-border bg-card p-7 shadow-[0_30px_90px_-60px_rgba(11,19,43,0.4)] transition-all hover:-translate-y-1 sm:p-9">
+                <p className="text-[15px] font-medium text-primary">{p.label}</p>
+                <p className="mt-5 font-display text-[clamp(2.1rem,4vw,2.8rem)] font-medium leading-none tracking-[-0.02em] text-primary">
+                  {p.price}
+                </p>
+                <p className="mt-3 text-[13px] uppercase tracking-[0.16em] text-accent-orange">
+                  One-time payment
+                </p>
+                <Link
+                  to="/auth"
+                  onClick={() => rememberRegion(p.region)}
+                  className="group mt-8 inline-flex w-full items-center justify-center gap-2 rounded-full bg-accent-orange px-6 py-3.5 text-sm font-medium text-accent-orange-foreground transition-all hover:-translate-y-0.5"
+                >
+                  Start Your Atlas Experience
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                </Link>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+
+        <Reveal delay={200}>
+          <p className="mx-auto mt-8 flex max-w-2xl items-start justify-center gap-2.5 text-center text-[13px] leading-relaxed text-muted-foreground">
+            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-accent-orange" aria-hidden />
+            <span>
+              Secure payment in your local currency. Atlas provides simulated workplace experience —
+              it is not employment and is not an accredited qualification.
+            </span>
+          </p>
         </Reveal>
+
+        <div className="mt-20 border-t border-border pt-16">
+          <Reveal>
+            <h3 className="mx-auto max-w-2xl text-center font-display text-[clamp(1.5rem,2.8vw,2.1rem)] font-medium leading-[1.15] tracking-[-0.02em] text-primary">
+              What full access helps you achieve
+            </h3>
+          </Reveal>
+          <ul className="mx-auto mt-10 grid max-w-4xl gap-4 sm:grid-cols-2">
+            {READINESS_OUTCOMES.map((o, i) => (
+              <Reveal key={o} delay={80 + i * 50}>
+                <li className="flex items-start gap-3 text-[15px] leading-relaxed text-foreground">
+                  <Check className="mt-1 h-4 w-4 shrink-0 text-accent-orange" aria-hidden />
+                  <span>{o}</span>
+                </li>
+              </Reveal>
+            ))}
+          </ul>
+        </div>
       </div>
     </section>
   );

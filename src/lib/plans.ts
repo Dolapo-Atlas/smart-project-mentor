@@ -35,7 +35,7 @@ export const PLANS: Record<
     oneTime: { priceId: "atlas_onetime_inr", amount: 1499, currency: "INR", symbol: "₹" },
   },
   international: {
-    label: "United Kingdom & other markets",
+    label: "United Kingdom & International",
     currency: "GBP",
     symbol: "£",
     oneTime: { priceId: "atlas_onetime_gbp", amount: 24.99, currency: "GBP", symbol: "£" },
@@ -59,6 +59,8 @@ export function formatPlanPrice(price: PlanPrice): string {
 /** Best-effort region guess from the browser locale / timezone. */
 export function guessRegion(): PlanRegion {
   if (typeof window === "undefined") return "international";
+  const stored = window.localStorage.getItem("atlas.region");
+  if (stored === "nigeria" || stored === "india" || stored === "international") return stored;
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone ?? "";
   const locale = navigator.language ?? "";
   if (/Lagos|Africa\/Lagos/i.test(tz) || /-NG$/i.test(locale)) return "nigeria";
