@@ -33,7 +33,7 @@ function computeCompletion(payload: Record<string, string>): number {
 }
 
 export const getOrCreateLessons = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) =>
     z.object({ task_id: z.string().uuid().optional() }).parse(d ?? {}),
   )
