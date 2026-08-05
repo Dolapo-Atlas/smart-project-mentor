@@ -5,6 +5,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { ArrowRight, Check, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getUnlockPricing } from "@/lib/access.functions";
+import { getPlanPrices } from "@/utils/payments.functions";
+import { formatMinor } from "@/lib/money";
 import { trackLearner } from "@/lib/learner-events";
 import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 import {
@@ -14,7 +16,7 @@ import {
   guessRegion,
   planFor,
 } from "@/lib/plans";
-import { paymentsConfigured } from "@/lib/stripe";
+import { paymentsConfigured, getStripeEnvironment } from "@/lib/stripe";
 
 const REGIONS: Array<{ key: PlanRegion; label: string }> = [
   { key: "nigeria", label: "Nigeria" },
@@ -64,6 +66,7 @@ export function UnlockScreen({
   onReturnToWorkspace?: () => void;
 }) {
   const fetchPricing = useServerFn(getUnlockPricing);
+  const fetchPlanPrices = useServerFn(getPlanPrices);
   const [region, setRegion] = useState<PlanRegion>(() => guessRegion());
   const [checkoutOpen, setCheckoutOpen] = useState(false);
 
@@ -72,7 +75,18 @@ export function UnlockScreen({
     queryFn: () => fetchPricing(),
   });
 
+  // Live amounts from the payment provider — the same numbers Checkout charges.
+  const { data: livePrices } = useQuery({
+    queryKey: ["plan-prices", getStripeEnvironment()],
+    queryFn: () => fetchPlanPrices({ data: { environment: getStripeEnvironment() } }),
+    staleTime: 5 * 60_000,
+  });
+
   const plan = useMemo(() => planFor(region), [region]);
+  const displayPrice = useMemo(() => {
+    const live = livePrices?.[plan.priceId];
+    return live ? formatMinor(live.amount, live.currency) : formatPlanPrice(plan);
+  }, [livePrices, plan]);
   const configured = paymentsConfigured();
 
   function openCheckout() {
@@ -164,7 +178,7 @@ export function UnlockScreen({
 
       <div className="mt-5 flex items-end gap-3">
         <span className="font-display text-[clamp(2.2rem,5vw,3.2rem)] font-medium leading-none">
-          {formatPlanPrice(plan)}
+          {displayPrice}
         </span>
         <span className="pb-2 text-sm text-muted-foreground">
           One-time payment. No subscription.
