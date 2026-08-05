@@ -35,7 +35,8 @@ export const getPlanPrices = createServerFn({ method: "POST" })
       const out: PlanPricesResult = {};
       for (const price of prices.data) {
         const key = price.lookup_key ?? price.metadata?.["lovable_external_id"];
-        if (!key || price.unit_amount == null) continue;
+        // Recurring prices are never valid for Atlas — it is a one-time unlock.
+        if (!key || price.unit_amount == null || price.type !== "one_time") continue;
         out[key] = { amount: price.unit_amount, currency: (price.currency ?? "").toUpperCase() };
       }
       return out;
@@ -144,6 +145,9 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         selectedCountry: country,
         selectedCurrency: (price.currency ?? "").toUpperCase(),
         priceId: data.priceId,
+        // Audit trail: the provider amount this session was opened with.
+        expectedAmount: String(price.unit_amount ?? ""),
+        expectedCurrency: (price.currency ?? "").toUpperCase(),
       };
 
       const session = await stripe.checkout.sessions.create({
