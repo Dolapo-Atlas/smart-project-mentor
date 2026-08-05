@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireProgrammeAccess } from "@/lib/programme-access.middleware";
 import { z } from "zod";
 import { generateObject, generateText } from "ai";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
@@ -269,7 +270,7 @@ async function loadMentorContext(
  * optionally an Ask-AI answer when a question is supplied.
  */
 export const mentorBrief = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((input: { route: string; question?: string }) => input)
   .handler(async ({ data, context }) => {
     const ctx = lookupRoute(data.route);
@@ -387,7 +388,7 @@ const MentorTurnSchema = z.object({
 });
 
 export const mentorChat = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator(
     (input: {
       route: string;

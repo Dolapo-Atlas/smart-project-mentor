@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireProgrammeAccess } from "@/lib/programme-access.middleware";
 import { z } from "zod";
 import { ARCHETYPE_SENTIMENT_BY_ROLE } from "@/lib/pm.functions";
 import { loadRoster, rosterByRole, rosterByName, type RosterMember } from "@/lib/roster";
@@ -105,7 +106,7 @@ async function bumpSentiment(
 }
 
 export const delegateInboxMessage = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) =>
     z.object({
       inbox_id: z.string().uuid(),
