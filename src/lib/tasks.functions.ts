@@ -281,7 +281,7 @@ export const createRichTask = createServerFn({ method: "POST" })
   });
 
 export const submitTaskWithWork = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) =>
     z
       .object({
@@ -294,9 +294,9 @@ export const submitTaskWithWork = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    // Free preview allows one completed task; further submissions need the unlock.
-    const { assertProgrammeAccess } = await import("@/lib/access.server");
-    await assertProgrammeAccess(supabase, userId);
+    // The free workplace action is the explicit first stakeholder-email reply.
+    // Task deliverables belong to the paid simulation; Charter preview editing
+    // is handled separately by its dedicated server functions.
     // Reject structurally empty submissions early with a clear message.
     // Template submissions encode as JSON; plain free-text submissions are raw strings.
     const raw = data.submission.trim();
