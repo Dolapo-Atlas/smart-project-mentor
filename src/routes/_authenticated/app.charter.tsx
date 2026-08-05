@@ -36,6 +36,7 @@ import { isPaywallError } from "@/lib/paywall";
 import { useNavigate } from "@tanstack/react-router";
 import { TaskContextPanel } from "@/components/mentor/task-context-panel";
 import { WhyThisMatters } from "@/components/why-this-matters";
+import { formatMinor } from "@/lib/money";
 import { UnlockScreen } from "@/components/dashboard/unlock-screen";
 import { getMyAccess } from "@/lib/access.functions";
 import { Lock } from "lucide-react";
