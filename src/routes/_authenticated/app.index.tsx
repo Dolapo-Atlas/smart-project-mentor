@@ -5,7 +5,7 @@ import {
   getOverview,
   generateStakeholderMessage,
 } from "@/lib/sim.functions";
-import { getActiveProject } from "@/lib/projects.functions";
+import { getActiveProject, markTourCompleted } from "@/lib/projects.functions";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Compass, Focus, LayoutGrid } from "lucide-react";
 import { toast } from "sonner";
@@ -35,6 +35,8 @@ function Dashboard() {
   const genMessage = useServerFn(generateStakeholderMessage);
   const fetchActive = useServerFn(getActiveProject);
   const fetchAccess = useServerFn(getMyAccess);
+  const markTour = useServerFn(markTourCompleted);
+
 
   const { data: overview } = useQuery({ queryKey: ["overview"], queryFn: () => fetchOverview() });
   const { data: active, isSuccess: activeLoaded } = useQuery({
@@ -65,7 +67,13 @@ function Dashboard() {
     if (typeof window === "undefined" || !id) return;
     window.localStorage.setItem(`atlas.first-run-done.${id}`, "1");
     window.dispatchEvent(new Event("atlas:first-run-done"));
+    // The guided tour has been removed from the post-brief flow; record it as
+    // complete so analytics and any legacy checks stay consistent.
+    markTour({ data: { instanceId: id } }).catch(() => {
+      /* non-blocking */
+    });
   };
+
 
   // Auto-open the Project Brief the first time the user lands on the
   // dashboard for a given project instance. Uses localStorage so returning
