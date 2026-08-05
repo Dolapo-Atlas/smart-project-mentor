@@ -12,10 +12,11 @@ import { UnlockScreen } from "@/components/dashboard/unlock-screen";
  */
 export function LockedModuleGate({ children }: { children: ReactNode }) {
   const fetchAccess = useServerFn(getMyAccess);
-  const { data: access, isLoading } = useQuery({
+  const { data: access, isLoading, isError } = useQuery({
     queryKey: ["my-access"],
     queryFn: () => fetchAccess(),
-    staleTime: 30_000,
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   if (isLoading) {
@@ -26,7 +27,9 @@ export function LockedModuleGate({ children }: { children: ReactNode }) {
     );
   }
 
-  if (access?.locked) {
+  // Fail closed: a premium module must never render while access could not be
+  // verified. The unlock screen remains the safe, actionable destination.
+  if (isError || !access || access.locked) {
     return (
       <div className="py-4">
         <UnlockScreen />
