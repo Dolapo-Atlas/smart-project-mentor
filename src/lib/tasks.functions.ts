@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireProgrammeAccess } from "@/lib/programme-access.middleware";
 import { z } from "zod";
 import { generateObject } from "ai";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
@@ -241,7 +242,7 @@ export const listWhatsNext = createServerFn({ method: "GET" })
 /* ---------- CREATE / UPDATE / SUBMIT / CLOSE ---------- */
 
 export const createRichTask = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) =>
     z
       .object({
@@ -538,7 +539,7 @@ const FeedbackSchema = z.object({
 });
 
 export const closeTaskWithReview = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) =>
     z
       .object({
@@ -724,7 +725,7 @@ Be specific to the email — do NOT return generic templates.`;
 /* ---------- ESCALATE A TASK ---------- */
 
 export const escalateTask = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) =>
     z
       .object({
@@ -792,7 +793,7 @@ export const escalateTask = createServerFn({ method: "POST" })
 /* ---------- RESUME A BLOCKED TASK (post-escalation) ---------- */
 
 export const resumeBlockedTask = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
