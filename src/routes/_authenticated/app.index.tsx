@@ -82,7 +82,6 @@ function Dashboard() {
     autoOpenedRef.current = activeId;
     setBriefOpen(true);
     firstRunBriefRef.current = true;
-    window.localStorage.setItem(key, "1");
     trackLearner("brief_opened", { projectInstanceId: activeId });
   }, [activeId]);
 
@@ -90,6 +89,9 @@ function Dashboard() {
     setBriefOpen(next);
     if (!next && firstRunBriefRef.current) {
       firstRunBriefRef.current = false;
+      if (typeof window !== "undefined" && activeId) {
+        window.localStorage.setItem(`atlas.brief-seen.${activeId}`, "1");
+      }
       trackLearner("brief_closed", { projectInstanceId: activeId ?? null });
       trackLearner("first_email_prompt_shown", { projectInstanceId: activeId ?? null });
       setEmailPromptOpen(true);
@@ -222,14 +224,11 @@ function Dashboard() {
         </div>
       )}
 
-      {focusMode ? (
+      {!firstRunActive && (focusMode ? (
         <div
-          className={`mx-auto max-w-2xl space-y-4 ${firstRunActive ? "hidden" : ""}`}
-          aria-hidden={firstRunActive}
+          className="mx-auto max-w-2xl space-y-4"
         >
-          {!firstRunActive && (
-            <FirstWinPanel projectId={activeId} onOpenBrief={() => setBriefOpen(true)} />
-          )}
+          <FirstWinPanel projectId={activeId} onOpenBrief={() => setBriefOpen(true)} />
           <div className="rounded-lg border border-accent-orange/30 bg-accent-orange/5 px-4 py-3 text-xs text-foreground/80">
             <span className="font-medium text-foreground">Focus mode.</span>{" "}
             One thing at a time. Everything else is still there — toggle the
@@ -238,14 +237,9 @@ function Dashboard() {
           <div className="atlas-rise atlas-rise-2"><ContinueCard /></div>
         </div>
       ) : (
-        <div
-          className={firstRunActive ? "hidden" : "space-y-6"}
-          aria-hidden={firstRunActive}
-        >
-          {!firstRunActive && <WelcomeBackPanel />}
-          {!firstRunActive && (
-            <FirstWinPanel projectId={activeId} onOpenBrief={() => setBriefOpen(true)} />
-          )}
+        <div className="space-y-6">
+          <WelcomeBackPanel />
+          <FirstWinPanel projectId={activeId} onOpenBrief={() => setBriefOpen(true)} />
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
             <div className="min-w-0 space-y-6">
               <div className="atlas-rise atlas-rise-2"><ContinueCard /></div>
@@ -258,7 +252,7 @@ function Dashboard() {
             </div>
           </div>
         </div>
-      )}
+      ))}
       <ProjectBriefSheet
         open={briefOpen}
         onOpenChange={handleBriefOpenChange}
