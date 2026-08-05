@@ -12,12 +12,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, CheckCircle2, Loader2, Save, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import {
-import { LockedModuleGate } from "@/components/dashboard/locked-module-gate";
   ExampleDialog,
   FirstTimeChoiceCard,
   GuidedCoachStrip,
   useFirstTimeMode,
 } from "@/components/onboarding/first-time-task";
+import { LockedModuleGate } from "@/components/dashboard/locked-module-gate";
 
 export const Route = createFileRoute("/_authenticated/app/template/$kind")({
   component: TemplateFillRoute,
