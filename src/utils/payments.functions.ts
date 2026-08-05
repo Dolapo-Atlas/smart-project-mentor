@@ -101,9 +101,19 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
 
       const stripe = createStripeClient(data.environment);
 
-      const prices = await stripe.prices.list({ lookup_keys: [data.priceId] });
-      const price = prices.data[0];
+      // Resolve the amount from the provider, never from the client or from
+      // any amount stored in the app. Only an ACTIVE, ONE-TIME price may be
+      // charged, so a stale or recurring price can never open checkout.
+      const prices = await stripe.prices.list({
+        lookup_keys: [data.priceId],
+        active: true,
+        expand: ["data.product"],
+      });
+      const price = prices.data.find((p) => p.type === "one_time" && p.active);
       if (!price) return { error: "That plan is not available yet. Please try again shortly." };
+      if (price.recurring) {
+        return { error: "That plan is misconfigured as a subscription. Please contact support." };
+      }
 
       const { data: profile } = await context.supabase
         .from("profiles")
@@ -138,6 +148,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
 
       const session = await stripe.checkout.sessions.create({
         line_items: [{ price: price.id, quantity: 1 }],
+        // One-time purchase only. Atlas never creates subscriptions.
         mode: "payment",
         ui_mode: "embedded_page",
         return_url: data.returnUrl,
