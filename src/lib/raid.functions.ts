@@ -310,7 +310,7 @@ export const createRaid = createServerFn({ method: "POST" })
   });
 
 export const updateRaidStatus = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) =>
     z.object({ id: z.string().uuid(), status: Status }).parse(d),
   )
@@ -326,7 +326,7 @@ export const updateRaidStatus = createServerFn({ method: "POST" })
   });
 
 export const deleteRaid = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase
@@ -447,7 +447,7 @@ export const listRag = createServerFn({ method: "GET" })
   });
 
 export const upsertRag = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) =>
     z.object({
       area: Area,
