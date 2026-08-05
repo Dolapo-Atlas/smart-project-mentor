@@ -36,6 +36,7 @@ import { isPaywallError } from "@/lib/paywall";
 import { useNavigate } from "@tanstack/react-router";
 import { TaskContextPanel } from "@/components/mentor/task-context-panel";
 import { WhyThisMatters } from "@/components/why-this-matters";
+import { formatMinor } from "@/lib/money";
 import { UnlockScreen } from "@/components/dashboard/unlock-screen";
 import { getMyAccess } from "@/lib/access.functions";
 import { Lock } from "lucide-react";
@@ -538,7 +539,14 @@ function CharterPage() {
         {search.checkout === "success" && (
           <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-4 text-sm">
             <div className="font-semibold text-emerald-800 dark:text-emerald-300">
-              Payment successful. Your full Atlas experience is now unlocked.
+              Payment successful
+              {accessQuery.data?.purchase?.status === "paid"
+                ? ` — ${formatMinor(accessQuery.data.purchase.amount, accessQuery.data.purchase.currency)} paid once`
+                : ""}
+              . Your full Atlas experience is now unlocked.
+            </div>
+            <div className="mt-1 text-emerald-800/80 dark:text-emerald-300/80">
+              One-time payment. Nothing renews automatically.
             </div>
             <Button className="mt-3" size="sm" onClick={() => accessQuery.refetch()}>
               Continue Project Charter

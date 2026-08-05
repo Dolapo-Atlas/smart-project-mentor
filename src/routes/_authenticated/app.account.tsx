@@ -21,6 +21,7 @@ import { createPortalSession } from "@/utils/payments.functions";
 import { getStripeEnvironment, paymentsConfigured } from "@/lib/stripe";
 import { supabase } from "@/integrations/supabase/client";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+import { formatMinor } from "@/lib/money";
 
 export const Route = createFileRoute("/_authenticated/app/account")({
   component: AccountPage,
@@ -43,15 +44,7 @@ export const Route = createFileRoute("/_authenticated/app/account")({
   }),
 });
 
-function money(amount: number, currency: string): string {
-  // Provider amounts are in minor units.
-  const value = amount / 100;
-  try {
-    return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(value);
-  } catch {
-    return `${currency} ${value.toFixed(2)}`;
-  }
-}
+const money = formatMinor;
 
 function when(iso: string | null): string {
   if (!iso) return "—";

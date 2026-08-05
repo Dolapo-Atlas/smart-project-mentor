@@ -11,6 +11,7 @@ import { getMyAccess } from "@/lib/access.functions";
 import { createPortalSession } from "@/utils/payments.functions";
 import { getStripeEnvironment, paymentsConfigured } from "@/lib/stripe";
 import { trackLearner } from "@/lib/learner-events";
+import { formatMinor } from "@/lib/money";
 
 export const Route = createFileRoute("/_authenticated/app/unlock")({
   component: UnlockPage,
@@ -67,7 +68,7 @@ function UnlockPage() {
       }
       window.open(res.url, "_blank");
     } catch {
-      toast.error("We couldn't open your billing settings just then.");
+      toast.error("We couldn't open your receipt just then.");
     }
   }
 
@@ -94,17 +95,16 @@ function UnlockPage() {
           <Button asChild size="lg" className="rounded-full">
             <Link to="/app">Back to my project</Link>
           </Button>
-          {access.subscription && paymentsConfigured() && (
+          {access.purchase?.status === "paid" && paymentsConfigured() && (
             <Button size="lg" variant="outline" className="rounded-full" onClick={manageBilling}>
-              Manage my subscription
+              View my receipt
             </Button>
           )}
         </div>
-        {access.subscription?.cancelAtPeriodEnd && access.subscription.currentPeriodEnd && (
+        {access.purchase?.status === "paid" && (
           <p className="mt-4 text-sm text-muted-foreground">
-            Your subscription ends on{" "}
-            {new Date(access.subscription.currentPeriodEnd).toLocaleDateString()} — you keep full
-            access until then.
+            {formatMinor(access.purchase.amount, access.purchase.currency)} paid once. No
+            subscription — nothing renews automatically.
           </p>
         )}
       </div>

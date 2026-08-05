@@ -13,8 +13,37 @@ type CheckoutSessionResult =
   | { alreadyPaid: true }
   | { error: string };
 type PortalSessionResult = { url: string } | { error: string };
+/** Live provider amounts, keyed by human-readable price ID (lookup key). */
+type PlanPricesResult = Record<string, { amount: number; currency: string }>;
 
 const envSchema = z.enum(["sandbox", "live"]);
+
+/**
+ * The authoritative price list: read straight from the payment provider so the
+ * paywall can never drift from what Checkout actually charges.
+ */
+export const getPlanPrices = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ environment: envSchema }).parse(d))
+  .handler(async ({ data }): Promise<PlanPricesResult> => {
+    try {
+      const stripe = createStripeClient(data.environment);
+      const prices = await stripe.prices.list({
+        lookup_keys: PLAN_PRICE_IDS,
+        active: true,
+        limit: 20,
+      });
+      const out: PlanPricesResult = {};
+      for (const price of prices.data) {
+        const key = price.lookup_key ?? price.metadata?.["lovable_external_id"];
+        if (!key || price.unit_amount == null) continue;
+        out[key] = { amount: price.unit_amount, currency: (price.currency ?? "").toUpperCase() };
+      }
+      return out;
+    } catch (error) {
+      console.error("plan price lookup failed", error);
+      return {};
+    }
+  });
 
 const checkoutSchema = z.object({
   priceId: z.string().refine((v) => PLAN_PRICE_IDS.includes(v), "Unknown plan"),
