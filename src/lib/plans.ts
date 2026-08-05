@@ -14,6 +14,8 @@ export const PROGRAMME_NAME =
 export interface PlanPrice {
   priceId: string;
   amount: number;
+  /** Exact provider amount in the currency's minor unit (pence/kobo/paise). */
+  amountMinor: number;
   currency: string;
   symbol: string;
 }
@@ -26,23 +28,35 @@ export const PLANS: Record<
     label: "Nigeria",
     currency: "NGN",
     symbol: "₦",
-    oneTime: { priceId: "atlas_onetime_ngn", amount: 25000, currency: "NGN", symbol: "₦" },
+    oneTime: { priceId: "atlas_onetime_ngn", amount: 25000, amountMinor: 2500000, currency: "NGN", symbol: "₦" },
   },
   india: {
     label: "India",
     currency: "INR",
     symbol: "₹",
-    oneTime: { priceId: "atlas_onetime_inr", amount: 1499, currency: "INR", symbol: "₹" },
+    oneTime: { priceId: "atlas_onetime_inr", amount: 1499, amountMinor: 149900, currency: "INR", symbol: "₹" },
   },
   international: {
     label: "United Kingdom & International",
     currency: "GBP",
     symbol: "£",
-    oneTime: { priceId: "atlas_onetime_gbp", amount: 24.99, currency: "GBP", symbol: "£" },
+    oneTime: { priceId: "atlas_onetime_gbp", amount: 24.99, amountMinor: 2499, currency: "GBP", symbol: "£" },
   },
 };
 
 export const PLAN_PRICE_IDS = Object.values(PLANS).map((p) => p.oneTime.priceId);
+
+/**
+ * Checkout safety contract. The provider remains the source of the charge,
+ * but Atlas refuses to open Checkout if its active price has drifted from the
+ * approved regional catalogue.
+ */
+export const PLAN_PRICE_EXPECTATIONS = Object.fromEntries(
+  Object.values(PLANS).map(({ oneTime }) => [
+    oneTime.priceId,
+    { amount: oneTime.amountMinor, currency: oneTime.currency },
+  ]),
+) as Record<string, { amount: number; currency: string }>;
 
 export function planFor(region: PlanRegion): PlanPrice {
   return PLANS[region].oneTime;
