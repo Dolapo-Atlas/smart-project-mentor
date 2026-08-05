@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
-import { Mail, ListChecks, LayoutDashboard, LogOut, ArrowLeft, ShieldAlert, FileBarChart2, Contact, FolderKanban, MoreHorizontal, FileText, Users, Wallet, Activity, Gauge, Gavel, Award, Send, GitPullRequest, CheckCircle2, Compass, Settings, Shield, UserCheck, Megaphone, Sparkles, PauseCircle, Camera, LayoutTemplate, CreditCard } from "lucide-react";
+import { Mail, ListChecks, LayoutDashboard, LogOut, ArrowLeft, ShieldAlert, FileBarChart2, Contact, FolderKanban, MoreHorizontal, FileText, Users, Wallet, Activity, Gauge, Gavel, Award, Send, GitPullRequest, CheckCircle2, Compass, Settings, Shield, UserCheck, Megaphone, Sparkles, PauseCircle, Camera, LayoutTemplate, CreditCard, UserRound } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -392,6 +392,12 @@ function AppLayout() {
                 className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-xs text-white/70 transition hover:bg-white/10 hover:text-white"
               >
                 <FolderKanban className="h-3.5 w-3.5" /> Switch project
+              </Link>
+              <Link
+                to="/app/account"
+                className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-xs text-white/70 transition hover:bg-white/10 hover:text-white"
+              >
+                <UserRound className="h-3.5 w-3.5" /> Account & delete account
               </Link>
               <button
                 type="button"
