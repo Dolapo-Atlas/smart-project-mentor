@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireProgrammeAccess } from "@/lib/programme-access.middleware";
 import { z } from "zod";
 import { generateObject } from "ai";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
@@ -412,7 +413,7 @@ const StakeholderSchema = z.object({
 });
 
 export const generateStakeholderMessage = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     const { data: state } = await supabase
@@ -514,7 +515,7 @@ export const listTasks = createServerFn({ method: "GET" })
   });
 
 export const createTask = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) =>
     z.object({
       title: z.string().min(1),
@@ -533,7 +534,7 @@ export const createTask = createServerFn({ method: "POST" })
   });
 
 export const updateTaskStatus = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) =>
     z.object({ id: z.string().uuid(), status: z.enum(["todo", "in_progress", "submitted", "done"]) }).parse(d),
   )

@@ -314,7 +314,7 @@ const DEFAULT_BUDGET: Array<{ category: string; description: string; amount: num
 ];
 
 export const seedBudgetIfEmpty = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .handler(async ({ context }) => {
     const { count } = await context.supabase
       .from("budget_lines")
@@ -583,7 +583,7 @@ export const createChangeRequest = createServerFn({ method: "POST" })
 const PHASES = ["initiation", "planning", "execution", "closure"] as const;
 
 export const listGates = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .handler(async ({ context }) => {
     let { data } = await context.supabase
       .from("phase_gates")

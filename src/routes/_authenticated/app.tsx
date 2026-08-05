@@ -168,6 +168,10 @@ function normalisePhase(p?: string | null): keyof typeof PHASE_NAV {
  * free first half and replaces the remaining sections with the unlock panel.
  */
 function isPremiumWorkspaceRoute(pathname: string): boolean {
+  // Router pathnames can carry a trailing slash depending on how a learner
+  // arrived. Normalise it before comparing so `/app/raid/` cannot bypass the
+  // same gate that protects `/app/raid`.
+  const route = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
   const freeRoutes = new Set([
     "/app",
     "/app/inbox",
@@ -178,9 +182,11 @@ function isPremiumWorkspaceRoute(pathname: string): boolean {
     "/app/settings",
     "/app/projects",
   ]);
-  if (freeRoutes.has(pathname)) return false;
-  if (pathname.startsWith("/app/projects/")) return false;
-  return pathname.startsWith("/app/");
+  if (freeRoutes.has(route)) return false;
+  if (route.startsWith("/app/projects/")) return false;
+  // Fail closed: every present or future workspace descendant not explicitly
+  // listed above is part of the paid simulation.
+  return route.startsWith("/app/");
 }
 
 function AppLayout() {

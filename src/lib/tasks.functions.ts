@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireProgrammeAccess } from "@/lib/programme-access.middleware";
 import { z } from "zod";
 import { generateObject } from "ai";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
@@ -241,7 +242,7 @@ export const listWhatsNext = createServerFn({ method: "GET" })
 /* ---------- CREATE / UPDATE / SUBMIT / CLOSE ---------- */
 
 export const createRichTask = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) =>
     z
       .object({
@@ -280,7 +281,7 @@ export const createRichTask = createServerFn({ method: "POST" })
   });
 
 export const submitTaskWithWork = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) =>
     z
       .object({
@@ -293,9 +294,9 @@ export const submitTaskWithWork = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    // Free preview allows one completed task; further submissions need the unlock.
-    const { assertProgrammeAccess } = await import("@/lib/access.server");
-    await assertProgrammeAccess(supabase, userId);
+    // The free workplace action is the explicit first stakeholder-email reply.
+    // Task deliverables belong to the paid simulation; Charter preview editing
+    // is handled separately by its dedicated server functions.
     // Reject structurally empty submissions early with a clear message.
     // Template submissions encode as JSON; plain free-text submissions are raw strings.
     const raw = data.submission.trim();
@@ -538,7 +539,7 @@ const FeedbackSchema = z.object({
 });
 
 export const closeTaskWithReview = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) =>
     z
       .object({
@@ -724,7 +725,7 @@ Be specific to the email — do NOT return generic templates.`;
 /* ---------- ESCALATE A TASK ---------- */
 
 export const escalateTask = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) =>
     z
       .object({
@@ -792,7 +793,7 @@ export const escalateTask = createServerFn({ method: "POST" })
 /* ---------- RESUME A BLOCKED TASK (post-escalation) ---------- */
 
 export const resumeBlockedTask = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
