@@ -68,24 +68,19 @@ function Inbox() {
   const fetchTasks = useServerFn2(listTasksRich);
   const { data: allTasks } = useQuery({ queryKey: ["tasks"], queryFn: () => fetchTasks() });
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const selected = messages?.find((m) => m.id === selectedId) ?? messages?.[0];
-  // Onboarding: jump straight to the first unread stakeholder email and open
-  // the response box so the expected action is unmistakable.
+  // On day one nothing is auto-opened: the learner has to open the email
+  // themselves, so it is only marked read once they have actually read it.
+  const selected =
+    messages?.find((m) => m.id === selectedId) ??
+    (onboardingMode ? undefined : messages?.[0]);
   const [onboardingDone, setOnboardingDone] = useState(false);
+  const trackedOpenRef = useRef(false);
   useEffect(() => {
-    if (!onboardingMode || onboardingDone) return;
-    if (selectedId) return;
-    const list = messages ?? [];
-    if (list.length === 0) return;
+    if (!onboardingMode || trackedOpenRef.current) return;
+    if ((messages ?? []).length === 0) return;
+    trackedOpenRef.current = true;
     trackLearner("inbox_opened", { props: { onboarding: true } });
-    const target =
-      [...list].reverse().find((m) => !m.read && m.sender_name !== "Project Update") ??
-      list[0];
-    if (target) {
-      setSelectedId(target.id);
-      setReplyOpen(true);
-    }
-  }, [onboardingMode, onboardingDone, messages, selectedId]);
+  }, [onboardingMode, messages]);
   const linkedTasks = (allTasks ?? []).filter(
     (t: any) => selected && t.source_ref === selected.id,
   );
