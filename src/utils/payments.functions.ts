@@ -123,8 +123,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
 
       // Fail closed if the provider catalogue ever drifts again. Checkout
       // still charges the provider Price object below; this guard prevents an
-      // incorrect active price (for example 2999 instead of 2499 GBP) from
-      // ever reaching the learner.
+      // incorrect active price from ever reaching the learner.
       const expected = PLAN_PRICE_EXPECTATIONS[data.priceId];
       const providerCurrency = (price.currency ?? "").toUpperCase();
       if (
