@@ -146,6 +146,19 @@ function AccountPage() {
         <p className="mt-1 text-sm text-muted-foreground">
           Access, payment and sign-in details for your Atlas workplace experience.
         </p>
+        <Button
+          variant="outline"
+          size="sm"
+          className="mt-4 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+          onClick={() => {
+            document
+              .getElementById("close-account")
+              ?.scrollIntoView({ behavior: "smooth", block: "center" });
+          }}
+        >
+          <Trash2 className="mr-2 h-4 w-4" />
+          Delete my account
+        </Button>
       </header>
 
       {isLoading ? (
@@ -279,7 +292,10 @@ function AccountPage() {
           </section>
 
           {/* Danger zone */}
-          <section className="rounded-xl border border-destructive/30 bg-destructive/5 p-5">
+          <section
+            id="close-account"
+            className="scroll-mt-24 rounded-xl border border-destructive/30 bg-destructive/5 p-5"
+          >
             <div className="flex items-start gap-3">
               <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
               <div className="min-w-0 flex-1">
