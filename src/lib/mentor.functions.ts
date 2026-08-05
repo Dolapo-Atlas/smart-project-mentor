@@ -1,5 +1,4 @@
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { requireProgrammeAccess } from "@/lib/programme-access.middleware";
 import { z } from "zod";
 import { generateObject, generateText } from "ai";
