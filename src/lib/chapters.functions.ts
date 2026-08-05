@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireProgrammeAccess } from "@/lib/programme-access.middleware";
 
 // Server-only helper (no module-scope side effects). Safe to import from other
 // *.functions.ts files. Marks a chapter complete by slug for the user's active
@@ -202,7 +203,7 @@ export const listChapters = createServerFn({ method: "GET" })
 
 // Mark a chapter complete and unlock the next one. Idempotent.
 export const completeChapter = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((input: { chapterId: string; score?: number }) => input)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;

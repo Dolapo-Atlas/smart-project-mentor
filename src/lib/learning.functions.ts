@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireProgrammeAccess } from "@/lib/programme-access.middleware";
 import { z } from "zod";
 import {
   PHASES,
@@ -162,7 +163,7 @@ export const getLearningJourney = createServerFn({ method: "GET" })
   });
 
 export const submitReflection = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .inputValidator((d: unknown) =>
     z
       .object({
@@ -197,7 +198,7 @@ export const submitReflection = createServerFn({ method: "POST" })
  * safe to run multiple times.
  */
 export const backfillLearningJourney = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireProgrammeAccess])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     const [docs, comms, reports, raid, changes, gates] = await Promise.all([

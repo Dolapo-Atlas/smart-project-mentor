@@ -144,10 +144,19 @@ export async function getAccessState(
       }
     : null;
 
-  // Paid access comes from a live subscription, or from the grandfathered /
-  // manually granted `full` tier on the profile.
+  // Access must be backed by a real payment (or an explicit admin grant).
+  // Historical `grandfathered` profile rows must not silently bypass checkout:
+  // that was the reason unpaid test accounts could open every module.
   const subscribed = subRow ? subscriptionGrantsAccess(subRow) : false;
-  const tier = profile?.access_tier === "full" || subscribed ? "full" : "free";
+  const purchased = Boolean(
+    purchaseRow?.status === "paid" &&
+      purchaseRow.paid_at &&
+      !purchaseRow.refunded_at &&
+      !purchaseRow.disputed_at,
+  );
+  const adminGranted =
+    profile?.access_tier === "full" && profile?.access_source === "admin";
+  const tier = purchased || subscribed || adminGranted ? "full" : "free";
   const workDone = tasksRes.count ?? 0;
   let freePreviewCompletedAt = profile?.free_preview_completed_at ?? null;
   // The preview is consumed by the first finished piece of work — a submitted
