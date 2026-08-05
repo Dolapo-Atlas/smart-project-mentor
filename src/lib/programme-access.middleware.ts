@@ -10,7 +10,11 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 export const requireProgrammeAccess = createMiddleware({ type: "function" })
   .middleware([requireSupabaseAuth])
   .server(async ({ next, context }) => {
-    const { assertProgrammeAccess } = await import("@/lib/access.server");
-    await assertProgrammeAccess(context.supabase, context.userId);
+    const { getAccessState, PAYWALL_MESSAGE } = await import("@/lib/access.server");
+    const access = await getAccessState(context.supabase, context.userId);
+    // Premium module writes always require verified full access. The free
+    // preview is implemented only by its explicit task/email/Charter flows;
+    // it must never make premium server functions temporarily writable.
+    if (access.tier !== "full") throw new Error(PAYWALL_MESSAGE);
     return next();
   });
