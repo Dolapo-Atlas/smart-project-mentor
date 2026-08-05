@@ -62,7 +62,9 @@ function ProjectIntro() {
     setStarting(true);
     try {
       await seenMut.mutateAsync();
-      navigate({ to: "/app/inbox" });
+      // The workspace Home is the single first destination. It owns the
+      // first-run sequence: open the full brief, then offer the inbox prompt.
+      navigate({ to: "/app", replace: true });
     } catch (error) {
       setStarting(false);
       toast.error(error instanceof Error ? error.message : "Couldn't start your first day");
