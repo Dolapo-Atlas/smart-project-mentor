@@ -1938,8 +1938,7 @@ function ReadinessOffer() {
           <p className="mx-auto mt-8 flex max-w-2xl items-start justify-center gap-2.5 text-center text-[13px] leading-relaxed text-muted-foreground">
             <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-accent-orange" aria-hidden />
             <span>
-              Secure payment in your local currency. Atlas provides simulated workplace experience —
-              it is not employment and is not an accredited qualification.
+              Secure payment in your local currency. Atlas provides simulated workplace experience.
             </span>
           </p>
         </Reveal>
