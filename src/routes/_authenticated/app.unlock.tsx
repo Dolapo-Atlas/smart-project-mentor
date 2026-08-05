@@ -100,11 +100,10 @@ function UnlockPage() {
             </Button>
           )}
         </div>
-        {access.subscription?.cancelAtPeriodEnd && access.subscription.currentPeriodEnd && (
+        {access.purchase?.status === "paid" && (
           <p className="mt-4 text-sm text-muted-foreground">
-            Your subscription ends on{" "}
-            {new Date(access.subscription.currentPeriodEnd).toLocaleDateString()} — you keep full
-            access until then.
+            {formatMinor(access.purchase.amount, access.purchase.currency)} paid once. No
+            subscription — nothing renews automatically.
           </p>
         )}
       </div>
