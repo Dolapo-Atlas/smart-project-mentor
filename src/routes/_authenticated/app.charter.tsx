@@ -144,6 +144,8 @@ function CharterPage() {
   const [mode, setMode] = useState<"edit" | "preview">("edit");
   const [dirty, setDirty] = useState(false);
   const [showAllFields, setShowAllFields] = useState(false);
+  const firstTime = useFirstTimeMode("template.project_charter");
+  const [charterExampleOpen, setCharterExampleOpen] = useState(false);
 
   const focusKeys = useMemo(() => {
     const t = taskQuery.data as any;
@@ -351,7 +353,7 @@ function CharterPage() {
         {firstTime.mode === "guided" && (
           <GuidedCoachStrip
             fields={template.fields}
-            values={form as Record<string, string>}
+            values={values}
             onDismiss={() => firstTime.setMode("self")}
           />
         )}
