@@ -17,7 +17,7 @@ import { getActiveProject } from "@/lib/projects.functions";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { GuidedTour } from "@/components/guided-tour";
+
 import { LearningDrawer } from "@/components/learning-drawer";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { MarketingExport } from "@/components/marketing-export";
@@ -245,28 +245,8 @@ function AppLayout() {
     navigate({ to: "/app/projects" });
   }, [active, activeLoading, pathname, navigate, signingOut]);
 
-  const [tourDismissed, setTourDismissed] = useState(false);
   const activeAny = active as any;
-  // The first-run sequence (project brief -> "you have an email" prompt) owns
-  // the screen on day one. The guided tour waits its turn so learners don't get
-  // three overlays stacked on top of each other the moment they land.
-  const [firstRunDone, setFirstRunDone] = useState(true);
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const id = activeAny?.id as string | undefined;
-    if (!id) return;
-    const read = () =>
-      setFirstRunDone(window.localStorage.getItem(`atlas.first-run-done.${id}`) === "1");
-    read();
-    window.addEventListener("atlas:first-run-done", read);
-    return () => window.removeEventListener("atlas:first-run-done", read);
-  }, [activeAny?.id]);
-  const showTour =
-    !!activeAny?.id &&
-    !!activeAny?.intro_seen_at &&
-    !activeAny?.tour_completed_at &&
-    firstRunDone &&
-    !tourDismissed;
+
 
 
   async function signOut() {
@@ -493,12 +473,6 @@ function AppLayout() {
           )}
         </main>
       </div>
-      {showTour && (
-        <GuidedTour
-          instanceId={activeAny.id}
-          onDone={() => setTourDismissed(true)}
-        />
-      )}
       {active && <LearningDrawer />}
       {active && (
         <MarketingExport open={marketingOpen} onOpenChange={setMarketingOpen} floating={false} />
