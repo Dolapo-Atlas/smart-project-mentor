@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import jsPDF from "jspdf";
 import { StakeholderSelect } from "@/components/stakeholder-select";
+import { LockedModuleGate } from "@/components/dashboard/locked-module-gate";
 
 const changesSearchSchema = z.object({
   task: z.string().uuid().optional(),
@@ -34,7 +35,7 @@ const changesSearchSchema = z.object({
 
 export const Route = createFileRoute("/_authenticated/app/changes")({
   validateSearch: changesSearchSchema,
-  component: Changes,
+  component: GatedChanges,
 });
 
 const riskStyle: Record<string, string> = {
@@ -464,5 +465,13 @@ function Cell({ label, value, tone }: { label: string; value: string; tone?: str
       <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{label}</div>
       <div className={`mt-1 font-display text-lg font-medium ${tone ?? ""}`}>{value}</div>
     </div>
+  );
+}
+
+function GatedChanges() {
+  return (
+    <LockedModuleGate>
+      <Changes />
+    </LockedModuleGate>
   );
 }

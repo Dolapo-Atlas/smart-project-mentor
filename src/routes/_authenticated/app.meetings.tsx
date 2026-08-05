@@ -26,9 +26,10 @@ import { EmptyState } from "@/components/empty-state";
 import meetingsEmpty from "@/assets/illustrations/meetings-empty.png.asset.json";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import { LockedModuleGate } from "@/components/dashboard/locked-module-gate";
 
 export const Route = createFileRoute("/_authenticated/app/meetings")({
-  component: Meetings,
+  component: GatedMeetings,
 });
 
 function PostMeetingActions({
@@ -637,5 +638,13 @@ function Meetings() {
         </article>
       </div>
     </div>
+  );
+}
+
+function GatedMeetings() {
+  return (
+    <LockedModuleGate>
+      <Meetings />
+    </LockedModuleGate>
   );
 }

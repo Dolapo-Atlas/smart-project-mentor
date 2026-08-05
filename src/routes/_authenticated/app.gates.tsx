@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Lock, Unlock, CheckCircle2, XCircle, Gavel } from "lucide-react";
 import { toast } from "sonner";
+import { LockedModuleGate } from "@/components/dashboard/locked-module-gate";
 
 export const Route = createFileRoute("/_authenticated/app/gates")({
-  component: Gates,
+  component: GatedGates,
 });
 
 type Phase = "initiation" | "planning" | "execution" | "closure";
@@ -139,4 +140,12 @@ function StatusIcon({ status }: { status: Status }) {
   if (status === "open") return <Unlock className="h-4 w-4 text-blue-600" />;
   if (status === "passed") return <CheckCircle2 className="h-4 w-4 text-emerald-600" />;
   return <XCircle className="h-4 w-4 text-red-600" />;
+}
+
+function GatedGates() {
+  return (
+    <LockedModuleGate>
+      <Gates />
+    </LockedModuleGate>
+  );
 }

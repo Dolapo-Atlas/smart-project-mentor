@@ -5,6 +5,7 @@ import { getSkillMap } from "@/lib/workplace-skills.functions";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Check, ArrowUpRight, Sparkles, Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { LockedModuleGate } from "@/components/dashboard/locked-module-gate";
 
 export const Route = createFileRoute("/_authenticated/app/workplace-tools")({
   head: () => ({
@@ -13,7 +14,7 @@ export const Route = createFileRoute("/_authenticated/app/workplace-tools")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: WorkplaceToolsPage,
+  component: GatedWorkplaceToolsPage,
 });
 
 const FAMILY_BLURB: Record<string, string> = {
@@ -149,5 +150,13 @@ function WorkplaceToolsPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function GatedWorkplaceToolsPage() {
+  return (
+    <LockedModuleGate>
+      <WorkplaceToolsPage />
+    </LockedModuleGate>
   );
 }

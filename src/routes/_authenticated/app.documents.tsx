@@ -9,9 +9,10 @@ import { Upload, FileText, Sparkles, Loader2, FolderOpen } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
 import documentsEmpty from "@/assets/illustrations/documents-empty.png.asset.json";
 import { toast } from "sonner";
+import { LockedModuleGate } from "@/components/dashboard/locked-module-gate";
 
 export const Route = createFileRoute("/_authenticated/app/documents")({
-  component: Documents,
+  component: GatedDocuments,
 });
 
 async function readTextExcerpt(file: File): Promise<string | undefined> {
@@ -290,5 +291,13 @@ function Block({ title, items, tone }: { title: string; items: string[]; tone: s
         ))}
       </ul>
     </div>
+  );
+}
+
+function GatedDocuments() {
+  return (
+    <LockedModuleGate>
+      <Documents />
+    </LockedModuleGate>
   );
 }
