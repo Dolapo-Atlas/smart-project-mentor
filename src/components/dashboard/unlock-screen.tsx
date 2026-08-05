@@ -21,7 +21,7 @@ import { paymentsConfigured, getStripeEnvironment } from "@/lib/stripe";
 const REGIONS: Array<{ key: PlanRegion; label: string }> = [
   { key: "nigeria", label: "Nigeria" },
   { key: "india", label: "India" },
-  { key: "international", label: "UK & other markets" },
+  { key: "international", label: "United Kingdom & International" },
 ];
 
 const ACHIEVE = [

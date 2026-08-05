@@ -9,7 +9,7 @@ export const COUNTRY_META: Record<CountryKey, { label: string; currency: string;
   nigeria: { label: "Nigeria", currency: "NGN", symbol: "₦", gateway: "paystack" },
   india: { label: "India", currency: "INR", symbol: "₹", gateway: "razorpay" },
   international: {
-    label: "United Kingdom & other markets",
+    label: "United Kingdom & International",
     currency: "GBP",
     symbol: "£",
     gateway: null,
