@@ -9,15 +9,7 @@ import { getMyAccess } from "@/lib/access.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { sendTransactionalEmail } from "@/lib/email/send";
 import { trackLearner } from "@/lib/learner-events";
-
-function money(amount: number, currency: string): string {
-  const value = amount / 100;
-  try {
-    return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(value);
-  } catch {
-    return `${currency} ${value.toFixed(2)}`;
-  }
-}
+import { formatMinor } from "@/lib/money";
 
 /**
  * Purchase lifecycle surface for the workspace: a one-off unlock celebration,
@@ -61,21 +53,29 @@ export function SubscriptionNotices() {
         (user.user_metadata?.display_name as string | undefined) ||
         (user.user_metadata?.full_name as string | undefined) ||
         "";
-      const amount = money(purchase.amount, purchase.currency);
+      // Amount and currency come from the confirmed payment record only.
+      const amount = formatMinor(purchase.amount, purchase.currency);
+      const origin = window.location.origin;
       await sendTransactionalEmail({
-        templateName: "subscription-welcome",
+        templateName: "unlock-confirmation",
         recipientEmail: user.email,
-        idempotencyKey: `unlock-welcome-${purchase.id}`,
-        templateData: { name, plan: "Full Atlas experience", amount },
+        idempotencyKey: `unlock-confirmation-${purchase.id}`,
+        templateData: {
+          name,
+          first_name: name.split(/\s+/)[0] ?? "",
+          amount_paid: amount,
+          // Deep link back to the saved Project Charter position.
+          continue_url: `${origin}/app/charter`,
+        },
       });
       await sendTransactionalEmail({
-        templateName: "subscription-admin-alert",
+        templateName: "purchase-admin-alert",
         recipientEmail: user.email,
         idempotencyKey: `unlock-admin-${purchase.id}`,
         templateData: {
           name,
           email: user.email,
-          plan: "Full Atlas experience",
+          plan: "Atlas Project Readiness Experience",
           amount,
           region: purchase.country ?? "",
           price_id: purchase.currency,
@@ -106,7 +106,7 @@ export function SubscriptionNotices() {
                 Full experience unlocked.
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                {money(purchase.amount, purchase.currency)}, paid once — nothing renews. Everything
+                {formatMinor(purchase.amount, purchase.currency)}, paid once — nothing renews. Everything
                 from the preview is still here, and the rest of the project, every template, the
                 Steering Committee gates and your credential are now open. We've emailed your
                 receipt.
