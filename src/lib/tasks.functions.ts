@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { requireProgrammeAccess } from "@/lib/programme-access.middleware";
+import { requireProgrammeAccess, requireFreePreviewAllowance } from "@/lib/programme-access.middleware";
 import { z } from "zod";
 import { generateObject } from "ai";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
@@ -281,7 +281,9 @@ export const createRichTask = createServerFn({ method: "POST" })
   });
 
 export const submitTaskWithWork = createServerFn({ method: "POST" })
-  .middleware([requireProgrammeAccess])
+  // Free preview: the learner may finish exactly one task (the welcome-email
+  // reply). Afterwards `previewComplete` flips and this gate closes.
+  .middleware([requireFreePreviewAllowance])
   .inputValidator((d: unknown) =>
     z
       .object({
