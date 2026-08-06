@@ -18,3 +18,18 @@ export const requireProgrammeAccess = createMiddleware({ type: "function" })
     if (access.tier !== "full") throw new Error(PAYWALL_MESSAGE);
     return next();
   });
+
+/**
+ * Authenticated + (paid OR free preview still unused). Use this for the very
+ * first piece of workplace work in the free preview — replying to the Project
+ * Manager's welcome email and closing the task linked to it. Once the preview
+ * has been consumed, this behaves exactly like `requireProgrammeAccess`.
+ */
+export const requireFreePreviewAllowance = createMiddleware({ type: "function" })
+  .middleware([requireSupabaseAuth])
+  .server(async ({ next, context }) => {
+    const { getAccessState, PAYWALL_MESSAGE } = await import("@/lib/access.server");
+    const access = await getAccessState(context.supabase, context.userId);
+    if (access.tier !== "full" && access.previewComplete) throw new Error(PAYWALL_MESSAGE);
+    return next();
+  });
