@@ -27,6 +27,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useRef } from "react";
 import { PhaseProgressCard } from "@/components/dashboard/phase-progress-card";
 import { LockedModuleGate } from "@/components/dashboard/locked-module-gate";
+import { PaymentSuccessDialog } from "@/components/dashboard/payment-success-dialog";
 
 export const Route = createFileRoute("/_authenticated/app")({
   component: AppLayout,
@@ -478,6 +479,7 @@ function AppLayout() {
         <MarketingExport open={marketingOpen} onOpenChange={setMarketingOpen} floating={false} />
       )}
       <PauseProjectDialog open={pauseOpen} onOpenChange={setPauseOpen} />
+      <PaymentSuccessDialog />
       <ProjectBriefSheet open={briefOpen} onOpenChange={setBriefOpen} />
     </div>
   );
