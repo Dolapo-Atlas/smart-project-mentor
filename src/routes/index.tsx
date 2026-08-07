@@ -1820,7 +1820,7 @@ function SiteFooter() {
       </div>
       <div className="border-t border-border/60">
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-2 px-6 py-6 text-xs text-muted-foreground sm:flex-row sm:items-center lg:px-10">
-          <p>© {new Date().getFullYear()} Atlas. The companies and projects are fictional; the work is real practice.</p>
+          <p>© {new Date().getFullYear()} Atlassim Technologies Limited. The companies and projects are fictional; the work is real practice.</p>
           <p>Made with care for professionals who learn by doing.</p>
         </div>
       </div>
