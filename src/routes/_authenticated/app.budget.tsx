@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_authenticated/app/budget")({
   component: GatedBudget,
 });
 
-const TOTAL_BUDGET = 500_000;
+const TOTAL_BUDGET = 1_200_000;
 
 const kindStyle: Record<string, string> = {
   planned: "bg-blue-500/10 text-blue-700 dark:text-blue-400",
@@ -107,7 +107,7 @@ function Budget() {
         <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Finance</div>
         <h1 className="font-display text-4xl font-medium">Budget</h1>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-          £500,000 envelope. Track planned vs actuals, log vendor invoices, forecast change-request impacts.
+          £1,200,000 envelope. Track planned vs actuals, log vendor invoices, forecast change-request impacts.
         </p>
       </header>
 

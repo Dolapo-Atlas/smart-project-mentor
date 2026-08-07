@@ -188,7 +188,7 @@ export function AtlasCertificate({
             </div>
             <div className="text-[1.05cqw] text-[#6B7280]">Founder, Atlas</div>
             <div className="text-[1.05cqw] text-[#6B7280]">
-              Issued by Atlas · {formatDate(cert.issued_at ?? cert.completion_date)}
+              Issued by Atlassim Technologies Limited · {formatDate(cert.issued_at ?? cert.completion_date)}
             </div>
           </div>
 

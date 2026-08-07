@@ -581,7 +581,7 @@ function PreviewCharter() {
   const rows = [
     { k: "Project", v: "Digital Care Records" },
     { k: "Sponsor", v: "Margaret Chen" },
-    { k: "Budget", v: "£500,000" },
+    { k: "Budget", v: "£1,200,000" },
     { k: "Timeline", v: "6 months · 12 sites" },
   ];
   return (
@@ -1059,7 +1059,7 @@ function CharterSlide() {
       {[
         { k: "Project name", v: "Digital Care Records Rollout" },
         { k: "Sponsor", v: "Margaret Chen" },
-        { k: "Budget", v: "£500,000" },
+        { k: "Budget", v: "£1,200,000" },
         { k: "Timeline", v: "6 months · 12 care homes" },
       ].map((r) => (
         <div key={r.k} className="flex items-baseline justify-between rounded-xl border border-border/60 bg-background/60 px-3 py-2.5">
@@ -1820,7 +1820,7 @@ function SiteFooter() {
       </div>
       <div className="border-t border-border/60">
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-2 px-6 py-6 text-xs text-muted-foreground sm:flex-row sm:items-center lg:px-10">
-          <p>© {new Date().getFullYear()} Atlas. The companies and projects are fictional; the work is real practice.</p>
+          <p>© {new Date().getFullYear()} Atlassim Technologies Limited. The companies and projects are fictional; the work is real practice.</p>
           <p>Made with care for professionals who learn by doing.</p>
         </div>
       </div>
