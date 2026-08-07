@@ -305,12 +305,12 @@ Score 0-100. A good status report has: concrete achievements with evidence, name
 /* ============= BUDGET ============= */
 
 const DEFAULT_BUDGET: Array<{ category: string; description: string; amount: number }> = [
-  { category: "Software & Licensing", description: "CareSoft platform licences (12 sites x 12 months)", amount: 180000 },
-  { category: "Implementation", description: "CareSoft implementation services", amount: 95000 },
-  { category: "Hardware", description: "Tablets, docks, network upgrades", amount: 70000 },
-  { category: "Training", description: "Staff training across 12 care homes", amount: 60000 },
-  { category: "Internal Resources", description: "Coordinator, BA, clinical SME time", amount: 55000 },
-  { category: "Contingency", description: "10% contingency", amount: 40000 },
+  { category: "Software & Licensing", description: "CareSoft platform licences (12 sites x 12 months)", amount: 430000 },
+  { category: "Implementation", description: "CareSoft implementation services", amount: 230000 },
+  { category: "Hardware", description: "Tablets, docks, network upgrades", amount: 170000 },
+  { category: "Training", description: "Staff training across 12 care homes", amount: 145000 },
+  { category: "Internal Resources", description: "Coordinator, BA, clinical SME time", amount: 116000 },
+  { category: "Contingency", description: "10% contingency", amount: 109000 },
 ];
 
 export const seedBudgetIfEmpty = createServerFn({ method: "POST" })
