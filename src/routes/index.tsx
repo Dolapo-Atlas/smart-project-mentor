@@ -581,7 +581,7 @@ function PreviewCharter() {
   const rows = [
     { k: "Project", v: "Digital Care Records" },
     { k: "Sponsor", v: "Margaret Chen" },
-    { k: "Budget", v: "£500,000" },
+    { k: "Budget", v: "£1,200,000" },
     { k: "Timeline", v: "6 months · 12 sites" },
   ];
   return (
