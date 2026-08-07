@@ -1,64 +1,27 @@
-## Goal
+# Make the Dolapo Rasaq certificate genuinely verifiable
 
-Find out where learners actually stop after signing in — with recorded events, not inference — before spending more on ads.
+The verification machinery already exists and works — public pages at `/verify/{code}`, `/certificate/{code}` and `/report/{code}` all read the `certificates` table through `getPublicCredential`. The problem is the certificate you have as a PDF came from the **preview page**, which uses hardcoded sample data. The `certificates` table is currently empty, so any code you post will fail verification.
 
-Today `getLearnerTracking` reconstructs the funnel from end-state tables (`profiles`, `project_instances`, `tasks`, `documents`, `project_charters`). That shows the residue of a stalled account but never the moment it stalled, so "stuck after sign-in" can't be diagnosed from current data.
+Fix: issue one real credential record for you, so the code on the certificate resolves to a live "Verified" page anyone can test.
 
-## What gets built
+## What will be done
 
-**1. A first-session event trail**
-
-New `learner_events` table: `user_id`, `event` (text), `project_instance_id` (nullable), `props` (jsonb), `campaign` (jsonb), `created_at`. RLS: users insert/select their own rows; admins select all via `has_role`; service_role full.
-
-Events recorded (fire-and-forget, never blocking the UI):
-
-```text
-signed_in
-onboarding_started
-role_selected
-project_created
-brief_opened
-brief_closed
-first_email_prompt_shown
-inbox_opened
-first_reply_sent
-first_task_completed
-day_advanced
-```
-
-**2. Campaign attribution carried inward**
-
-The first-touch campaign already persists in localStorage via `captureCampaign`/`readCampaign` in `landing-analytics.ts`. On the first event a user emits, that blob is written onto `profiles` (new `campaign jsonb` column) and stamped on each event. This lets the funnel be split paid vs organic.
-
-**3. A real drop-off view on /admin/tracking**
-
-Replace the inferred funnel with the recorded one:
-- Step-by-step counts and the % lost at each step.
-- Median time between consecutive steps (long gaps flag confusion, not abandonment).
-- Filter by traffic source and by signup date range.
-- Keep the existing per-learner table underneath, now showing "last event" and "stalled at" instead of guessed state.
-
-**4. Mirror the key steps to GA4/Meta**
-
-Extend `FunnelEvent` in `landing-analytics.ts` with the in-app steps so the ad platforms can optimise toward learners who actually start, not merely sign up.
-
-## What is deliberately NOT touched
-
-Simulation logic, task generation, scoring, AI reviewers, templates, phase gates, certificates, payments, the landing page, and `/project-readiness` all stay exactly as they are. This batch only adds observation.
-
-## After the data lands
-
-One week of events will say which of these it is, and the fix is different for each:
-- They never get past the brief → the brief is too long.
-- Brief closed, inbox never opened → the prompt isn't landing.
-- Inbox opened, no reply sent → the reply UI isn't obvious.
-- First task completed, then nothing → the second action is missing.
-
-I'd hold ad spend increases until that's known.
+1. **Insert a real credential row** into `certificates` for your account (`fuhad.dolapo@gmail.com`) with:
+   - Recipient: Dolapo Rasaq, simulated role Project Coordinator
+   - Programme: Atlas Digital Care Records Programme, project Digital Care Records Rollout
+   - Score 88 / Distinction, plus the performance breakdown, competencies, strengths and development areas so `/report/{code}` is fully populated
+   - Status `valid`, issued today
+   - A freshly generated verification code in the live Atlas format (e.g. `ATLAS-2026-XXXXXXXXXX`) — real and unique, not the sample code printed on the preview PDF
+2. **Give you the shareable links** once inserted:
+   - Verification page: `https://atlassim.co/verify/{code}`
+   - Certificate page (printable A4 PDF): `https://atlassim.co/certificate/{code}`
+   - Performance report: `https://atlassim.co/report/{code}`
+3. **Regenerate your certificate PDF from the real record** by opening `/certificate/{code}` — this version carries the working code and a QR code that scans to the verification page, so it matches what people will test. The old preview PDF (code `ATLAS-2026-A7F3K9D2M4`) should not be posted, since that code is sample data.
+4. **Verify end-to-end** before handing it over: load the verification page and confirm it renders the green "Verified" state with your name, grade and score, and that an invalid code still shows the "not found" state.
 
 ## Technical notes
 
-- One migration: `learner_events` table plus `profiles.campaign`, with GRANTs for `authenticated`/`service_role` and RLS policies in the same migration.
-- New `src/lib/learner-events.functions.ts` (`recordLearnerEvent`, auth-gated) and a thin client helper `src/lib/learner-events.ts` that de-duplicates one-time events per user via localStorage so refreshes don't inflate counts.
-- Call sites: `app.index.tsx` (brief open/close, first-email prompt), `app.inbox.tsx` (inbox opened, first reply), `onboarding.tsx` (role selected, project created), `time.functions.ts` (day advanced), and the auth callback (signed in).
-- `getLearnerTracking` gains a second query against `learner_events` and returns both the recorded funnel and the existing inferred rows, so nothing on the page breaks during the transition.
+- Data-only change: one `INSERT` into `public.certificates` via the insert tool. No schema migration, no code changes.
+- Code generation follows `generateVerificationCode` in `src/lib/certificates.server.ts`, and uniqueness is enforced by the existing unique constraint on `verification_code`.
+- Public read access already exists for valid certificates, so no policy or grant changes are needed.
+- Nothing about the live issuing flow (`issueCertificate` after project close-out) is touched — this only backfills your own credential.
