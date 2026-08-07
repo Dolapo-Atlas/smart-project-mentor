@@ -24,7 +24,7 @@ export function PaymentSuccessDialog() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const fetchAccess = useServerFn(getMyAccess);
-  const search = useRouterState({ select: (s) => s.location.search }) as Record<string, unknown>;
+  const search = useRouterState({ select: (s) => s.location.search }) as unknown as Record<string, unknown>;
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   const returning =
