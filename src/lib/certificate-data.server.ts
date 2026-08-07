@@ -250,7 +250,7 @@ export async function buildCertificatePayload(
     simulatedRole: outcome.user_role || profile?.role || "Project Coordinator",
     programmeName,
     projectName,
-    simulatedBudget: forecast > 0 ? money(forecast) : "£500,000",
+    simulatedBudget: forecast > 0 ? money(forecast) : "£1,200,000",
     simulatedTimeline: timeline(tpl?.duration_days) ?? "6 months",
     completionDate: outcome.completed_at,
     overallScore: score,
