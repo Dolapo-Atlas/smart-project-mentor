@@ -1059,7 +1059,7 @@ function CharterSlide() {
       {[
         { k: "Project name", v: "Digital Care Records Rollout" },
         { k: "Sponsor", v: "Margaret Chen" },
-        { k: "Budget", v: "£500,000" },
+        { k: "Budget", v: "£1,200,000" },
         { k: "Timeline", v: "6 months · 12 care homes" },
       ].map((r) => (
         <div key={r.k} className="flex items-baseline justify-between rounded-xl border border-border/60 bg-background/60 px-3 py-2.5">
