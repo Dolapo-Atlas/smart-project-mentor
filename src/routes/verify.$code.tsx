@@ -48,7 +48,7 @@ function VerifyShell({ children }: { children: React.ReactNode }) {
       </header>
       <main className="mx-auto max-w-5xl px-6 py-10">{children}</main>
       <footer className="border-t border-[#0B1F3A]/10 px-6 py-8 text-center text-sm text-[#6B7280]">
-        Atlas · AI-powered simulated workplace environment ·{" "}
+        Atlassim Technologies Limited (Atlas) · AI-powered simulated workplace environment ·{" "}
         <a className="font-medium text-[#0B1F3A]" href="https://atlassim.co">
           atlassim.co
         </a>
@@ -181,8 +181,8 @@ function VerifyPage() {
 
           <p className="mt-6 rounded-2xl bg-[#0B1F3A]/[0.04] p-4 text-sm leading-relaxed text-[#2D2D3F]">
             This credential confirms completion and performance within an Atlas simulated
-            workplace experience. It does not represent employment by Atlas or the
-            simulated organisation.
+            workplace experience, issued by Atlassim Technologies Limited. It does not
+            represent employment by Atlassim Technologies Limited or the simulated organisation.
           </p>
 
           <div className="mt-6 flex flex-wrap gap-3">
