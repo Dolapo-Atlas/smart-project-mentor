@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { OnboardingSteps } from "@/components/onboarding/onboarding-steps";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
   head: () => ({
@@ -56,7 +57,7 @@ function Onboarding() {
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.first_name.trim() || !form.last_name.trim() || !form.country.trim()) {
+    if (!form.first_name.trim() || !form.last_name.trim()) {
       toast.error("Please complete all required fields");
       return;
     }
@@ -66,7 +67,8 @@ function Onboarding() {
   return (
     <div className="min-h-screen bg-background paper-texture">
       <main className="mx-auto max-w-2xl px-6 py-16">
-        <div className="text-xs uppercase tracking-[0.22em] text-muted-foreground">
+        <OnboardingSteps current={1} />
+        <div className="mt-6 text-xs uppercase tracking-[0.22em] text-muted-foreground">
           Employee onboarding
         </div>
         <h1 className="mt-2 font-display text-5xl font-medium tracking-tight">
@@ -120,11 +122,14 @@ function Onboarding() {
             <Label htmlFor="country">Country</Label>
             <Input
               id="country"
-              required
               maxLength={80}
+              placeholder="Optional"
               value={form.country}
               onChange={(e) => setForm({ ...form, country: e.target.value })}
             />
+            <p className="text-xs text-muted-foreground">
+              Optional — it only sets your local pricing later on.
+            </p>
           </div>
 
           <div className="space-y-2">
@@ -147,16 +152,18 @@ function Onboarding() {
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              You'll join the Digital Care Records Rollout as a {form.career_goal}.
-              The simulation, tasks and stakeholders are the same for every role —
-              only how the team addresses you changes. You can change this before
-              starting your project; once it starts, your role is locked.
+              You'll join as a {form.career_goal}. Only how the team addresses you
+              changes — the tasks and stakeholders are the same for every role.
             </p>
           </div>
 
           <Button type="submit" disabled={mut.isPending} className="w-full">
             {mut.isPending ? "Setting up your workspace…" : "Continue"}
           </Button>
+          <p className="text-center text-xs text-muted-foreground">
+            Next: a short orientation, then you choose your project. Nothing starts
+            until you say so.
+          </p>
         </form>
       </main>
     </div>
