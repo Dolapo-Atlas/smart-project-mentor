@@ -1,8 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { HowAtlasWorksDialog } from "@/components/onboarding/how-atlas-works-dialog";
+import { OnboardingSteps } from "@/components/onboarding/onboarding-steps";
 import { ATLAS_SIGNATURE } from "@/lib/atlas-voice";
 import { trackLearner } from "@/lib/learner-events";
 
@@ -51,7 +52,10 @@ function Orientation() {
       />
 
       <main className="relative mx-auto flex min-h-screen max-w-2xl flex-col justify-center px-6 py-16">
-        <div className="atlas-rise text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
+        <div className="atlas-rise">
+          <OnboardingSteps current={2} />
+        </div>
+        <div className="atlas-rise mt-6 text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
           Orientation · Day one
         </div>
 
@@ -94,6 +98,15 @@ function Orientation() {
             How Atlas Works
           </button>
         </div>
+
+        <button
+          type="button"
+          onClick={() => navigate({ to: "/onboarding" })}
+          className="atlas-rise atlas-rise-4 mt-8 inline-flex w-fit items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to your details
+        </button>
 
         <p className="atlas-rise atlas-rise-4 mt-12 max-w-xl border-l-2 border-accent-orange/50 pl-4 text-sm italic text-muted-foreground">
           {ATLAS_SIGNATURE}
