@@ -18,16 +18,9 @@ export const Route = createFileRoute("/_authenticated")({
 
     const path = location.pathname;
     const onOnboarding = path.startsWith("/onboarding");
-    const onWelcome = path.startsWith("/welcome");
 
     if (!profile?.onboarded && !onOnboarding) {
       throw redirect({ to: "/onboarding" });
-    }
-    if (profile?.onboarded && onOnboarding) {
-      throw redirect({ to: "/app/projects" });
-    }
-    if (onWelcome) {
-      throw redirect({ to: "/app/projects" });
     }
     return { user: data.user };
   },
