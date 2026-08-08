@@ -7,7 +7,7 @@ import {
 } from "@/lib/sim.functions";
 import { getActiveProject, markTourCompleted } from "@/lib/projects.functions";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Compass, Focus, LayoutGrid } from "lucide-react";
+import { Sparkles, Compass, Focus, LayoutGrid, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { TimeControls } from "@/components/time-controls";
 import { ContinueCard } from "@/components/dashboard/continue-card";
@@ -20,6 +20,7 @@ import { WelcomeBackPanel } from "@/components/dashboard/welcome-back-panel";
 import { PhaseReadinessPanel } from "@/components/dashboard/phase-readiness-panel";
 import { FirstWinPanel } from "@/components/dashboard/first-win-panel";
 import { SubscriptionNotices } from "@/components/dashboard/subscription-notices";
+import { GuidedTour } from "@/components/guided-tour";
 import { getMyAccess } from "@/lib/access.functions";
 import { useEffect, useRef, useState } from "react";
 import { trackLearner } from "@/lib/learner-events";
@@ -47,9 +48,7 @@ function Dashboard() {
 
   const [briefOpen, setBriefOpen] = useState(false);
   const [emailPromptOpen, setEmailPromptOpen] = useState(false);
-  // True only for the first-run brief, so closing it hands the learner to the
-  // inbox instead of dropping them on the dashboard with no direction.
-  const firstRunBriefRef = useRef(false);
+  const [tourOpen, setTourOpen] = useState(false);
   const [focusMode, setFocusMode] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     return window.localStorage.getItem("atlas.focus-mode") === "1";
@@ -75,9 +74,8 @@ function Dashboard() {
   };
 
 
-  // Auto-open the Project Brief the first time the user lands on the
-  // dashboard for a given project instance. Uses localStorage so returning
-  // users are not interrupted.
+  // First arrival on a project goes straight to the first scored action: the
+  // Project Manager's email. The brief stays one click away in the header.
   useEffect(() => {
     if (!activeId) return;
     if (typeof window === "undefined") return;
@@ -88,22 +86,14 @@ function Dashboard() {
       return;
     }
     autoOpenedRef.current = activeId;
-    setBriefOpen(true);
-    firstRunBriefRef.current = true;
-    trackLearner("brief_opened", { projectInstanceId: activeId });
+    window.localStorage.setItem(key, "1");
+    setEmailPromptOpen(true);
+    trackLearner("first_email_prompt_shown", { projectInstanceId: activeId });
   }, [activeId]);
 
   const handleBriefOpenChange = (next: boolean) => {
     setBriefOpen(next);
-    if (!next && firstRunBriefRef.current) {
-      firstRunBriefRef.current = false;
-      if (typeof window !== "undefined" && activeId) {
-        window.localStorage.setItem(`atlas.brief-seen.${activeId}`, "1");
-      }
-      trackLearner("brief_closed", { projectInstanceId: activeId ?? null });
-      trackLearner("first_email_prompt_shown", { projectInstanceId: activeId ?? null });
-      setEmailPromptOpen(true);
-    }
+    if (!next) trackLearner("brief_closed", { projectInstanceId: activeId ?? null });
   };
 
   const handleEmailPromptOpenChange = (next: boolean) => {
@@ -214,6 +204,16 @@ function Dashboard() {
           </Button>
           <Button
             size="sm"
+            variant="secondary"
+            className="border border-border"
+            onClick={() => setTourOpen(true)}
+            title="Walk through the workspace, one section at a time"
+          >
+            <MapPin className="mr-2 h-4 w-4" />
+            Show me around
+          </Button>
+          <Button
+            size="sm"
             onClick={() => summon.mutate()}
             disabled={summon.isPending}
             variant="secondary"
@@ -264,9 +264,12 @@ function Dashboard() {
       <ProjectBriefSheet
         open={briefOpen}
         onOpenChange={handleBriefOpenChange}
-        firstRun={firstRunBriefRef.current}
+        firstRun={false}
       />
       <FirstEmailPrompt open={emailPromptOpen} onOpenChange={handleEmailPromptOpenChange} />
+      {tourOpen && activeId && (
+        <GuidedTour instanceId={activeId} onDone={() => setTourOpen(false)} />
+      )}
     </div>
   );
 }
