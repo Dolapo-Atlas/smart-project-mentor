@@ -64,34 +64,8 @@ function ProjectIntro() {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background paper-texture">
-      {/* Loader overlay */}
-      {stage === "loading" && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm">
-          <div className="w-full max-w-md px-8 text-center">
-            <div className="mx-auto mb-6 h-10 w-10 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              {loadingLines.map((line, i) => (
-                <li
-                  key={line}
-                  className={`transition-all duration-500 ${
-                    i < loadingStep
-                      ? "text-foreground opacity-100"
-                      : i === loadingStep
-                      ? "text-foreground opacity-100"
-                      : "opacity-30"
-                  }`}
-                >
-                  {i < loadingStep ? "✓ " : i === loadingStep ? "› " : "   "}
-                  {line}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      )}
-
-      {/* Grab a coffee intermission */}
-      {stage === "coffee" && (
+      {/* Single pre-start screen */}
+      {stage === "ready" && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm animate-in fade-in duration-500">
           <div className="w-full max-w-lg px-8 text-center">
             <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-border bg-card">
@@ -101,12 +75,11 @@ function ProjectIntro() {
               Before you begin
             </div>
             <h2 className="mt-3 font-display text-3xl font-medium tracking-tight md:text-4xl">
-              Grab a coffee ☕
+              Your first day at {(tpl as any).title}
             </h2>
             <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-              Take a breath. Your first day at <span className="text-foreground">{(tpl as any).title}</span> is about to start.
-              <br className="hidden sm:block" />
-              In a moment you'll see your project brief — then Emma drops a welcome note the moment you sit down.
+              Grab a coffee and take a breath. Next you'll read the project brief,
+              and Emma's welcome note will be waiting the moment you sit down.
             </p>
             <div className="mt-8 flex justify-center">
               <Button size="lg" onClick={() => setStage("intro")}>
