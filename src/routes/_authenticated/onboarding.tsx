@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { completeOnboarding } from "@/lib/sim.functions";
+import { completeOnboarding, getProfile } from "@/lib/sim.functions";
 import { trackLearner } from "@/lib/learner-events";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +34,8 @@ const CAREER_GOALS = [
 function Onboarding() {
   const navigate = useNavigate();
   const submit = useServerFn(completeOnboarding);
+  const fetchProfile = useServerFn(getProfile);
+  const { data: profile } = useQuery({ queryKey: ["profile"], queryFn: () => fetchProfile() });
   const [form, setForm] = useState({
     first_name: "",
     last_name: "",
@@ -41,6 +43,24 @@ function Onboarding() {
     country: "",
     career_goal: "Project Coordinator" as (typeof CAREER_GOALS)[number],
   });
+  const [prefilled, setPrefilled] = useState(false);
+
+  // Returning mid-onboarding (or coming back from orientation to edit) should
+  // resume from what was already saved rather than an empty form.
+  useEffect(() => {
+    if (prefilled || !profile) return;
+    const p = profile as any;
+    setForm((f) => ({
+      first_name: p.first_name ?? f.first_name,
+      last_name: p.last_name ?? f.last_name,
+      preferred_name: p.preferred_name ?? f.preferred_name,
+      country: p.country ?? f.country,
+      career_goal: (p.role || p.career_goal || f.career_goal) as (typeof CAREER_GOALS)[number],
+    }));
+    setPrefilled(true);
+  }, [profile, prefilled]);
+
+  const returning = Boolean((profile as any)?.onboarded);
 
   const mut = useMutation({
     mutationFn: () => submit({ data: form }),
@@ -72,10 +92,14 @@ function Onboarding() {
           Employee onboarding
         </div>
         <h1 className="mt-2 font-display text-5xl font-medium tracking-tight">
-          Welcome to Atlas
+          {returning
+            ? `Welcome back${(profile as any)?.first_name ? `, ${(profile as any).first_name}` : ""}`
+            : "Welcome to Atlas"}
         </h1>
         <p className="mt-3 text-base text-muted-foreground">
-          Before you begin your first assignment, tell us a little about yourself.
+          {returning
+            ? "Your details are saved. Change anything here, then carry on where you left off."
+            : "Before you begin your first assignment, tell us a little about yourself."}
         </p>
 
         <form
@@ -158,7 +182,11 @@ function Onboarding() {
           </div>
 
           <Button type="submit" disabled={mut.isPending} className="w-full">
-            {mut.isPending ? "Setting up your workspace…" : "Continue"}
+            {mut.isPending
+              ? "Setting up your workspace…"
+              : returning
+                ? "Save and continue"
+                : "Continue"}
           </Button>
           <p className="text-center text-xs text-muted-foreground">
             Next: a short orientation, then you choose your project. Nothing starts
