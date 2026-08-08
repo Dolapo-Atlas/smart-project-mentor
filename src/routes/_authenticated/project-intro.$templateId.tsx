@@ -28,34 +28,15 @@ function ProjectIntro() {
     queryFn: () => fetchActive(),
   });
 
-  type Stage = "loading" | "coffee" | "intro";
-  const [stage, setStage] = useState<Stage>("loading");
-  const [loadingStep, setLoadingStep] = useState(0);
+  // One short pre-start screen replaces the old loader + "grab a coffee"
+  // sequence, so there is a single click between here and the brief.
+  type Stage = "ready" | "intro";
+  const [stage, setStage] = useState<Stage>("ready");
   const [starting, setStarting] = useState(false);
-  const loadingLines = tpl
-    ? [
-        `Connecting to ${tpl.title}…`,
-        "Loading Project Workspace…",
-        "Preparing today's brief…",
-      ]
-    : ["Loading Project Workspace…", "Preparing today's brief…"];
 
   const seenMut = useMutation({
     mutationFn: () => markSeen({ data: { instanceId: (active as any).id, templateId } }),
   });
-
-  useEffect(() => {
-    if (stage !== "loading") return;
-    if (loadingStep >= loadingLines.length) return;
-    const t = setTimeout(() => setLoadingStep((s) => s + 1), 850);
-    return () => clearTimeout(t);
-  }, [stage, loadingStep, loadingLines.length]);
-
-  useEffect(() => {
-    if (stage === "loading" && loadingStep >= loadingLines.length) {
-      setStage("coffee");
-    }
-  }, [stage, loadingStep, loadingLines.length]);
 
   async function begin() {
     if (!(active as any)?.id) return;
