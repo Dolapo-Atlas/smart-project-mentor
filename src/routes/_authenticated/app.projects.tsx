@@ -48,6 +48,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { OnboardingSteps } from "@/components/onboarding/onboarding-steps";
 
 const ROLE_OPTIONS = [
   "Project Coordinator",
@@ -208,6 +209,28 @@ function ProjectsPicker() {
 
   return (
     <div className="mx-auto w-full max-w-7xl px-6 py-10">
+      {instances.length === 0 && (
+        <div className="mb-6 space-y-4">
+          <OnboardingSteps current={3} />
+          <div className="rounded-2xl border border-accent-orange/30 bg-accent-orange/[0.06] px-4 py-3">
+            <div className="font-display text-lg leading-snug">
+              {profile?.first_name
+                ? `Almost there, ${(profile as any).preferred_name?.trim() || (profile as any).first_name}.`
+                : "Almost there."}
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Pick a project below and your first day begins. Nothing is locked in —
+              you can archive a simulation and start another at any time.
+            </p>
+            <Link
+              to="/orientation"
+              className="mt-2 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+            >
+              ← Back to orientation
+            </Link>
+          </div>
+        </div>
+      )}
       {/* Role banner */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-sm">
         <div className="min-w-0">

@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { completeOnboarding } from "@/lib/sim.functions";
+import { completeOnboarding, getProfile } from "@/lib/sim.functions";
 import { trackLearner } from "@/lib/learner-events";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { OnboardingSteps } from "@/components/onboarding/onboarding-steps";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
   head: () => ({
@@ -33,6 +34,8 @@ const CAREER_GOALS = [
 function Onboarding() {
   const navigate = useNavigate();
   const submit = useServerFn(completeOnboarding);
+  const fetchProfile = useServerFn(getProfile);
+  const { data: profile } = useQuery({ queryKey: ["profile"], queryFn: () => fetchProfile() });
   const [form, setForm] = useState({
     first_name: "",
     last_name: "",
@@ -40,6 +43,24 @@ function Onboarding() {
     country: "",
     career_goal: "Project Coordinator" as (typeof CAREER_GOALS)[number],
   });
+  const [prefilled, setPrefilled] = useState(false);
+
+  // Returning mid-onboarding (or coming back from orientation to edit) should
+  // resume from what was already saved rather than an empty form.
+  useEffect(() => {
+    if (prefilled || !profile) return;
+    const p = profile as any;
+    setForm((f) => ({
+      first_name: p.first_name ?? f.first_name,
+      last_name: p.last_name ?? f.last_name,
+      preferred_name: p.preferred_name ?? f.preferred_name,
+      country: p.country ?? f.country,
+      career_goal: (p.role || p.career_goal || f.career_goal) as (typeof CAREER_GOALS)[number],
+    }));
+    setPrefilled(true);
+  }, [profile, prefilled]);
+
+  const returning = Boolean((profile as any)?.onboarded);
 
   const mut = useMutation({
     mutationFn: () => submit({ data: form }),
@@ -56,7 +77,7 @@ function Onboarding() {
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.first_name.trim() || !form.last_name.trim() || !form.country.trim()) {
+    if (!form.first_name.trim() || !form.last_name.trim()) {
       toast.error("Please complete all required fields");
       return;
     }
@@ -66,14 +87,19 @@ function Onboarding() {
   return (
     <div className="min-h-screen bg-background paper-texture">
       <main className="mx-auto max-w-2xl px-6 py-16">
-        <div className="text-xs uppercase tracking-[0.22em] text-muted-foreground">
+        <OnboardingSteps current={1} />
+        <div className="mt-6 text-xs uppercase tracking-[0.22em] text-muted-foreground">
           Employee onboarding
         </div>
         <h1 className="mt-2 font-display text-5xl font-medium tracking-tight">
-          Welcome to Atlas
+          {returning
+            ? `Welcome back${(profile as any)?.first_name ? `, ${(profile as any).first_name}` : ""}`
+            : "Welcome to Atlas"}
         </h1>
         <p className="mt-3 text-base text-muted-foreground">
-          Before you begin your first assignment, tell us a little about yourself.
+          {returning
+            ? "Your details are saved. Change anything here, then carry on where you left off."
+            : "Before you begin your first assignment, tell us a little about yourself."}
         </p>
 
         <form
@@ -120,11 +146,14 @@ function Onboarding() {
             <Label htmlFor="country">Country</Label>
             <Input
               id="country"
-              required
               maxLength={80}
+              placeholder="Optional"
               value={form.country}
               onChange={(e) => setForm({ ...form, country: e.target.value })}
             />
+            <p className="text-xs text-muted-foreground">
+              Optional — it only sets your local pricing later on.
+            </p>
           </div>
 
           <div className="space-y-2">
@@ -147,16 +176,22 @@ function Onboarding() {
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              You'll join the Digital Care Records Rollout as a {form.career_goal}.
-              The simulation, tasks and stakeholders are the same for every role —
-              only how the team addresses you changes. You can change this before
-              starting your project; once it starts, your role is locked.
+              You'll join as a {form.career_goal}. Only how the team addresses you
+              changes — the tasks and stakeholders are the same for every role.
             </p>
           </div>
 
           <Button type="submit" disabled={mut.isPending} className="w-full">
-            {mut.isPending ? "Setting up your workspace…" : "Continue"}
+            {mut.isPending
+              ? "Setting up your workspace…"
+              : returning
+                ? "Save and continue"
+                : "Continue"}
           </Button>
+          <p className="text-center text-xs text-muted-foreground">
+            Next: a short orientation, then you choose your project. Nothing starts
+            until you say so.
+          </p>
         </form>
       </main>
     </div>

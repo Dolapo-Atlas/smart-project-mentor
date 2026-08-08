@@ -36,7 +36,7 @@ const OnboardingSchema = z.object({
   first_name: z.string().trim().min(1).max(80),
   last_name: z.string().trim().min(1).max(80),
   preferred_name: z.string().trim().max(80).optional().or(z.literal("")),
-  country: z.string().trim().min(1).max(80),
+  country: z.string().trim().max(80).optional().or(z.literal("")),
   career_goal: z.enum([
     "Project Coordinator",
     "Project Support Officer",
@@ -95,7 +95,7 @@ export const completeOnboarding = createServerFn({ method: "POST" })
         first_name: data.first_name,
         last_name: data.last_name,
         preferred_name: data.preferred_name || null,
-        country: data.country,
+        country: data.country?.trim() || null,
         display_name: `${data.first_name} ${data.last_name}`.trim(),
         career_goal: data.career_goal,
         role: data.career_goal,
