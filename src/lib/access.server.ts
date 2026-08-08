@@ -48,6 +48,13 @@ export interface AccessState {
 
 const ACTIVE_STATUSES = ["active", "trialing", "past_due"];
 
+/**
+ * Temporary: Atlas is fully open to everyone. While this is true, no paywall,
+ * unlock screen or premium middleware check blocks any learner. Set to false to
+ * restore the free-preview / paid-unlock behaviour.
+ */
+export const OPEN_ACCESS = true;
+
 /** True while the learner has paid access, including a cancelled-but-paid period. */
 function subscriptionGrantsAccess(row: {
   status: string;
@@ -156,7 +163,8 @@ export async function getAccessState(
   );
   const adminGranted =
     profile?.access_tier === "full" && profile?.access_source === "admin";
-  const tier = purchased || subscribed || adminGranted ? "full" : "free";
+  const tier =
+    OPEN_ACCESS || purchased || subscribed || adminGranted ? "full" : "free";
   const workDone = tasksRes.count ?? 0;
   let freePreviewCompletedAt = profile?.free_preview_completed_at ?? null;
   // The preview is consumed by the first finished piece of work — a submitted
