@@ -2,8 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listRag, upsertRag } from "@/lib/raid.functions";
+import { getHealthEvidence } from "@/lib/pm.functions";
 import { Textarea } from "@/components/ui/textarea";
-import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Radar, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -38,6 +39,11 @@ function HealthPage() {
   const fetchRag = useServerFn(listRag);
   const upsertRagFn = useServerFn(upsertRag);
   const { data: rag } = useQuery({ queryKey: ["rag"], queryFn: () => fetchRag() });
+  const fetchEvidence = useServerFn(getHealthEvidence);
+  const { data: evidence } = useQuery({
+    queryKey: ["health-evidence"],
+    queryFn: () => fetchEvidence(),
+  });
 
   const byArea: Record<string, { rag: Rag; note: string | null; trend: Trend; updated_at: string; updated_by: string | null }> = {};
   (rag ?? []).forEach((r: any) => {
@@ -58,6 +64,12 @@ function HealthPage() {
   });
 
   const overall = byArea["overall"]?.rag ?? "green";
+  const RANK: Record<Rag, number> = { green: 0, amber: 1, red: 2 };
+  const mismatches = AREAS.filter(({ key }) => {
+    const suggested = evidence?.areas?.[key]?.suggested as Rag | undefined;
+    if (!suggested) return false;
+    return RANK[byArea[key]?.rag ?? "green"] < RANK[suggested];
+  });
 
   return (
     <div className="space-y-8">
@@ -77,6 +89,20 @@ function HealthPage() {
           <span className="ml-auto text-xs uppercase tracking-wider text-muted-foreground">{ragMeta[overall].label}</span>
         </div>
       </div>
+
+      {mismatches.length > 0 && (
+        <div className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-5">
+          <div className="flex items-center gap-2 text-sm font-semibold text-amber-700">
+            <AlertTriangle className="h-4 w-4" />
+            Your report looks more optimistic than the evidence
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            You still decide the rating — but be ready to defend it. The workspace evidence points to a
+            worse position on {mismatches.map((m) => m.label).join(", ")}. Sponsors lose trust fastest when
+            a green report is followed by a surprise.
+          </p>
+        </div>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-2">
         {AREAS.map(({ key, label, help }) => {
@@ -144,10 +170,56 @@ function HealthPage() {
                 <span>Last updated: {cur?.updated_at ? format(new Date(cur.updated_at), "d MMM yyyy, HH:mm") : "—"}</span>
                 <span>By: {cur?.updated_by ?? "You"}</span>
               </div>
+
+              <EvidenceNote
+                reported={current}
+                suggested={evidence?.areas?.[key]?.suggested as Rag | undefined}
+                signals={evidence?.areas?.[key]?.signals ?? []}
+              />
             </div>
           );
         })}
       </div>
+    </div>
+  );
+}
+
+function EvidenceNote({
+  reported,
+  suggested,
+  signals,
+}: {
+  reported: Rag;
+  suggested?: Rag;
+  signals: string[];
+}) {
+  if (!suggested || signals.length === 0) return null;
+  const rank: Record<Rag, number> = { green: 0, amber: 1, red: 2 };
+  const optimistic = rank[reported] < rank[suggested];
+  return (
+    <div
+      className={`mt-3 rounded-md border p-3 ${
+        optimistic ? "border-amber-500/40 bg-amber-500/5" : "border-border bg-background/60"
+      }`}
+    >
+      <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-foreground/80">
+        <Radar className="h-3.5 w-3.5" />
+        Evidence says
+        <span className={`ml-1 inline-flex items-center gap-1 rounded-full border border-border px-1.5 py-0.5 text-[10px] normal-case tracking-normal`}>
+          <span className={`h-2 w-2 rounded-full ${ragMeta[suggested].dot}`} />
+          {ragMeta[suggested].label}
+        </span>
+      </div>
+      <ul className="mt-2 space-y-0.5 text-[11px] text-muted-foreground">
+        {signals.slice(0, 4).map((s, i) => (
+          <li key={i}>· {s}</li>
+        ))}
+      </ul>
+      {optimistic && (
+        <div className="mt-2 text-[11px] font-medium text-amber-700">
+          You are reporting greener than the evidence supports.
+        </div>
+      )}
     </div>
   );
 }

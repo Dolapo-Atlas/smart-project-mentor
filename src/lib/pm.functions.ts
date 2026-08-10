@@ -1738,3 +1738,164 @@ export const getReportingPack = createServerFn({ method: "GET" })
       })),
     };
   });
+/**
+ * Read-only evidence for the Project Health (RAG) page.
+ * Computes what the workspace evidence *suggests* for each area so the learner
+ * can see when their reported rating contradicts reality. It never writes a
+ * rating — the reported RAG stays learner-owned (that judgement is assessed).
+ */
+export const getHealthEvidence = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const today = new Date().toISOString().slice(0, 10);
+
+    const [tasksRes, raidRes, crRes, budgetRes, commsRes, relRes, simRes] = await Promise.all([
+      supabase.from("tasks").select("id,status,due_at,priority").eq("user_id", userId),
+      supabase.from("raid_items").select("kind,severity,status").eq("user_id", userId)
+        .in("status", ["open", "mitigating"]),
+      supabase.from("change_requests").select("status,cost_impact,schedule_impact_days").eq("user_id", userId)
+        .in("status", ["submitted", "approved"]),
+      supabase.from("budget_lines").select("amount,kind").eq("user_id", userId),
+      supabase.from("inbox_messages").select("sender_name,tone,read").eq("user_id", userId)
+        .in("tone", ["frustrated", "concerned", "urgent"]),
+      supabase.from("stakeholder_relationships").select("stakeholder_name,sentiment").eq("user_id", userId),
+      supabase.from("simulation_state").select("health,reputation,progress").eq("user_id", userId).maybeSingle(),
+    ]);
+
+    const tasks = tasksRes.data ?? [];
+    const openTasks = tasks.filter((t: any) => ["todo", "in_progress", "blocked"].includes(t.status));
+    const overdue = openTasks.filter((t: any) => t.due_at && t.due_at.slice(0, 10) < today);
+    const blocked = openTasks.filter((t: any) => t.status === "blocked");
+
+    const raid = raidRes.data ?? [];
+    const openIssues = raid.filter((r: any) => r.kind === "issue");
+    const openDeps = raid.filter((r: any) => r.kind === "dependency");
+    const highRisks = raid.filter((r: any) => r.kind === "risk" && ["high", "critical"].includes(r.severity));
+
+    const crs = crRes.data ?? [];
+    const pendingCrs = crs.filter((c: any) => c.status === "submitted");
+    const crDays = crs.reduce((s: number, c: any) => s + (Number(c.schedule_impact_days) || 0), 0);
+    const crCost = crs.reduce((s: number, c: any) => s + (Number(c.cost_impact) || 0), 0);
+
+    let baseline = 0, spent = 0, forecast = 0;
+    for (const l of (budgetRes.data ?? [])) {
+      const amt = Number(l.amount) || 0;
+      if (l.kind === "planned") baseline += amt;
+      else if (l.kind === "forecast") forecast += amt;
+      else spent += amt;
+    }
+    const eac = spent + forecast;
+    const variance = eac - baseline;
+    const variancePct = baseline > 0 ? (variance / baseline) * 100 : 0;
+
+    const concerns = commsRes.data ?? [];
+    const unreadConcerns = concerns.filter((m: any) => !m.read);
+    const rels = relRes.data ?? [];
+    const avgSentiment = rels.length
+      ? Math.round(rels.reduce((s: number, r: any) => s + (Number(r.sentiment) || 0), 0) / rels.length)
+      : null;
+    const unhappy = rels.filter((r: any) => Number(r.sentiment) < 40).map((r: any) => r.stakeholder_name);
+
+    type Rag = "green" | "amber" | "red";
+    const worst = (a: Rag, b: Rag): Rag =>
+      a === "red" || b === "red" ? "red" : a === "amber" || b === "amber" ? "amber" : "green";
+
+    const areas: Record<string, { suggested: Rag; signals: string[] }> = {};
+
+    // Schedule
+    {
+      const signals: string[] = [];
+      let rag: Rag = "green";
+      if (overdue.length) { signals.push(`${overdue.length} task(s) past their due date`); rag = worst(rag, overdue.length >= 3 ? "red" : "amber"); }
+      if (blocked.length) { signals.push(`${blocked.length} task(s) marked blocked`); rag = worst(rag, "amber"); }
+      if (crDays > 0) { signals.push(`Change requests add ${crDays} day(s) of schedule impact`); rag = worst(rag, crDays >= 10 ? "red" : "amber"); }
+      if (!signals.length) signals.push("No overdue or blocked work, no schedule impact from changes");
+      areas["schedule"] = { suggested: rag, signals };
+    }
+
+    // Budget
+    {
+      const signals: string[] = [];
+      let rag: Rag = "green";
+      if (baseline === 0) signals.push("No approved baseline captured yet");
+      else {
+        signals.push(`EAC ${Math.round(eac).toLocaleString()} vs baseline ${Math.round(baseline).toLocaleString()} (${variance >= 0 ? "+" : ""}${variancePct.toFixed(1)}%)`);
+        if (variancePct > 10) rag = "red";
+        else if (variancePct > 2) rag = "amber";
+      }
+      if (crCost > 0) { signals.push(`Change requests carry ${Math.round(crCost).toLocaleString()} of cost impact`); rag = worst(rag, "amber"); }
+      areas["budget"] = { suggested: rag, signals };
+    }
+
+    // Scope
+    {
+      const signals: string[] = [];
+      let rag: Rag = "green";
+      if (pendingCrs.length) { signals.push(`${pendingCrs.length} change request(s) awaiting a decision`); rag = worst(rag, pendingCrs.length >= 3 ? "red" : "amber"); }
+      if (crs.length) signals.push(`${crs.length} live change request(s) against the agreed scope`);
+      if (!signals.length) signals.push("Scope baseline is holding — no live change requests");
+      areas["scope"] = { suggested: rag, signals };
+    }
+
+    // Quality
+    {
+      const signals: string[] = [];
+      let rag: Rag = "green";
+      if (openIssues.length) { signals.push(`${openIssues.length} open issue(s) in the RAID log`); rag = worst(rag, openIssues.length >= 3 ? "red" : "amber"); }
+      if (!signals.length) signals.push("No open issues logged against deliverables");
+      areas["quality"] = { suggested: rag, signals };
+    }
+
+    // Resources
+    {
+      const signals: string[] = [];
+      let rag: Rag = "green";
+      if (openDeps.length) { signals.push(`${openDeps.length} unresolved dependency/ies on other people or vendors`); rag = worst(rag, openDeps.length >= 3 ? "red" : "amber"); }
+      if (blocked.length) { signals.push(`${blocked.length} task(s) blocked waiting on someone`); rag = worst(rag, "amber"); }
+      if (!signals.length) signals.push("No capacity or dependency blockers recorded");
+      areas["resources"] = { suggested: rag, signals };
+    }
+
+    // Benefits
+    {
+      const signals: string[] = [];
+      let rag: Rag = "green";
+      const rep = simRes.data?.reputation ?? null;
+      if (rep !== null) {
+        signals.push(`Delivery reputation ${rep}/100`);
+        if (rep < 45) rag = "red";
+        else if (rep < 65) rag = "amber";
+      }
+      if (variancePct > 10) { signals.push("Cost overrun is eroding the business case"); rag = worst(rag, "amber"); }
+      if (!signals.length) signals.push("No evidence yet that expected benefits are at risk");
+      areas["benefits"] = { suggested: rag, signals };
+    }
+
+    // Overall — worst of the areas, plus stakeholder mood
+    {
+      const signals: string[] = [];
+      let rag: Rag = "green";
+      for (const k of ["scope", "schedule", "budget", "resources", "quality", "benefits"]) {
+        rag = worst(rag, areas[k]!.suggested);
+      }
+      if (avgSentiment !== null) {
+        signals.push(`Average stakeholder sentiment ${avgSentiment}/100`);
+        if (avgSentiment < 40) rag = worst(rag, "red");
+        else if (avgSentiment < 60) rag = worst(rag, "amber");
+      }
+      if (unhappy.length) signals.push(`Unhappy right now: ${unhappy.slice(0, 4).join(", ")}`);
+      if (unreadConcerns.length) { signals.push(`${unreadConcerns.length} unread escalation(s) in your inbox`); rag = worst(rag, "amber"); }
+      if (highRisks.length) { signals.push(`${highRisks.length} high/critical open risk(s)`); rag = worst(rag, "amber"); }
+      if (simRes.data?.health) signals.push(`Simulation engine reads the project as ${simRes.data.health}`);
+      if (!signals.length) signals.push("Evidence across all areas looks healthy");
+      areas["overall"] = { suggested: rag, signals };
+    }
+
+    return {
+      generated_at: new Date().toISOString(),
+      stakeholder_sentiment: avgSentiment,
+      unread_concerns: unreadConcerns.length,
+      areas,
+    };
+  });
