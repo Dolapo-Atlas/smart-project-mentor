@@ -69,6 +69,36 @@
   --color-navy-foreground: var(--navy-foreground);
 }
 
+/*
+ * Atlas soft card system ("Luminous depth").
+ * Tinted card surfaces derived from the Atlas palette, plus matching
+ * borders, chip fills and elevation. Registered here so utilities like
+ * bg-surface-orange / border-surface-orange-border / text-surface-orange-accent
+ * are available everywhere and theme correctly in dark mode.
+ */
+@theme inline {
+  --color-surface-neutral: var(--surface-neutral);
+  --color-surface-neutral-border: var(--surface-neutral-border);
+  --color-surface-neutral-accent: var(--surface-neutral-accent);
+  --color-surface-navy: var(--surface-navy);
+  --color-surface-navy-border: var(--surface-navy-border);
+  --color-surface-navy-accent: var(--surface-navy-accent);
+  --color-surface-orange: var(--surface-orange);
+  --color-surface-orange-border: var(--surface-orange-border);
+  --color-surface-orange-accent: var(--surface-orange-accent);
+  --color-surface-cream: var(--surface-cream);
+  --color-surface-cream-border: var(--surface-cream-border);
+  --color-surface-cream-accent: var(--surface-cream-accent);
+  --color-surface-green: var(--surface-green);
+  --color-surface-green-border: var(--surface-green-border);
+  --color-surface-green-accent: var(--surface-green-accent);
+  --color-surface-lilac: var(--surface-lilac);
+  --color-surface-lilac-border: var(--surface-lilac-border);
+  --color-surface-lilac-accent: var(--surface-lilac-accent);
+  --shadow-soft: var(--shadow-soft);
+  --shadow-soft-lift: var(--shadow-soft-lift);
+}
+
 :root {
   --radius: 0.5rem;
   /* Warm narrative palette: paper, ink, amber, stone */
@@ -116,6 +146,31 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
+:root {
+  /* Soft tinted card surfaces (light) */
+  --surface-neutral: oklch(0.985 0.012 85);
+  --surface-neutral-border: oklch(0.9 0.015 80);
+  --surface-neutral-accent: oklch(0.42 0.015 60);
+  --surface-navy: oklch(0.965 0.018 262);
+  --surface-navy-border: oklch(0.9 0.03 262);
+  --surface-navy-accent: oklch(0.22 0.05 260);
+  --surface-orange: oklch(0.975 0.025 60);
+  --surface-orange-border: oklch(0.915 0.055 55);
+  --surface-orange-accent: oklch(0.52 0.16 45);
+  --surface-cream: oklch(0.978 0.03 90);
+  --surface-cream-border: oklch(0.915 0.05 88);
+  --surface-cream-accent: oklch(0.46 0.09 75);
+  --surface-green: oklch(0.975 0.025 155);
+  --surface-green-border: oklch(0.915 0.05 155);
+  --surface-green-accent: oklch(0.45 0.12 155);
+  --surface-lilac: oklch(0.968 0.022 285);
+  --surface-lilac-border: oklch(0.905 0.04 285);
+  --surface-lilac-accent: oklch(0.38 0.09 285);
+  /* Luminous elevation */
+  --shadow-soft: 0 20px 60px -15px oklch(0.22 0.05 260 / 0.1), 0 2px 6px -2px oklch(0.22 0.05 260 / 0.05);
+  --shadow-soft-lift: 0 40px 80px -20px oklch(0.22 0.05 260 / 0.16), 0 4px 10px -3px oklch(0.22 0.05 260 / 0.07);
+}
+
 .dark {
   --background: oklch(0.129 0.042 264.695);
   --foreground: oklch(0.984 0.003 247.858);
@@ -149,6 +204,30 @@
   --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.551 0.027 264.364);
+}
+
+.dark {
+  /* Soft tinted card surfaces (dark) */
+  --surface-neutral: oklch(0.23 0.03 262);
+  --surface-neutral-border: oklch(0.34 0.03 262);
+  --surface-neutral-accent: oklch(0.82 0.02 262);
+  --surface-navy: oklch(0.24 0.05 262);
+  --surface-navy-border: oklch(0.36 0.05 262);
+  --surface-navy-accent: oklch(0.85 0.04 262);
+  --surface-orange: oklch(0.27 0.06 50);
+  --surface-orange-border: oklch(0.4 0.09 50);
+  --surface-orange-accent: oklch(0.85 0.11 60);
+  --surface-cream: oklch(0.27 0.04 85);
+  --surface-cream-border: oklch(0.4 0.06 85);
+  --surface-cream-accent: oklch(0.88 0.07 88);
+  --surface-green: oklch(0.26 0.05 155);
+  --surface-green-border: oklch(0.38 0.07 155);
+  --surface-green-accent: oklch(0.85 0.1 155);
+  --surface-lilac: oklch(0.26 0.05 288);
+  --surface-lilac-border: oklch(0.38 0.07 288);
+  --surface-lilac-accent: oklch(0.86 0.07 288);
+  --shadow-soft: 0 20px 60px -15px oklch(0 0 0 / 0.5), 0 2px 6px -2px oklch(0 0 0 / 0.35);
+  --shadow-soft-lift: 0 40px 80px -20px oklch(0 0 0 / 0.6), 0 4px 10px -3px oklch(0 0 0 / 0.4);
 }
 
 @layer base {

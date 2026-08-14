@@ -86,7 +86,7 @@ export function ContinueCard() {
   );
 
   return (
-    <section className="relative overflow-hidden rounded-2xl border border-navy/30 bg-navy p-6 text-navy-foreground shadow-lg md:p-8">
+    <section className="relative overflow-hidden rounded-3xl border border-navy/30 bg-navy p-6 text-navy-foreground shadow-[var(--shadow-soft-lift)] md:rounded-[2.5rem] md:p-8">
       {/* soft decorative glow */}
       <div
         aria-hidden

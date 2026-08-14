@@ -217,15 +217,18 @@ function Card({
   tone = "default",
 }: {
   children: React.ReactNode;
-  tone?: "default" | "warn";
+  tone?: "default" | "warn" | "navy" | "green" | "lilac";
 }) {
+  const tones: Record<string, string> = {
+    default: "border-surface-neutral-border bg-surface-neutral",
+    warn: "border-surface-orange-border bg-surface-orange",
+    navy: "border-surface-navy-border bg-surface-navy",
+    green: "border-surface-green-border bg-surface-green",
+    lilac: "border-surface-lilac-border bg-surface-lilac",
+  };
   return (
     <div
-      className={`rounded-2xl border p-4 ${
-        tone === "warn"
-          ? "border-accent-orange/30 bg-accent-orange/[0.06]"
-          : "border-border bg-muted/40"
-      }`}
+      className={`rounded-3xl border p-5 shadow-[var(--shadow-soft)] transition-all duration-500 ${tones[tone]}`}
     >
       {children}
     </div>
@@ -405,7 +408,7 @@ function TimelineTab() {
       <section>
         <H>Delivery timeline</H>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <Card>
+          <Card tone="warn">
             <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
               Planned delivery window
             </div>
@@ -413,7 +416,7 @@ function TimelineTab() {
               12 weeks
             </div>
           </Card>
-          <Card>
+          <Card tone="navy">
             <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
               Approved budget
             </div>
@@ -506,7 +509,7 @@ function StakeholdersTab() {
       <H>Key stakeholders</H>
       <div className="space-y-3">
         {STAKEHOLDERS.map((s) => (
-          <Card key={s.name}>
+          <Card key={s.name} tone="lilac">
             <div className="font-medium text-foreground">{s.name}</div>
             <div className="text-[11px] uppercase tracking-wider text-accent-orange">
               {s.role}
@@ -657,7 +660,7 @@ function RoleTab({ roleTitle }: { roleTitle: string }) {
 
       <section>
         <H>Your immediate priorities</H>
-        <Card>
+        <Card tone="green">
           <Bullets
             items={[
               "Understand the project’s purpose and current position.",

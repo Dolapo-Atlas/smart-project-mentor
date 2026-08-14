@@ -515,6 +515,20 @@ const FEATURES: Array<{
 ];
 
 function Features() {
+  return <FeaturesGrid />;
+}
+
+/** Atlas soft card tints, rotated across grids. */
+const SOFT_TONES = [
+  "border-surface-orange-border bg-surface-orange",
+  "border-surface-lilac-border bg-surface-lilac",
+  "border-surface-green-border bg-surface-green",
+  "border-surface-navy-border bg-surface-navy",
+  "border-surface-cream-border bg-surface-cream",
+  "border-surface-neutral-border bg-surface-neutral",
+];
+
+function FeaturesGrid() {
   return (
     <section id="features" className="py-28 sm:py-36">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
@@ -523,10 +537,12 @@ function Features() {
           title="You're not reading about project management. You're already doing it."
           subtitle="Every surface in Atlas is a workplace surface. No quizzes, no theory cards — just the tools your first PM job will hand you on day one."
         />
-        <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map(({ icon: Icon, tag, title, body, preview }, i) => (
             <Reveal key={title} delay={i * 60}>
-              <article className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card/70 backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-accent-orange/30 hover:shadow-[0_28px_70px_-30px_rgba(40,30,15,0.3)]">
+              <article
+                className={`group relative flex h-full flex-col overflow-hidden rounded-3xl border shadow-[var(--shadow-soft)] transition-all duration-500 motion-safe:hover:-translate-y-2 hover:shadow-[var(--shadow-soft-lift)] md:rounded-[2rem] ${SOFT_TONES[i % SOFT_TONES.length]}`}
+              >
                 <div className="border-b border-border/60 bg-background/40 px-4 py-2.5">
                   <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
                     <span className="h-1.5 w-1.5 rounded-full bg-[oklch(0.65_0.18_25)]/70" />
@@ -737,7 +753,7 @@ function HowItWorks() {
           <ol className="grid gap-6 md:grid-cols-4">
             {steps.map((s, i) => (
               <Reveal key={s.title} delay={i * 80}>
-                <li className="group relative h-full rounded-2xl border border-border bg-card/70 p-6 backdrop-blur transition-all hover:-translate-y-1 hover:border-accent-orange/30 hover:shadow-[0_20px_50px_-25px_rgba(40,30,15,0.25)]">
+                <li className="group relative h-full rounded-3xl border border-surface-cream-border bg-surface-cream p-6 shadow-[var(--shadow-soft)] transition-all duration-500 hover:shadow-[var(--shadow-soft-lift)] motion-safe:hover:-translate-y-2 md:rounded-[2rem]">
                   <div className="flex items-center gap-3">
                     <span className="grid h-9 w-9 place-items-center rounded-full bg-accent-orange text-accent-orange-foreground text-sm font-semibold shadow-[0_6px_20px_-6px_rgba(217,119,6,0.7)]">
                       {i + 1}
@@ -1191,7 +1207,7 @@ function WhyAtlas() {
         />
         <Reveal>
           <div className="mt-14 grid gap-5 md:grid-cols-3">
-            <article className="rounded-2xl border border-border bg-card/60 p-7 backdrop-blur">
+            <article className="rounded-3xl border border-surface-neutral-border bg-surface-neutral p-7 shadow-[var(--shadow-soft)] transition-all duration-500 md:rounded-[2rem]">
               <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Traditional courses</p>
               <h3 className="mt-3 font-display text-xl font-medium">Read, watch, repeat.</h3>
               <ul className="mt-5 space-y-3">
@@ -1206,7 +1222,7 @@ function WhyAtlas() {
               </ul>
             </article>
 
-            <article className="relative overflow-hidden rounded-2xl border border-accent-orange/30 bg-card p-7 shadow-[0_30px_80px_-40px_rgba(217,119,6,0.45)] md:scale-[1.02]">
+            <article className="relative overflow-hidden rounded-3xl border border-surface-orange-border bg-surface-orange p-7 shadow-[var(--shadow-soft-lift)] transition-all duration-500 md:scale-[1.02] md:rounded-[2rem]">
               <div
                 aria-hidden
                 className="pointer-events-none absolute inset-0"
@@ -1233,7 +1249,7 @@ function WhyAtlas() {
               </div>
             </article>
 
-            <article className="rounded-2xl border border-border bg-card/60 p-7 backdrop-blur">
+            <article className="rounded-3xl border border-surface-green-border bg-surface-green p-7 shadow-[var(--shadow-soft)] transition-all duration-500 md:rounded-[2rem]">
               <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">The outcome</p>
               <h3 className="mt-3 font-display text-xl font-medium">Walk in ready.</h3>
               <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
@@ -1913,7 +1929,9 @@ function ReadinessOffer() {
         <div className="mt-14 grid gap-5 sm:gap-6 lg:grid-cols-3">
           {READINESS_PRICES.map((p, i) => (
             <Reveal key={p.region} delay={120 + i * 90}>
-              <div className="flex h-full flex-col rounded-[26px] border border-border bg-card p-7 shadow-[0_30px_90px_-60px_rgba(11,19,43,0.4)] transition-all hover:-translate-y-1 sm:p-9">
+              <div
+                className={`group flex h-full flex-col rounded-3xl border p-7 shadow-[var(--shadow-soft)] transition-all duration-500 hover:shadow-[var(--shadow-soft-lift)] motion-safe:hover:-translate-y-2 sm:p-9 md:rounded-[2.5rem] ${SOFT_TONES[i % 3]}`}
+              >
                 <p className="text-[15px] font-medium text-primary">{p.label}</p>
                 <p className="mt-5 font-display text-[clamp(2.1rem,4vw,2.8rem)] font-medium leading-none tracking-[-0.02em] text-primary">
                   {p.price}

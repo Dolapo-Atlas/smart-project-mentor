@@ -32,7 +32,7 @@ export function ProjectSidePanel() {
       {/* Inbox */}
       <Link
         to="/app/inbox"
-        className="hover-lift flex items-center justify-between rounded-2xl border border-border/80 bg-card p-4 shadow-md ring-1 ring-black/[0.03] transition hover:border-primary/50"
+        className="flex items-center justify-between rounded-3xl border border-surface-neutral-border bg-surface-neutral p-4 shadow-[var(--shadow-soft)] transition-all duration-500 hover:shadow-[var(--shadow-soft-lift)] motion-safe:hover:-translate-y-1"
       >
         <div className="flex items-center gap-3">
           <div className="grid h-10 w-10 place-items-center rounded-full bg-primary/10 text-primary">
@@ -53,7 +53,7 @@ export function ProjectSidePanel() {
       </Link>
 
       {/* Active stakeholders */}
-      <div className="rounded-2xl border border-border/80 bg-card p-5 shadow-md ring-1 ring-black/[0.03]">
+      <div className="rounded-3xl border border-surface-cream-border bg-surface-cream p-5 shadow-[var(--shadow-soft)]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-foreground/70">
             <Users className="h-3.5 w-3.5" />
