@@ -3,16 +3,27 @@ import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { getActiveProject } from "@/lib/projects.functions";
 import { getOverview } from "@/lib/sim.functions";
-import { ArrowRight, Info } from "lucide-react";
+import {
+  ArrowRight,
+  Info,
+  Compass,
+  Target,
+  Boxes,
+  CalendarClock,
+  Users,
+  ShieldAlert,
+  AlertTriangle,
+  UserRound,
+  type LucideIcon,
+} from "lucide-react";
 
 type Props = {
   open: boolean;
@@ -22,17 +33,17 @@ type Props = {
 };
 
 const TABS = [
-  "Overview",
-  "Objectives & Success",
-  "Scope",
-  "Timeline & Budget",
-  "Stakeholders",
-  "Risks & Assumptions",
-  "Current Issues",
-  "Your Role",
-] as const;
+  { label: "Overview", icon: Compass },
+  { label: "Objectives & Success", icon: Target },
+  { label: "Scope", icon: Boxes },
+  { label: "Timeline & Budget", icon: CalendarClock },
+  { label: "Stakeholders", icon: Users },
+  { label: "Risks & Assumptions", icon: ShieldAlert },
+  { label: "Current Issues", icon: AlertTriangle },
+  { label: "Your Role", icon: UserRound },
+] as const satisfies readonly { label: string; icon: LucideIcon }[];
 
-type Tab = (typeof TABS)[number];
+type Tab = (typeof TABS)[number]["label"];
 
 export function ProjectInitiationPack({ open, onOpenChange, firstRun }: Props) {
   const fetchActive = useServerFn(getActiveProject);
@@ -62,97 +73,121 @@ export function ProjectInitiationPack({ open, onOpenChange, firstRun }: Props) {
     ((overview?.profile as any)?.role as string | undefined)?.trim() ||
     "Project Coordinator";
 
+  const activeIcon =
+    TABS.find((t) => t.label === tab)?.icon ?? Compass;
+  const ActiveIcon = activeIcon;
+
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="right"
-        className="w-full overflow-y-auto bg-background sm:max-w-2xl"
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        className="flex h-[100dvh] w-full max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 bg-background p-0 left-0 top-0 shadow-2xl sm:left-[50%] sm:top-[50%] sm:h-[92dvh] sm:max-w-6xl sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-3xl sm:border [&>button]:right-5 [&>button]:top-5 [&>button]:z-20 [&>button]:rounded-full [&>button]:bg-primary-foreground/10 [&>button]:p-2 [&>button]:text-primary-foreground [&>button]:opacity-90 [&>button]:hover:bg-primary-foreground/20"
       >
-        <SheetHeader className="text-left">
-          <div className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+        {/* Navy header + sticky tab rail */}
+        <div className="shrink-0 bg-navy px-5 pb-4 pt-6 text-navy-foreground sm:px-8 sm:pb-5 sm:pt-8">
+          <div className="text-[10px] uppercase tracking-[0.24em] text-navy-foreground/60">
             {title}
           </div>
-          <SheetTitle className="font-display text-3xl font-medium tracking-tight">
+          <DialogTitle className="mt-1 font-display text-2xl font-medium tracking-tight sm:text-4xl">
             Project Initiation Pack
-          </SheetTitle>
-          <SheetDescription>
+          </DialogTitle>
+          <DialogDescription className="mt-1.5 max-w-2xl text-sm text-navy-foreground/70">
             Your starting point for understanding the project, its purpose,
             current position, constraints and known concerns.
-          </SheetDescription>
-        </SheetHeader>
+          </DialogDescription>
 
-        {/* Tabs */}
-        <div className="mt-5 -mx-1 overflow-x-auto pb-1">
-          <div
-            role="tablist"
-            aria-label="Project Initiation Pack sections"
-            className="flex w-max gap-1.5 px-1"
-          >
-            {TABS.map((t) => {
-              const activeTab = t === tab;
-              return (
-                <button
-                  key={t}
-                  type="button"
-                  role="tab"
-                  aria-selected={activeTab}
-                  onClick={() => setTab(t)}
-                  className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium transition ${
-                    activeTab
-                      ? "border-accent-orange bg-accent-orange/10 text-accent-orange"
-                      : "border-border bg-card text-muted-foreground hover:border-accent-orange/50 hover:text-foreground"
-                  }`}
-                >
-                  {t}
-                </button>
-              );
-            })}
+          <div className="-mx-5 mt-5 overflow-x-auto px-5 pb-1 sm:-mx-8 sm:px-8">
+            <div
+              role="tablist"
+              aria-label="Project Initiation Pack sections"
+              className="flex w-max gap-2"
+            >
+              {TABS.map(({ label, icon: Icon }) => {
+                const activeTab = label === tab;
+                return (
+                  <button
+                    key={label}
+                    type="button"
+                    role="tab"
+                    aria-selected={activeTab}
+                    onClick={() => setTab(label)}
+                    className={`flex items-center gap-2 whitespace-nowrap rounded-2xl border px-3.5 py-2 text-xs font-medium transition-all duration-200 sm:text-sm ${
+                      activeTab
+                        ? "border-accent-orange bg-accent-orange text-accent-orange-foreground shadow-lg shadow-black/25"
+                        : "border-navy-foreground/15 bg-navy-foreground/5 text-navy-foreground/75 hover:border-accent-orange/60 hover:bg-navy-foreground/10 hover:text-navy-foreground"
+                    }`}
+                  >
+                    <Icon className="h-3.5 w-3.5 shrink-0" />
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
-        <div className="mt-3 flex items-start gap-2 rounded-md border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
-          <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-          <span>
-            You do not need to read everything now. Use this pack throughout the
-            project and return to the relevant section when you need information
-            for a task or decision.
-          </span>
+        {/* Scrollable content */}
+        <div className="min-h-0 flex-1 overflow-y-auto bg-muted/30 px-4 py-5 sm:px-8 sm:py-7">
+          <div className="mx-auto max-w-4xl">
+            <div className="flex items-start gap-2.5 rounded-2xl border border-accent-orange/25 bg-accent-orange/5 p-3.5 text-xs text-foreground/75 sm:text-sm">
+              <Info className="mt-0.5 h-4 w-4 shrink-0 text-accent-orange" />
+              <span>
+                You do not need to read everything now. Use this pack throughout
+                the project and return to the relevant section when you need
+                information for a task or decision.
+              </span>
+            </div>
+
+            <div className="mt-5 flex items-center gap-2.5">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-navy text-navy-foreground">
+                <ActiveIcon className="h-4.5 w-4.5" />
+              </span>
+              <h2 className="font-display text-xl font-medium tracking-tight sm:text-2xl">
+                {tab}
+              </h2>
+            </div>
+
+            <div
+              key={tab}
+              className="mt-4 animate-in fade-in-0 slide-in-from-bottom-1 space-y-5 rounded-3xl border border-border bg-card p-4 text-sm leading-relaxed text-foreground/85 shadow-sm duration-300 sm:p-6"
+            >
+              {tab === "Overview" && <OverviewTab />}
+              {tab === "Objectives & Success" && <ObjectivesTab />}
+              {tab === "Scope" && <ScopeTab />}
+              {tab === "Timeline & Budget" && <TimelineTab />}
+              {tab === "Stakeholders" && <StakeholdersTab />}
+              {tab === "Risks & Assumptions" && <RisksTab />}
+              {tab === "Current Issues" && <IssuesTab />}
+              {tab === "Your Role" && <RoleTab roleTitle={roleTitle} />}
+            </div>
+
+            <p className="mt-5 text-xs text-muted-foreground">
+              Use this information when completing project tasks. New emails,
+              decisions and project events may change what you know as the
+              simulation progresses.
+            </p>
+          </div>
         </div>
 
-        <div className="mt-6 space-y-6 text-sm leading-relaxed text-foreground/85">
-          {tab === "Overview" && <OverviewTab />}
-          {tab === "Objectives & Success" && <ObjectivesTab />}
-          {tab === "Scope" && <ScopeTab />}
-          {tab === "Timeline & Budget" && <TimelineTab />}
-          {tab === "Stakeholders" && <StakeholdersTab />}
-          {tab === "Risks & Assumptions" && <RisksTab />}
-          {tab === "Current Issues" && <IssuesTab />}
-          {tab === "Your Role" && <RoleTab roleTitle={roleTitle} />}
-        </div>
-
-        <p className="mt-8 border-t border-border pt-4 text-xs text-muted-foreground">
-          Use this information when completing project tasks. New emails,
-          decisions and project events may change what you know as the
-          simulation progresses.
-        </p>
-
-        <div className="mt-4 flex flex-wrap items-center gap-3">
-          {firstRun ? (
-            <Button size="lg" onClick={() => onOpenChange(false)}>
-              <ArrowRight className="mr-2 h-4 w-4" />
-              I’ve read the Project Initiation Pack
-            </Button>
-          ) : (
-            <Button asChild onClick={() => onOpenChange(false)}>
-              <Link to="/app/tasks">
+        {/* Sticky footer actions */}
+        <div className="shrink-0 border-t border-border bg-card px-4 py-3 sm:px-8 sm:py-4">
+          <div className="mx-auto flex max-w-4xl flex-wrap items-center gap-3">
+            {firstRun ? (
+              <Button size="lg" onClick={() => onOpenChange(false)}>
                 <ArrowRight className="mr-2 h-4 w-4" />
-                Back to my work
-              </Link>
-            </Button>
-          )}
+                I’ve read the Project Initiation Pack
+              </Button>
+            ) : (
+              <Button asChild onClick={() => onOpenChange(false)}>
+                <Link to="/app/tasks">
+                  <ArrowRight className="mr-2 h-4 w-4" />
+                  Back to my work
+                </Link>
+              </Button>
+            )}
+          </div>
         </div>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -186,10 +221,10 @@ function Card({
 }) {
   return (
     <div
-      className={`rounded-lg border p-4 ${
+      className={`rounded-2xl border p-4 ${
         tone === "warn"
-          ? "border-accent-orange/30 bg-accent-orange/5"
-          : "border-border bg-card"
+          ? "border-accent-orange/30 bg-accent-orange/[0.06]"
+          : "border-border bg-muted/40"
       }`}
     >
       {children}
