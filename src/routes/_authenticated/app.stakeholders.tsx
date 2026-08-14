@@ -71,7 +71,7 @@ function StakeholdersPage() {
     trackLearner("contact_stakeholder_clicked", { props: { name, from: "workspace" } });
     navigate({
       to: "/app/comms",
-      search: (prev: Record<string, unknown>) => ({ ...prev, to: role, type: "Request" }),
+      search: (prev: Record<string, unknown>) => ({ ...prev, to: role, type: "Request" as const }),
     });
   }
 
