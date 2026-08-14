@@ -1972,43 +1972,34 @@ function ReadinessOffer() {
 function DemoWalkthrough() {
   return (
     <section id="walkthrough" className="relative border-y border-border bg-card/40 py-20 sm:py-28">
-      <div className="mx-auto grid max-w-7xl items-center gap-12 px-5 sm:px-6 lg:grid-cols-[minmax(0,380px)_1fr] lg:gap-20 lg:px-10">
-        <Reveal>
-          <div>
-            <div className="rounded-[28px] border border-border bg-card p-3 shadow-[0_40px_120px_-50px_rgba(11,19,43,0.35)]">
-              <DemoVideo />
-            </div>
-            <p className="mx-auto mt-4 max-w-[360px] text-center text-[13px] leading-relaxed text-muted-foreground">
-              In 60 seconds: you run a real project end to end, and leave with proof you can do the job.
-            </p>
-            <div className="mx-auto mt-5 max-w-[360px]">
-              <Link
-                to="/auth"
-                className="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-all hover:-translate-y-0.5"
-              >
-                Start Your Atlas Experience
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-              </Link>
-            </div>
-          </div>
-        </Reveal>
-        <div>
-          <Reveal delay={100}>
-            <p className="text-xs uppercase tracking-[0.22em] text-accent-orange">A word from the founder</p>
+      <div className="mx-auto max-w-6xl px-5 sm:px-6 lg:px-10">
+        <div className="text-center">
+          <Reveal>
+            <p className="text-xs uppercase tracking-[0.22em] text-accent-orange">Product walkthrough</p>
           </Reveal>
-          <Reveal delay={150}>
-            <h2 className="mt-4 font-display text-[clamp(1.8rem,3.4vw,2.7rem)] font-medium leading-[1.1] tracking-[-0.02em]">
-              Why Atlas exists, in Dolapo&rsquo;s own words
+          <Reveal delay={100}>
+            <h2 className="mx-auto mt-4 max-w-3xl font-display text-[clamp(1.8rem,3.4vw,2.7rem)] font-medium leading-[1.1] tracking-[-0.02em]">
+              See how Atlas turns theory into real project judgement
             </h2>
           </Reveal>
-          <Reveal delay={200}>
-            <p className="mt-5 max-w-xl text-[16px] leading-relaxed text-muted-foreground">
-              Dolapo Rasaq explains the gap Atlas was built to close: knowing the theory but never having
-              handled a real project, a difficult stakeholder or a deliverable under pressure. Tap to play with sound.
+          <Reveal delay={150}>
+            <p className="mx-auto mt-5 max-w-2xl text-[16px] leading-relaxed text-muted-foreground">
+              Watch the demo to see a realistic project scenario in action: emails, decisions, risks,
+              stakeholders and the consequences that build practical confidence.
             </p>
           </Reveal>
-          <Reveal delay={250}>
-            <div className="mt-8">
+        </div>
+
+        <Reveal delay={200} className="mt-12">
+          <DemoVideo />
+        </Reveal>
+
+        <Reveal delay={250}>
+          <div className="mx-auto mt-10 max-w-xl text-center">
+            <p className="text-[13px] leading-relaxed text-muted-foreground">
+              In just over a minute you will run a real project end to end, and leave with proof you can do the job.
+            </p>
+            <div className="mt-6">
               <Link
                 to="/auth"
                 className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-all hover:-translate-y-0.5"
@@ -2017,8 +2008,8 @@ function DemoWalkthrough() {
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
             </div>
-          </Reveal>
-        </div>
+          </div>
+        </Reveal>
       </div>
     </section>
   );
