@@ -515,6 +515,20 @@ const FEATURES: Array<{
 ];
 
 function Features() {
+  return <FeaturesGrid />;
+}
+
+/** Atlas soft card tints, rotated across grids. */
+const SOFT_TONES = [
+  "border-surface-orange-border bg-surface-orange",
+  "border-surface-lilac-border bg-surface-lilac",
+  "border-surface-green-border bg-surface-green",
+  "border-surface-navy-border bg-surface-navy",
+  "border-surface-cream-border bg-surface-cream",
+  "border-surface-neutral-border bg-surface-neutral",
+];
+
+function FeaturesGrid() {
   return (
     <section id="features" className="py-28 sm:py-36">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
