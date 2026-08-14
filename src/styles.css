@@ -69,6 +69,36 @@
   --color-navy-foreground: var(--navy-foreground);
 }
 
+/*
+ * Atlas soft card system ("Luminous depth").
+ * Tinted card surfaces derived from the Atlas palette, plus matching
+ * borders, chip fills and elevation. Registered here so utilities like
+ * bg-surface-orange / border-surface-orange-border / text-surface-orange-accent
+ * are available everywhere and theme correctly in dark mode.
+ */
+@theme inline {
+  --color-surface-neutral: var(--surface-neutral);
+  --color-surface-neutral-border: var(--surface-neutral-border);
+  --color-surface-neutral-accent: var(--surface-neutral-accent);
+  --color-surface-navy: var(--surface-navy);
+  --color-surface-navy-border: var(--surface-navy-border);
+  --color-surface-navy-accent: var(--surface-navy-accent);
+  --color-surface-orange: var(--surface-orange);
+  --color-surface-orange-border: var(--surface-orange-border);
+  --color-surface-orange-accent: var(--surface-orange-accent);
+  --color-surface-cream: var(--surface-cream);
+  --color-surface-cream-border: var(--surface-cream-border);
+  --color-surface-cream-accent: var(--surface-cream-accent);
+  --color-surface-green: var(--surface-green);
+  --color-surface-green-border: var(--surface-green-border);
+  --color-surface-green-accent: var(--surface-green-accent);
+  --color-surface-lilac: var(--surface-lilac);
+  --color-surface-lilac-border: var(--surface-lilac-border);
+  --color-surface-lilac-accent: var(--surface-lilac-accent);
+  --shadow-soft: var(--shadow-soft);
+  --shadow-soft-lift: var(--shadow-soft-lift);
+}
+
 :root {
   --radius: 0.5rem;
   /* Warm narrative palette: paper, ink, amber, stone */
