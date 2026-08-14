@@ -100,6 +100,7 @@ export function SubscriptionNotices() {
   }, [purchase]);
 
   if (!purchase) return null;
+  if (!celebrating && !(reversed && !dismissed)) return null;
 
   return (
     <div className="space-y-3">
