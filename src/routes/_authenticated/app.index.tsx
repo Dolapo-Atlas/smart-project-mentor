@@ -169,11 +169,10 @@ function Dashboard() {
             {greeting}, {name}.
           </h1>
         </div>
-        <div className="flex shrink-0 flex-wrap gap-2">
-          <Button
-            size="sm"
-            variant={focusMode ? "default" : "secondary"}
-            className={focusMode ? "" : "border border-border"}
+        <div className="-mx-1 flex shrink-0 flex-nowrap gap-2 overflow-x-auto px-1 pb-1 atlas-no-scrollbar sm:flex-wrap sm:overflow-visible">
+          <ActionChip
+            tone={focusMode ? "orange" : "lilac"}
+            icon={focusMode ? LayoutGrid : Focus}
             onClick={() => setFocusMode((v) => !v)}
             title={
               focusMode
@@ -181,46 +180,27 @@ function Dashboard() {
                 : "Hide secondary panels and focus on one next action"
             }
           >
-            {focusMode ? (
-              <>
-                <LayoutGrid className="mr-2 h-4 w-4" />
-                Full dashboard
-              </>
-            ) : (
-              <>
-                <Focus className="mr-2 h-4 w-4" />
-                Focus mode
-              </>
-            )}
-          </Button>
-          <Button
-            size="sm"
-            variant="secondary"
-            className="border border-border"
-            onClick={() => setBriefOpen(true)}
-          >
-            <Compass className="mr-2 h-4 w-4" />
+            {focusMode ? "Full dashboard" : "Focus mode"}
+          </ActionChip>
+          <ActionChip tone="green" icon={Compass} onClick={() => setBriefOpen(true)}>
             Initiation pack
-          </Button>
-          <Button
-            size="sm"
-            variant="secondary"
-            className="border border-border"
+          </ActionChip>
+          <ActionChip
+            tone="cream"
+            icon={MapPin}
             onClick={() => setTourOpen(true)}
             title="Walk through the workspace, one section at a time"
           >
-            <MapPin className="mr-2 h-4 w-4" />
             Show me around
-          </Button>
-          <Button
-            size="sm"
+          </ActionChip>
+          <ActionChip
+            tone="navy"
+            icon={Sparkles}
             onClick={() => summon.mutate()}
             disabled={summon.isPending}
-            variant="secondary"
           >
-            <Sparkles className="mr-2 h-4 w-4" />
             {summon.isPending ? "Drafting…" : "New stakeholder email"}
-          </Button>
+          </ActionChip>
         </div>
       </header>
 
