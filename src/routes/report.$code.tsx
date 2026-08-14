@@ -1,5 +1,6 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
+import { exportElementToPdf } from "@/lib/pdf-export";
 import { getPublicCredential } from "@/lib/certificates.functions";
 import { formatDate } from "@/components/certificate/atlas-certificate";
 import atlasMarkAsset from "@/assets/atlas-mark.png.asset.json";
@@ -51,12 +52,32 @@ export const Route = createFileRoute("/report/$code")({
 
 function ReportPage() {
   const { certificate: cert, qrCodeUrl, verificationUrl } = Route.useLoaderData();
+  const sheetRef = useRef<HTMLElement>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function downloadPdf() {
+    if (!sheetRef.current || busy) return;
+    setBusy(true);
+    try {
+      await exportElementToPdf(
+        sheetRef.current,
+        `Atlas-Performance-Report-${cert.verification_code}.pdf`,
+        { multipage: true },
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     if (params.get("print") === "1") {
       const t = setTimeout(() => window.print(), 800);
+      return () => clearTimeout(t);
+    }
+    if (params.get("download") === "1") {
+      const t = setTimeout(() => void downloadPdf(), 900);
       return () => clearTimeout(t);
     }
   }, []);
@@ -71,7 +92,10 @@ function ReportPage() {
 
   return (
     <div className="min-h-screen bg-neutral-100 px-4 py-10 print:bg-white print:p-0">
-      <article className="mx-auto max-w-[820px] rounded-3xl bg-[#FDFCF8] p-8 shadow-xl md:p-12 print:rounded-none print:p-8 print:shadow-none">
+      <article
+        ref={sheetRef}
+        className="mx-auto max-w-[820px] rounded-3xl bg-[#FDFCF8] p-8 shadow-xl md:p-12 print:rounded-none print:p-8 print:shadow-none"
+      >
         <header className="flex items-start justify-between gap-6 border-b border-[#0B1F3A]/15 pb-6">
           <div className="flex items-center gap-3">
             <img src={atlasMark} alt="Atlas" className="h-10 w-10" />
@@ -186,22 +210,31 @@ function ReportPage() {
           does not represent employment by Atlas or the simulated organisation.
         </footer>
 
-        <div className="mt-6 flex flex-wrap gap-3 print:hidden">
-          <button
-            type="button"
-            onClick={() => window.print()}
-            className="rounded-full bg-[#0B1F3A] px-5 py-2.5 text-sm font-medium text-white"
-          >
-            Download / print report
-          </button>
-          <a
-            href={`/verify/${cert.verification_code}`}
-            className="rounded-full border border-[#0B1F3A]/20 bg-white px-5 py-2.5 text-sm font-medium text-[#0B1F3A]"
-          >
-            Public verification page
-          </a>
-        </div>
       </article>
+
+      <div className="mx-auto mt-6 flex max-w-[820px] flex-wrap gap-3 print:hidden">
+        <button
+          type="button"
+          onClick={downloadPdf}
+          disabled={busy}
+          className="rounded-full bg-[#0B1F3A] px-5 py-2.5 text-sm font-medium text-white disabled:opacity-60"
+        >
+          {busy ? "Preparing PDF…" : "Download PDF report"}
+        </button>
+        <button
+          type="button"
+          onClick={() => window.print()}
+          className="rounded-full border border-[#0B1F3A]/20 bg-white px-5 py-2.5 text-sm font-medium text-[#0B1F3A]"
+        >
+          Print
+        </button>
+        <a
+          href={`/verify/${cert.verification_code}`}
+          className="rounded-full border border-[#0B1F3A]/20 bg-white px-5 py-2.5 text-sm font-medium text-[#0B1F3A]"
+        >
+          Public verification page
+        </a>
+      </div>
     </div>
   );
 }

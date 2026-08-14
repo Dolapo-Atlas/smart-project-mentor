@@ -134,12 +134,12 @@ Verify credential: ${verifyUrl}
         <div className="flex flex-col gap-3">
           <div className="flex flex-wrap gap-2">
             <Button asChild>
-              <a href={`/certificate/${code}?print=1`} target="_blank" rel="noreferrer">
+              <a href={`/certificate/${code}?download=1`} target="_blank" rel="noreferrer">
                 <Download className="mr-2 h-4 w-4" /> Download certificate
               </a>
             </Button>
             <Button variant="outline" asChild>
-              <a href={`/report/${code}?print=1`} target="_blank" rel="noreferrer">
+              <a href={`/report/${code}?download=1`} target="_blank" rel="noreferrer">
                 <FileText className="mr-2 h-4 w-4" /> Download performance report
               </a>
             </Button>

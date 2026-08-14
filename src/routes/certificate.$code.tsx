@@ -1,7 +1,8 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getPublicCredential } from "@/lib/certificates.functions";
 import { AtlasCertificate } from "@/components/certificate/atlas-certificate";
+import { exportElementToPdf } from "@/lib/pdf-export";
 
 export const Route = createFileRoute("/certificate/$code")({
   loader: async ({ params }) => {
@@ -39,6 +40,21 @@ export const Route = createFileRoute("/certificate/$code")({
 
 function CertificatePage() {
   const { certificate, qrCodeUrl, verificationUrl } = Route.useLoaderData();
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function downloadPdf() {
+    if (!sheetRef.current || busy) return;
+    setBusy(true);
+    try {
+      await exportElementToPdf(
+        sheetRef.current,
+        `Atlas-Certificate-${certificate.verification_code}.pdf`,
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -47,12 +63,16 @@ function CertificatePage() {
       const t = setTimeout(() => window.print(), 800);
       return () => clearTimeout(t);
     }
+    if (params.get("download") === "1") {
+      const t = setTimeout(() => void downloadPdf(), 900);
+      return () => clearTimeout(t);
+    }
   }, []);
 
   return (
     <div className="min-h-screen bg-neutral-100 px-4 py-10 print:bg-white print:p-0">
       <div className="mx-auto max-w-[850px] print:max-w-none">
-        <div className="print-sheet">
+        <div className="print-sheet" ref={sheetRef}>
           <AtlasCertificate
             cert={certificate as any}
             qrCodeUrl={qrCodeUrl}
@@ -63,10 +83,18 @@ function CertificatePage() {
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-sm print:hidden">
           <button
             type="button"
+            onClick={downloadPdf}
+            disabled={busy}
+            className="rounded-full bg-[#0B1F3A] px-5 py-2 font-medium text-white hover:opacity-90 disabled:opacity-60"
+          >
+            {busy ? "Preparing PDF…" : "Download A4 PDF"}
+          </button>
+          <button
+            type="button"
             onClick={() => window.print()}
             className="rounded-full bg-[#0B1F3A] px-5 py-2 font-medium text-white hover:opacity-90"
           >
-            Download / print A4 PDF
+            Print
           </button>
           <a
             href={`/verify/${certificate.verification_code}`}
