@@ -354,7 +354,7 @@ function Comms() {
             <Send className="mr-2 h-4 w-4" /> {submit.isPending ? "Sending…" : "Send"}
           </Button>
         </div>
-      </section>
+      </Card>
 
       <section className="space-y-3">
         <h2 className="font-display text-2xl">Threads</h2>
