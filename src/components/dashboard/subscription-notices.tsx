@@ -17,6 +17,16 @@ import { formatMinor } from "@/lib/money";
  * so there is no renewal, dunning or cancellation state to show.
  * Presentation only — access rules live in access.server.ts.
  */
+/** Only celebrate a purchase that completed in the last few minutes. */
+const CELEBRATION_WINDOW_MS = 15 * 60 * 1000;
+
+function justPaid(paidAt: string | null | undefined) {
+  if (!paidAt) return false;
+  const t = Date.parse(paidAt);
+  if (Number.isNaN(t)) return false;
+  return Date.now() - t < CELEBRATION_WINDOW_MS;
+}
+
 export function SubscriptionNotices() {
   const fetchAccess = useServerFn(getMyAccess);
   const { data: access } = useQuery({ queryKey: ["my-access"], queryFn: () => fetchAccess() });
@@ -32,6 +42,10 @@ export function SubscriptionNotices() {
   // never double-fire.
   useEffect(() => {
     if (!purchase || purchase.status !== "paid") return;
+    // The celebration belongs to the moment of purchase only. Without this the
+    // banner reappears on every sign-in whenever localStorage was cleared or the
+    // learner logs in from another device/browser.
+    if (!justPaid(purchase.paidAt)) return;
     if (typeof window === "undefined") return;
     if (firedRef.current === purchase.id) return;
     const key = `atlas.unlock-welcomed.${purchase.id}`;
@@ -86,6 +100,7 @@ export function SubscriptionNotices() {
   }, [purchase]);
 
   if (!purchase) return null;
+  if (!celebrating && !(reversed && !dismissed)) return null;
 
   return (
     <div className="space-y-3">
