@@ -195,8 +195,33 @@ function fallbackReply(
   stakeholder: { role: string; name: string; title: string },
   subject: string,
   attachmentLabel?: string,
+  msgType?: string,
 ): Reply {
   const topic = attachmentLabel ? ` and the attached ${attachmentLabel}` : "";
+  // A plain information Request is normal workplace behaviour — answer it
+  // helpfully instead of treating it as an escalation or a new concern.
+  if (msgType === "Request") {
+    const answerByRole: Record<string, string> = {
+      pm: `Happy to help with this${topic}. I'll pull together what I have and point you to where the detail sits — if you need it for a specific deliverable, tell me which one and I'll prioritise it.`,
+      clinical: `Thanks for asking rather than assuming${topic}. From a governance point of view, the things you'll need are the safety impact, the approval route and who signs it off. Come back to me once you've drafted it and I'll review.`,
+      sponsor: `Good question${topic}. Keep me to the decision and the options — I'll give you a view. If it needs funding or a mandate change, flag that explicitly and I'll take it to the committee.`,
+      finance: `Thanks for checking${topic}. I can share the current budget position and the approval thresholds — tell me the figure you're working to and I'll confirm whether it needs sign-off.`,
+      tech: `No problem${topic}. On the technical side the constraints are integration, data migration and environment availability. Let me know the dates you're planning around and I'll tell you what's realistic.`,
+      vendor: `Thanks for the request${topic}. We can share what the product does as standard; if what you need sits outside the agreed scope we'll tell you clearly so you can raise it properly.`,
+      operations: `Happy to help${topic}. I'll give you the staffing and readiness picture for the sites — just let me know the timeframe you need it for.`,
+      admin: `Sure${topic}. I'll send over the records and approvals we hold so your audit trail is complete.`,
+      care_home: `Thanks for asking${topic}. I can tell you how the shifts actually run and what training time is realistic — the earlier you ask, the more useful my answer is.`,
+    };
+    const lead =
+      answerByRole[stakeholder.role] ??
+      `Happy to help with this${topic}. Let me know exactly what you need and by when, and I'll come back with it.`;
+    return {
+      sender_role: stakeholder.title,
+      subject: `Re: ${subject}`,
+      body: `${lead}\n\n${stakeholder.name}\n${stakeholder.title}`,
+      sentiment: "neutral",
+    };
+  }
   const bodyByRole: Record<string, string> = {
     pm: `I have reviewed your note${topic}. Please convert the key points into dated actions, then show me which items need sponsor or governance input before Friday.`,
     clinical: `I have picked this up${topic}. Before governance can support it, I need the safety impact, approval route, and escalation triggers made explicit.`,
@@ -361,6 +386,7 @@ Stay grounded in the "${projectName}" project domain — do NOT invent unrelated
 
 Use the workspace evidence above. If the coordinator says something is updated, attached, completed, or has no pending items and the evidence supports that, acknowledge it and do not claim you cannot see the file, central folder, RAID log, or pending action. Do not invent missing artefacts.
 Only disagree, push back, ask hard questions, or escalate when there is a specific unresolved gap in the evidence (for example missing owner, missing mitigation, open high/critical RAID item, pending document review, or open task). If the evidence resolves the issue, be positive or neutral.
+${data.msg_type === "Request" ? `This email is a REQUEST — the coordinator is proactively asking you for information or clarification. That is normal, welcome workplace behaviour. Answer from your own area of responsibility, be helpful, and choose sentiment "neutral" or "positive". Do NOT treat a request as an escalation, do NOT invent a new concern or complaint, and do NOT become annoyed unless the message itself is clearly inappropriate.\n` : ""}
 2-4 short paragraphs. Sign off with name & role. Do not use generic placeholder wording like "Thanks for the note — I'll come back to you shortly".
 Choose sentiment honestly: positive, neutral, pushback, concerned, or ignored (if ignored, body is a short auto-reply / out of office).`;
 
@@ -434,13 +460,13 @@ Choose sentiment honestly: positive, neutral, pushback, concerned, or ignored (i
           try {
             out = (await generateObject({ model: getModel(), prompt, schema: ReplySchema })).object;
           } catch {
-            out = fallbackReply({ role: sh.role, name: sh.name, title: sh.title }, data.subject, data.attachment_label);
+            out = fallbackReply({ role: sh.role, name: sh.name, title: sh.title }, data.subject, data.attachment_label, data.msg_type);
           }
         }
       }
 
       if (isPlaceholderReply(out.body) || (recentReplies ?? []).some((m) => m.sender_name === sh.name && m.body.trim().toLowerCase() === out.body.trim().toLowerCase())) {
-        out = fallbackReply({ role: sh.role, name: sh.name, title: sh.title }, data.subject, data.attachment_label);
+        out = fallbackReply({ role: sh.role, name: sh.name, title: sh.title }, data.subject, data.attachment_label, data.msg_type);
       }
 
       await supabase.from("comms_messages").insert({

@@ -109,7 +109,7 @@ const MORE_GROUPS: NavGroup[] = [
     label: "Communications",
     items: [
       { to: "/app/meetings", label: "Meetings", icon: Users },
-      { to: "/app/comms", label: "Comms", icon: Send },
+      { to: "/app/comms", label: "Stakeholder Comms", icon: Send },
       { to: "/app/stakeholders", label: "People", icon: Contact },
     ],
   },

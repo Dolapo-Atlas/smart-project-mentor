@@ -7,7 +7,8 @@ import {
 } from "@/lib/sim.functions";
 import { getActiveProject, markTourCompleted } from "@/lib/projects.functions";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Compass, Focus, LayoutGrid, MapPin } from "lucide-react";
+import { Sparkles, Compass, Focus, LayoutGrid, MapPin, MessagesSquare } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { TimeControls } from "@/components/time-controls";
 import { ActionChip } from "@/components/dashboard/action-chip";
@@ -32,6 +33,7 @@ export const Route = createFileRoute("/_authenticated/app/")({
 
 
 function Dashboard() {
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const fetchOverview = useServerFn(getOverview);
   const genMessage = useServerFn(generateStakeholderMessage);
@@ -185,6 +187,14 @@ function Dashboard() {
           </ActionChip>
           <ActionChip tone="green" icon={Compass} onClick={() => setBriefOpen(true)}>
             Initiation pack
+          </ActionChip>
+          <ActionChip
+            tone="orange"
+            icon={MessagesSquare}
+            onClick={() => navigate({ to: "/app/comms", search: (prev: any) => ({ ...prev }) })}
+            title="Ask a stakeholder for information through Stakeholder Comms"
+          >
+            Contact a stakeholder
           </ActionChip>
           <ActionChip
             tone="cream"

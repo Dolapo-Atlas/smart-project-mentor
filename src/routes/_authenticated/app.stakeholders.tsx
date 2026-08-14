@@ -9,7 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Save, Send, Download, FileText, ClipboardList, Sparkles, Star } from "lucide-react";
+import { Save, Send, Download, FileText, ClipboardList, Sparkles, Star, Mail, ArrowRight, Info } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { stakeholderProfile } from "@/lib/stakeholder-profiles";
+import { trackLearner } from "@/lib/learner-events";
 import jsPDF from "jspdf";
 import {
   getOrCreateRegister,
@@ -55,16 +58,47 @@ function StakeholdersPage() {
   const navigate = useNavigate();
   const showRegister = Boolean(search.register || search.task);
 
+  useEffect(() => {
+    trackLearner("stakeholder_workspace_opened");
+  }, []);
+
+  function openProfile(name: string) {
+    trackLearner("stakeholder_profile_opened", { props: { name } });
+    setActive(name);
+  }
+
+  function contact(role: string, name: string) {
+    trackLearner("contact_stakeholder_clicked", { props: { name, from: "workspace" } });
+    navigate({
+      to: "/app/comms",
+      search: (prev: Record<string, unknown>) => ({ ...prev, to: role, type: "Request" as const }),
+    });
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl font-semibold tracking-tight">Stakeholders</h1>
+          <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">People</div>
+          <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">
+            Stakeholder workspace
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Your working relationships. Click anyone to log concerns, or open the register to formalise engagement.
+            The people you work with on this project. Open anyone to understand their role, then
+            contact them when you need information.
           </p>
         </div>
-        <Button
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            onClick={() =>
+              navigate({ to: "/app/comms", search: (prev: Record<string, unknown>) => ({ ...prev }) })
+            }
+          >
+            <Mail className="mr-2 h-4 w-4" />
+            Stakeholder comms
+          </Button>
+          <Button
           variant={showRegister ? "secondary" : "outline"}
           onClick={() =>
             navigate({ to: "/app/stakeholders", search: showRegister ? {} : { register: true } })
@@ -72,7 +106,16 @@ function StakeholdersPage() {
         >
           <ClipboardList className="mr-2 h-4 w-4" />
           {showRegister ? "Hide register" : "Stakeholder register"}
-        </Button>
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex items-start gap-2 rounded-2xl border border-surface-cream-border bg-surface-cream/60 px-4 py-3 text-sm text-foreground/80">
+        <Info className="mt-0.5 h-4 w-4 shrink-0 text-[var(--surface-cream-accent)]" />
+        <p>
+          Not sure who to contact? Review each stakeholder's role and responsibilities before making
+          your request — the right person is usually whoever owns that area.
+        </p>
       </div>
 
       <WhyThisMatters
@@ -106,28 +149,46 @@ function StakeholdersPage() {
           {data?.map((s) => {
             const m = sentimentMeta(s.sentiment);
             const pct = ((s.sentiment + 100) / 200) * 100;
+            const meta = stakeholderProfile(s.type);
             return (
-              <button
+              <Card
                 key={s.name}
-                type="button"
-                onClick={() => setActive(s.name)}
-                className="group rounded-xl border border-border bg-card p-4 text-left shadow-sm transition hover:border-foreground/30 hover:shadow-md"
+                variant="soft"
+                tone={meta.tone === "neutral" ? "neutral" : meta.tone}
+                className="flex flex-col p-5 md:rounded-3xl"
               >
-                <div className="flex items-center gap-3">
-                  <StakeholderAvatar name={s.name} size="lg" />
+                <div className="flex items-start gap-3">
+                  <StakeholderAvatar name={s.name} size="lg" seed={s.seed} role={s.type} />
                   <div className="min-w-0 flex-1">
-                    <div className="truncate font-semibold">{s.name}</div>
+                    <div className="truncate font-display text-lg font-semibold">{s.name}</div>
                     <div className="truncate text-xs text-muted-foreground">{s.role}</div>
                   </div>
+                  <span className="shrink-0 rounded-full border border-border/60 bg-background/60 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                    {meta.badge}
+                  </span>
                 </div>
+
+                <p className="mt-3 text-sm text-foreground/75">{meta.summary}</p>
+
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {meta.tags.map((t) => (
+                    <span
+                      key={t}
+                      className="rounded-full bg-background/70 px-2.5 py-1 text-[11px] font-medium text-foreground/70"
+                    >
+                      {t}
+                    </span>
+                  ))}
+                </div>
+
                 <div className="mt-4">
                   <div className="mb-1 flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">Sentiment</span>
+                    <span className="text-muted-foreground">Working relationship</span>
                     <span className={`font-medium ${m.color}`}>
                       {m.label} ({s.sentiment > 0 ? "+" : ""}{s.sentiment})
                     </span>
                   </div>
-                  <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted">
+                  <div className="relative h-2 w-full overflow-hidden rounded-full bg-background/70">
                     <div className="absolute inset-y-0 left-1/2 w-px bg-border" />
                     <div
                       className={`h-full ${m.bar}`}
@@ -138,11 +199,26 @@ function StakeholdersPage() {
                     />
                   </div>
                 </div>
-                <div className="mt-3 flex items-center justify-between text-[11px] text-muted-foreground">
+                <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
                   <span>{s.concerns.length} concern{s.concerns.length === 1 ? "" : "s"} logged</span>
                   <span>{s.interaction_count} interactions</span>
                 </div>
-              </button>
+
+                <div className="mt-4 flex flex-wrap gap-2 pt-1">
+                  <Button size="sm" className="flex-1" onClick={() => openProfile(s.name)}>
+                    View stakeholder
+                    <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="bg-background/60"
+                    onClick={() => contact(s.type, s.name)}
+                  >
+                    <Mail className="mr-1.5 h-3.5 w-3.5" /> Contact
+                  </Button>
+                </div>
+              </Card>
             );
           })}
         </div>

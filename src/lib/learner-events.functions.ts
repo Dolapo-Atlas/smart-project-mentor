@@ -1,9 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { LEARNER_EVENTS, type LearnerEvent } from "./learner-events.shared";
+import { LEARNER_EVENTS, SIDE_EVENTS, type TrackedEvent } from "./learner-events.shared";
 
 type Payload = {
-  event: LearnerEvent;
+  event: TrackedEvent;
   projectInstanceId?: string | null;
   props?: Record<string, unknown>;
   campaign?: Record<string, string>;
@@ -18,7 +18,10 @@ export const recordLearnerEvent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: Payload) => {
     if (!input || typeof input.event !== "string") throw new Error("event required");
-    if (!LEARNER_EVENTS.includes(input.event)) throw new Error("unknown event");
+    const known =
+      (LEARNER_EVENTS as readonly string[]).includes(input.event) ||
+      (SIDE_EVENTS as readonly string[]).includes(input.event);
+    if (!known) throw new Error("unknown event");
     return input;
   })
   .handler(async ({ data, context }) => {
