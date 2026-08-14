@@ -17,14 +17,18 @@ import { Card } from "@/components/ui/card";
 import { stakeholderProfile } from "@/lib/stakeholder-profiles";
 import { trackLearner } from "@/lib/learner-events";
 
+const commsSearchSchema = z.object({
+  task: z.string().optional(),
+  prefill_title: z.string().optional(),
+  prefill_body: z.string().optional(),
+  /** Canonical stakeholder role key to preselect (e.g. "clinical"). */
+  to: z.string().optional(),
+  /** Communication type to preselect (defaults to Update). */
+  type: z.enum(["Update", "Escalation", "Request", "FYI"]).optional(),
+});
+
 export const Route = createFileRoute("/_authenticated/app/comms")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    task: typeof search.task === "string" ? search.task : undefined,
-    prefill_title: typeof search.prefill_title === "string" ? search.prefill_title : undefined,
-    prefill_body: typeof search.prefill_body === "string" ? search.prefill_body : undefined,
-    to: typeof search.to === "string" ? search.to : undefined,
-    type: typeof search.type === "string" ? search.type : undefined,
-  }),
+  validateSearch: commsSearchSchema,
   component: GatedComms,
 });
 
