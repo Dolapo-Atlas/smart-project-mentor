@@ -164,6 +164,12 @@ function Comms() {
     },
     onSuccess: (r: any) => {
       toast.success(`Sent. ${r.replies} stakeholder(s) will reply.`);
+      trackLearner("stakeholder_request_sent", {
+        props: { type: msgType, recipients: toRoles.length },
+      });
+      if (r?.replies) {
+        trackLearner("stakeholder_response_received", { props: { count: r.replies } });
+      }
       qc.invalidateQueries({ queryKey: ["comms"] });
       qc.invalidateQueries({ queryKey: ["inbox"] });
       qc.invalidateQueries({ queryKey: ["overview"] });
