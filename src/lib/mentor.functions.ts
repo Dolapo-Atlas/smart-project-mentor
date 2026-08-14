@@ -36,8 +36,8 @@ const ROUTE_CONTEXT: Record<
     concept: "Stakeholder communication — listening for risks, decisions, and asks before they escalate.",
   },
   "/app/comms": {
-    area: "Comms",
-    what: "Send a proactive update or new email to a stakeholder.",
+    area: "Stakeholder Comms",
+    what: "Pick the stakeholder who owns the area, choose a type (Update, Escalation, Request, FYI) and send them a message. A Request is how you ask for information.",
     concept: "Proactive communication — shaping perception instead of reacting.",
   },
   "/app/meetings": {
@@ -46,8 +46,8 @@ const ROUTE_CONTEXT: Record<
     concept: "Facilitation — steering a room of differing agendas to a decision.",
   },
   "/app/stakeholders": {
-    area: "Stakeholders",
-    what: "Check sentiment, recover relationships, and read concerns per person.",
+    area: "Stakeholder Workspace",
+    what: "Review each person's role, interests and relationship, then use Contact Stakeholder to send them a Request through Stakeholder Comms.",
     concept: "Stakeholder management — sentiment is the leading indicator of project health.",
   },
   "/app/tasks": {
