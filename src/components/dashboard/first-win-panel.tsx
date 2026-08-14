@@ -104,8 +104,8 @@ export function FirstWinPanel({
   const steps = [
     {
       done: briefSeen,
-      label: "Read your project brief",
-      hint: "Two minutes. Who you are, what the project is, who to keep happy.",
+      label: "Open your Project Initiation Pack",
+      hint: "Skim the Overview tab. You don\u2019t need to read all of it now \u2014 it stays open to you all simulation.",
       action: (
         <Button
           size="sm"
@@ -120,7 +120,7 @@ export function FirstWinPanel({
           }}
         >
           <Compass className="mr-2 h-4 w-4" />
-          Open brief
+          Open pack
         </Button>
       ),
     },

@@ -22,7 +22,7 @@ import { LearningDrawer } from "@/components/learning-drawer";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { MarketingExport } from "@/components/marketing-export";
 import { PauseProjectDialog } from "@/components/pause-project-dialog";
-import { ProjectBriefSheet } from "@/components/dashboard/project-brief-sheet";
+import { ProjectInitiationPack } from "@/components/dashboard/project-initiation-pack";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useRef } from "react";
 import { PhaseProgressCard } from "@/components/dashboard/phase-progress-card";
@@ -371,7 +371,7 @@ function AppLayout() {
                 ))}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setBriefOpen(true); }}>
-                  <Compass className="mr-2 h-3.5 w-3.5" /> Project brief
+                  <Compass className="mr-2 h-3.5 w-3.5" /> Project initiation pack
                 </DropdownMenuItem>
                 <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setMarketingOpen(true); }}>
                   <Camera className="mr-2 h-3.5 w-3.5" /> Marketing export
@@ -480,7 +480,7 @@ function AppLayout() {
       )}
       <PauseProjectDialog open={pauseOpen} onOpenChange={setPauseOpen} />
       <PaymentSuccessDialog />
-      <ProjectBriefSheet open={briefOpen} onOpenChange={setBriefOpen} />
+      <ProjectInitiationPack open={briefOpen} onOpenChange={setBriefOpen} />
     </div>
   );
 }

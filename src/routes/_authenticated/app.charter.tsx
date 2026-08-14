@@ -38,8 +38,9 @@ import { TaskContextPanel } from "@/components/mentor/task-context-panel";
 import { WhyThisMatters } from "@/components/why-this-matters";
 import { formatMinor } from "@/lib/money";
 import { UnlockScreen } from "@/components/dashboard/unlock-screen";
+import { ProjectInitiationPack } from "@/components/dashboard/project-initiation-pack";
 import { getMyAccess } from "@/lib/access.functions";
-import { Lock } from "lucide-react";
+import { Lock, Compass } from "lucide-react";
 import {
   ExampleDialog,
   FirstTimeChoiceCard,
@@ -147,6 +148,7 @@ function CharterPage() {
   const [showAllFields, setShowAllFields] = useState(false);
   const firstTime = useFirstTimeMode("template.project_charter");
   const [charterExampleOpen, setCharterExampleOpen] = useState(false);
+  const [packOpen, setPackOpen] = useState(false);
 
   const focusKeys = useMemo(() => {
     const t = taskQuery.data as any;
@@ -333,11 +335,22 @@ function CharterPage() {
             >
               <Eye className="mr-2 h-3.5 w-3.5" /> Preview
             </Button>
+            <Button variant="outline" size="sm" onClick={() => setPackOpen(true)}>
+              <Compass className="mr-2 h-3.5 w-3.5" /> Open Project Initiation Pack
+            </Button>
             <Button variant="outline" size="sm" onClick={exportPdf}>
               <Download className="mr-2 h-3.5 w-3.5" /> Export PDF
             </Button>
           </div>
         </header>
+
+        <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+          Use the <span className="font-medium text-foreground">Project Initiation Pack</span> as your
+          starting source of information — objectives, scope, timeline, budget,
+          stakeholders and known risks are all in there.
+        </div>
+
+        <ProjectInitiationPack open={packOpen} onOpenChange={setPackOpen} />
 
         <TaskContextPanel taskId={search.task} />
 
