@@ -14,7 +14,7 @@ import { ContinueCard } from "@/components/dashboard/continue-card";
 import { TaskSummaryStrip } from "@/components/dashboard/task-summary-strip";
 import { TaskBoard } from "@/components/dashboard/task-board";
 import { ProjectSidePanel } from "@/components/dashboard/project-side-panel";
-import { ProjectBriefSheet } from "@/components/dashboard/project-brief-sheet";
+import { ProjectInitiationPack } from "@/components/dashboard/project-initiation-pack";
 import { FirstEmailPrompt } from "@/components/dashboard/first-email-prompt";
 import { WelcomeBackPanel } from "@/components/dashboard/welcome-back-panel";
 import { PhaseReadinessPanel } from "@/components/dashboard/phase-readiness-panel";
@@ -200,7 +200,7 @@ function Dashboard() {
             onClick={() => setBriefOpen(true)}
           >
             <Compass className="mr-2 h-4 w-4" />
-            Project brief
+            Initiation pack
           </Button>
           <Button
             size="sm"
@@ -261,7 +261,7 @@ function Dashboard() {
           </div>
         </div>
       ))}
-      <ProjectBriefSheet
+      <ProjectInitiationPack
         open={briefOpen}
         onOpenChange={handleBriefOpenChange}
         firstRun={false}
