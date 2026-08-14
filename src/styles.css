@@ -379,14 +379,45 @@
     size: A4 portrait;
     margin: 0;
   }
-  .print-sheet {
+
+  /* Single-sheet documents (certificate): isolate the sheet so wrapper
+     padding / min-heights cannot push content onto a second page. */
+  html:has(.print-sheet),
+  body:has(.print-sheet) {
     width: 210mm;
     height: 297mm;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    background: #fff !important;
+  }
+  body:has(.print-sheet) * {
+    visibility: hidden !important;
+    box-shadow: none !important;
+  }
+  body:has(.print-sheet) .print-sheet,
+  body:has(.print-sheet) .print-sheet * {
+    visibility: visible !important;
+  }
+  .print-sheet {
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 210mm;
+    height: 296.5mm;
+    overflow: hidden;
+    page-break-inside: avoid;
+    break-inside: avoid;
     page-break-after: avoid;
+    break-after: avoid;
   }
   .print-sheet .atlas-cert {
     width: 210mm;
-    height: 297mm;
+    height: 296.5mm;
+    max-height: 296.5mm;
     aspect-ratio: auto !important;
+    overflow: hidden;
   }
 }
