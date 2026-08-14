@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { z } from "zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listComms, listAttachables, sendComm } from "@/lib/comms.functions";
@@ -64,6 +65,21 @@ function Comms() {
   const fileInput = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const prefilledTaskRef = useRef<string | null>(null);
+  const prefilledToRef = useRef<string | null>(null);
+
+  // Preselection from "Contact stakeholder": select the person, default the
+  // type (Request), and leave subject/message blank for the learner to write.
+  useEffect(() => {
+    if (!search.to) return;
+    const key = `${search.to}|${search.type ?? ""}`;
+    if (prefilledToRef.current === key) return;
+    prefilledToRef.current = key;
+    setToRoles([search.to]);
+    setMsgType((search.type as MsgType) ?? "Request");
+    trackLearner("stakeholder_request_started", {
+      props: { role: search.to, type: search.type ?? "Request" },
+    });
+  }, [search.to, search.type]);
 
   useEffect(() => {
     if (!search.task || prefilledTaskRef.current === search.task) return;
