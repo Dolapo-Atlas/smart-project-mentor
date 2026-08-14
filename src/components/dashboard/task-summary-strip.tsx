@@ -46,7 +46,14 @@ const TILES: Array<{
   },
 ];
 
-export function TaskSummaryStrip() {
+export const TILE_TONES = [
+  "border-surface-orange-border bg-surface-orange",
+  "border-surface-lilac-border bg-surface-lilac",
+  "border-surface-green-border bg-surface-green",
+  "border-surface-navy-border bg-surface-navy",
+];
+
+function TaskSummaryStrip() {
   const fetchTasks = useServerFn(listTasksRich);
   const { data: tasks } = useQuery<any[]>({
     queryKey: ["tasks"],
@@ -82,14 +89,14 @@ export function TaskSummaryStrip() {
       variants={stagger}
       className="grid grid-cols-2 gap-3 sm:grid-cols-4"
     >
-      {TILES.map((t) => {
+      {TILES.map((t, i) => {
         const count = rows.filter((r) => t.statuses.includes(r.status)).length;
         const Icon = t.icon;
         return (
           <motion.div
             key={t.key}
             variants={fadeUp}
-            className="hover-lift relative overflow-hidden rounded-xl border border-border bg-card p-4 shadow-sm"
+            className={`relative overflow-hidden rounded-3xl border p-4 shadow-[var(--shadow-soft)] transition-all duration-500 hover:shadow-[var(--shadow-soft-lift)] motion-safe:hover:-translate-y-1 ${TILE_TONES[i % TILE_TONES.length]}`}
           >
             <span className={`absolute left-0 top-0 h-full w-1 ${t.bar}`} aria-hidden />
             <div className="flex items-start justify-between">

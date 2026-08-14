@@ -126,7 +126,7 @@ export function TaskBoard() {
 
   return (
     <>
-      <section className="rounded-2xl border border-border bg-card p-4 shadow-sm md:p-6">
+      <section className="rounded-3xl border border-surface-neutral-border bg-surface-neutral p-4 shadow-[var(--shadow-soft)] md:rounded-[2rem] md:p-6">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="font-display text-lg font-semibold">Task board</h2>
@@ -147,7 +147,7 @@ export function TaskBoard() {
         </div>
         <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           {grouped.map((col) => (
-            <div key={col.key} className="rounded-xl border border-border bg-background/60 p-3">
+            <div key={col.key} className="rounded-2xl border border-border/70 bg-background/70 p-3">
               <div className="flex items-center justify-between">
                 <div className={`text-[11px] font-semibold uppercase tracking-wider ${col.tone}`}>
                   {col.label}
