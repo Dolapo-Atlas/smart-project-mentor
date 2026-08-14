@@ -217,15 +217,18 @@ function Card({
   tone = "default",
 }: {
   children: React.ReactNode;
-  tone?: "default" | "warn";
+  tone?: "default" | "warn" | "navy" | "green" | "lilac";
 }) {
+  const tones: Record<string, string> = {
+    default: "border-surface-neutral-border bg-surface-neutral",
+    warn: "border-surface-orange-border bg-surface-orange",
+    navy: "border-surface-navy-border bg-surface-navy",
+    green: "border-surface-green-border bg-surface-green",
+    lilac: "border-surface-lilac-border bg-surface-lilac",
+  };
   return (
     <div
-      className={`rounded-2xl border p-4 ${
-        tone === "warn"
-          ? "border-accent-orange/30 bg-accent-orange/[0.06]"
-          : "border-border bg-muted/40"
-      }`}
+      className={`rounded-3xl border p-5 shadow-[var(--shadow-soft)] transition-all duration-500 ${tones[tone]}`}
     >
       {children}
     </div>
