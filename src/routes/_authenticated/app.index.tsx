@@ -33,6 +33,7 @@ export const Route = createFileRoute("/_authenticated/app/")({
 
 
 function Dashboard() {
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const fetchOverview = useServerFn(getOverview);
   const genMessage = useServerFn(generateStakeholderMessage);
