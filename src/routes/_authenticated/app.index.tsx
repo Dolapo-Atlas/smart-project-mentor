@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Sparkles, Compass, Focus, LayoutGrid, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { TimeControls } from "@/components/time-controls";
+import { ActionChip } from "@/components/dashboard/action-chip";
 import { ContinueCard } from "@/components/dashboard/continue-card";
 import { TaskSummaryStrip } from "@/components/dashboard/task-summary-strip";
 import { TaskBoard } from "@/components/dashboard/task-board";
