@@ -386,6 +386,7 @@ Stay grounded in the "${projectName}" project domain — do NOT invent unrelated
 
 Use the workspace evidence above. If the coordinator says something is updated, attached, completed, or has no pending items and the evidence supports that, acknowledge it and do not claim you cannot see the file, central folder, RAID log, or pending action. Do not invent missing artefacts.
 Only disagree, push back, ask hard questions, or escalate when there is a specific unresolved gap in the evidence (for example missing owner, missing mitigation, open high/critical RAID item, pending document review, or open task). If the evidence resolves the issue, be positive or neutral.
+${data.msg_type === "Request" ? `This email is a REQUEST — the coordinator is proactively asking you for information or clarification. That is normal, welcome workplace behaviour. Answer from your own area of responsibility, be helpful, and choose sentiment "neutral" or "positive". Do NOT treat a request as an escalation, do NOT invent a new concern or complaint, and do NOT become annoyed unless the message itself is clearly inappropriate.\n` : ""}
 2-4 short paragraphs. Sign off with name & role. Do not use generic placeholder wording like "Thanks for the note — I'll come back to you shortly".
 Choose sentiment honestly: positive, neutral, pushback, concerned, or ignored (if ignored, body is a short auto-reply / out of office).`;
 
@@ -459,13 +460,13 @@ Choose sentiment honestly: positive, neutral, pushback, concerned, or ignored (i
           try {
             out = (await generateObject({ model: getModel(), prompt, schema: ReplySchema })).object;
           } catch {
-            out = fallbackReply({ role: sh.role, name: sh.name, title: sh.title }, data.subject, data.attachment_label);
+            out = fallbackReply({ role: sh.role, name: sh.name, title: sh.title }, data.subject, data.attachment_label, data.msg_type);
           }
         }
       }
 
       if (isPlaceholderReply(out.body) || (recentReplies ?? []).some((m) => m.sender_name === sh.name && m.body.trim().toLowerCase() === out.body.trim().toLowerCase())) {
-        out = fallbackReply({ role: sh.role, name: sh.name, title: sh.title }, data.subject, data.attachment_label);
+        out = fallbackReply({ role: sh.role, name: sh.name, title: sh.title }, data.subject, data.attachment_label, data.msg_type);
       }
 
       await supabase.from("comms_messages").insert({
