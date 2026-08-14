@@ -117,6 +117,11 @@ The coordinator just sent you this ${learnerMessage.msgType.toLowerCase()} email
 Subject: ${learnerMessage.subject}
 Body:
 ${learnerMessage.body}
+${
+  learnerMessage.msgType.toLowerCase() === "request"
+    ? `This is a REQUEST — the coordinator is proactively asking you for information or clarification. That is normal, welcome workplace behaviour. Answer the question from your own area of responsibility, be genuinely helpful, and pick sentiment "neutral" or "positive". Do NOT treat a request as an escalation, do NOT manufacture a new concern or complaint, and do NOT be annoyed unless the message itself is clearly inappropriate or repeats something already answered.`
+    : ""
+}
 ${learnerMessage.attachmentLabel ? `Attached: ${learnerMessage.attachmentKind ?? "file"} — ${learnerMessage.attachmentLabel}` : "No attachment."}
 
 Write your reply. Ground it in the evidence and the thread history above; if the coordinator says something is done/attached and the evidence supports it, acknowledge that — do not claim you cannot see the file.
