@@ -23,6 +23,25 @@ export const LEARNER_EVENTS = [
 
 export type LearnerEvent = (typeof LEARNER_EVENTS)[number];
 
+/**
+ * Additional in-app events that are recorded for analytics but are NOT part
+ * of the first-session funnel (they can happen many times, in any order).
+ * Kept separate so the admin funnel ordering stays untouched.
+ */
+export const SIDE_EVENTS = [
+  "stakeholder_workspace_opened",
+  "stakeholder_profile_opened",
+  "contact_stakeholder_clicked",
+  "stakeholder_request_started",
+  "stakeholder_request_sent",
+  "stakeholder_response_received",
+] as const;
+
+export type SideEvent = (typeof SIDE_EVENTS)[number];
+
+/** Any event the client tracker may send. */
+export type TrackedEvent = LearnerEvent | SideEvent;
+
 /** Human labels for the admin funnel. */
 export const LEARNER_EVENT_LABELS: Record<LearnerEvent, string> = {
   signed_in: "Signed in",
