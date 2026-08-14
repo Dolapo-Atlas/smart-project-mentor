@@ -69,7 +69,10 @@ function StakeholdersPage() {
 
   function contact(role: string, name: string) {
     trackLearner("contact_stakeholder_clicked", { props: { name, from: "workspace" } });
-    navigate({ to: "/app/comms", search: { to: role, type: "Request" } });
+    navigate({
+      to: "/app/comms",
+      search: (prev: Record<string, unknown>) => ({ ...prev, to: role, type: "Request" }),
+    });
   }
 
   return (
@@ -86,7 +89,12 @@ function StakeholdersPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={() => navigate({ to: "/app/comms", search: {} })}>
+          <Button
+            variant="outline"
+            onClick={() =>
+              navigate({ to: "/app/comms", search: (prev: Record<string, unknown>) => ({ ...prev }) })
+            }
+          >
             <Mail className="mr-2 h-4 w-4" />
             Stakeholder comms
           </Button>
