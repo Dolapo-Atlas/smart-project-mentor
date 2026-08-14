@@ -523,10 +523,12 @@ function Features() {
           title="You're not reading about project management. You're already doing it."
           subtitle="Every surface in Atlas is a workplace surface. No quizzes, no theory cards — just the tools your first PM job will hand you on day one."
         />
-        <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map(({ icon: Icon, tag, title, body, preview }, i) => (
             <Reveal key={title} delay={i * 60}>
-              <article className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card/70 backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-accent-orange/30 hover:shadow-[0_28px_70px_-30px_rgba(40,30,15,0.3)]">
+              <article
+                className={`group relative flex h-full flex-col overflow-hidden rounded-3xl border shadow-[var(--shadow-soft)] transition-all duration-500 motion-safe:hover:-translate-y-2 hover:shadow-[var(--shadow-soft-lift)] md:rounded-[2rem] ${SOFT_TONES[i % SOFT_TONES.length]}`}
+              >
                 <div className="border-b border-border/60 bg-background/40 px-4 py-2.5">
                   <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
                     <span className="h-1.5 w-1.5 rounded-full bg-[oklch(0.65_0.18_25)]/70" />
