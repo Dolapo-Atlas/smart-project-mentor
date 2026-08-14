@@ -1929,7 +1929,9 @@ function ReadinessOffer() {
         <div className="mt-14 grid gap-5 sm:gap-6 lg:grid-cols-3">
           {READINESS_PRICES.map((p, i) => (
             <Reveal key={p.region} delay={120 + i * 90}>
-              <div className="flex h-full flex-col rounded-[26px] border border-border bg-card p-7 shadow-[0_30px_90px_-60px_rgba(11,19,43,0.4)] transition-all hover:-translate-y-1 sm:p-9">
+              <div
+                className={`group flex h-full flex-col rounded-3xl border p-7 shadow-[var(--shadow-soft)] transition-all duration-500 hover:shadow-[var(--shadow-soft-lift)] motion-safe:hover:-translate-y-2 sm:p-9 md:rounded-[2.5rem] ${SOFT_TONES[i % 3]}`}
+              >
                 <p className="text-[15px] font-medium text-primary">{p.label}</p>
                 <p className="mt-5 font-display text-[clamp(2.1rem,4vw,2.8rem)] font-medium leading-none tracking-[-0.02em] text-primary">
                   {p.price}
