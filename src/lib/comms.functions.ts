@@ -195,8 +195,33 @@ function fallbackReply(
   stakeholder: { role: string; name: string; title: string },
   subject: string,
   attachmentLabel?: string,
+  msgType?: string,
 ): Reply {
   const topic = attachmentLabel ? ` and the attached ${attachmentLabel}` : "";
+  // A plain information Request is normal workplace behaviour — answer it
+  // helpfully instead of treating it as an escalation or a new concern.
+  if (msgType === "Request") {
+    const answerByRole: Record<string, string> = {
+      pm: `Happy to help with this${topic}. I'll pull together what I have and point you to where the detail sits — if you need it for a specific deliverable, tell me which one and I'll prioritise it.`,
+      clinical: `Thanks for asking rather than assuming${topic}. From a governance point of view, the things you'll need are the safety impact, the approval route and who signs it off. Come back to me once you've drafted it and I'll review.`,
+      sponsor: `Good question${topic}. Keep me to the decision and the options — I'll give you a view. If it needs funding or a mandate change, flag that explicitly and I'll take it to the committee.`,
+      finance: `Thanks for checking${topic}. I can share the current budget position and the approval thresholds — tell me the figure you're working to and I'll confirm whether it needs sign-off.`,
+      tech: `No problem${topic}. On the technical side the constraints are integration, data migration and environment availability. Let me know the dates you're planning around and I'll tell you what's realistic.`,
+      vendor: `Thanks for the request${topic}. We can share what the product does as standard; if what you need sits outside the agreed scope we'll tell you clearly so you can raise it properly.`,
+      operations: `Happy to help${topic}. I'll give you the staffing and readiness picture for the sites — just let me know the timeframe you need it for.`,
+      admin: `Sure${topic}. I'll send over the records and approvals we hold so your audit trail is complete.`,
+      care_home: `Thanks for asking${topic}. I can tell you how the shifts actually run and what training time is realistic — the earlier you ask, the more useful my answer is.`,
+    };
+    const lead =
+      answerByRole[stakeholder.role] ??
+      `Happy to help with this${topic}. Let me know exactly what you need and by when, and I'll come back with it.`;
+    return {
+      sender_role: stakeholder.title,
+      subject: `Re: ${subject}`,
+      body: `${lead}\n\n${stakeholder.name}\n${stakeholder.title}`,
+      sentiment: "neutral",
+    };
+  }
   const bodyByRole: Record<string, string> = {
     pm: `I have reviewed your note${topic}. Please convert the key points into dated actions, then show me which items need sponsor or governance input before Friday.`,
     clinical: `I have picked this up${topic}. Before governance can support it, I need the safety impact, approval route, and escalation triggers made explicit.`,
