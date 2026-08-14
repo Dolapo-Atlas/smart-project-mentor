@@ -408,7 +408,7 @@ function TimelineTab() {
       <section>
         <H>Delivery timeline</H>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <Card>
+          <Card tone="warn">
             <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
               Planned delivery window
             </div>
@@ -416,7 +416,7 @@ function TimelineTab() {
               12 weeks
             </div>
           </Card>
-          <Card>
+          <Card tone="navy">
             <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
               Approved budget
             </div>
@@ -509,7 +509,7 @@ function StakeholdersTab() {
       <H>Key stakeholders</H>
       <div className="space-y-3">
         {STAKEHOLDERS.map((s) => (
-          <Card key={s.name}>
+          <Card key={s.name} tone="lilac">
             <div className="font-medium text-foreground">{s.name}</div>
             <div className="text-[11px] uppercase tracking-wider text-accent-orange">
               {s.role}
@@ -660,7 +660,7 @@ function RoleTab({ roleTitle }: { roleTitle: string }) {
 
       <section>
         <H>Your immediate priorities</H>
-        <Card>
+        <Card tone="green">
           <Bullets
             items={[
               "Understand the project’s purpose and current position.",
