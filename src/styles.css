@@ -206,6 +206,30 @@
   --sidebar-ring: oklch(0.551 0.027 264.364);
 }
 
+.dark {
+  /* Soft tinted card surfaces (dark) */
+  --surface-neutral: oklch(0.23 0.03 262);
+  --surface-neutral-border: oklch(0.34 0.03 262);
+  --surface-neutral-accent: oklch(0.82 0.02 262);
+  --surface-navy: oklch(0.24 0.05 262);
+  --surface-navy-border: oklch(0.36 0.05 262);
+  --surface-navy-accent: oklch(0.85 0.04 262);
+  --surface-orange: oklch(0.27 0.06 50);
+  --surface-orange-border: oklch(0.4 0.09 50);
+  --surface-orange-accent: oklch(0.85 0.11 60);
+  --surface-cream: oklch(0.27 0.04 85);
+  --surface-cream-border: oklch(0.4 0.06 85);
+  --surface-cream-accent: oklch(0.88 0.07 88);
+  --surface-green: oklch(0.26 0.05 155);
+  --surface-green-border: oklch(0.38 0.07 155);
+  --surface-green-accent: oklch(0.85 0.1 155);
+  --surface-lilac: oklch(0.26 0.05 288);
+  --surface-lilac-border: oklch(0.38 0.07 288);
+  --surface-lilac-accent: oklch(0.86 0.07 288);
+  --shadow-soft: 0 20px 60px -15px oklch(0 0 0 / 0.5), 0 2px 6px -2px oklch(0 0 0 / 0.35);
+  --shadow-soft-lift: 0 40px 80px -20px oklch(0 0 0 / 0.6), 0 4px 10px -3px oklch(0 0 0 / 0.4);
+}
+
 @layer base {
   * {
     border-color: var(--color-border);
