@@ -46,14 +46,14 @@ const TILES: Array<{
   },
 ];
 
-export const TILE_TONES = [
+const TILE_TONES = [
   "border-surface-orange-border bg-surface-orange",
   "border-surface-lilac-border bg-surface-lilac",
   "border-surface-green-border bg-surface-green",
   "border-surface-navy-border bg-surface-navy",
 ];
 
-function TaskSummaryStrip() {
+export function TaskSummaryStrip() {
   const fetchTasks = useServerFn(listTasksRich);
   const { data: tasks } = useQuery<any[]>({
     queryKey: ["tasks"],
