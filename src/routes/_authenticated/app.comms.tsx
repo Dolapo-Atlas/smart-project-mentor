@@ -10,15 +10,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Send, Paperclip, ChevronRight, Upload, Loader2 } from "lucide-react";
+import { Send, Paperclip, ChevronRight, Upload, Loader2, Users, Check } from "lucide-react";
 import { StakeholderHoverAvatar as StakeholderAvatar } from "@/components/stakeholder-card";
 import { LockedModuleGate } from "@/components/dashboard/locked-module-gate";
+import { Card } from "@/components/ui/card";
+import { stakeholderProfile } from "@/lib/stakeholder-profiles";
+import { trackLearner } from "@/lib/learner-events";
 
 export const Route = createFileRoute("/_authenticated/app/comms")({
   validateSearch: (search: Record<string, unknown>) => ({
     task: typeof search.task === "string" ? search.task : undefined,
     prefill_title: typeof search.prefill_title === "string" ? search.prefill_title : undefined,
     prefill_body: typeof search.prefill_body === "string" ? search.prefill_body : undefined,
+    to: typeof search.to === "string" ? search.to : undefined,
+    type: typeof search.type === "string" ? search.type : undefined,
   }),
   component: GatedComms,
 });
