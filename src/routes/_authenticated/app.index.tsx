@@ -7,7 +7,8 @@ import {
 } from "@/lib/sim.functions";
 import { getActiveProject, markTourCompleted } from "@/lib/projects.functions";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Compass, Focus, LayoutGrid, MapPin } from "lucide-react";
+import { Sparkles, Compass, Focus, LayoutGrid, MapPin, MessagesSquare } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { TimeControls } from "@/components/time-controls";
 import { ActionChip } from "@/components/dashboard/action-chip";
