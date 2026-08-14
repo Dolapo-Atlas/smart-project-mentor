@@ -200,39 +200,93 @@ function Comms() {
         </p>
       </header>
 
-      <section className="rounded-lg border border-border bg-card p-6">
-        <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">To</div>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {roster.map((s) => (
-            <button
-              key={s.role}
-              onClick={() => toggleRole(s.role)}
-              className={`flex items-center gap-2 rounded-full border py-1 pl-1 pr-3 text-xs transition ${
-                toRoles.includes(s.role)
-                  ? "border-foreground bg-foreground text-background"
-                  : "border-border text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <StakeholderAvatar name={s.name} size="xs" seed={s.seed} role={s.role} />
-              <span>{s.name} <span className="opacity-60">· {s.title}</span></span>
-            </button>
-          ))}
-        </div>
+      <Card variant="soft" tone="navy" className="p-5 sm:p-7">
+        {selected.length > 0 && (
+          <div className="mb-5 flex flex-wrap items-center gap-3 rounded-2xl border border-surface-orange-border bg-surface-orange/70 px-4 py-3">
+            <div className="flex -space-x-2">
+              {selected.map((s) => (
+                <StakeholderAvatar key={s.role} name={s.name} size="sm" seed={s.seed} role={s.role} />
+              ))}
+            </div>
+            <div className="min-w-0 text-sm">
+              <div className="font-semibold">
+                You are contacting {selected.map((s) => s.name).join(", ")}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {selected.length === 1
+                  ? `${selected[0]!.title} · ${msgType.toUpperCase()}`
+                  : `${selected.length} recipients · ${msgType.toUpperCase()}`}
+              </div>
+            </div>
+          </div>
+        )}
 
-        <div className="mt-5 flex flex-wrap items-center gap-2">
-          <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mr-2">Type</div>
+        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+          <Users className="h-3.5 w-3.5" /> To
+        </div>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {roster.map((s) => {
+            const on = toRoles.includes(s.role);
+            return (
+              <button
+                key={s.role}
+                type="button"
+                onClick={() => toggleRole(s.role)}
+                aria-pressed={on}
+                className={`flex items-center gap-3 rounded-2xl border px-3 py-2.5 text-left transition-all duration-300 ${
+                  on
+                    ? "border-primary bg-background shadow-[var(--shadow-soft)]"
+                    : "border-border/60 bg-background/50 hover:border-border hover:bg-background/80"
+                }`}
+              >
+                <StakeholderAvatar name={s.name} size="sm" seed={s.seed} role={s.role} />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium">{s.name}</div>
+                  <div className="truncate text-[11px] text-muted-foreground">{s.title}</div>
+                </div>
+                {on && (
+                  <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground">
+                    <Check className="h-3 w-3" />
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          {selected.length === 1
+            ? stakeholderProfile(selected[0]!.role).contactFor
+            : "Pick the person who owns the area you need information about."}
+        </p>
+
+        <div className="mt-6 flex flex-wrap items-center gap-2">
+          <div className="mr-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            Type
+          </div>
           {MSG_TYPES.map((t) => (
             <button
               key={t}
               onClick={() => setMsgType(t)}
-              className={`rounded-md border px-3 py-1.5 text-xs uppercase tracking-wider transition ${
-                msgType === t ? "border-foreground bg-foreground text-background" : "border-border text-muted-foreground"
+              aria-pressed={msgType === t}
+              className={`rounded-xl border px-3.5 py-2 text-xs font-medium uppercase tracking-wider transition-all duration-300 ${
+                msgType === t
+                  ? "border-primary bg-primary text-primary-foreground shadow-[var(--shadow-soft)]"
+                  : "border-border/60 bg-background/50 text-muted-foreground hover:text-foreground"
               }`}
             >
               {t}
             </button>
           ))}
         </div>
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          {msgType === "Request"
+            ? "A request is a normal ask for information — it isn't an escalation."
+            : msgType === "Escalation"
+              ? "Escalations go on the record. Use them when a decision or blocker needs authority."
+              : msgType === "Update"
+                ? "Updates keep people informed on progress, risk and next steps."
+                : "An FYI is background awareness — no action expected."}
+        </p>
 
         <div className="mt-5 space-y-3">
           <div>
