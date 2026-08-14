@@ -8,8 +8,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { MailCheck, ThumbsUp, ThumbsDown, Plus, X } from "lucide-react";
+import { MailCheck, ThumbsUp, ThumbsDown, Plus, X, Mail } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "@tanstack/react-router";
+import { stakeholderProfile } from "@/lib/stakeholder-profiles";
+import { trackLearner } from "@/lib/learner-events";
 
 type Stakeholder = {
   name: string;
@@ -163,6 +166,7 @@ export function StakeholderProfileDialog({
   const { data } = useStakeholders();
   const s = data?.find((x) => x.name === name);
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const updateFn = useServerFn(updateStakeholder);
   const repairFn = useServerFn(repairStakeholderRelationship);
   type UpdateInput = {
@@ -197,6 +201,20 @@ export function StakeholderProfileDialog({
   const sentiment = s?.sentiment ?? 0;
   const sl = sentimentLabel(sentiment);
   const playbook = recoveryPlaybook(name);
+  const meta = stakeholderProfile(s?.type);
+
+  function contact() {
+    trackLearner("contact_stakeholder_clicked", { props: { name, from: "profile" } });
+    onOpenChange(false);
+    navigate({
+      to: "/app/comms",
+      search: (prev: Record<string, unknown>) => ({
+        ...prev,
+        to: s?.type ?? "sponsor",
+        type: "Request" as const,
+      }),
+    });
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -212,6 +230,29 @@ export function StakeholderProfileDialog({
         </DialogHeader>
 
         <div className="space-y-5">
+          <div className="rounded-2xl border border-surface-cream-border bg-surface-cream/60 p-4">
+            <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+              Relationship to the project
+            </div>
+            <p className="mt-1.5 text-sm text-foreground/80">{meta.relationship}</p>
+            <div className="mt-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+              Key interests &amp; responsibilities
+            </div>
+            <ul className="mt-1.5 space-y-1 text-sm text-foreground/80">
+              {meta.interests.map((i) => (
+                <li key={i}>• {i}</li>
+              ))}
+            </ul>
+            <div className="mt-3 text-xs text-muted-foreground">
+              <span className="font-medium text-foreground/70">Worth contacting for: </span>
+              {meta.contactFor}
+            </div>
+          </div>
+
+          <Button className="w-full" onClick={contact}>
+            <Mail className="mr-2 h-4 w-4" /> Contact stakeholder
+          </Button>
+
           <div>
             <div className="mb-2 flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Relationship</span>
