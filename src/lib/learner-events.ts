@@ -1,7 +1,12 @@
 import { supabase } from "@/integrations/supabase/client";
 import { recordLearnerEvent } from "./learner-events.functions";
 import { readCampaign, track } from "./landing-analytics";
-import { ONCE_PER_LEARNER, type LearnerEvent, type TrackedEvent } from "./learner-events.shared";
+import {
+  LEARNER_EVENTS,
+  ONCE_PER_LEARNER,
+  type LearnerEvent,
+  type TrackedEvent,
+} from "./learner-events.shared";
 
 /**
  * Client-side tracker for the in-app journey.
@@ -46,9 +51,11 @@ export function trackLearner(
       if (alreadySent(userId, event)) return;
       markSent(userId, event);
 
-      // Mirror to the ad platforms so campaigns can optimise toward learners
-      // who actually start work, not merely sign up.
-      track(event, { ...(options.props ?? {}) });
+      // Mirror funnel steps to the ad platforms so campaigns can optimise
+      // toward learners who actually start work, not merely sign up.
+      if (LEARNER_EVENTS.includes(event as LearnerEvent)) {
+        track(event as LearnerEvent, { ...(options.props ?? {}) });
+      }
 
       await recordLearnerEvent({
         data: {
