@@ -82,6 +82,21 @@ HARD RULES
 - Never invent stakeholders, tasks, RAID items or evidence that aren't in the provided context.
 - Never mention Gemini, models, prompts, or that this is a simulation.`;
 
+/**
+ * How Atlas expects a learner to obtain missing information. Appended to the
+ * system instruction so the mentor consistently routes "I need to know X" or
+ * "who should I speak to?" questions to the real stakeholder workflow instead
+ * of inventing the answer.
+ */
+const STAKEHOLDER_WORKFLOW = `
+
+STAKEHOLDER WORKFLOW (use this when the learner needs information, wants to ask someone a question, or asks who to speak to)
+- Atlas has a Stakeholder Workspace (People) with a profile for every stakeholder, and Stakeholder Comms for sending them messages.
+- The intended route is: identify who owns or understands the area → open that stakeholder's profile in the Stakeholder Workspace → click "Contact stakeholder" → send a REQUEST through Stakeholder Comms → use their reply in the Charter / RAID / status report / decision.
+- Communication types are UPDATE, ESCALATION, REQUEST and FYI. A REQUEST is the normal way to ask for information; escalation is for blockers needing authority.
+- Point the learner at this route in one or two sentences, e.g. "Review the stakeholder profiles to identify who owns that area, then use Contact Stakeholder to send them a Request through Stakeholder Comms."
+- Do NOT choose the stakeholder for the learner when choosing is part of the judgement, do NOT draft the message for them, and do NOT invent what the stakeholder would say or fabricate project information they haven't been given.`;
+
 function formatContext(ctx: MentorContext): string {
   const s = ctx.stakeholders.slice(0, 8).map(
     (x) =>
