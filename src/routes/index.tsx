@@ -753,7 +753,7 @@ function HowItWorks() {
           <ol className="grid gap-6 md:grid-cols-4">
             {steps.map((s, i) => (
               <Reveal key={s.title} delay={i * 80}>
-                <li className="group relative h-full rounded-2xl border border-border bg-card/70 p-6 backdrop-blur transition-all hover:-translate-y-1 hover:border-accent-orange/30 hover:shadow-[0_20px_50px_-25px_rgba(40,30,15,0.25)]">
+                <li className="group relative h-full rounded-3xl border border-surface-cream-border bg-surface-cream p-6 shadow-[var(--shadow-soft)] transition-all duration-500 hover:shadow-[var(--shadow-soft-lift)] motion-safe:hover:-translate-y-2 md:rounded-[2rem]">
                   <div className="flex items-center gap-3">
                     <span className="grid h-9 w-9 place-items-center rounded-full bg-accent-orange text-accent-orange-foreground text-sm font-semibold shadow-[0_6px_20px_-6px_rgba(217,119,6,0.7)]">
                       {i + 1}
@@ -1207,7 +1207,7 @@ function WhyAtlas() {
         />
         <Reveal>
           <div className="mt-14 grid gap-5 md:grid-cols-3">
-            <article className="rounded-2xl border border-border bg-card/60 p-7 backdrop-blur">
+            <article className="rounded-3xl border border-surface-neutral-border bg-surface-neutral p-7 shadow-[var(--shadow-soft)] transition-all duration-500 md:rounded-[2rem]">
               <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Traditional courses</p>
               <h3 className="mt-3 font-display text-xl font-medium">Read, watch, repeat.</h3>
               <ul className="mt-5 space-y-3">
@@ -1222,7 +1222,7 @@ function WhyAtlas() {
               </ul>
             </article>
 
-            <article className="relative overflow-hidden rounded-2xl border border-accent-orange/30 bg-card p-7 shadow-[0_30px_80px_-40px_rgba(217,119,6,0.45)] md:scale-[1.02]">
+            <article className="relative overflow-hidden rounded-3xl border border-surface-orange-border bg-surface-orange p-7 shadow-[var(--shadow-soft-lift)] transition-all duration-500 md:scale-[1.02] md:rounded-[2rem]">
               <div
                 aria-hidden
                 className="pointer-events-none absolute inset-0"
@@ -1249,7 +1249,7 @@ function WhyAtlas() {
               </div>
             </article>
 
-            <article className="rounded-2xl border border-border bg-card/60 p-7 backdrop-blur">
+            <article className="rounded-3xl border border-surface-green-border bg-surface-green p-7 shadow-[var(--shadow-soft)] transition-all duration-500 md:rounded-[2rem]">
               <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">The outcome</p>
               <h3 className="mt-3 font-display text-xl font-medium">Walk in ready.</h3>
               <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
