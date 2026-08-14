@@ -175,7 +175,7 @@ Learner asks: ${input.question.trim()}
 
 Coach them. Stay concrete to the context above.`;
   const text = await generateGeminiText(prompt, {
-    systemInstruction: SYSTEM_INSTRUCTION,
+    systemInstruction: SYSTEM_INSTRUCTION + STAKEHOLDER_WORKFLOW,
   });
   const clean = text.trim();
   if (!clean) throw new Error("Mentor returned empty response");
