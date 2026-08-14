@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { recordLearnerEvent } from "./learner-events.functions";
 import { readCampaign, track } from "./landing-analytics";
-import { ONCE_PER_LEARNER, type LearnerEvent } from "./learner-events.shared";
+import { ONCE_PER_LEARNER, type LearnerEvent, type TrackedEvent } from "./learner-events.shared";
 
 /**
  * Client-side tracker for the in-app journey.
@@ -10,12 +10,12 @@ import { ONCE_PER_LEARNER, type LearnerEvent } from "./learner-events.shared";
  * failure is swallowed. Tracking must never block or break a learner's screen.
  */
 
-function seenKey(userId: string, event: LearnerEvent) {
+function seenKey(userId: string, event: TrackedEvent) {
   return `atlas.ev.${userId}.${event}`;
 }
 
-function alreadySent(userId: string, event: LearnerEvent) {
-  if (!ONCE_PER_LEARNER.includes(event)) return false;
+function alreadySent(userId: string, event: TrackedEvent) {
+  if (!ONCE_PER_LEARNER.includes(event as LearnerEvent)) return false;
   try {
     return window.localStorage.getItem(seenKey(userId, event)) === "1";
   } catch {
@@ -23,8 +23,8 @@ function alreadySent(userId: string, event: LearnerEvent) {
   }
 }
 
-function markSent(userId: string, event: LearnerEvent) {
-  if (!ONCE_PER_LEARNER.includes(event)) return;
+function markSent(userId: string, event: TrackedEvent) {
+  if (!ONCE_PER_LEARNER.includes(event as LearnerEvent)) return;
   try {
     window.localStorage.setItem(seenKey(userId, event), "1");
   } catch {
@@ -33,7 +33,7 @@ function markSent(userId: string, event: LearnerEvent) {
 }
 
 export function trackLearner(
-  event: LearnerEvent,
+  event: TrackedEvent,
   options: { projectInstanceId?: string | null; props?: Record<string, unknown> } = {},
 ) {
   if (typeof window === "undefined") return;
