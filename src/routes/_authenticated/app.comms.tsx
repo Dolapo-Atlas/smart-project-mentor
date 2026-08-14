@@ -178,6 +178,11 @@ function Comms() {
     setToRoles((prev) => prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role]);
   };
 
+  const selected = useMemo(
+    () => roster.filter((s) => toRoles.includes(s.role)),
+    [roster, toRoles],
+  );
+
   // Group messages by thread
   const threads = useMemo(() => {
     const map = new Map<string, any[]>();
