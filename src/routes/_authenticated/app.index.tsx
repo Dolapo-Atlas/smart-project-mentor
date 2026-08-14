@@ -187,6 +187,14 @@ function Dashboard() {
             Initiation pack
           </ActionChip>
           <ActionChip
+            tone="orange"
+            icon={MessagesSquare}
+            onClick={() => navigate({ to: "/app/comms", search: (prev: any) => ({ ...prev }) })}
+            title="Ask a stakeholder for information through Stakeholder Comms"
+          >
+            Contact a stakeholder
+          </ActionChip>
+          <ActionChip
             tone="cream"
             icon={MapPin}
             onClick={() => setTourOpen(true)}
