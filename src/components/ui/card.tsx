@@ -119,4 +119,120 @@ const CardFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
 );
 CardFooter.displayName = "CardFooter";
 
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent };
+/** Small pill chip that picks up its parent card's tone. */
+const chipVariants = cva(
+  "inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wider",
+  {
+    variants: {
+      tone: {
+        neutral: "",
+        navy: "",
+        orange: "",
+        cream: "",
+        green: "",
+        lilac: "",
+      },
+      emphasis: { solid: "", subtle: "border bg-background/60" },
+    },
+    compoundVariants: [
+      { emphasis: "solid", tone: "neutral", class: "bg-secondary text-secondary-foreground" },
+      { emphasis: "solid", tone: "navy", class: "bg-navy text-navy-foreground" },
+      { emphasis: "solid", tone: "orange", class: "bg-accent-orange text-accent-orange-foreground" },
+      { emphasis: "solid", tone: "cream", class: "bg-warning text-warning-foreground" },
+      { emphasis: "solid", tone: "green", class: "bg-success text-success-foreground" },
+      { emphasis: "solid", tone: "lilac", class: "bg-navy text-navy-foreground" },
+      {
+        emphasis: "subtle",
+        tone: "neutral",
+        class: "border-surface-neutral-border text-surface-neutral-accent",
+      },
+      {
+        emphasis: "subtle",
+        tone: "navy",
+        class: "border-surface-navy-border text-surface-navy-accent",
+      },
+      {
+        emphasis: "subtle",
+        tone: "orange",
+        class: "border-surface-orange-border text-surface-orange-accent",
+      },
+      {
+        emphasis: "subtle",
+        tone: "cream",
+        class: "border-surface-cream-border text-surface-cream-accent",
+      },
+      {
+        emphasis: "subtle",
+        tone: "green",
+        class: "border-surface-green-border text-surface-green-accent",
+      },
+      {
+        emphasis: "subtle",
+        tone: "lilac",
+        class: "border-surface-lilac-border text-surface-lilac-accent",
+      },
+    ],
+    defaultVariants: { tone: "neutral", emphasis: "subtle" },
+  },
+);
+
+export interface CardTagChipProps
+  extends React.HTMLAttributes<HTMLSpanElement>,
+    VariantProps<typeof chipVariants> {}
+
+const CardTagChip = React.forwardRef<HTMLSpanElement, CardTagChipProps>(
+  ({ className, tone, emphasis, ...props }, ref) => (
+    <span ref={ref} className={cn(chipVariants({ tone, emphasis }), className)} {...props} />
+  ),
+);
+CardTagChip.displayName = "CardTagChip";
+
+/** Wrapping cluster for CardTagChip children. */
+const CardTagRow = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div ref={ref} className={cn("flex flex-wrap gap-2", className)} {...props} />
+  ),
+);
+CardTagRow.displayName = "CardTagRow";
+
+/**
+ * Footer action row: label on the left, circular arrow on the right.
+ * Renders as a button unless `asChild`-style composition is needed; parent
+ * cards that are themselves clickable should pass `as="div"`.
+ */
+export interface CardActionProps extends React.HTMLAttributes<HTMLDivElement> {
+  label: string;
+  icon?: React.ReactNode;
+}
+
+const CardAction = React.forwardRef<HTMLDivElement, CardActionProps>(
+  ({ className, label, icon, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn("mt-8 flex items-center justify-between gap-4", className)}
+      {...props}
+    >
+      <span className="text-sm font-semibold text-foreground sm:text-base">{label}</span>
+      <span
+        aria-hidden="true"
+        className="flex size-11 shrink-0 items-center justify-center rounded-full bg-navy text-navy-foreground transition-transform duration-300 group-hover:-rotate-45"
+      >
+        {icon ?? <ArrowRight className="size-5" strokeWidth={2.5} />}
+      </span>
+    </div>
+  ),
+);
+CardAction.displayName = "CardAction";
+
+export {
+  Card,
+  CardHeader,
+  CardFooter,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardTagChip,
+  CardTagRow,
+  CardAction,
+  cardVariants,
+};
