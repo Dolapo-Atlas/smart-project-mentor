@@ -7,8 +7,8 @@ export const ATLAS_DEMO_URL = demoAsset.url;
 export const ATLAS_DEMO_POSTER = posterAsset.url;
 
 /**
- * Portrait product walkthrough. Autoplays muted when scrolled into view and
- * shows a play affordance when autoplay is blocked (iOS low-power mode).
+ * Landscape product demo video (16:9). Autoplays muted when scrolled into view
+ * and shows a play affordance when autoplay is blocked (iOS low-power mode).
  */
 export function DemoVideo({
   src = ATLAS_DEMO_URL,
@@ -49,22 +49,22 @@ export function DemoVideo({
 
   return (
     <div
-      className={`relative mx-auto w-full max-w-[360px] overflow-hidden rounded-[24px] bg-black/5 ${className}`}
-      style={{ aspectRatio: "9 / 16" }}
+      className={`relative mx-auto w-full max-w-5xl overflow-hidden rounded-2xl bg-black/5 shadow-2xl ${className}`}
+      style={{ aspectRatio: "16 / 9" }}
     >
       <video
         ref={ref}
         src={src}
         poster={ATLAS_DEMO_POSTER}
-        width={720}
-        height={1280}
+        width={1920}
+        height={1080}
         muted
         playsInline
         loop
         controls
         preload="metadata"
-        aria-label="Atlas product walkthrough"
-        className="absolute inset-0 block h-full w-full rounded-[24px] object-cover"
+        aria-label="Atlas product demo"
+        className="absolute inset-0 block h-full w-full rounded-2xl object-cover"
       />
       {!playing && (
         <button
@@ -78,10 +78,10 @@ export function DemoVideo({
               })
               .catch(() => {});
           }}
-          className="absolute inset-0 grid place-items-center rounded-[24px] bg-black/25 transition-colors hover:bg-black/15"
-          aria-label="Play the Atlas product walkthrough"
+          className="absolute inset-0 grid place-items-center rounded-2xl bg-black/30 transition-colors hover:bg-black/20"
+          aria-label="Play the Atlas product demo"
         >
-          <PlayCircle className="h-14 w-14 text-white drop-shadow" aria-hidden />
+          <PlayCircle className="h-16 w-16 text-white drop-shadow-lg" aria-hidden />
         </button>
       )}
     </div>
