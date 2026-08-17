@@ -1,0 +1,1 @@
+update public.tasks set linked_module_route = '/app/raid' where linked_module_route in ('/app/risk','/app/risks');
