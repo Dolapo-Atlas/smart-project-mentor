@@ -7,6 +7,7 @@
 // their own static logic on error, so the simulation never breaks when
 // Gemini is unavailable.
 import { generateGeminiJSON, isGeminiAvailable } from "./gemini.server";
+import { projectFactsPrompt } from "./project-facts";
 import { personaliseBody } from "./personalise";
 
 export type StakeholderProfile = {
@@ -26,6 +27,8 @@ export type ProjectContext = {
   projectName: string;
   /** The learner's real first / preferred name, used to address the email. */
   coordinatorName?: string | null;
+  /** Authoritative budget block — see projectFactsPrompt(). */
+  factsBlock?: string;
   phase?: string | null;
   health?: string | null;
   reputation?: number | null;
@@ -110,6 +113,9 @@ Respond ONLY with a JSON object matching the required schema.`;
 
   const prompt = `Project: ${project.projectName}
 Phase: ${project.phase ?? "unknown"} · Health: ${project.health ?? "unknown"} · Reputation: ${project.reputation ?? "?"}/100 · Progress: ${project.progress ?? "?"}/100
+
+AUTHORITATIVE PROJECT FACTS (the only figures that exist — quote them exactly):
+${project.factsBlock ?? projectFactsPrompt()}
 
 Workspace evidence you can see right now:
 ${project.evidenceSummary ?? "(none)"}

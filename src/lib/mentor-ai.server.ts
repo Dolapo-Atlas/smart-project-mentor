@@ -6,6 +6,7 @@
 // catch and fall back to their static/gateway logic so the simulation
 // never breaks when Gemini is unavailable.
 import { generateGeminiText, isGeminiAvailable } from "./gemini.server";
+import { projectFactsPrompt } from "./project-facts";
 
 export type MentorScreen = {
   route: string;
@@ -124,6 +125,9 @@ function formatContext(ctx: MentorContext): string {
 SCREEN: ${ctx.screen.area} (${ctx.screen.route})
 Screen purpose: ${ctx.screen.purpose}
 Underlying concept: ${ctx.screen.concept}
+
+PROJECT FACTS (authoritative — quote these, never invent figures):
+${projectFactsPrompt()}
 
 PROJECT: ${ctx.project.name}${ctx.project.phase ? ` · phase ${ctx.project.phase}` : ""}${
     typeof ctx.project.progressPct === "number" ? ` · progress ${ctx.project.progressPct}%` : ""

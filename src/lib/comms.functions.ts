@@ -4,6 +4,7 @@ import { requireProgrammeAccess, requireFreePreviewAllowance } from "@/lib/progr
 import { z } from "zod";
 import { generateObject } from "ai";
 import { personaliseBody } from "./personalise";
+import { projectFactsPrompt } from "./project-facts";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
 import { applyCompetencyStatus } from "./learning.functions";
 import { ARCHETYPE_SENTIMENT_BY_ROLE } from "./pm.functions";
@@ -335,6 +336,20 @@ export const sendComm = createServerFn({ method: "POST" })
     ]);
 
     const firstName = profile?.preferred_name?.trim() || profile?.first_name || "there";
+
+    // Authoritative money facts so no stakeholder ever invents a budget figure.
+    const { data: budgetLines } = await supabase
+      .from("budget_lines")
+      .select("amount,kind")
+      .eq("user_id", uid);
+    const spentToDate = (budgetLines ?? [])
+      .filter((l) => l.kind === "actual" || l.kind === "invoice")
+      .reduce((s, l) => s + Number(l.amount), 0);
+    const forecastToCome = (budgetLines ?? [])
+      .filter((l) => l.kind === "forecast")
+      .reduce((s, l) => s + Number(l.amount), 0);
+    const factsBlock = projectFactsPrompt({ spent: spentToDate, forecast: forecastToCome });
+
     const attachmentDetail = attachedDoc
       ? `${attachedDoc.title} (${attachedDoc.status}${typeof attachedDoc.quality_score === "number" ? `, score ${attachedDoc.quality_score}` : ""})`
       : attachedRaid
@@ -363,6 +378,9 @@ export const sendComm = createServerFn({ method: "POST" })
       const projectName = state?.project_name ?? "the programme";
       const prompt = `You are simulating "${sh.name}, ${sh.title}" on the "${projectName}" project.
 Project state: phase=${state?.phase}, health=${state?.health}, reputation=${state?.reputation}/100, progress=${state?.progress}/100.
+
+AUTHORITATIVE PROJECT FACTS (the only figures that exist — quote them exactly):
+${factsBlock}
 
 Current workspace evidence you can see:
 ${evidence.evidenceSummary}
@@ -437,6 +455,7 @@ Choose sentiment honestly: positive, neutral, pushback, concerned, or ignored (i
               project: {
                 projectName,
                 coordinatorName: firstName,
+                factsBlock,
                 phase: state?.phase,
                 health: state?.health,
                 reputation: state?.reputation,
