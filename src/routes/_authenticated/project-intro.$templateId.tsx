@@ -79,7 +79,8 @@ function ProjectIntro() {
             </h2>
             <p className="mt-4 text-base leading-relaxed text-muted-foreground">
               Grab a coffee and take a breath. Next you'll read the project brief,
-              and Emma's welcome note will be waiting the moment you sit down.
+              and {(tpl as any).pm_name ?? "your project manager"}'s welcome email
+              will be waiting the moment you sit down.
             </p>
             <div className="mt-8 flex justify-center">
               <Button size="lg" onClick={() => setStage("intro")}>
@@ -111,8 +112,12 @@ function ProjectIntro() {
         </p>
 
         <div className="mt-10 grid gap-6 sm:grid-cols-3">
-          <Meta icon={Calendar} label="Project length" value={`${tpl.chapters_count ?? 12} Chapters`} />
-          <Meta icon={Clock} label="Estimated completion" value={tpl.estimated_hours ?? "8–12 Hours"} />
+          <Meta
+            icon={Calendar}
+            label="Simulated project length"
+            value={`${factsFor((tpl as any).slug).durationDays} simulated days`}
+          />
+          <Meta icon={Clock} label="Your time to complete" value={tpl.estimated_hours ?? "8–12 hours"} />
           <Meta icon={Gauge} label="Difficulty" value={tpl.difficulty ?? "Beginner"} />
         </div>
 
