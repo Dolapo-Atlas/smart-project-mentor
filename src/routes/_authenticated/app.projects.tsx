@@ -500,15 +500,46 @@ function ProjectsPicker() {
 
                 <div className="mt-5">
                   {t.is_playable ? (
-                    <Button
-                      className="w-full"
-                      size="lg"
-                      onClick={() => start.mutate(t.id)}
-                      disabled={start.isPending}
-                    >
-                      Select Project
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
+                    finishedTemplateIds.has(t.id) ? (
+                      <div className="space-y-2">
+                        <Button
+                          className="w-full"
+                          size="lg"
+                          onClick={() => start.mutate({ templateId: t.id })}
+                          disabled={start.isPending}
+                        >
+                          Open completed run
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
+                        <Button
+                          className="w-full"
+                          size="sm"
+                          variant="ghost"
+                          disabled={start.isPending}
+                          onClick={() => {
+                            if (
+                              confirm(
+                                "Start a brand-new run of this simulation? Your completed run stays saved and reviewable.",
+                              )
+                            ) {
+                              start.mutate({ templateId: t.id, restart: true });
+                            }
+                          }}
+                        >
+                          Start a fresh run
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        className="w-full"
+                        size="lg"
+                        onClick={() => start.mutate({ templateId: t.id })}
+                        disabled={start.isPending}
+                      >
+                        Select Project
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    )
                   ) : (
                     <Button className="w-full" size="lg" variant="secondary" disabled>
                       Coming soon
