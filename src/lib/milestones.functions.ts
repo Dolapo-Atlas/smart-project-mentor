@@ -98,7 +98,7 @@ export const listMilestones = createServerFn({ method: "GET" })
         .maybeSingle(),
       supabase
         .from("certificates")
-        .select("id,certificate_status,issued_at,grade,overall_score,simulated_role")
+        .select("id,certificate_status,issued_at,grade,overall_score,simulated_role,revoked_at")
         .eq("user_id", userId)
         .eq("project_instance_id", instanceId)
         .maybeSingle(),
