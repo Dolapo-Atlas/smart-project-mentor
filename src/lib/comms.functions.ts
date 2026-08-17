@@ -435,6 +435,7 @@ Choose sentiment honestly: positive, neutral, pushback, concerned, or ignored (i
               stakeholder: { role: sh.role, name: sh.name, title: sh.title },
               project: {
                 projectName,
+                coordinatorName: firstName,
                 phase: state?.phase,
                 health: state?.health,
                 reputation: state?.reputation,
@@ -468,6 +469,15 @@ Choose sentiment honestly: positive, neutral, pushback, concerned, or ignored (i
       if (isPlaceholderReply(out.body) || (recentReplies ?? []).some((m) => m.sender_name === sh.name && m.body.trim().toLowerCase() === out.body.trim().toLowerCase())) {
         out = fallbackReply({ role: sh.role, name: sh.name, title: sh.title }, data.subject, data.attachment_label, data.msg_type);
       }
+
+      out = {
+        ...out,
+        body: personaliseBody(out.body, {
+          learnerName: firstName,
+          senderName: sh.name,
+          senderTitle: sh.title,
+        }),
+      };
 
       await supabase.from("comms_messages").insert({
         user_id: uid,
