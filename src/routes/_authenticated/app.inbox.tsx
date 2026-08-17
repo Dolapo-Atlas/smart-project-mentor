@@ -9,6 +9,15 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Sparkles, Mail, Flame, Reply, Send } from "lucide-react";
+import { BookOpen } from "lucide-react";
+import { ProjectInitiationPack } from "@/components/dashboard/project-initiation-pack";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { EmptyState } from "@/components/empty-state";
 import inboxEmpty from "@/assets/illustrations/inbox-empty.png.asset.json";
 import { toast } from "sonner";
@@ -52,6 +61,11 @@ const LEGACY_SENDER_ROLE_MAP: Record<string, string> = {
   "Margaret Hollis": "care_home",
   "Rachel Stone": "clinical",
 };
+
+const PACK_SEEN_KEY = "atlas.initiation-pack.opened";
+
+/** Sarah's first welcome email carries the pack pointer inside ─── rules. */
+const PACK_BLOCK = /─{5,}\s*\nBEFORE YOU RESPOND\n([\s\S]*?)\n─{5,}\s*\n?/;
 
 function Inbox() {
   const qc = useQueryClient();
@@ -119,6 +133,27 @@ function Inbox() {
   const markPreviewFn = useServerFn(markFreePreviewComplete);
   const [replyOpen, setReplyOpen] = useState(false);
   const [replyBody, setReplyBody] = useState("");
+  const [packOpen, setPackOpen] = useState(false);
+  const [packSeen, setPackSeen] = useState(true);
+  const [remindOpen, setRemindOpen] = useState(false);
+  useEffect(() => {
+    try {
+      setPackSeen(localStorage.getItem(PACK_SEEN_KEY) === "1");
+    } catch {
+      setPackSeen(false);
+    }
+  }, []);
+  const openPack = () => {
+    setPackOpen(true);
+    setRemindOpen(false);
+    setPackSeen(true);
+    try {
+      localStorage.setItem(PACK_SEEN_KEY, "1");
+    } catch {
+      // Non-blocking.
+    }
+    trackLearner("brief_opened", { props: { from: "inbox_first_email" } });
+  };
   const reply = useMutation({
     mutationFn: (input: { to_role: string; subject: string; body: string }) =>
       sendFn({
@@ -322,7 +357,34 @@ function Inbox() {
                   />
                 </div>
               ) : null}
-              <div className="mt-6 whitespace-pre-wrap leading-relaxed">{selected.body}</div>
+              {(() => {
+                const match = selected.body.match(PACK_BLOCK);
+                const bodyText = match
+                  ? selected.body.replace(PACK_BLOCK, "")
+                  : selected.body;
+                return (
+                  <>
+                    <div className="mt-6 whitespace-pre-wrap leading-relaxed">
+                      {bodyText.trim()}
+                    </div>
+                    {match && (
+                      <div className="mt-6 rounded-2xl border border-accent-orange/40 bg-accent-orange/5 p-5">
+                        <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-accent-orange">
+                          <BookOpen className="h-3.5 w-3.5" />
+                          Before you respond
+                        </div>
+                        <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
+                          {match[1]?.trim()}
+                        </p>
+                        <Button size="lg" className="mt-4" onClick={openPack}>
+                          <BookOpen className="mr-2 h-4 w-4" />
+                          Open Project Initiation Pack
+                        </Button>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
               {linkedTasks.length > 0 && (
                 <div className="mt-6 rounded-md border border-primary/40 bg-primary/5 p-4">
                   <div className="text-xs uppercase tracking-[0.18em] text-primary/80">
@@ -358,6 +420,7 @@ function Inbox() {
                   LEGACY_SENDER_ROLE_MAP[selected.sender_name];
                 const isSystem = selected.sender_name === "Project Update";
                 if (isSystem) return null;
+                const hasPackSection = PACK_BLOCK.test(selected.body);
                 const subject = selected.subject.startsWith("Re:")
                   ? selected.subject
                   : `Re: ${selected.subject}`;
@@ -369,6 +432,10 @@ function Inbox() {
                           variant={onboardingMode && !onboardingDone ? "default" : "outline"}
                           size={onboardingMode && !onboardingDone ? "lg" : "default"}
                           onClick={() => {
+                            if (hasPackSection && !packSeen) {
+                              setRemindOpen(true);
+                              return;
+                            }
                             setReplyOpen(true);
                             setReplyBody("");
                           }}
@@ -433,6 +500,35 @@ function Inbox() {
           )}
         </article>
       </div>
+
+      <ProjectInitiationPack open={packOpen} onOpenChange={setPackOpen} />
+
+      <Dialog open={remindOpen} onOpenChange={setRemindOpen}>
+        <DialogContent className="max-w-md">
+          <DialogTitle className="font-display text-xl font-medium">
+            Have you reviewed the Project Initiation Pack?
+          </DialogTitle>
+          <DialogDescription>
+            It contains important project context that may help you respond
+            accurately.
+          </DialogDescription>
+          <DialogFooter className="gap-2 sm:justify-end">
+            <Button variant="outline" onClick={openPack}>
+              <BookOpen className="mr-2 h-4 w-4" />
+              Open Project Initiation Pack
+            </Button>
+            <Button
+              onClick={() => {
+                setRemindOpen(false);
+                setReplyOpen(true);
+                setReplyBody("");
+              }}
+            >
+              Continue to Reply
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

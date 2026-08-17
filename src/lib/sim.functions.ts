@@ -136,6 +136,14 @@ I won't sugar-coat it: the project is currently three weeks behind schedule and 
 
 I've added these as tasks in your workspace. Assume you have authority to make sensible decisions and document them — shout if anything is unclear.
 
+─────────────────────────────
+BEFORE YOU RESPOND
+
+You've just joined the Digital Care Records Rollout. Before replying, review the Project Initiation Pack to understand the project background, objectives, scope, timeline, budget, stakeholders and current issues.
+
+You'll use this pack throughout the project, so you don't need to memorise everything now.
+─────────────────────────────
+
 Regards,
 
 Sarah Williams
