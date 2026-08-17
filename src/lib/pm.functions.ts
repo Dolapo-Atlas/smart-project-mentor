@@ -9,6 +9,7 @@ import type { Json } from "@/integrations/supabase/types";
 import { loadRoster, rosterByRole, rosterByName, DEFAULT_ROSTER, type RosterMember } from "./roster";
 import { encodeSubmission, evaluateStatusReport } from "./templates";
 import { markSubmittedArtifactTasks } from "./task-sync.server";
+import { projectFactsPrompt, factsFor } from "./project-facts";
 
 const MODEL = "google/gemini-3-flash-preview";
 function getModel() {
