@@ -219,6 +219,14 @@ Your first objectives are waiting for you in the workspace:
   ✓ Review the current project status
   ✓ Submit an initial status update
 
+─────────────────────────────
+BEFORE YOU RESPOND
+
+You've just joined ${projectTitle}. Before replying, review the Project Initiation Pack to understand the project background, objectives, scope, timeline, budget, stakeholders and current issues.
+
+You'll use this pack throughout the project, so you don't need to memorise everything now.
+─────────────────────────────
+
 Welcome to the team.
 
 ${pmName}
@@ -274,7 +282,7 @@ ${pmRole}`;
           },
           {
             title: "Submit an initial status update",
-            description: "Write your first weekly status report and submit it to Emma.",
+            description: `Write your first weekly status report and submit it to ${pmName}.`,
             priority: "high" as const,
             category: "Reporting",
             linked_area: "reports",
