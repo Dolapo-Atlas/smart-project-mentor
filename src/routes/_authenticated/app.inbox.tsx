@@ -152,7 +152,7 @@ function Inbox() {
     } catch {
       // Non-blocking.
     }
-    trackLearner("initiation_pack_opened", { props: { from: "inbox_first_email" } });
+    trackLearner("brief_opened", { props: { from: "inbox_first_email" } });
   };
   const reply = useMutation({
     mutationFn: (input: { to_role: string; subject: string; body: string }) =>
