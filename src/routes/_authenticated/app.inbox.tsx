@@ -9,6 +9,15 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Sparkles, Mail, Flame, Reply, Send } from "lucide-react";
+import { BookOpen } from "lucide-react";
+import { ProjectInitiationPack } from "@/components/dashboard/project-initiation-pack";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { EmptyState } from "@/components/empty-state";
 import inboxEmpty from "@/assets/illustrations/inbox-empty.png.asset.json";
 import { toast } from "sonner";
@@ -52,6 +61,11 @@ const LEGACY_SENDER_ROLE_MAP: Record<string, string> = {
   "Margaret Hollis": "care_home",
   "Rachel Stone": "clinical",
 };
+
+const PACK_SEEN_KEY = "atlas.initiation-pack.opened";
+
+/** Sarah's first welcome email carries the pack pointer inside ─── rules. */
+const PACK_BLOCK = /─{5,}\s*\nBEFORE YOU RESPOND\n([\s\S]*?)\n─{5,}\s*\n?/;
 
 function Inbox() {
   const qc = useQueryClient();
@@ -119,6 +133,27 @@ function Inbox() {
   const markPreviewFn = useServerFn(markFreePreviewComplete);
   const [replyOpen, setReplyOpen] = useState(false);
   const [replyBody, setReplyBody] = useState("");
+  const [packOpen, setPackOpen] = useState(false);
+  const [packSeen, setPackSeen] = useState(true);
+  const [remindOpen, setRemindOpen] = useState(false);
+  useEffect(() => {
+    try {
+      setPackSeen(localStorage.getItem(PACK_SEEN_KEY) === "1");
+    } catch {
+      setPackSeen(false);
+    }
+  }, []);
+  const openPack = () => {
+    setPackOpen(true);
+    setRemindOpen(false);
+    setPackSeen(true);
+    try {
+      localStorage.setItem(PACK_SEEN_KEY, "1");
+    } catch {
+      // Non-blocking.
+    }
+    trackLearner("initiation_pack_opened", { props: { from: "inbox_first_email" } });
+  };
   const reply = useMutation({
     mutationFn: (input: { to_role: string; subject: string; body: string }) =>
       sendFn({
