@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -31,15 +31,13 @@ export function MilestoneShareDialog({
     [milestone, projectName],
   );
   const [caption, setCaption] = useState(initial);
-  const [editedFor, setEditedFor] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   // Reset the caption when a different milestone is opened, but keep the
   // learner's edits while they stay on the same one.
-  if (milestone && editedFor !== milestone.id) {
-    setEditedFor(milestone.id);
+  useEffect(() => {
     setCaption(initial);
-  }
+  }, [milestone?.id, initial]);
 
   if (!milestone) return null;
 
