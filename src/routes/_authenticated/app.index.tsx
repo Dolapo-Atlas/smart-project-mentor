@@ -61,6 +61,9 @@ function Dashboard() {
   const [briefOpen, setBriefOpen] = useState(false);
   const [emailPromptOpen, setEmailPromptOpen] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
+  // Completed runs default to the completion hub. "Review completed project"
+  // flips this on so the archived workspace can be read, never mutated.
+  const [reviewMode, setReviewMode] = useState(false);
   const [focusMode, setFocusMode] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     return window.localStorage.getItem("atlas.focus-mode") === "1";
