@@ -30,9 +30,12 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [authStatus, setAuthStatus] = useState<"idle" | "redirecting" | "checking">(() =>
-    typeof window !== "undefined" && sessionStorage.getItem("oauth_pending") === "1" ? "checking" : "idle",
-  );
+  // Must start "idle" so SSR and the first client render agree; the pending
+  // OAuth check is applied after hydration.
+  const [authStatus, setAuthStatus] = useState<"idle" | "redirecting" | "checking">("idle");
+  useEffect(() => {
+    if (sessionStorage.getItem("oauth_pending") === "1") setAuthStatus("checking");
+  }, []);
   const routingRef = useRef(false);
 
   const routeAuthenticatedUser = useCallback(
