@@ -276,7 +276,12 @@ function AppLayout() {
     exact ? pathname === to : pathname === to || pathname.startsWith(to + "/");
 
   const phaseKey = normalisePhase(overview?.state?.phase as string | undefined);
-  const phaseLabel = phaseKey.charAt(0).toUpperCase() + phaseKey.slice(1);
+  const phaseLabel =
+    phaseKey === "go-live"
+      ? "Go-Live"
+      : phaseKey === "monitoring"
+        ? "Monitoring & Control"
+        : phaseKey.charAt(0).toUpperCase() + phaseKey.slice(1);
   const NAV: NavItem[] = [...PINNED, ...PHASE_NAV[phaseKey]];
   const navTos = new Set(NAV.map((n) => n.to));
   const MORE_GROUPS_FILTERED = MORE_GROUPS.map((g) => ({
