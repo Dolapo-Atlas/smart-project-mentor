@@ -254,6 +254,37 @@ function CharterPage() {
     setDirty(true);
   }
 
+  // Mirror every keystroke into localStorage immediately (survives navigation)
+  useEffect(() => {
+    if (typeof window === "undefined" || !draftKey) return;
+    if (!dirty) return;
+    try {
+      window.localStorage.setItem(draftKey, JSON.stringify(values));
+    } catch {
+      /* storage full or blocked — server autosave below still covers it */
+    }
+  }, [values, dirty, draftKey]);
+
+  // Debounced autosave to the server so the draft is durable across devices.
+  useEffect(() => {
+    if (!dirty || !charterQuery.data?.id) return;
+    const id = charterQuery.data.id;
+    const handle = window.setTimeout(async () => {
+      try {
+        setAutoSaving(true);
+        await saveFn({ data: { id, payload: values } });
+        setDirty(false);
+        if (draftKey) window.localStorage.removeItem(draftKey);
+        qc.invalidateQueries({ queryKey: ["charter"] });
+      } catch {
+        /* keep dirty so the local copy and a later retry still protect the work */
+      } finally {
+        setAutoSaving(false);
+      }
+    }, 1200);
+    return () => window.clearTimeout(handle);
+  }, [values, dirty, charterQuery.data?.id, draftKey]);
+
   function exportPdf() {
     const doc = new jsPDF({ unit: "pt", format: "a4" });
     const margin = 48;
