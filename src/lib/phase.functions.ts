@@ -177,6 +177,7 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
     };
 
     const artifactPct = (row?: {
+
       completion_pct?: number | null;
       status?: string | null;
       approval_status?: string | null;
