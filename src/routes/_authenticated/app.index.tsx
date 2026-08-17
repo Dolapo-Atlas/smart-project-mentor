@@ -27,6 +27,8 @@ import { MilestoneWatcher } from "@/components/milestones/milestone-watcher";
 import { getMyAccess } from "@/lib/access.functions";
 import { getCompletionState } from "@/lib/completion.functions";
 import { CompletionHub } from "@/components/completion/completion-hub";
+import { FirstTaskGate } from "@/components/dashboard/first-task-gate";
+import { useFirstEmailGate } from "@/lib/use-first-email-gate";
 import { useEffect, useRef, useState } from "react";
 import { trackLearner } from "@/lib/learner-events";
 
@@ -57,6 +59,7 @@ function Dashboard() {
     queryFn: () => fetchCompletion() as Promise<any>,
   });
   const isCompleted = !!completion?.completed;
+  const { required: firstTaskRequired } = useFirstEmailGate();
 
   const [briefOpen, setBriefOpen] = useState(false);
   const [emailPromptOpen, setEmailPromptOpen] = useState(false);
@@ -186,6 +189,12 @@ function Dashboard() {
   // Completed run → completion hub replaces the active workspace as Home.
   if (isCompleted && !reviewMode) {
     return <CompletionHub state={completion as any} onReviewWorkspace={() => setReviewMode(true)} />;
+  }
+
+  // Day one on a fresh project: the only thing on the board is the Project
+  // Manager's email. No time controls, no task board, no charter.
+  if (!isCompleted && firstTaskRequired) {
+    return <FirstTaskGate />;
   }
 
   return (
