@@ -111,6 +111,7 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
     const [
       { data: state },
       { data: docs },
+      { data: artifacts },
       { data: raid },
       { data: stakeholders },
       { data: meetings },
@@ -147,6 +148,7 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
 
     const phase = phaseOrFirst(state?.phase as string | undefined);
     const D = (docs ?? []) as DocRow[];
+    const A = (artifacts ?? []) as { artifact_type?: string | null; status?: string | null }[];
     const R = (raid ?? []) as RaidRow[];
     const S = (stakeholders ?? []) as StakeholderRow[];
     const M = (meetings ?? []) as MeetingRow[];
