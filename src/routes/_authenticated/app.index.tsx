@@ -25,10 +25,15 @@ import { SubscriptionNotices } from "@/components/dashboard/subscription-notices
 import { GuidedTour } from "@/components/guided-tour";
 import { MilestoneWatcher } from "@/components/milestones/milestone-watcher";
 import { getMyAccess } from "@/lib/access.functions";
+import { getCompletionState } from "@/lib/completion.functions";
+import { CompletionHub } from "@/components/completion/completion-hub";
 import { useEffect, useRef, useState } from "react";
 import { trackLearner } from "@/lib/learner-events";
 
 export const Route = createFileRoute("/_authenticated/app/")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    review: search.review === "1" || search.review === true ? true : undefined,
+  }),
   component: Dashboard,
 });
 
@@ -36,11 +41,13 @@ export const Route = createFileRoute("/_authenticated/app/")({
 function Dashboard() {
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { review } = Route.useSearch();
   const fetchOverview = useServerFn(getOverview);
   const genMessage = useServerFn(generateStakeholderMessage);
   const fetchActive = useServerFn(getActiveProject);
   const fetchAccess = useServerFn(getMyAccess);
   const markTour = useServerFn(markTourCompleted);
+  const fetchCompletion = useServerFn(getCompletionState);
 
 
   const { data: overview } = useQuery({ queryKey: ["overview"], queryFn: () => fetchOverview() });
@@ -49,6 +56,11 @@ function Dashboard() {
     queryFn: () => fetchActive(),
   });
   useQuery({ queryKey: ["my-access"], queryFn: () => fetchAccess() });
+  const { data: completion } = useQuery({
+    queryKey: ["completion-state"],
+    queryFn: () => fetchCompletion() as Promise<any>,
+  });
+  const isCompleted = !!completion?.completed;
 
   const [briefOpen, setBriefOpen] = useState(false);
   const [emailPromptOpen, setEmailPromptOpen] = useState(false);
