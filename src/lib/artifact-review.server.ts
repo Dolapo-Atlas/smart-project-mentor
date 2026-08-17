@@ -5,6 +5,7 @@ import { z } from "zod";
 import { generateObject } from "ai";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
 import { recordArtifactVersion, updateLatestArtifact, payloadToMarkdown } from "./artifact-store.server";
+import { projectFactsPrompt, factsFor } from "./project-facts";
 
 const MODEL = "google/gemini-3-flash-preview";
 
@@ -61,6 +62,31 @@ export async function reviewArtifact(
 
   const content = payloadToMarkdown(args.title, args.payload as Record<string, unknown>);
 
+  // Authoritative, sponsor-approved project facts. The reviewer must judge the
+  // artifact AGAINST these constraints, never challenge the premise itself.
+  let slug: string | null = null;
+  let projectName = args.project_name ?? null;
+  try {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("current_project_instance_id")
+      .eq("id", userId)
+      .maybeSingle();
+    if (profile?.current_project_instance_id) {
+      const { data: inst } = await supabase
+        .from("project_instances")
+        .select("display_name, project_templates(slug, title)")
+        .eq("id", profile.current_project_instance_id)
+        .maybeSingle();
+      slug = (inst as any)?.project_templates?.slug ?? null;
+      projectName = projectName ?? (inst as any)?.display_name ?? (inst as any)?.project_templates?.title ?? null;
+    }
+  } catch (e) {
+    console.error("artifact review project lookup failed", e);
+  }
+  const facts = factsFor(slug);
+  const factsBlock = projectFactsPrompt({ slug });
+
   const { version } = await recordArtifactVersion(supabase, userId, {
     artifact_type: args.artifact_type,
     title: args.title,
@@ -81,13 +107,23 @@ export async function reviewArtifact(
       model,
       schema: ReviewSchema,
       prompt: `You are ${reviewerName}, ${reviewerRole} on the project${
-        args.project_name ? ` "${args.project_name}"` : ""
+        projectName ? ` "${projectName}"` : ""
       }. You are reviewing a Project Coordinator's "${args.title}" (version ${version}, ${args.completion_pct}% complete).
+
+APPROVED PROJECT FACTS (fixed, already signed off by the board — these are NOT up for debate):
+${factsBlock}
+Simulated project duration: ${facts.durationDays} calendar days (${facts.timelineLabel}) end to end.
+
+HOW TO REVIEW:
+- Treat the facts above as settled. Do NOT challenge the premise, feasibility, budget adequacy, scope size or the ${facts.durationDays}-day window. A ${facts.timelineLabel} delivery inside this envelope is achievable and board-approved.
+- Judge only whether the coordinator's document is CONSISTENT with those facts (correct budget, currency, timeline, footprint, vendor) and whether it is specific, complete and usable.
+- If the document contradicts an approved fact, say which fact it contradicts and what the correct figure is.
+- Never request changes solely because you think the timeline or budget is unrealistic.
 
 Submission:
 ${content}
 
-Judge it the way a real sponsor would: are objectives, scope, owners, dates, risks and decision rights clear and specific to this project? Approve only when it is genuinely usable to govern the work (score >= ${PASS_SCORE}). Otherwise request changes and list the specific, actionable changes required. Write the comment in first person, warm but direct, max 4 sentences.`,
+Judge it the way a real sponsor would: are objectives, scope, owners, dates, risks and decision rights clear, specific and consistent with the approved facts? Approve when it is genuinely usable to govern the work (score >= ${PASS_SCORE}). Otherwise request changes and list the specific, actionable changes required. Write the comment in first person, warm but direct, max 4 sentences.`,
     });
     review = object;
     if (review.score >= PASS_SCORE) review.decision = "approved";
