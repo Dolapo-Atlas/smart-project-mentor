@@ -30,7 +30,7 @@ const DCR: ProjectFacts = {
   // Matches the Project Initiation Pack ("12 weeks").
   durationDays: 84,
   timelineLabel: "12 weeks",
-  unitLabel: "",
+  unitLabel: "12 care homes",
   vendor: "CareSoft",
 };
 

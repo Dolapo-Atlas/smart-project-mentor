@@ -11,6 +11,7 @@ import {
 } from "@/lib/projects.functions";
 import { getProfile, updateProjectRole } from "@/lib/sim.functions";
 import { trackLearner } from "@/lib/learner-events";
+import { factsFor } from "@/lib/project-facts";
 import { Button } from "@/components/ui/button";
 import {
   Heart,
@@ -455,7 +456,11 @@ function ProjectsPicker() {
                 <p className="mt-3 text-sm text-muted-foreground">{t.description}</p>
 
                 <div className="mt-4 grid grid-cols-3 gap-2 text-xs">
-                  <Stat icon={Calendar} label="Duration" value={`${t.duration_days} Days`} />
+                  <Stat
+                    icon={Calendar}
+                    label="Simulated days"
+                    value={`${factsFor(t.slug).durationDays} days`}
+                  />
                   <Stat
                     icon={Gauge}
                     label="Difficulty"
