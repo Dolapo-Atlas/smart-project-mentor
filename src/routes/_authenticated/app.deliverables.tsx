@@ -223,7 +223,7 @@ function DeliverablesPage() {
               ) : null}
 
               <div className="space-y-4">
-                {sectionsFromPayload(open.payload ?? {}).map((s) => (
+                {sectionsForDeliverable(open.payload, open.content_markdown).map((s) => (
                   <section key={s.heading}>
                     <h3 className="text-sm font-medium">{s.heading}</h3>
                     <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">{s.body}</p>
