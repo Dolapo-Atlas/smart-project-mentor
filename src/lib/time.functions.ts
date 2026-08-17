@@ -4,6 +4,7 @@ import { z } from "zod";
 import { ARCHETYPE_SENTIMENT } from "./pm.functions";
 import { generateStakeholderMessage } from "./sim.functions";
 import { PHASE_KEYS, type PhaseKey } from "@/lib/phases";
+import { isActionableInboxMessage } from "@/lib/inbox-triage";
 
 const ModeSchema = z.enum(["day", "week", "sprint", "steerco", "golive"]);
 
@@ -34,7 +35,7 @@ export const getReadiness = createServerFn({ method: "GET" })
         .in("status", ["todo", "in_progress", "blocked", "changes_requested"])),
       scope(supabase
         .from("inbox_messages")
-        .select("id,subject,sender_name")
+        .select("id,subject,sender_name,sender_role,tone,escalated_at")
         .eq("user_id", userId)
         .eq("read", false)),
       scope(supabase
@@ -71,7 +72,11 @@ export const getReadiness = createServerFn({ method: "GET" })
       .in("status", ["submitted", "under_review"]));
 
     const openTasks = tasks.data ?? [];
-    const unread = inbox.data ?? [];
+    const unreadAll = inbox.data ?? [];
+    // Only genuine unresolved obligations gate progression. Atlas-generated
+    // approvals/reviews/acknowledgements stay visible but never block.
+    const unread = unreadAll.filter((m) => isActionableInboxMessage(m as any));
+    const unreadFyi = unreadAll.filter((m) => !isActionableInboxMessage(m as any));
     const unsubmitted = docs.data ?? [];
     const highRisks = raids.data ?? [];
     const frustrated = (rels.data ?? []).map((r) => ({
@@ -93,6 +98,7 @@ export const getReadiness = createServerFn({ method: "GET" })
       openTasks: openTasks.map((t) => ({ id: t.id, title: t.title })),
       systemProcessing: (reviewing ?? []).map((t) => ({ id: t.id, title: t.title })),
       unreadInbox: unread.map((m) => ({ id: m.id, from: m.sender_name, subject: m.subject })),
+      unreadInformational: unreadFyi.map((m) => ({ id: m.id, from: m.sender_name, subject: m.subject })),
       unsubmittedDocs: unsubmitted.map((d) => ({ id: d.id, title: d.title })),
       meetingsMissingMinutes: meetingsMissingMinutes.map((m) => ({ id: m.id, title: m.title })),
       openHighRisks: highRisks.map((r) => ({ id: r.id, title: r.title, kind: r.kind })),

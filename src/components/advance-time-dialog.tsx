@@ -213,7 +213,7 @@ export function AdvanceTimeDialog({
         ) : data ? (
           <>
           <ul className="space-y-2 text-sm">
-            <BlockerRow icon={Mail} label="Unread stakeholder messages" count={data.unreadInbox.length} to="/app/inbox" onClose={() => onOpenChange(false)} />
+            <BlockerRow icon={Mail} label="Messages awaiting your response" count={data.unreadInbox.length} to="/app/inbox" onClose={() => onOpenChange(false)} />
             <BlockerRow icon={ListChecks} label="Open tasks" count={data.openTasks.length} to="/app/tasks" onClose={() => onOpenChange(false)} />
             <BlockerRow icon={FileText} label="Unsubmitted documents" count={data.unsubmittedDocs.length} to="/app/documents" onClose={() => onOpenChange(false)} />
             <BlockerRow icon={ClipboardList} label="Meeting minutes not sent" count={data.meetingsMissingMinutes.length} to="/app/meetings" onClose={() => onOpenChange(false)} />
@@ -225,6 +225,13 @@ export function AdvanceTimeDialog({
               {data.systemProcessing.length} submission
               {data.systemProcessing.length === 1 ? " is" : "s are"} with the reviewer. That's not on
               you — no penalty while it's being reviewed.
+            </p>
+          ) : null}
+          {data.unreadInformational?.length ? (
+            <p className="text-xs text-muted-foreground">
+              {data.unreadInformational.length} unread notification
+              {data.unreadInformational.length === 1 ? "" : "s"} (approvals, review scores, logged
+              change requests). Useful reading, but they don't block anything.
             </p>
           ) : null}
           </>
