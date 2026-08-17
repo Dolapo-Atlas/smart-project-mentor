@@ -1234,6 +1234,27 @@ ${excerpt || "(non-text document — judge based on the title; assume minimal co
       .update({ status: "reviewed", quality_score: output.score })
       .eq("id", doc.id);
 
+    // Mirror the review decision onto the canonical artifact record so the
+    // Deliverables Library shows the same status and reviewer feedback.
+    if ((doc as any).artifact_type) {
+      try {
+        const { updateLatestArtifact } = await import("./artifact-store.server");
+        await updateLatestArtifact(supabase, userId, String((doc as any).artifact_type), {
+          status: output.score >= 70 ? "approved" : "changes_requested",
+          reviewer_name: "PMO Reviewer",
+          review_result: {
+            score: output.score,
+            decision: output.score >= 70 ? "approved" : "changes_requested",
+            comment: output.summary,
+            required_changes: output.recommendations,
+            strengths: output.strengths,
+          },
+        });
+      } catch (e) {
+        console.error("artifact review sync failed", e);
+      }
+    }
+
     const { data: fb } = await supabase
       .from("ai_feedback")
       .insert({
