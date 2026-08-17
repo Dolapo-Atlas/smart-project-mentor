@@ -280,7 +280,16 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
       kickPct = bestOf(kickPct, taskBestPct(/kick.?off|vendor kickoff|steering committee|steerco|meeting agenda|meeting minutes/i, "meetings"));
       items = [
         { key: "charter", label: "Project Charter", pct: charter, route: "/app/charter" },
-        { key: "stakeholders", label: "Stakeholder Mapping", pct: stakeholderPct, route: "/app/stakeholders", hint: stakeholderPct >= 100 ? "Mapped" : `${Math.min(mapped, 5)}/5 mapped` },
+        {
+          key: "stakeholders",
+          label: "Stakeholder Register",
+          pct: stakeholderPct,
+          route: "/app/stakeholders",
+          hint:
+            stakeholderPct >= 100
+              ? "All 5 required stakeholders mapped"
+              : `${Math.min(mapped, 5)} of 5 required stakeholders mapped (roster shows everyone on the project)`,
+        },
         { key: "raid", label: "RAID Log Setup", pct: raidPct, route: "/app/raid", hint: `${Math.min(kinds.size, 4)}/4 kinds (risks, assumptions, issues, dependencies)` },
         { key: "kickoff", label: "Kick-off Preparation", pct: kickPct, route: "/app/meetings" },
       ];

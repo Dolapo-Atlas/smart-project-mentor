@@ -11,6 +11,7 @@ import {
 } from "@/lib/projects.functions";
 import { getProfile, updateProjectRole } from "@/lib/sim.functions";
 import { trackLearner } from "@/lib/learner-events";
+import { factsFor } from "@/lib/project-facts";
 import { Button } from "@/components/ui/button";
 import {
   Heart,
