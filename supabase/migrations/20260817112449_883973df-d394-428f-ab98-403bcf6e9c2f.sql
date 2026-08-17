@@ -1,0 +1,1 @@
+UPDATE public.certificates SET simulated_budget = '£1,200,000', simulated_timeline = '12 weeks', updated_at = now() WHERE verification_code = 'ATLAS-2026-BGTMY243AM';
