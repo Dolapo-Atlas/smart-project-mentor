@@ -44,7 +44,10 @@ function Budget() {
 
   const { data: lines } = useQuery({ queryKey: ["budget"], queryFn: () => fetchLines() });
 
+  const seededOnce = useRef(false);
   useEffect(() => {
+    if (seededOnce.current) return;
+    seededOnce.current = true;
     seed().then((r) => { if (r.seeded) qc.invalidateQueries({ queryKey: ["budget"] }); });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
