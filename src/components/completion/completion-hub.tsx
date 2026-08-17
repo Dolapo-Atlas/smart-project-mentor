@@ -66,10 +66,14 @@ export function CompletionHub({
     null;
 
   const startMut = useMutation({
-    mutationFn: (templateId: string) => start({ data: { templateId } }) as Promise<any>,
+    mutationFn: (vars: { templateId: string; restart?: boolean }) =>
+      start({ data: { templateId: vars.templateId, restart: vars.restart } }) as Promise<any>,
     onSuccess: (res: any) => {
       qc.invalidateQueries();
-      if (res?.requiresIntro && res?.templateId) {
+      if (res?.completed) {
+        toast.success("Reopening your completed run — nothing was reset.");
+        navigate({ to: "/app" });
+      } else if (res?.requiresIntro && res?.templateId) {
         navigate({ to: "/project-intro/$templateId", params: { templateId: res.templateId } });
       } else {
         navigate({ to: "/app" });
@@ -207,7 +211,7 @@ export function CompletionHub({
               </div>
               <Button
                 className="mt-5 w-full"
-                onClick={() => startMut.mutate(r.id)}
+                onClick={() => startMut.mutate({ templateId: r.id })}
                 disabled={startMut.isPending}
               >
                 {startMut.isPending ? "Starting…" : "Start simulation"}
@@ -229,7 +233,13 @@ export function CompletionHub({
               </p>
               <Button
                 className="mt-5 w-full"
-                onClick={() => state.templateId && startMut.mutate(state.templateId)}
+                onClick={() =>
+                  state.templateId &&
+                  confirm(
+                    "Start a brand-new run of this simulation? Your completed run stays saved and reviewable.",
+                  ) &&
+                  startMut.mutate({ templateId: state.templateId, restart: true })
+                }
                 disabled={!state.templateId || startMut.isPending}
               >
                 {startMut.isPending ? "Starting…" : "Restart this simulation"}

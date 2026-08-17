@@ -46,7 +46,11 @@ export const getActiveProject = createServerFn({ method: "GET" })
 
 export const startProject = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ templateId: z.string().uuid() }).parse(d))
+  .inputValidator((d: unknown) =>
+    z
+      .object({ templateId: z.string().uuid(), restart: z.boolean().optional() })
+      .parse(d),
+  )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
@@ -69,6 +73,34 @@ export const startProject = createServerFn({ method: "POST" })
       .order("last_active_at", { ascending: false })
       .limit(1)
       .maybeSingle();
+
+    // A finished run must never be replaced by a fresh one. Unless the learner
+    // explicitly asked to restart, reopening a completed simulation reactivates
+    // the finished instance so the Completion Hub (and its archived workspace)
+    // is shown instead of wiping the record with a new instance.
+    if (!existing?.id && !data.restart) {
+      const { data: finished } = await supabase
+        .from("project_instances")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("template_id", data.templateId)
+        .in("status", ["completed", "archived"])
+        .order("last_active_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (finished?.id) {
+        await supabase
+          .from("profiles")
+          .update({ current_project_instance_id: finished.id })
+          .eq("id", userId);
+        return {
+          instanceId: finished.id,
+          requiresIntro: false,
+          templateId: template.id,
+          completed: true,
+        };
+      }
+    }
 
     let instanceId = existing?.id;
     let requiresIntro = false;
@@ -124,7 +156,7 @@ export const startProject = createServerFn({ method: "POST" })
       if (ssErr) console.error("simulation_state seed failed", ssErr);
     }
 
-    return { instanceId, requiresIntro, templateId: template.id };
+    return { instanceId, requiresIntro, templateId: template.id, completed: false };
   });
 
 export const markIntroSeen = createServerFn({ method: "POST" })
