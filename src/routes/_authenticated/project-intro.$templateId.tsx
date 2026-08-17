@@ -6,6 +6,7 @@ import { getTemplateById, getActiveProject, markIntroSeen } from "@/lib/projects
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Calendar, Clock, Gauge, Sparkles, Coffee } from "lucide-react";
 import { StakeholderHoverAvatar as StakeholderAvatar } from "@/components/stakeholder-card";
+import { factsFor } from "@/lib/project-facts";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/project-intro/$templateId")({
