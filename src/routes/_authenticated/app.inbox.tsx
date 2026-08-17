@@ -500,6 +500,35 @@ function Inbox() {
           )}
         </article>
       </div>
+
+      <ProjectInitiationPack open={packOpen} onOpenChange={setPackOpen} />
+
+      <Dialog open={remindOpen} onOpenChange={setRemindOpen}>
+        <DialogContent className="max-w-md">
+          <DialogTitle className="font-display text-xl font-medium">
+            Have you reviewed the Project Initiation Pack?
+          </DialogTitle>
+          <DialogDescription>
+            It contains important project context that may help you respond
+            accurately.
+          </DialogDescription>
+          <DialogFooter className="gap-2 sm:justify-end">
+            <Button variant="outline" onClick={openPack}>
+              <BookOpen className="mr-2 h-4 w-4" />
+              Open Project Initiation Pack
+            </Button>
+            <Button
+              onClick={() => {
+                setRemindOpen(false);
+                setReplyOpen(true);
+                setReplyBody("");
+              }}
+            >
+              Continue to Reply
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
