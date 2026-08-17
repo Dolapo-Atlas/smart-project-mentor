@@ -506,26 +506,31 @@ function Inbox() {
       <Dialog open={remindOpen} onOpenChange={setRemindOpen}>
         <DialogContent className="max-w-md">
           <DialogTitle className="font-display text-xl font-medium">
-            Have you reviewed the Project Initiation Pack?
+            {firstTaskRequired
+              ? "Read the Project Initiation Pack first"
+              : "Have you reviewed the Project Initiation Pack?"}
           </DialogTitle>
           <DialogDescription>
-            It contains important project context that may help you respond
-            accurately.
+            {firstTaskRequired
+              ? "Your Project Manager pointed you to it in this email. Open it before you reply — your response is scored on how well it reflects the actual project."
+              : "It contains important project context that may help you respond accurately."}
           </DialogDescription>
           <DialogFooter className="gap-2 sm:justify-end">
-            <Button variant="outline" onClick={openPack}>
+            <Button variant={firstTaskRequired ? "default" : "outline"} onClick={openPack}>
               <BookOpen className="mr-2 h-4 w-4" />
               Open Project Initiation Pack
             </Button>
-            <Button
-              onClick={() => {
-                setRemindOpen(false);
-                setReplyOpen(true);
-                setReplyBody("");
-              }}
-            >
-              Continue to Reply
-            </Button>
+            {!firstTaskRequired && (
+              <Button
+                onClick={() => {
+                  setRemindOpen(false);
+                  setReplyOpen(true);
+                  setReplyBody("");
+                }}
+              >
+                Continue to Reply
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
