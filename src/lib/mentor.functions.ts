@@ -9,6 +9,7 @@ import {
   type MentorContext,
   type MentorTurn,
 } from "./mentor-ai.server";
+import { getProjectCtx } from "./pm.functions";
 
 const MODEL = "google/gemini-3-flash-preview";
 function getModel() {
@@ -316,7 +317,8 @@ export const mentorBrief = createServerFn({ method: "POST" })
 Project: ${projectTitle}${phase ? ` (phase: ${phase})` : ""}.
 Open tasks: ${openTasks}. Unread emails: ${unread}.
 Screen purpose: ${ctx.what}
-Underlying concept: ${ctx.concept}`;
+Underlying concept: ${ctx.concept}
+${(await getProjectCtx(supabase, userId)).domainGuard}`;
 
     const Schema = z.object({
       task: z
