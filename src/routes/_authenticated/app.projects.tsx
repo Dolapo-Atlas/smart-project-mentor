@@ -149,14 +149,18 @@ function ProjectsPicker() {
   });
 
   const start = useMutation({
-    mutationFn: (templateId: string) => startFn({ data: { templateId } }),
+    mutationFn: (vars: { templateId: string; restart?: boolean }) =>
+      startFn({ data: { templateId: vars.templateId, restart: vars.restart } }),
     onSuccess: (res: any) => {
       qc.invalidateQueries();
       trackLearner("project_created", {
         projectInstanceId: res?.projectInstanceId ?? res?.id ?? null,
         props: { templateId: res?.templateId ?? null },
       });
-      if (res?.requiresIntro && res?.templateId) {
+      if (res?.completed) {
+        toast.success("Reopening your completed run — nothing was reset.");
+        navigate({ to: "/app" });
+      } else if (res?.requiresIntro && res?.templateId) {
         navigate({ to: "/project-intro/$templateId", params: { templateId: res.templateId } });
       } else {
         toast.success("Simulation loaded. Welcome back.");
@@ -206,6 +210,14 @@ function ProjectsPicker() {
 
   const activeInstances = instances.filter(
     (i: any) => i.status === "active" || i.status === "paused",
+  );
+
+  // Templates that already hold a finished run for this learner. Selecting one
+  // must reopen that run, not start a fresh project over the top of it.
+  const finishedTemplateIds = new Set(
+    instances
+      .filter((i: any) => i.status === "completed" || i.status === "archived")
+      .map((i: any) => i.template_id),
   );
 
   return (
