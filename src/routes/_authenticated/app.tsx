@@ -28,6 +28,8 @@ import { useRef } from "react";
 import { PhaseProgressCard } from "@/components/dashboard/phase-progress-card";
 import { LockedModuleGate } from "@/components/dashboard/locked-module-gate";
 import { PaymentSuccessDialog } from "@/components/dashboard/payment-success-dialog";
+import { FirstTaskGate } from "@/components/dashboard/first-task-gate";
+import { useFirstEmailGate } from "@/lib/use-first-email-gate";
 
 export const Route = createFileRoute("/_authenticated/app")({
   component: AppLayout,
@@ -199,6 +201,25 @@ function isPremiumWorkspaceRoute(pathname: string): boolean {
   return route.startsWith("/app/");
 }
 
+/**
+ * Routes that stay open while the day-one first-email task is outstanding.
+ * Everything else in the workspace shows the first-task gate instead.
+ */
+const FIRST_TASK_OPEN_ROUTES = new Set([
+  "/app",
+  "/app/inbox",
+  "/app/projects",
+  "/app/account",
+  "/app/settings",
+  "/app/unlock",
+]);
+
+function labelForRoute(pathname: string): string {
+  const route = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
+  const all = [...PINNED, ...Object.values(PHASE_NAV).flat(), ...MORE_GROUPS.flatMap((g) => g.items)];
+  return all.find((n) => n.to === route)?.label ?? "This module";
+}
+
 function AppLayout() {
   const navigate = useNavigate();
   const router = useRouter();
@@ -211,6 +232,7 @@ function AppLayout() {
   const [pauseOpen, setPauseOpen] = useState(false);
   const [marketingOpen, setMarketingOpen] = useState(false);
   const [briefOpen, setBriefOpen] = useState(false);
+  const { required: firstTaskRequired } = useFirstEmailGate();
 
   // Scroll to top on route change without re-triggering animations or
   // multiple deferred scrolls (which caused a visible "snap back" flicker
@@ -479,7 +501,11 @@ function AppLayout() {
               </button>
             )}
           </div>
-          {isPremiumWorkspaceRoute(pathname) ? (
+          {firstTaskRequired &&
+          !FIRST_TASK_OPEN_ROUTES.has(pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname) &&
+          pathname.startsWith("/app/") ? (
+            <FirstTaskGate moduleName={labelForRoute(pathname)} />
+          ) : isPremiumWorkspaceRoute(pathname) ? (
             <LockedModuleGate>
               <Outlet />
             </LockedModuleGate>
