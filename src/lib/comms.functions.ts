@@ -336,6 +336,20 @@ export const sendComm = createServerFn({ method: "POST" })
     ]);
 
     const firstName = profile?.preferred_name?.trim() || profile?.first_name || "there";
+
+    // Authoritative money facts so no stakeholder ever invents a budget figure.
+    const { data: budgetLines } = await supabase
+      .from("budget_lines")
+      .select("amount,kind")
+      .eq("user_id", uid);
+    const spentToDate = (budgetLines ?? [])
+      .filter((l) => l.kind === "actual" || l.kind === "invoice")
+      .reduce((s, l) => s + Number(l.amount), 0);
+    const forecastToCome = (budgetLines ?? [])
+      .filter((l) => l.kind === "forecast")
+      .reduce((s, l) => s + Number(l.amount), 0);
+    const factsBlock = projectFactsPrompt({ spent: spentToDate, forecast: forecastToCome });
+
     const attachmentDetail = attachedDoc
       ? `${attachedDoc.title} (${attachedDoc.status}${typeof attachedDoc.quality_score === "number" ? `, score ${attachedDoc.quality_score}` : ""})`
       : attachedRaid
