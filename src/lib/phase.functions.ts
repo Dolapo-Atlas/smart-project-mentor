@@ -337,7 +337,7 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
           ];
         })(),
         { key: "resource", label: "Resource Plan", pct: resource, route: "/app/template/resource_plan" },
-        { key: "budget", label: "Budget Baseline", pct: budgetPct, route: "/app/budget", hint: taskDoneHint(/budget|cost|forecast|baseline|cost.?to.?complete|financial|variance|contingency/i, "budget") ?? `${B.length}/5 lines` },
+        { key: "budget", label: "Budget Baseline", pct: budgetPct, route: "/app/budget", hint: taskDoneHint(/budget|cost|forecast|baseline|cost.?to.?complete|financial|variance|contingency/i, "budget") ?? `${Math.min(B.length, 5)}/5 lines` },
         { key: "comms", label: "Communication Plan", pct: commsPlan, route: "/app/template/communication_plan" },
         { key: "risk", label: "Risk Response Plan", pct: riskResponse, route: "/app/template/risk_response_plan" },
       ];
