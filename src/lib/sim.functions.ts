@@ -1223,12 +1223,10 @@ ${excerpt || "(non-text document — judge based on the title; assume minimal co
     const delta = Math.round((output.score - 50) / 5); // -10..+10
     const newProgress = Math.max(0, Math.min(100, (state?.progress ?? 0) + Math.max(2, delta)));
     const newReputation = Math.max(0, Math.min(100, (state?.reputation ?? 50) + delta));
-    const phases = ["initiation", "planning", "execution", "monitoring", "closure"];
-    const curIdx = Math.max(0, phases.indexOf(state?.phase ?? "initiation"));
-    const nextPhase =
-      newProgress >= ((curIdx + 1) / phases.length) * 100 && curIdx < phases.length - 1
-        ? phases[curIdx + 1]
-        : state?.phase;
+    // Phase is owned exclusively by the governance gate ledger (phase_gates +
+    // pm.functions.ts). A document review NEVER advances the phase — it only
+    // moves progress, reputation and performance. See src/lib/phases.ts.
+    const nextPhase = state?.phase ?? "initiation";
 
     // Roll category scores into running performance averages
     const prevPerf = (state?.performance ?? {}) as Record<string, number>;
@@ -1257,7 +1255,6 @@ ${excerpt || "(non-text document — judge based on the title; assume minimal co
       .update({
         progress: newProgress,
         reputation: newReputation,
-        phase: nextPhase,
         health: newHealth,
         performance: newPerf,
         story_log: story,
