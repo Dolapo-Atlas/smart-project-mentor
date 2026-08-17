@@ -34,16 +34,10 @@ const ragDot: Record<Rag, string> = {
   red: "bg-red-500",
 };
 
-function mondayOf(d = new Date()) {
-  const date = new Date(d);
-  const day = date.getDay();
-  date.setDate(date.getDate() + (day === 0 ? -6 : 1 - day));
-  return date.toISOString().slice(0, 10);
-}
-
 type ReportRow = {
   id: string;
   week_start: string;
+  sim_week?: number | null;
   rag_summary: string;
   achievements: string | null;
   next_week: string | null;
@@ -127,8 +121,10 @@ function Reports() {
   });
   const linkedTask = (allTasks ?? []).find((t: any) => t.id === search.task) ?? null;
 
-  const thisWeek = mondayOf();
-  const current = reports?.find((r) => r.week_start === thisWeek);
+  // Reports are keyed to the simulation week, not the real calendar week.
+  const simWeek = Number((overview as any)?.state?.current_week ?? 1) || 1;
+  const thisWeek = `Week ${simWeek}`;
+  const current = reports?.find((r) => Number((r as any).sim_week) === simWeek);
   const suggestedRag = ((overview as any)?.state?.health as Rag | undefined) ?? "amber";
 
   const [rag, setRag] = useState<Rag>((current?.rag_summary as Rag) ?? suggestedRag);
@@ -155,7 +151,7 @@ function Reports() {
     mutationFn: async (submit: boolean) => {
       const result = await upsert({
         data: {
-          week_start: thisWeek,
+          sim_week: simWeek,
           rag_summary: rag,
           achievements: ach,
           next_week: next,
@@ -199,7 +195,7 @@ function Reports() {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
     doc.setTextColor(90);
-    doc.text(`Week of ${thisWeek} · RAG: ${rag.toUpperCase()} · Exported ${new Date().toLocaleDateString()}`, margin, y);
+    doc.text(`${thisWeek} · RAG: ${rag.toUpperCase()} · Exported ${new Date().toLocaleDateString()}`, margin, y);
     y += 20;
     doc.setTextColor(20);
     const sections: [string, string][] = [
@@ -220,10 +216,9 @@ function Reports() {
       }
       y += 8;
     }
-    doc.save(`status-report-${thisWeek}.pdf`);
+    doc.save(`status-report-${thisWeek.replace(" ", "-").toLowerCase()}.pdf`);
   }
 
-  const past = (reports ?? []).filter((r) => r.week_start !== thisWeek);
   const submitted = (reports ?? []).filter((r) => r.submitted_at);
 
   return (
@@ -277,7 +272,7 @@ function Reports() {
       <section className="rounded-lg border border-border bg-card p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Week of</div>
+            <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Simulation week</div>
             <div className="font-display text-2xl">{thisWeek}</div>
           </div>
           <div className="flex items-center gap-2">
@@ -340,8 +335,10 @@ function Reports() {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <span className={`h-2.5 w-2.5 rounded-full ${ragDot[r.rag_summary as Rag]}`} />
-                  <span className="font-medium">Week of {r.week_start}</span>
-                  {r.week_start === thisWeek && (
+                  <span className="font-medium">
+                    Week {(r as any).sim_week ?? "?"} <span className="text-muted-foreground">· w/c {r.week_start}</span>
+                  </span>
+                  {Number((r as any).sim_week) === simWeek && (
                     <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs text-primary">this week</span>
                   )}
                 </div>

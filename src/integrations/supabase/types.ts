@@ -2160,6 +2160,7 @@ export type Database = {
           project_instance_id: string | null
           rag_summary: Database["public"]["Enums"]["rag_status"]
           risks_blockers: string | null
+          sim_week: number
           submitted_at: string | null
           updated_at: string
           user_id: string
@@ -2178,6 +2179,7 @@ export type Database = {
           project_instance_id?: string | null
           rag_summary?: Database["public"]["Enums"]["rag_status"]
           risks_blockers?: string | null
+          sim_week?: number
           submitted_at?: string | null
           updated_at?: string
           user_id: string
@@ -2196,6 +2198,7 @@ export type Database = {
           project_instance_id?: string | null
           rag_summary?: Database["public"]["Enums"]["rag_status"]
           risks_blockers?: string | null
+          sim_week?: number
           submitted_at?: string | null
           updated_at?: string
           user_id?: string
