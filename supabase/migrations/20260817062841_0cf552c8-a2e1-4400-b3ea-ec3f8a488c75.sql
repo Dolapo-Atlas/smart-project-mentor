@@ -1,0 +1,1 @@
+update public.simulation_state set current_day = 31, current_week = 5, updated_at = now() where project_instance_id = '02f927ff-4c60-4a1d-90fd-12ef141f1e20' and current_day < 31;

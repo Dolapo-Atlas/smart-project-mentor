@@ -96,3 +96,21 @@ export function isFinalPhase(phase: PhaseKey): boolean {
 export function phasesUpTo(phase: PhaseKey): PhaseKey[] {
   return PHASE_KEYS.slice(0, phaseIndex(phase) + 1);
 }
+
+/**
+ * Canonical day on which each phase opens, across the 84-day simulation.
+ * Used to fast-forward the project clock when a governance gate is passed
+ * early, so the dashboard day/week never lags behind the phase.
+ */
+export const PHASE_START_DAY: Record<PhaseKey, number> = {
+  initiation: 1,
+  planning: 15,
+  execution: 31,
+  monitoring: 53,
+  "go-live": 65,
+  closure: 75,
+};
+
+export function weekOfDay(day: number): number {
+  return Math.max(1, Math.ceil(day / 7));
+}
