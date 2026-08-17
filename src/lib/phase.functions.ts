@@ -176,8 +176,17 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
       return 50;
     };
 
-    const artifactPct = (row?: {
+    // project_artifacts is the canonical deliverable store — a submitted or
+    // approved artifact of a given type counts as delivered.
+    const artifactTypePct = (...types: string[]) => {
+      const match = A.filter((a) => types.includes(String(a.artifact_type ?? "")));
+      if (match.length === 0) return 0;
+      const APPROVED = new Set(["approved"]);
+      if (match.some((a) => APPROVED.has(String(a.status ?? "").toLowerCase()))) return 100;
+      return 80;
+    };
 
+    const artifactPct = (row?: {
       completion_pct?: number | null;
       status?: string | null;
       approval_status?: string | null;
