@@ -584,7 +584,9 @@ export const closeTaskWithReview = createServerFn({ method: "POST" })
             payload.ai_readiness ? ` · AI review: ${payload.ai_readiness.score}/100` : ""
           }`
         : "";
+      const reviewPctx = await getProjectCtx(supabase, userId);
       const prompt = `You are a Project Management mentor reviewing a Project Coordinator's submission.
+${reviewPctx.domainGuard}
 Task: ${task.title}
 Category: ${task.category ?? "general"}
 What good looks like: ${task.completion_action ?? "Complete the action thoroughly."}${readinessLine}

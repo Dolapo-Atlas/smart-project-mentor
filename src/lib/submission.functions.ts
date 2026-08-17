@@ -91,6 +91,7 @@ export const checkSubmissionReadiness = createServerFn({ method: "POST" })
 
 Project: ${pctx.name}
 ${pctx.description ? `Brief: ${pctx.description}` : ""}
+${pctx.domainGuard}
 Phase: ${state?.phase ?? "execution"}
 Current health: ${state?.health ?? "amber"}
 

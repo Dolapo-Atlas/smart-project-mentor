@@ -348,7 +348,25 @@ export const sendComm = createServerFn({ method: "POST" })
     const forecastToCome = (budgetLines ?? [])
       .filter((l) => l.kind === "forecast")
       .reduce((s, l) => s + Number(l.amount), 0);
-    const factsBlock = projectFactsPrompt({ spent: spentToDate, forecast: forecastToCome });
+    // Which simulation is this? Facts differ per template.
+    const { data: factProfile } = await supabase
+      .from("profiles")
+      .select("current_project_instance_id")
+      .eq("id", uid)
+      .maybeSingle();
+    const { data: factInstance } = factProfile?.current_project_instance_id
+      ? await supabase
+          .from("project_instances")
+          .select("project_templates(slug)")
+          .eq("id", factProfile.current_project_instance_id)
+          .maybeSingle()
+      : { data: null };
+    const templateSlug = (factInstance as any)?.project_templates?.slug ?? null;
+    const factsBlock = projectFactsPrompt({
+      slug: templateSlug,
+      spent: spentToDate,
+      forecast: forecastToCome,
+    });
 
     const attachmentDetail = attachedDoc
       ? `${attachedDoc.title} (${attachedDoc.status}${typeof attachedDoc.quality_score === "number" ? `, score ${attachedDoc.quality_score}` : ""})`

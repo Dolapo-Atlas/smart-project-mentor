@@ -49,6 +49,8 @@ export type MentorContext = {
   screen: MentorScreen;
   project: {
     name: string;
+    /** project_templates.slug — selects the authoritative fact set. */
+    slug?: string | null;
     phase?: string | null;
     progressPct?: number | null;
     status?: string | null;
@@ -127,7 +129,7 @@ Screen purpose: ${ctx.screen.purpose}
 Underlying concept: ${ctx.screen.concept}
 
 PROJECT FACTS (authoritative — quote these, never invent figures):
-${projectFactsPrompt()}
+${projectFactsPrompt({ slug: ctx.project.slug })}
 
 PROJECT: ${ctx.project.name}${ctx.project.phase ? ` · phase ${ctx.project.phase}` : ""}${
     typeof ctx.project.progressPct === "number" ? ` · progress ${ctx.project.progressPct}%` : ""
