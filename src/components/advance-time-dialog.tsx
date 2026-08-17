@@ -203,9 +203,15 @@ export function AdvanceTimeDialog({
           </DialogDescription>
         </DialogHeader>
 
+        <p className="rounded-md border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+          Moving the clock advances the calendar only. Your project phase changes when you pass the
+          governance gate for the phase you're in.
+        </p>
+
         {loading ? (
           <div className="py-6 text-sm text-muted-foreground">Checking readiness…</div>
         ) : data ? (
+          <>
           <ul className="space-y-2 text-sm">
             <BlockerRow icon={Mail} label="Unread stakeholder messages" count={data.unreadInbox.length} to="/app/inbox" onClose={() => onOpenChange(false)} />
             <BlockerRow icon={ListChecks} label="Open tasks" count={data.openTasks.length} to="/app/tasks" onClose={() => onOpenChange(false)} />
@@ -214,6 +220,14 @@ export function AdvanceTimeDialog({
             <BlockerRow icon={ShieldAlert} label="Open high-severity risks" count={data.openHighRisks.length} to="/app/raid" onClose={() => onOpenChange(false)} />
             <BlockerRow icon={Frown} label="Frustrated stakeholders" count={data.frustratedStakeholders.length} to="/app/stakeholders" onClose={() => onOpenChange(false)} />
           </ul>
+          {data.systemProcessing.length > 0 ? (
+            <p className="text-xs text-muted-foreground">
+              {data.systemProcessing.length} submission
+              {data.systemProcessing.length === 1 ? " is" : "s are"} with the reviewer. That's not on
+              you — no penalty while it's being reviewed.
+            </p>
+          ) : null}
+          </>
         ) : null}
 
         <DialogFooter className="gap-2">
