@@ -357,7 +357,34 @@ function Inbox() {
                   />
                 </div>
               ) : null}
-              <div className="mt-6 whitespace-pre-wrap leading-relaxed">{selected.body}</div>
+              {(() => {
+                const match = selected.body.match(PACK_BLOCK);
+                const bodyText = match
+                  ? selected.body.replace(PACK_BLOCK, "")
+                  : selected.body;
+                return (
+                  <>
+                    <div className="mt-6 whitespace-pre-wrap leading-relaxed">
+                      {bodyText.trim()}
+                    </div>
+                    {match && (
+                      <div className="mt-6 rounded-2xl border border-accent-orange/40 bg-accent-orange/5 p-5">
+                        <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-accent-orange">
+                          <BookOpen className="h-3.5 w-3.5" />
+                          Before you respond
+                        </div>
+                        <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
+                          {match[1]?.trim()}
+                        </p>
+                        <Button size="lg" className="mt-4" onClick={openPack}>
+                          <BookOpen className="mr-2 h-4 w-4" />
+                          Open Project Initiation Pack
+                        </Button>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
               {linkedTasks.length > 0 && (
                 <div className="mt-6 rounded-md border border-primary/40 bg-primary/5 p-4">
                   <div className="text-xs uppercase tracking-[0.18em] text-primary/80">
@@ -393,6 +420,7 @@ function Inbox() {
                   LEGACY_SENDER_ROLE_MAP[selected.sender_name];
                 const isSystem = selected.sender_name === "Project Update";
                 if (isSystem) return null;
+                const hasPackSection = PACK_BLOCK.test(selected.body);
                 const subject = selected.subject.startsWith("Re:")
                   ? selected.subject
                   : `Re: ${selected.subject}`;
@@ -404,6 +432,10 @@ function Inbox() {
                           variant={onboardingMode && !onboardingDone ? "default" : "outline"}
                           size={onboardingMode && !onboardingDone ? "lg" : "default"}
                           onClick={() => {
+                            if (hasPackSection && !packSeen) {
+                              setRemindOpen(true);
+                              return;
+                            }
                             setReplyOpen(true);
                             setReplyBody("");
                           }}
