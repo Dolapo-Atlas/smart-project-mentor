@@ -308,10 +308,12 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
       ];
     } else if (phase === "planning") {
       const schedule = bestOf(
+        artifactTypePct("project_schedule"),
         docPct(/schedule|plan\b|gantt|timeline|data migration/i),
         taskBestPct(/project schedule|schedule|timeline|gantt|data migration plan|migration plan|milestone/i),
       );
       const resource = bestOf(
+        artifactTypePct("resource_plan", "raci_matrix"),
         docPct(/resource|team plan|raci/i),
         taskBestPct(/resource plan|resourcing|team plan|raci|resource plan revision|data remediation/i),
       );
@@ -320,12 +322,14 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
         taskAveragePct(/budget|cost|forecast|baseline|cost.?to.?complete|financial|variance|contingency/i, "budget"),
       );
       const commsPlan = bestOf(
+        artifactTypePct("communication_plan"),
         docPct(/communication|comms plan|stakeholder engagement/i),
         taskBestPct(/communication plan|comms plan|stakeholder engagement|communication cadence/i, "comms"),
       );
       const risksWithMitigation = R.filter((r) => String(r.kind).toLowerCase() === "risk" && (r.mitigation ?? "").trim().length > 0).length;
       const totalRisks = R.filter((r) => String(r.kind).toLowerCase() === "risk").length;
       const riskResponse = bestOf(
+        artifactTypePct("risk_response_plan"),
         totalRisks === 0 ? 0 : pct(risksWithMitigation, totalRisks),
         taskBestPct(/risk response|risk register|risk mitigation|mitigation plan|raid/i, "risk"),
       );
@@ -337,7 +341,7 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
           // mandatory by default.
           const wbsRx = /work breakdown|\bwbs\b/i;
           const wbsTasks = taskMatches(wbsRx);
-          const wbsDoc = docPct(wbsRx);
+          const wbsDoc = bestOf(artifactTypePct("wbs"), docPct(wbsRx));
           if (wbsTasks.length === 0 && wbsDoc === 0) return [];
           return [
             {
