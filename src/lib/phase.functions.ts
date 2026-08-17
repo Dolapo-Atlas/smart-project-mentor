@@ -362,6 +362,7 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
       const teamActions = bestOf(taskAveragePct(/team action|frontline|training|vendor|technical|workstream|implementation|pilot/i), pct(executionDone, Math.max(6, executionMatches.length)));
       const deliverables = bestOf(
         pct(D.filter((d) => d.status === "approved").length, 3),
+        pct(A.filter((a) => String(a.status ?? "") === "approved").length, 3),
         taskBestPct(/deliverable|pilot|implementation|migration|uat|technical spec|scope verification|requirements/i, ["documents", "charter"]),
       );
       const commsPct = bestOf(pct(C.length, 5), taskAveragePct(/stakeholder comms|stakeholder communication|brief|reply|update|communication/i, "comms"));
@@ -369,9 +370,36 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
         { key: "tasks", label: "Tasks Completed", pct: tasksPct, route: "/app/tasks", hint: executionMatches.length > 0 ? `${executionDone}/${executionMatches.length} execution tasks` : `${doneTaskCount}/${T.length}` },
         { key: "team", label: "Team Actions", pct: teamActions, route: "/app/tasks" },
         { key: "deliv", label: "Deliverables", pct: deliverables, route: "/app/documents" },
-        { key: "uat", label: "UAT Test Plan", pct: taskBestPct(/uat|user acceptance|test plan|test script/i, ["documents", "tasks"]), route: "/app/template/uat_plan" },
-        { key: "training", label: "Training & Rollout", pct: taskBestPct(/training|rollout|super.?user/i, ["documents", "tasks"]), route: "/app/template/training_plan" },
-        { key: "cutover", label: "Cutover Plan", pct: taskBestPct(/cutover|runbook|go.?live plan|deployment plan/i, ["documents", "tasks"]), route: "/app/template/cutover_plan" },
+        {
+          key: "uat",
+          label: "UAT Test Plan",
+          pct: bestOf(
+            artifactTypePct("uat_plan"),
+            docPct(/uat|user acceptance|test plan|test script/i),
+            taskBestPct(/uat|user acceptance|test plan|test script/i, ["documents", "tasks"]),
+          ),
+          route: "/app/template/uat_plan",
+        },
+        {
+          key: "training",
+          label: "Training & Rollout",
+          pct: bestOf(
+            artifactTypePct("training_plan"),
+            docPct(/training|rollout|super.?user/i),
+            taskBestPct(/training|rollout|super.?user/i, ["documents", "tasks"]),
+          ),
+          route: "/app/template/training_plan",
+        },
+        {
+          key: "cutover",
+          label: "Cutover Plan",
+          pct: bestOf(
+            artifactTypePct("cutover_plan"),
+            docPct(/cutover|runbook|go.?live plan|deployment plan/i),
+            taskBestPct(/cutover|runbook|go.?live plan|deployment plan/i, ["documents", "tasks"]),
+          ),
+          route: "/app/template/cutover_plan",
+        },
         { key: "comms", label: "Stakeholder Comms", pct: commsPct, route: "/app/comms" },
       ];
     } else if (phase === "monitoring") {
