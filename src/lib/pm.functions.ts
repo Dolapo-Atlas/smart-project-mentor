@@ -75,7 +75,10 @@ export async function getProjectCtx(supabase: any, userId: string) {
   const { data: budgetLines } = await supabase
     .from("budget_lines")
     .select("amount,kind")
-    .eq("user_id", userId);
+    .eq("user_id", userId)
+    // Scope to the active project: without this, spend from a learner's other
+    // simulations bleeds in and stakeholders quote impossible numbers.
+    .eq("project_instance_id", instanceId);
   const spent = (budgetLines ?? [])
     .filter((l: any) => l.kind === "actual" || l.kind === "invoice")
     .reduce((s: number, l: any) => s + Number(l.amount), 0);

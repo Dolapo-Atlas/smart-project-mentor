@@ -57,6 +57,21 @@ const AREA_TO_ROUTE: Record<string, string> = {
   changes: "/app/changes",
 };
 
+// Legacy rows (and a few early AI generations) stored routes that no longer
+// exist. Left alone they drop the learner on a 404 / Documents fallback, which
+// is one of the "unclear steps" the integrity audit flags.
+const LEGACY_ROUTE_FIXES: Record<string, string> = {
+  "/app/risk": "/app/raid",
+  "/app/risks": "/app/raid",
+  "/app/schedule": "/app/gantt",
+  "/app/brief": "/app",
+};
+
+function normaliseRoute(route: string | null | undefined): string | null {
+  if (!route) return null;
+  return LEGACY_ROUTE_FIXES[route] ?? route;
+}
+
 // Some tasks (esp. AI-generated or older seeded rows) were stored with a
 // generic linked_area like "documents" even when the deliverable clearly
 // belongs in a dedicated module (Charter, RAID, Reports, etc.). Rather than
@@ -96,7 +111,7 @@ function inferModuleRoute<T extends {
     [/\bscope\b|\btechnical spec(?:ification)?\b|\brequirements?\b|\bsow\b|\bstatement of work\b/, "/app/charter"],
   ];
   for (const [re, route] of rules) if (re.test(text)) return route;
-  return t.linked_module_route ?? (t.linked_area ? AREA_TO_ROUTE[t.linked_area] ?? null : null);
+  return normaliseRoute(t.linked_module_route) ?? (t.linked_area ? AREA_TO_ROUTE[t.linked_area] ?? null : null);
 }
 
 const ImpactSchema = z

@@ -63,6 +63,7 @@ import { Route as AuthenticatedAdminTrackingRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminSignupsRouteImport } from './routes/_authenticated/admin.signups'
 import { Route as AuthenticatedAdminMarketingRouteImport } from './routes/_authenticated/admin.marketing'
 import { Route as AuthenticatedAdminLandingRouteImport } from './routes/_authenticated/admin.landing'
+import { Route as AuthenticatedAdminIntegrityRouteImport } from './routes/_authenticated/admin.integrity'
 import { Route as AuthenticatedAdminEvalsRouteImport } from './routes/_authenticated/admin.evals'
 import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin.analytics'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
@@ -358,6 +359,12 @@ const AuthenticatedAdminLandingRoute =
     path: '/admin/landing',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminIntegrityRoute =
+  AuthenticatedAdminIntegrityRouteImport.update({
+    id: '/admin/integrity',
+    path: '/admin/integrity',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminEvalsRoute = AuthenticatedAdminEvalsRouteImport.update({
   id: '/admin/evals',
   path: '/admin/evals',
@@ -429,6 +436,7 @@ export interface FileRoutesByFullPath {
   '/verify/$code': typeof VerifyCodeRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/evals': typeof AuthenticatedAdminEvalsRoute
+  '/admin/integrity': typeof AuthenticatedAdminIntegrityRoute
   '/admin/landing': typeof AuthenticatedAdminLandingRoute
   '/admin/marketing': typeof AuthenticatedAdminMarketingRoute
   '/admin/signups': typeof AuthenticatedAdminSignupsRoute
@@ -492,6 +500,7 @@ export interface FileRoutesByTo {
   '/verify/$code': typeof VerifyCodeRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/evals': typeof AuthenticatedAdminEvalsRoute
+  '/admin/integrity': typeof AuthenticatedAdminIntegrityRoute
   '/admin/landing': typeof AuthenticatedAdminLandingRoute
   '/admin/marketing': typeof AuthenticatedAdminMarketingRoute
   '/admin/signups': typeof AuthenticatedAdminSignupsRoute
@@ -558,6 +567,7 @@ export interface FileRoutesById {
   '/verify/$code': typeof VerifyCodeRoute
   '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/_authenticated/admin/evals': typeof AuthenticatedAdminEvalsRoute
+  '/_authenticated/admin/integrity': typeof AuthenticatedAdminIntegrityRoute
   '/_authenticated/admin/landing': typeof AuthenticatedAdminLandingRoute
   '/_authenticated/admin/marketing': typeof AuthenticatedAdminMarketingRoute
   '/_authenticated/admin/signups': typeof AuthenticatedAdminSignupsRoute
@@ -624,6 +634,7 @@ export interface FileRouteTypes {
     | '/verify/$code'
     | '/admin/analytics'
     | '/admin/evals'
+    | '/admin/integrity'
     | '/admin/landing'
     | '/admin/marketing'
     | '/admin/signups'
@@ -687,6 +698,7 @@ export interface FileRouteTypes {
     | '/verify/$code'
     | '/admin/analytics'
     | '/admin/evals'
+    | '/admin/integrity'
     | '/admin/landing'
     | '/admin/marketing'
     | '/admin/signups'
@@ -752,6 +764,7 @@ export interface FileRouteTypes {
     | '/verify/$code'
     | '/_authenticated/admin/analytics'
     | '/_authenticated/admin/evals'
+    | '/_authenticated/admin/integrity'
     | '/_authenticated/admin/landing'
     | '/_authenticated/admin/marketing'
     | '/_authenticated/admin/signups'
@@ -1205,6 +1218,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminLandingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/integrity': {
+      id: '/_authenticated/admin/integrity'
+      path: '/admin/integrity'
+      fullPath: '/admin/integrity'
+      preLoaderRoute: typeof AuthenticatedAdminIntegrityRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/evals': {
       id: '/_authenticated/admin/evals'
       path: '/admin/evals'
@@ -1344,6 +1364,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOrientationRoute: typeof AuthenticatedOrientationRoute
   AuthenticatedAdminAnalyticsRoute: typeof AuthenticatedAdminAnalyticsRoute
   AuthenticatedAdminEvalsRoute: typeof AuthenticatedAdminEvalsRoute
+  AuthenticatedAdminIntegrityRoute: typeof AuthenticatedAdminIntegrityRoute
   AuthenticatedAdminLandingRoute: typeof AuthenticatedAdminLandingRoute
   AuthenticatedAdminMarketingRoute: typeof AuthenticatedAdminMarketingRoute
   AuthenticatedAdminSignupsRoute: typeof AuthenticatedAdminSignupsRoute
@@ -1357,6 +1378,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOrientationRoute: AuthenticatedOrientationRoute,
   AuthenticatedAdminAnalyticsRoute: AuthenticatedAdminAnalyticsRoute,
   AuthenticatedAdminEvalsRoute: AuthenticatedAdminEvalsRoute,
+  AuthenticatedAdminIntegrityRoute: AuthenticatedAdminIntegrityRoute,
   AuthenticatedAdminLandingRoute: AuthenticatedAdminLandingRoute,
   AuthenticatedAdminMarketingRoute: AuthenticatedAdminMarketingRoute,
   AuthenticatedAdminSignupsRoute: AuthenticatedAdminSignupsRoute,

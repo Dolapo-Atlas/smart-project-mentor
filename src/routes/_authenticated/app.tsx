@@ -40,6 +40,7 @@ const ADMIN_LINKS: NavItem[] = [
   { to: "/admin/analytics", label: "Analytics overview", icon: LayoutDashboard },
   { to: "/admin/tracking", label: "Learner tracking", icon: ListChecks },
   { to: "/admin/evals", label: "AI evals", icon: Shield },
+  { to: "/admin/integrity", label: "Simulation integrity", icon: Shield },
   { to: "/admin/marketing", label: "Marketing agent", icon: Megaphone },
 ];
 
