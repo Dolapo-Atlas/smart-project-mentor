@@ -3,6 +3,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { requireProgrammeAccess, requireFreePreviewAllowance } from "@/lib/programme-access.middleware";
 import { z } from "zod";
 import { generateObject } from "ai";
+import { personaliseBody } from "./personalise";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
 import { applyCompetencyStatus } from "./learning.functions";
 import { ARCHETYPE_SENTIMENT_BY_ROLE } from "./pm.functions";
