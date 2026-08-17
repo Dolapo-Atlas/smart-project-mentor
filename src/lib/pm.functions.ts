@@ -30,17 +30,28 @@ export async function getProjectCtx(supabase: any, userId: string) {
     .maybeSingle();
   const instanceId = profile?.current_project_instance_id as string | undefined;
   if (!instanceId) {
-    return { name: "the programme", description: "", category: "", skills: [] as string[], domainGuard: "" };
+    const factsBlock = projectFactsPrompt();
+    return {
+      name: "the programme",
+      description: "",
+      category: "",
+      skills: [] as string[],
+      slug: "",
+      facts: factsFor(null),
+      factsBlock,
+      domainGuard: `AUTHORITATIVE PROJECT FACTS (the only figures that exist — quote them exactly):\n${factsBlock}`,
+    };
   }
   const { data: inst } = await supabase
     .from("project_instances")
-    .select("display_name, project_templates(title, description, category, key_skills)")
+    .select("display_name, project_templates(slug, title, description, category, key_skills)")
     .eq("id", instanceId)
     .maybeSingle();
   const tpl: any = (inst as any)?.project_templates ?? {};
   const name = (inst as any)?.display_name || tpl.title || "the programme";
   const description: string = tpl.description ?? "";
   const category: string = tpl.category ?? "";
+  const slug: string = tpl.slug ?? "";
   const skills: string[] = Array.isArray(tpl.key_skills) ? tpl.key_skills : [];
   const blob = `${name} ${category} ${description}`.toLowerCase();
   const isHealth = /care|health|clinical|patient|nhs/.test(blob);
@@ -55,10 +66,44 @@ export async function getProjectCtx(supabase: any, userId: string) {
   } else if (isEv) {
     jargon = `Use EV/energy jargon: DC fast charging, OCPP, grid connection, load balancing, kW/kWh, back-office / CPO platform, site commissioning, DNO approvals, uptime SLAs.`;
   }
-  const domainGuard = isHealth
+  const domainGuardText = isHealth
     ? ""
     : `IMPORTANT: This is the "${name}" project. Do NOT reference healthcare, care homes, patients, clinical governance, "Digital Care Records", CareSoft, Oakwood, or NHS. Speak only in language relevant to ${name}. ${jargon}`.trim();
-  return { name, description, category, skills, domainGuard, jargon, isHealth };
+
+  // Live money so a stakeholder can quote real spend, never an invented figure.
+  const { data: budgetLines } = await supabase
+    .from("budget_lines")
+    .select("amount,kind")
+    .eq("user_id", userId);
+  const spent = (budgetLines ?? [])
+    .filter((l: any) => l.kind === "actual" || l.kind === "invoice")
+    .reduce((s: number, l: any) => s + Number(l.amount), 0);
+  const forecast = (budgetLines ?? [])
+    .filter((l: any) => l.kind === "forecast")
+    .reduce((s: number, l: any) => s + Number(l.amount), 0);
+  const factsBlock = projectFactsPrompt({ slug, spent, forecast });
+
+  // Facts ride along inside domainGuard so every prompt that already
+  // interpolates it inherits the authoritative figures.
+  const domainGuard = [
+    domainGuardText,
+    `AUTHORITATIVE PROJECT FACTS (the only figures that exist — quote them exactly):\n${factsBlock}`,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+
+  return {
+    name,
+    description,
+    category,
+    slug,
+    skills,
+    domainGuard,
+    jargon,
+    isHealth,
+    facts: factsFor(slug),
+    factsBlock,
+  };
 }
 
 /* ============= ROSTER HELPERS ============= */
