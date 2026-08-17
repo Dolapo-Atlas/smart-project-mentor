@@ -381,9 +381,12 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
         taskAveragePct(/stakeholder readiness|frontline|training|briefing|comms|communication/i, ["stakeholders", "comms"]),
         pct(C.length, 5),
       );
-      const goLiveGate = G.find((g) => /go.?live|execution|monitoring/i.test(String(g.phase ?? "").toLowerCase()));
+      // The Go-Live gate defence IS the go-live decision, so an OPEN gate
+      // counts as delivered. Requiring "passed" here would make the gate its
+      // own precondition and deadlock the phase.
+      const goLiveGate = G.find((g) => String(g.phase).toLowerCase() === "go-live");
       const decisionPct = bestOf(
-        goLiveGate?.status === "passed" ? 100 : goLiveGate?.status === "open" ? 50 : 0,
+        goLiveGate && goLiveGate.status !== "locked" ? 100 : 0,
         taskBestPct(/go.?live decision|sponsor approval|sign.?off|approval|phase gate|steering committee/i, "gates"),
       );
       items = [
@@ -403,7 +406,9 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
       const closureReport = bestOf(docPct(/closure|close.?out|final report/i), taskBestPct(/closure report|close.?out|final report|project closure/i, ["documents", "reports"]));
       const closureGate = G.find((g) => String(g.phase).toLowerCase() === "closure");
       const sponsorApproval = bestOf(
-        closureGate?.status === "passed" ? 100 : closureGate?.status === "open" ? 50 : 0,
+        // Same self-reference rule as Go-Live: the sponsor sign-off happens at
+        // the Closure gate itself, so an open gate satisfies this item.
+        closureGate && closureGate.status !== "locked" ? 100 : 0,
         O.length > 0 ? 100 : 0,
         taskBestPct(/sponsor approval|closure approval|sign.?off|phase gate|closure gate/i, "gates"),
       );
