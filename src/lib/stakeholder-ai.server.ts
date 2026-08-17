@@ -7,6 +7,7 @@
 // their own static logic on error, so the simulation never breaks when
 // Gemini is unavailable.
 import { generateGeminiJSON, isGeminiAvailable } from "./gemini.server";
+import { projectFactsPrompt } from "./project-facts";
 import { personaliseBody } from "./personalise";
 
 export type StakeholderProfile = {

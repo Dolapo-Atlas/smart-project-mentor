@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { LockedModuleGate } from "@/components/dashboard/locked-module-gate";
+import { TOTAL_BUDGET } from "@/lib/project-facts";
 
 const budgetSearchSchema = z.object({ task: z.string().uuid().optional() });
 
@@ -20,7 +21,7 @@ export const Route = createFileRoute("/_authenticated/app/budget")({
   component: GatedBudget,
 });
 
-const TOTAL_BUDGET = 1_200_000;
+
 
 const kindStyle: Record<string, string> = {
   planned: "bg-blue-500/10 text-blue-700 dark:text-blue-400",

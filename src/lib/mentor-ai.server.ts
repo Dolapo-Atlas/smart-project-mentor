@@ -6,6 +6,7 @@
 // catch and fall back to their static/gateway logic so the simulation
 // never breaks when Gemini is unavailable.
 import { generateGeminiText, isGeminiAvailable } from "./gemini.server";
+import { projectFactsPrompt } from "./project-facts";
 
 export type MentorScreen = {
   route: string;
