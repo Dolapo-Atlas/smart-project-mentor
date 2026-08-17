@@ -149,6 +149,8 @@ function CharterPage() {
   const firstTime = useFirstTimeMode("template.project_charter");
   const [charterExampleOpen, setCharterExampleOpen] = useState(false);
   const [packOpen, setPackOpen] = useState(false);
+  const [autoSaving, setAutoSaving] = useState(false);
+  const draftKey = charterQuery.data?.id ? `atlas.charter-draft.${charterQuery.data.id}` : null;
 
   const focusKeys = useMemo(() => {
     const t = taskQuery.data as any;
@@ -167,8 +169,23 @@ function CharterPage() {
 
   useEffect(() => {
     if (charterQuery.data) {
-      setValues((charterQuery.data.payload as Record<string, string>) ?? {});
-      setDirty(false);
+      const server = (charterQuery.data.payload as Record<string, string>) ?? {};
+      // Unsaved keystrokes are kept locally so switching modules (or a reload)
+      // never wipes work in progress.
+      let local: Record<string, string> | null = null;
+      if (typeof window !== "undefined" && draftKey) {
+        try {
+          const raw = window.localStorage.getItem(draftKey);
+          if (raw) local = JSON.parse(raw) as Record<string, string>;
+        } catch {
+          local = null;
+        }
+      }
+      const merged = { ...server, ...(local ?? {}) };
+      setValues(merged);
+      const hasLocalEdits =
+        !!local && Object.keys(merged).some((k) => (merged[k] ?? "") !== (server[k] ?? ""));
+      setDirty(hasLocalEdits);
     }
   }, [charterQuery.data?.id]);
 
