@@ -217,6 +217,7 @@ function CharterPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["charter"] });
       setDirty(false);
+      if (typeof window !== "undefined" && draftKey) window.localStorage.removeItem(draftKey);
       toast.success("Draft saved.");
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Save failed"),
@@ -237,6 +238,7 @@ function CharterPage() {
       qc.invalidateQueries({ queryKey: ["overview"] });
       qc.invalidateQueries({ queryKey: ["phase-progress"] });
       setDirty(false);
+      if (typeof window !== "undefined" && draftKey) window.localStorage.removeItem(draftKey);
       toast.success(`Charter v${r.version} submitted to sponsor for approval.`);
     },
     onError: (e) => {
