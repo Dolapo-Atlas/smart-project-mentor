@@ -188,7 +188,13 @@ export const listMilestones = createServerFn({ method: "GET" })
     const outcome = outcomeRes.data as any;
     if (outcome?.completed_at) {
       const cert = certRes.data as any;
-      const credentialLive = cert && cert.certificate_status === "issued" && !cert.revoked_at;
+      const credentialLive =
+        cert &&
+        !cert.revoked_at &&
+        (cert.certificate_status === "issued" || cert.certificate_status === "valid");
+      const credentialValue = credentialLive
+        ? `Verified · ${cert.verification_code || cert.id}`
+        : "Not yet issued";
       milestones.push({
         id: `completion:${instanceId}`,
         kind: "completion",
@@ -211,7 +217,7 @@ export const listMilestones = createServerFn({ method: "GET" })
             value: `${facts.currencySymbol}${facts.totalBudget.toLocaleString()}`,
           },
           { label: "Deliverables completed", value: String(seenType.size) },
-          { label: "Credential", value: credentialLive ? "Verified" : "Not yet issued" },
+          { label: "Credential", value: credentialValue },
         ],
       });
     }
