@@ -21,6 +21,40 @@ export function sectionsFromPayload(payload: Record<string, string>) {
     .map(([k, v]) => ({ heading: labelOf(k), body: String(v).trim() }));
 }
 
+/** Parse "## Heading" markdown into sections (fallback for artefacts stored as markdown). */
+export function sectionsFromMarkdown(markdown: string) {
+  const out: { heading: string; body: string }[] = [];
+  const lines = markdown.split(/\r?\n/);
+  let heading = "";
+  let body: string[] = [];
+  const flush = () => {
+    const text = body.join("\n").trim();
+    if (heading || text) out.push({ heading: heading || "Content", body: text });
+    body = [];
+  };
+  for (const line of lines) {
+    const m = /^#{1,3}\s+(.*)$/.exec(line.trim());
+    if (m) {
+      flush();
+      heading = m[1].trim();
+    } else {
+      body.push(line);
+    }
+  }
+  flush();
+  return out.filter((s) => s.body.length > 0);
+}
+
+/** Sections for a deliverable, preferring structured payload then markdown. */
+export function sectionsForDeliverable(
+  payload: Record<string, string> | null | undefined,
+  markdown: string | null | undefined,
+) {
+  const fromPayload = sectionsFromPayload(payload ?? {});
+  if (fromPayload.length > 0) return fromPayload;
+  return markdown ? sectionsFromMarkdown(markdown) : [];
+}
+
 function escapeXml(s: string) {
   return s
     .replace(/&/g, "&amp;")

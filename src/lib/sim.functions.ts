@@ -849,17 +849,47 @@ export const recordDocument = createServerFn({ method: "POST" })
       content_excerpt: z.string().optional(),
       mime_type: z.string().optional(),
       size_bytes: z.number().int().nonnegative().optional(),
+      // Canonical deliverable identity. When present the submission is mirrored
+      // into project_artifacts (the authoritative learner portfolio store).
+      artifact_type: z.string().min(1).max(80).optional(),
+      payload: z.record(z.string(), z.string()).optional(),
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
     const { assertProgrammeAccess } = await import("./access.server");
     await assertProgrammeAccess(context.supabase, context.userId);
+    const { artifact_type: artifactType, payload, ...docFields } = data;
     const { data: doc, error } = await context.supabase
       .from("documents")
-      .insert({ user_id: context.userId, status: "pending", ...data })
+      .insert({
+        user_id: context.userId,
+        status: "pending",
+        ...docFields,
+        ...(artifactType ? { artifact_type: artifactType } : {}),
+      })
       .select()
       .single();
     if (error) throw error;
+    // project_artifacts is the authoritative portfolio record; documents stays
+    // in place for the existing readiness/progression queries.
+    if (artifactType) {
+      try {
+        const { recordArtifactVersion } = await import("./artifact-store.server");
+        const body = payload ?? {};
+        const { version } = await recordArtifactVersion(context.supabase, context.userId, {
+          artifact_type: artifactType,
+          title: data.title,
+          payload: body,
+          content_markdown: data.content_excerpt ?? null,
+          status: "submitted",
+          source_table: "documents",
+          source_id: doc.id,
+        });
+        await context.supabase.from("documents").update({ version }).eq("id", doc.id);
+      } catch (e) {
+        console.error("artifact mirror failed", e);
+      }
+    }
     return doc;
   });
 
@@ -1203,6 +1233,27 @@ ${excerpt || "(non-text document — judge based on the title; assume minimal co
       .from("documents")
       .update({ status: "reviewed", quality_score: output.score })
       .eq("id", doc.id);
+
+    // Mirror the review decision onto the canonical artifact record so the
+    // Deliverables Library shows the same status and reviewer feedback.
+    if ((doc as any).artifact_type) {
+      try {
+        const { updateLatestArtifact } = await import("./artifact-store.server");
+        await updateLatestArtifact(supabase, userId, String((doc as any).artifact_type), {
+          status: output.score >= 70 ? "approved" : "changes_requested",
+          reviewer_name: "PMO Reviewer",
+          review_result: {
+            score: output.score,
+            decision: output.score >= 70 ? "approved" : "changes_requested",
+            comment: output.summary,
+            required_changes: output.recommendations,
+            strengths: output.strengths,
+          },
+        });
+      } catch (e) {
+        console.error("artifact review sync failed", e);
+      }
+    }
 
     const { data: fb } = await supabase
       .from("ai_feedback")

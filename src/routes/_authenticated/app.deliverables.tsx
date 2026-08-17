@@ -17,7 +17,7 @@ import { FileText, Download, FileDown, CheckCircle2, Clock, AlertTriangle } from
 import {
   exportDeliverableToPdf,
   exportDeliverableToDocx,
-  sectionsFromPayload,
+  sectionsForDeliverable,
   type DeliverableDoc,
 } from "@/lib/deliverable-export";
 
@@ -62,7 +62,7 @@ function toDoc(d: Deliverable): DeliverableDoc {
     status: statusMeta(d.status).label,
     version: d.version,
     date: d.submitted_at ? new Date(d.submitted_at).toLocaleDateString() : null,
-    sections: sectionsFromPayload(d.payload ?? {}),
+    sections: sectionsForDeliverable(d.payload, d.content_markdown),
   };
 }
 
@@ -223,7 +223,7 @@ function DeliverablesPage() {
               ) : null}
 
               <div className="space-y-4">
-                {sectionsFromPayload(open.payload ?? {}).map((s) => (
+                {sectionsForDeliverable(open.payload, open.content_markdown).map((s) => (
                   <section key={s.heading}>
                     <h3 className="text-sm font-medium">{s.heading}</h3>
                     <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">{s.body}</p>

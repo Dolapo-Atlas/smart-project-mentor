@@ -111,6 +111,7 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
     const [
       { data: state },
       { data: docs },
+      { data: artifacts },
       { data: raid },
       { data: stakeholders },
       { data: meetings },
@@ -128,6 +129,7 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
     ] = await Promise.all([
       scoped(supabase.from("simulation_state").select("phase").eq("user_id", userId)).maybeSingle(),
       scoped(supabase.from("documents").select("title,status,quality_score").eq("user_id", userId)),
+      scoped(supabase.from("project_artifacts").select("artifact_type,status,version,is_latest").eq("user_id", userId)),
       scoped(supabase.from("raid_items").select("kind,status,owner,mitigation,updated_at").eq("user_id", userId)),
       scoped(supabase.from("stakeholder_relationships").select("stakeholder_name,role,interaction_count").eq("user_id", userId)),
       scoped(supabase.from("meetings").select("kind,title,agenda,attendees,held,minutes").eq("user_id", userId)),
@@ -146,6 +148,7 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
 
     const phase = phaseOrFirst(state?.phase as string | undefined);
     const D = (docs ?? []) as DocRow[];
+    const A = (artifacts ?? []) as { artifact_type?: string | null; status?: string | null }[];
     const R = (raid ?? []) as RaidRow[];
     const S = (stakeholders ?? []) as StakeholderRow[];
     const M = (meetings ?? []) as MeetingRow[];
@@ -171,6 +174,16 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
       );
       if (delivered) return 100;
       return 50;
+    };
+
+    // project_artifacts is the canonical deliverable store — a submitted or
+    // approved artifact of a given type counts as delivered.
+    const artifactTypePct = (...types: string[]) => {
+      const match = A.filter((a) => types.includes(String(a.artifact_type ?? "")));
+      if (match.length === 0) return 0;
+      const APPROVED = new Set(["approved"]);
+      if (match.some((a) => APPROVED.has(String(a.status ?? "").toLowerCase()))) return 100;
+      return 80;
     };
 
     const artifactPct = (row?: {
@@ -295,10 +308,12 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
       ];
     } else if (phase === "planning") {
       const schedule = bestOf(
+        artifactTypePct("project_schedule"),
         docPct(/schedule|plan\b|gantt|timeline|data migration/i),
         taskBestPct(/project schedule|schedule|timeline|gantt|data migration plan|migration plan|milestone/i),
       );
       const resource = bestOf(
+        artifactTypePct("resource_plan", "raci_matrix"),
         docPct(/resource|team plan|raci/i),
         taskBestPct(/resource plan|resourcing|team plan|raci|resource plan revision|data remediation/i),
       );
@@ -307,12 +322,14 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
         taskAveragePct(/budget|cost|forecast|baseline|cost.?to.?complete|financial|variance|contingency/i, "budget"),
       );
       const commsPlan = bestOf(
+        artifactTypePct("communication_plan"),
         docPct(/communication|comms plan|stakeholder engagement/i),
         taskBestPct(/communication plan|comms plan|stakeholder engagement|communication cadence/i, "comms"),
       );
       const risksWithMitigation = R.filter((r) => String(r.kind).toLowerCase() === "risk" && (r.mitigation ?? "").trim().length > 0).length;
       const totalRisks = R.filter((r) => String(r.kind).toLowerCase() === "risk").length;
       const riskResponse = bestOf(
+        artifactTypePct("risk_response_plan"),
         totalRisks === 0 ? 0 : pct(risksWithMitigation, totalRisks),
         taskBestPct(/risk response|risk register|risk mitigation|mitigation plan|raid/i, "risk"),
       );
@@ -324,7 +341,7 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
           // mandatory by default.
           const wbsRx = /work breakdown|\bwbs\b/i;
           const wbsTasks = taskMatches(wbsRx);
-          const wbsDoc = docPct(wbsRx);
+          const wbsDoc = bestOf(artifactTypePct("wbs"), docPct(wbsRx));
           if (wbsTasks.length === 0 && wbsDoc === 0) return [];
           return [
             {
@@ -349,6 +366,7 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
       const teamActions = bestOf(taskAveragePct(/team action|frontline|training|vendor|technical|workstream|implementation|pilot/i), pct(executionDone, Math.max(6, executionMatches.length)));
       const deliverables = bestOf(
         pct(D.filter((d) => d.status === "approved").length, 3),
+        pct(A.filter((a) => String(a.status ?? "") === "approved").length, 3),
         taskBestPct(/deliverable|pilot|implementation|migration|uat|technical spec|scope verification|requirements/i, ["documents", "charter"]),
       );
       const commsPct = bestOf(pct(C.length, 5), taskAveragePct(/stakeholder comms|stakeholder communication|brief|reply|update|communication/i, "comms"));
@@ -356,9 +374,36 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
         { key: "tasks", label: "Tasks Completed", pct: tasksPct, route: "/app/tasks", hint: executionMatches.length > 0 ? `${executionDone}/${executionMatches.length} execution tasks` : `${doneTaskCount}/${T.length}` },
         { key: "team", label: "Team Actions", pct: teamActions, route: "/app/tasks" },
         { key: "deliv", label: "Deliverables", pct: deliverables, route: "/app/documents" },
-        { key: "uat", label: "UAT Test Plan", pct: taskBestPct(/uat|user acceptance|test plan|test script/i, ["documents", "tasks"]), route: "/app/template/uat_plan" },
-        { key: "training", label: "Training & Rollout", pct: taskBestPct(/training|rollout|super.?user/i, ["documents", "tasks"]), route: "/app/template/training_plan" },
-        { key: "cutover", label: "Cutover Plan", pct: taskBestPct(/cutover|runbook|go.?live plan|deployment plan/i, ["documents", "tasks"]), route: "/app/template/cutover_plan" },
+        {
+          key: "uat",
+          label: "UAT Test Plan",
+          pct: bestOf(
+            artifactTypePct("uat_plan"),
+            docPct(/uat|user acceptance|test plan|test script/i),
+            taskBestPct(/uat|user acceptance|test plan|test script/i, ["documents", "tasks"]),
+          ),
+          route: "/app/template/uat_plan",
+        },
+        {
+          key: "training",
+          label: "Training & Rollout",
+          pct: bestOf(
+            artifactTypePct("training_plan"),
+            docPct(/training|rollout|super.?user/i),
+            taskBestPct(/training|rollout|super.?user/i, ["documents", "tasks"]),
+          ),
+          route: "/app/template/training_plan",
+        },
+        {
+          key: "cutover",
+          label: "Cutover Plan",
+          pct: bestOf(
+            artifactTypePct("cutover_plan"),
+            docPct(/cutover|runbook|go.?live plan|deployment plan/i),
+            taskBestPct(/cutover|runbook|go.?live plan|deployment plan/i, ["documents", "tasks"]),
+          ),
+          route: "/app/template/cutover_plan",
+        },
         { key: "comms", label: "Stakeholder Comms", pct: commsPct, route: "/app/comms" },
       ];
     } else if (phase === "monitoring") {
