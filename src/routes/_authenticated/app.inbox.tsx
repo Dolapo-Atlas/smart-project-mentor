@@ -32,6 +32,7 @@ import { listTasksRich, submitTaskWithWork } from "@/lib/tasks.functions";
 import { markFreePreviewComplete } from "@/lib/access.functions";
 import { trackLearner } from "@/lib/learner-events";
 import { useRoster, rosterByName } from "@/lib/roster";
+import { useFirstEmailGate } from "@/lib/use-first-email-gate";
 
 export const Route = createFileRoute("/_authenticated/app/inbox")({
   validateSearch: (search: Record<string, unknown>) =>
@@ -62,15 +63,22 @@ const LEGACY_SENDER_ROLE_MAP: Record<string, string> = {
   "Rachel Stone": "clinical",
 };
 
-const PACK_SEEN_KEY = "atlas.initiation-pack.opened";
-
 /** Sarah's first welcome email carries the pack pointer inside ─── rules. */
 const PACK_BLOCK = /─{5,}\s*\nBEFORE YOU RESPOND\n([\s\S]*?)\n─{5,}\s*\n?/;
 
 function Inbox() {
   const qc = useQueryClient();
   const { onboarding } = Route.useSearch();
-  const onboardingMode = onboarding === 1;
+  // Pack state is tracked per project instance, so a brand new simulation asks
+  // the learner to read its own Initiation Pack again.
+  const {
+    packOpened: packSeen,
+    markPackOpened,
+    required: firstTaskRequired,
+  } = useFirstEmailGate();
+  // The guided first-email treatment applies whenever the day-one task is
+  // still outstanding, not only when arriving via ?onboarding=1.
+  const onboardingMode = onboarding === 1 || firstTaskRequired;
   const { settings: voice } = useVoiceSettings();
   const fetchInbox = useServerFn(listInbox);
   const markFn = useServerFn(markRead);
@@ -134,24 +142,11 @@ function Inbox() {
   const [replyOpen, setReplyOpen] = useState(false);
   const [replyBody, setReplyBody] = useState("");
   const [packOpen, setPackOpen] = useState(false);
-  const [packSeen, setPackSeen] = useState(true);
   const [remindOpen, setRemindOpen] = useState(false);
-  useEffect(() => {
-    try {
-      setPackSeen(localStorage.getItem(PACK_SEEN_KEY) === "1");
-    } catch {
-      setPackSeen(false);
-    }
-  }, []);
   const openPack = () => {
     setPackOpen(true);
     setRemindOpen(false);
-    setPackSeen(true);
-    try {
-      localStorage.setItem(PACK_SEEN_KEY, "1");
-    } catch {
-      // Non-blocking.
-    }
+    markPackOpened();
     trackLearner("brief_opened", { props: { from: "inbox_first_email" } });
   };
   const reply = useMutation({
@@ -200,6 +195,7 @@ function Inbox() {
       qc.invalidateQueries({ queryKey: ["tasks"] });
       qc.invalidateQueries({ queryKey: ["whats-next"] });
       qc.invalidateQueries({ queryKey: ["phase-progress"] });
+      qc.invalidateQueries({ queryKey: ["first-email-gate"] });
       if (onboardingMode) {
         setOnboardingDone(true);
         toast.success(
@@ -512,26 +508,31 @@ function Inbox() {
       <Dialog open={remindOpen} onOpenChange={setRemindOpen}>
         <DialogContent className="max-w-md">
           <DialogTitle className="font-display text-xl font-medium">
-            Have you reviewed the Project Initiation Pack?
+            {firstTaskRequired
+              ? "Read the Project Initiation Pack first"
+              : "Have you reviewed the Project Initiation Pack?"}
           </DialogTitle>
           <DialogDescription>
-            It contains important project context that may help you respond
-            accurately.
+            {firstTaskRequired
+              ? "Your Project Manager pointed you to it in this email. Open it before you reply — your response is scored on how well it reflects the actual project."
+              : "It contains important project context that may help you respond accurately."}
           </DialogDescription>
           <DialogFooter className="gap-2 sm:justify-end">
-            <Button variant="outline" onClick={openPack}>
+            <Button variant={firstTaskRequired ? "default" : "outline"} onClick={openPack}>
               <BookOpen className="mr-2 h-4 w-4" />
               Open Project Initiation Pack
             </Button>
-            <Button
-              onClick={() => {
-                setRemindOpen(false);
-                setReplyOpen(true);
-                setReplyBody("");
-              }}
-            >
-              Continue to Reply
-            </Button>
+            {!firstTaskRequired && (
+              <Button
+                onClick={() => {
+                  setRemindOpen(false);
+                  setReplyOpen(true);
+                  setReplyBody("");
+                }}
+              >
+                Continue to Reply
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
