@@ -423,6 +423,10 @@ function Inbox() {
                 const isSystem = selected.sender_name === "Project Update";
                 if (isSystem) return null;
                 const hasPackSection = PACK_BLOCK.test(selected.body);
+                // The day-one gate does not depend on the email body wording:
+                // while the first task is outstanding the pack must be opened
+                // before any reply can be drafted.
+                const mustReadPack = (hasPackSection || firstTaskRequired) && !packSeen;
                 const subject = selected.subject.startsWith("Re:")
                   ? selected.subject
                   : `Re: ${selected.subject}`;
@@ -434,7 +438,7 @@ function Inbox() {
                           variant={onboardingMode && !onboardingDone ? "default" : "outline"}
                           size={onboardingMode && !onboardingDone ? "lg" : "default"}
                           onClick={() => {
-                            if (hasPackSection && !packSeen) {
+                            if (mustReadPack) {
                               setRemindOpen(true);
                               return;
                             }
@@ -480,9 +484,14 @@ function Inbox() {
                       </Button>
                       <Button
                         onClick={() =>
-                          role && reply.mutate({ to_role: role, subject, body: replyBody.trim() })
+                          role &&
+                          (mustReadPack
+                            ? setRemindOpen(true)
+                            : reply.mutate({ to_role: role, subject, body: replyBody.trim() }))
                         }
-                        disabled={!role || reply.isPending || replyBody.trim().length < 5}
+                        disabled={
+                          !role || reply.isPending || replyBody.trim().length < 5 || mustReadPack
+                        }
                       >
                         <Send className="mr-2 h-4 w-4" />
                         {reply.isPending ? "Sending…" : "Send reply"}
