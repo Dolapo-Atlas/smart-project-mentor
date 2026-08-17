@@ -32,6 +32,7 @@ import { listTasksRich, submitTaskWithWork } from "@/lib/tasks.functions";
 import { markFreePreviewComplete } from "@/lib/access.functions";
 import { trackLearner } from "@/lib/learner-events";
 import { useRoster, rosterByName } from "@/lib/roster";
+import { useFirstEmailGate } from "@/lib/use-first-email-gate";
 
 export const Route = createFileRoute("/_authenticated/app/inbox")({
   validateSearch: (search: Record<string, unknown>) =>
@@ -61,8 +62,6 @@ const LEGACY_SENDER_ROLE_MAP: Record<string, string> = {
   "Margaret Hollis": "care_home",
   "Rachel Stone": "clinical",
 };
-
-const PACK_SEEN_KEY = "atlas.initiation-pack.opened";
 
 /** Sarah's first welcome email carries the pack pointer inside ─── rules. */
 const PACK_BLOCK = /─{5,}\s*\nBEFORE YOU RESPOND\n([\s\S]*?)\n─{5,}\s*\n?/;
@@ -134,24 +133,18 @@ function Inbox() {
   const [replyOpen, setReplyOpen] = useState(false);
   const [replyBody, setReplyBody] = useState("");
   const [packOpen, setPackOpen] = useState(false);
-  const [packSeen, setPackSeen] = useState(true);
   const [remindOpen, setRemindOpen] = useState(false);
-  useEffect(() => {
-    try {
-      setPackSeen(localStorage.getItem(PACK_SEEN_KEY) === "1");
-    } catch {
-      setPackSeen(false);
-    }
-  }, []);
+  // Pack state is tracked per project instance, so a brand new simulation asks
+  // the learner to read its own Initiation Pack again.
+  const {
+    packOpened: packSeen,
+    markPackOpened,
+    required: firstTaskRequired,
+  } = useFirstEmailGate();
   const openPack = () => {
     setPackOpen(true);
     setRemindOpen(false);
-    setPackSeen(true);
-    try {
-      localStorage.setItem(PACK_SEEN_KEY, "1");
-    } catch {
-      // Non-blocking.
-    }
+    markPackOpened();
     trackLearner("brief_opened", { props: { from: "inbox_first_email" } });
   };
   const reply = useMutation({
@@ -200,6 +193,7 @@ function Inbox() {
       qc.invalidateQueries({ queryKey: ["tasks"] });
       qc.invalidateQueries({ queryKey: ["whats-next"] });
       qc.invalidateQueries({ queryKey: ["phase-progress"] });
+      qc.invalidateQueries({ queryKey: ["first-email-gate"] });
       if (onboardingMode) {
         setOnboardingDone(true);
         toast.success(
