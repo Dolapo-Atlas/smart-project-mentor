@@ -6,6 +6,7 @@ import {
   toPerformanceBreakdown,
   type EvidenceCounts,
 } from "./certificates.server";
+import { factsFor } from "./project-facts";
 
 const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
 
@@ -15,6 +16,7 @@ function money(n: number) {
 
 function timeline(days?: number | null) {
   if (!days) return null;
+  if (days % 7 === 0 && days < 168) return `${days / 7} weeks`;
   if (days >= 60) return `${Math.round(days / 30)} months`;
   return `${days} days`;
 }
@@ -116,7 +118,7 @@ export async function buildCertificatePayload(
   ] = await Promise.all([
     supabase
       .from("project_instances")
-      .select("display_name, project_templates(title, duration_days)")
+      .select("display_name, project_templates(title, slug, duration_days)")
       .eq("id", instanceId)
       .maybeSingle(),
     supabase
@@ -208,11 +210,14 @@ export async function buildCertificatePayload(
   const score = clamp(Number(outcome.score ?? 0));
   const grade = calculateGrade(score);
 
-  const forecast = budget
-    .filter((b: any) => b.kind === "forecast" || b.kind === "planned")
-    .reduce((a: number, b: any) => a + Number(b.amount ?? 0), 0);
-
   const tpl = (instRes.data as any)?.project_templates;
+  const facts = factsFor(tpl?.slug);
+
+  // The credential shows the approved project budget, not spend plus forecast:
+  // only `planned` lines form the baseline.
+  const baseline = budget
+    .filter((b: any) => b.kind === "planned")
+    .reduce((a: number, b: any) => a + Number(b.amount ?? 0), 0);
   // Atlas is not affiliated with or endorsed by the NHS — never let that
   // appear on an issued credential.
   const deNHS = (s: string) =>
@@ -250,8 +255,10 @@ export async function buildCertificatePayload(
     simulatedRole: outcome.user_role || profile?.role || "Project Coordinator",
     programmeName,
     projectName,
-    simulatedBudget: forecast > 0 ? money(forecast) : "£1,200,000",
-    simulatedTimeline: timeline(tpl?.duration_days) ?? "6 months",
+    simulatedBudget: baseline > 0 ? money(baseline) : money(facts.totalBudget),
+    // `project_templates.duration_days` is how long a learner takes in real time,
+    // not the simulated project timeline — that comes from the project facts.
+    simulatedTimeline: facts.timelineLabel || timeline(facts.durationDays) || "12 weeks",
     completionDate: outcome.completed_at,
     overallScore: score,
     grade,
