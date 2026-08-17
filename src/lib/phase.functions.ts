@@ -428,9 +428,16 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
         return d && Date.now() - d.getTime() < 1000 * 60 * 60 * 24 * 14;
       }).length;
       const raidUpdates = pct(recentRaid, Math.max(3, R.length));
-      const actuals = B.filter((b) => String(b.kind).toLowerCase() === "actual").length;
-      const budgets = B.filter((b) => String(b.kind).toLowerCase() === "budget").length || 1;
-      const budgetTrack = bestOf(pct(actuals, budgets), taskAveragePct(/budget tracking|budget|actual|forecast|variance|cost.?to.?complete/i, "budget"));
+      // Budget tracking in Monitoring means the learner is recording real
+      // movement against the baseline: actuals/invoices logged, plus a
+      // forecast. "budget" is not a valid budget_kind (planned | actual |
+      // invoice | forecast), so the old denominator never matched anything.
+      const tracked = B.filter((b) => ["actual", "invoice"].includes(String(b.kind).toLowerCase())).length;
+      const hasForecast = B.some((b) => String(b.kind).toLowerCase() === "forecast");
+      const budgetTrack = bestOf(
+        Math.round(pct(Math.min(tracked, 3), 3) * 0.7 + (hasForecast ? 30 : 0)),
+        taskAveragePct(/budget tracking|budget|actual|forecast|variance|cost.?to.?complete/i, "budget"),
+      );
       const crPct = bestOf(pct(CR.length, 2), taskAveragePct(/change request|\bpcr\b|scope change|impact assessment|change board/i, "changes"));
       const schedule = bestOf(allTaskCompletion, taskAveragePct(/schedule performance|schedule|timeline|progress|milestone|delay|slippage/i, "reports"));
       const reportPct = bestOf(pct(submitted, 3), taskAveragePct(/status report|weekly status|board report|status update/i, "reports"));
