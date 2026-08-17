@@ -756,6 +756,7 @@ export const runEscalations = createServerFn({ method: "POST" })
       profile?.preferred_name?.trim() || profile?.first_name || "there";
 
     let count = 0;
+    const chasePctx = await getProjectCtx(supabase, userId);
     for (const orig of stale) {
       const daysOld = Math.max(
         2,
@@ -766,7 +767,9 @@ export const runEscalations = createServerFn({ method: "POST" })
 Original message body:
 ${orig.body}
 
-Style: a real chase email. Reference how long it's been. Be professional but show appropriate impatience — sponsors get blunt, finance/technical leads sound concerned, vendors deflect, operations/site leads sound stressed about the frontline reality. Stay in the technical language of THIS project (do not invent unrelated domain content). 2-3 short paragraphs max. Sign off with name & role.`;
+Style: a real chase email. Reference how long it's been. Be professional but show appropriate impatience — sponsors get blunt, finance/technical leads sound concerned, vendors deflect, operations/site leads sound stressed about the frontline reality. Stay in the technical language of THIS project (do not invent unrelated domain content). 2-3 short paragraphs max. Sign off with name & role.
+
+${chasePctx.domainGuard}`;
 
       let out: z.infer<typeof EscalationSchema>;
       try {
