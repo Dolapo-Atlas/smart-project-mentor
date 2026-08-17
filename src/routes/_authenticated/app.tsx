@@ -84,6 +84,11 @@ const PHASE_NAV: Record<string, NavItem[]> = {
     { to: "/app/health", label: "Health", icon: Activity },
     { to: "/app/progress", label: "Progress", icon: Gauge },
   ],
+  "go-live": [
+    { to: "/app/gates", label: "Go-live gate", icon: Gavel },
+    { to: "/app/health", label: "Health", icon: Activity },
+    { to: "/app/reports", label: "Reports", icon: FileBarChart2 },
+  ],
   closure: [
     { to: "/app/reports", label: "Reports", icon: FileBarChart2 },
     { to: "/app/lessons", label: "Retros", icon: Sparkles },
@@ -157,6 +162,7 @@ function normalisePhase(p?: string | null): keyof typeof PHASE_NAV {
   if (k.startsWith("plan")) return "planning";
   if (k.startsWith("exec")) return "execution";
   if (k.startsWith("mon")) return "monitoring";
+  if (k.startsWith("go")) return "go-live";
   if (k.startsWith("clos")) return "closure";
   return "execution";
 }
