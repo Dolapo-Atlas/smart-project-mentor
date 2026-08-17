@@ -49,7 +49,7 @@ export function MilestoneShareDialog({
     return await new Promise((res) => canvas.toBlob((b) => res(b), "image/png"));
   };
 
-  const download = async () => {
+  const download = async (silent = false) => {
     setBusy(true);
     try {
       const blob = await renderImage();
@@ -60,8 +60,10 @@ export function MilestoneShareDialog({
       a.download = `atlas-milestone-${milestone.id.replace(/[^a-z0-9]+/gi, "-")}.png`;
       a.click();
       URL.revokeObjectURL(url);
+      return true;
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Download failed");
+      if (!silent) toast.error(e instanceof Error ? e.message : "Download failed");
+      return false;
     } finally {
       setBusy(false);
     }
@@ -93,9 +95,17 @@ export function MilestoneShareDialog({
   };
 
   const openLinkedIn = async () => {
-    await navigator.clipboard.writeText(caption).catch(() => {});
-    toast.success("Caption copied — paste it into your post.");
-    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(SHARE_URL)}`, "_blank", "noopener");
+    // LinkedIn cannot accept an uploaded image through a share URL, so we hand
+    // the learner both pieces: the card saved to their device and the caption on
+    // the clipboard, then open the LinkedIn composer for them to attach it.
+    const saved = await download(true);
+    await navigator.clipboard.writeText(`${caption}\n\n${SHARE_URL}`).catch(() => {});
+    toast.success(
+      saved
+        ? "Card saved and caption copied — paste the caption, then attach the image."
+        : "Caption copied — paste it into your post.",
+    );
+    window.open("https://www.linkedin.com/feed/?shareActive=true", "_blank", "noopener");
   };
 
   const openX = () => {
@@ -112,8 +122,9 @@ export function MilestoneShareDialog({
         <DialogHeader>
           <DialogTitle className="font-display text-2xl font-medium">Share milestone</DialogTitle>
           <DialogDescription>
-            Edit the caption before you post. The card names Atlas as a simulated workplace
-            experience.
+            This is exactly the card that gets shared. LinkedIn won&rsquo;t accept an image from a
+            link, so choosing LinkedIn saves the card to your device, copies your caption, and opens
+            the composer — paste the caption and attach the image.
           </DialogDescription>
         </DialogHeader>
 
@@ -150,7 +161,7 @@ export function MilestoneShareDialog({
           <Button variant="outline" onClick={copy}>
             <Copy className="mr-2 h-4 w-4" /> Copy text
           </Button>
-          <Button variant="outline" onClick={download} disabled={busy}>
+          <Button variant="outline" onClick={() => download()} disabled={busy}>
             {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
             Download image
           </Button>

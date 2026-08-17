@@ -198,6 +198,7 @@ function Nav({ scrolled }: { scrolled: boolean }) {
           </Link>
           <Link
             to="/auth"
+            search={{ mode: "signup" }}
             className="group inline-flex items-center gap-1.5 rounded-full bg-accent-orange px-4 py-2 text-sm font-medium text-accent-orange-foreground shadow-[0_1px_0_rgba(255,255,255,0.25)_inset,0_8px_24px_-12px_rgba(217,119,6,0.6)] transition-all hover:-translate-y-0.5 hover:shadow-[0_1px_0_rgba(255,255,255,0.3)_inset,0_12px_28px_-12px_rgba(217,119,6,0.7)]"
           >
             Start Experience
@@ -289,6 +290,7 @@ function Hero() {
             <div className="mt-9 flex flex-wrap items-center gap-3">
               <Link
                 to="/auth"
+                search={{ mode: "signup" }}
                 className="group inline-flex items-center gap-2 rounded-full bg-accent-orange px-6 py-3 text-sm font-medium text-accent-orange-foreground shadow-[0_1px_0_rgba(255,255,255,0.25)_inset,0_12px_30px_-12px_rgba(217,119,6,0.6)] transition-all hover:-translate-y-0.5 hover:shadow-[0_1px_0_rgba(255,255,255,0.3)_inset,0_18px_36px_-12px_rgba(217,119,6,0.7)]"
               >
                 Start Your First Project Scenario
@@ -345,6 +347,7 @@ function ExperienceGap() {
           </p>
           <Link
             to="/auth"
+            search={{ mode: "signup" }}
             className="group mt-9 inline-flex items-center gap-2 rounded-full bg-accent-orange px-6 py-3 text-sm font-medium text-accent-orange-foreground transition-all hover:-translate-y-0.5"
           >
             Start Your First Project Scenario
@@ -1941,6 +1944,7 @@ function ReadinessOffer() {
                 </p>
                 <Link
                   to="/auth"
+                  search={{ mode: "signup" }}
                   onClick={() => rememberRegion(p.region)}
                   className="group mt-8 inline-flex w-full items-center justify-center gap-2 rounded-full bg-accent-orange px-6 py-3.5 text-sm font-medium text-accent-orange-foreground transition-all hover:-translate-y-0.5"
                 >
@@ -2020,6 +2024,7 @@ function DemoWalkthrough() {
             <div className="mt-6">
               <Link
                 to="/auth"
+                search={{ mode: "signup" }}
                 className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-all hover:-translate-y-0.5"
               >
                 Start Your Atlas Experience
