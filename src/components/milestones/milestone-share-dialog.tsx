@@ -128,7 +128,7 @@ export function MilestoneShareDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="overflow-hidden rounded-2xl shadow-[var(--shadow-soft-lift)]">
+        <div className="mx-auto w-full max-w-sm overflow-hidden rounded-2xl shadow-[var(--shadow-soft-lift)]">
           <MilestoneCard
             ref={cardRef}
             milestone={milestone}
