@@ -128,6 +128,7 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
     ] = await Promise.all([
       scoped(supabase.from("simulation_state").select("phase").eq("user_id", userId)).maybeSingle(),
       scoped(supabase.from("documents").select("title,status,quality_score").eq("user_id", userId)),
+      scoped(supabase.from("project_artifacts").select("artifact_type,status,version,is_latest").eq("user_id", userId)),
       scoped(supabase.from("raid_items").select("kind,status,owner,mitigation,updated_at").eq("user_id", userId)),
       scoped(supabase.from("stakeholder_relationships").select("stakeholder_name,role,interaction_count").eq("user_id", userId)),
       scoped(supabase.from("meetings").select("kind,title,agenda,attendees,held,minutes").eq("user_id", userId)),
