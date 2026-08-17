@@ -7,6 +7,7 @@
 // their own static logic on error, so the simulation never breaks when
 // Gemini is unavailable.
 import { generateGeminiJSON, isGeminiAvailable } from "./gemini.server";
+import { personaliseBody } from "./personalise";
 
 export type StakeholderProfile = {
   role: string;
@@ -23,6 +24,8 @@ export type ThreadMessage = {
 
 export type ProjectContext = {
   projectName: string;
+  /** The learner's real first / preferred name, used to address the email. */
+  coordinatorName?: string | null;
   phase?: string | null;
   health?: string | null;
   reputation?: number | null;
@@ -102,6 +105,7 @@ export async function generateStakeholderReply(input: {
 Stay in character (${stakeholder.role}: ${character}). Never break the fourth wall, never mention AI, models, or that this is a simulation.
 Write in first person as ${stakeholder.name}. Sign off with your name and title.
 2–4 short paragraphs. Do not use generic placeholder wording like "Thanks for the note — I'll come back to you shortly".
+Address the coordinator by their real name${project.coordinatorName ? ` — they are called "${project.coordinatorName}"` : ""}. NEVER write bracketed placeholders such as [Coordinator's Name], [Name] or [Your Name]; use real names everywhere.
 Respond ONLY with a JSON object matching the required schema.`;
 
   const prompt = `Project: ${project.projectName}
@@ -139,7 +143,11 @@ Set "sender_role" to "${stakeholder.title}" and start the subject with "Re: " un
   return {
     sender_role: raw.sender_role?.trim() || stakeholder.title,
     subject: subject.startsWith("Re:") ? subject : `Re: ${subject}`,
-    body: raw.body?.trim() || "",
+    body: personaliseBody(raw.body?.trim() || "", {
+      learnerName: project.coordinatorName,
+      senderName: stakeholder.name,
+      senderTitle: stakeholder.title,
+    }),
     sentiment: raw.sentiment ?? "neutral",
   };
 }
