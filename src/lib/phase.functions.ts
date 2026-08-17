@@ -386,7 +386,7 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
       // own precondition and deadlock the phase.
       const goLiveGate = G.find((g) => String(g.phase).toLowerCase() === "go-live");
       const decisionPct = bestOf(
-        goLiveGate?.status === "passed" || goLiveGate?.status === "open" ? 100 : 0,
+        goLiveGate && goLiveGate.status !== "locked" ? 100 : 0,
         taskBestPct(/go.?live decision|sponsor approval|sign.?off|approval|phase gate|steering committee/i, "gates"),
       );
       items = [
@@ -408,7 +408,7 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
       const sponsorApproval = bestOf(
         // Same self-reference rule as Go-Live: the sponsor sign-off happens at
         // the Closure gate itself, so an open gate satisfies this item.
-        closureGate?.status === "passed" || closureGate?.status === "open" ? 100 : 0,
+        closureGate && closureGate.status !== "locked" ? 100 : 0,
         O.length > 0 ? 100 : 0,
         taskBestPct(/sponsor approval|closure approval|sign.?off|phase gate|closure gate/i, "gates"),
       );
