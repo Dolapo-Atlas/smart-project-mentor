@@ -79,6 +79,9 @@ function TemplateFillPage() {
           content_excerpt: md,
           mime_type: "text/markdown",
           size_bytes: new Blob([md]).size,
+          // Canonical deliverable identity — mirrors into project_artifacts.
+          artifact_type: kind,
+          payload: values,
         },
       });
       if (opts.requestReview && (doc as { id?: string }).id) {
@@ -87,8 +90,9 @@ function TemplateFillPage() {
       return doc;
     },
     onSuccess: () => {
-      toast.success("Saved to Documents.");
+      toast.success("Saved to your Project Deliverables.");
       qc.invalidateQueries({ queryKey: ["documents"] });
+      qc.invalidateQueries({ queryKey: ["deliverables"] });
       qc.invalidateQueries({ queryKey: ["phase-progress"] });
       qc.invalidateQueries({ queryKey: ["overview"] });
       try {
