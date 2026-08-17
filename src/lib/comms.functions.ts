@@ -4,6 +4,7 @@ import { requireProgrammeAccess, requireFreePreviewAllowance } from "@/lib/progr
 import { z } from "zod";
 import { generateObject } from "ai";
 import { personaliseBody } from "./personalise";
+import { projectFactsPrompt } from "./project-facts";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
 import { applyCompetencyStatus } from "./learning.functions";
 import { ARCHETYPE_SENTIMENT_BY_ROLE } from "./pm.functions";
