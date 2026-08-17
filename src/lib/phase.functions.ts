@@ -363,7 +363,12 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
       const executionMatches = taskMatches(executionTaskRx);
       const executionDone = executionMatches.filter((t) => DONE_STATUSES.has(t.status ?? "")).length;
       const tasksPct = executionMatches.length > 0 ? taskAveragePct(executionTaskRx) : allTaskCompletion;
-      const teamActions = bestOf(taskAveragePct(/team action|frontline|training|vendor|technical|workstream|implementation|pilot/i), pct(executionDone, Math.max(6, executionMatches.length)));
+      const teamActionRx = /team action|frontline|training|vendor|technical|workstream|implementation|pilot/i;
+      const teamActionMatches = taskMatches(teamActionRx);
+      const teamActionsDone = teamActionMatches.filter((t) => DONE_STATUSES.has(t.status ?? "")).length;
+      const teamActions = teamActionMatches.length > 0
+        ? bestOf(taskAveragePct(teamActionRx), pct(teamActionsDone, teamActionMatches.length))
+        : 0;
       const deliverables = bestOf(
         pct(D.filter((d) => d.status === "approved").length, 3),
         pct(A.filter((a) => String(a.status ?? "") === "approved").length, 3),
@@ -372,7 +377,17 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
       const commsPct = bestOf(pct(C.length, 5), taskAveragePct(/stakeholder comms|stakeholder communication|brief|reply|update|communication/i, "comms"));
       items = [
         { key: "tasks", label: "Tasks Completed", pct: tasksPct, route: "/app/tasks", hint: executionMatches.length > 0 ? `${executionDone}/${executionMatches.length} execution tasks` : `${doneTaskCount}/${T.length}` },
-        { key: "team", label: "Team Actions", pct: teamActions, route: "/app/tasks" },
+        // Team Actions only counts once delegated/team workstream tasks exist —
+        // otherwise it is an unclearable blocker with nothing for the learner to do.
+        ...(teamActionMatches.length > 0
+          ? [{
+              key: "team",
+              label: "Team Actions",
+              pct: teamActions,
+              route: "/app/tasks",
+              hint: `${teamActionsDone}/${teamActionMatches.length} team workstream tasks closed`,
+            }]
+          : []),
         { key: "deliv", label: "Deliverables", pct: deliverables, route: "/app/documents" },
         {
           key: "uat",
