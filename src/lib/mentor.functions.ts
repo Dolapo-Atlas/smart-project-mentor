@@ -165,7 +165,7 @@ async function loadMentorContext(
   ] = await Promise.all([
     supabase
       .from("project_instances")
-      .select("display_name, current_phase, progress_pct, status")
+      .select("display_name, current_phase, progress_pct, status, project_templates(slug)")
       .eq("id", projectId)
       .maybeSingle(),
     supabase
@@ -226,6 +226,7 @@ async function loadMentorContext(
     screen,
     project: {
       name: proj.display_name ?? "your project",
+      slug: (proj as any)?.project_templates?.slug ?? null,
       phase: proj.current_phase ?? null,
       progressPct: proj.progress_pct ?? null,
       status: proj.status ?? null,
