@@ -6,7 +6,7 @@ import { generateObject } from "ai";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
 import { ARCHETYPE_SENTIMENT, getProjectCtx } from "./pm.functions";
 import { loadRoster, rosterByRole, DEFAULT_ROSTER } from "./roster";
-import { decodeSubmission, payloadToNarrative, TEMPLATES } from "./templates";
+import { decodeSubmission, payloadToNarrative, TEMPLATES, type TemplateKind } from "./templates";
 import { reconcileSubmittedArtifactTasks } from "./task-sync.server";
 
 const MODEL = "google/gemini-3-flash-preview";
@@ -368,6 +368,33 @@ export const submitTaskWithWork = createServerFn({ method: "POST" })
       .update({ status: "submitted", submission: data.submission, submitted_at: new Date().toISOString() })
       .eq("id", data.id)
       .eq("user_id", userId);
+    // Deliverables library: keep a versioned copy of every submission so the
+    // learner has a permanent, exportable record of their project work.
+    try {
+      const { recordArtifactVersion, payloadToMarkdown } = await import("./artifact-store.server");
+      const decoded = decodeSubmission(data.submission ?? null);
+      const isTemplate = !!decoded && decoded.kind !== "free_text" && !!decoded.template;
+      const artifactType = isTemplate
+        ? String((decoded as any).template)
+        : `task_${String((task as any)?.linked_area ?? "submission")}`;
+      const title = isTemplate
+        ? TEMPLATES[(decoded as any).template as TemplateKind].label
+        : String((task as any)?.title ?? "Submission");
+      const payload = isTemplate
+        ? ((decoded as any).values as Record<string, unknown>)
+        : { submission: data.submission };
+      await recordArtifactVersion(supabase, userId, {
+        artifact_type: artifactType,
+        title,
+        payload,
+        content_markdown: payloadToMarkdown(title, payload),
+        status: "submitted",
+        source_table: "tasks",
+        source_id: task.id,
+      });
+    } catch (e) {
+      console.error("artifact capture failed", e);
+    }
     // Roll this artifact submission into rolling competency scores + story beats
     // so the Performance dashboard reacts to inline template work (Charter,
     // Stakeholder Register, RAID, etc.), not just uploaded PDFs.

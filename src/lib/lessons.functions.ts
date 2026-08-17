@@ -173,20 +173,22 @@ export const submitLessons = createServerFn({ method: "POST" })
       }
     }
 
+    let decision: "approved" | "changes_requested" = "changes_requested";
     try {
-      await supabase.from("inbox_messages").insert({
-        user_id: userId,
-        sender_name: "David Okafor",
-        sender_role: "Executive Sponsor",
-        subject: `Received: Lessons Learned v${nextVersion}`,
-        body:
-          `Thanks for the retro — I've received v${nextVersion} of the Lessons Learned (${pct}% complete). I'll circulate to the PMO so the next project inherits what you learned.`,
-        tone: "supportive",
-        read: false,
+      const { reviewArtifact } = await import("./artifact-review.server");
+      const { review } = await reviewArtifact(supabase, userId, {
+        artifact_type: "lessons_learned",
+        title: "Lessons Learned",
+        payload,
+        completion_pct: pct,
+        source_table: "lessons_learned_docs",
+        source_id: doc.id,
+        linked_task_id: doc.linked_task_id,
       });
+      decision = review.decision;
     } catch (e) {
-      console.error("lessons sponsor inbox insert failed", e);
+      console.error("lessons review failed", e);
     }
 
-    return { ok: true, version: nextVersion, completion_pct: pct };
+    return { ok: true, version: nextVersion, completion_pct: pct, decision };
   });

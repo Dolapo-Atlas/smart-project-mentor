@@ -10,6 +10,14 @@ import { loadRoster, rosterByRole, rosterByName, DEFAULT_ROSTER, type RosterMemb
 import { encodeSubmission, evaluateStatusReport } from "./templates";
 import { markSubmittedArtifactTasks } from "./task-sync.server";
 import { projectFactsPrompt, factsFor } from "./project-facts";
+import {
+  PHASE_KEYS,
+  PHASE_LABELS,
+  GATE_LABELS,
+  nextPhase,
+  normalisePhase,
+  type PhaseKey,
+} from "@/lib/phases";
 
 const MODEL = "google/gemini-3-flash-preview";
 function getModel() {
@@ -628,30 +636,51 @@ export const createChangeRequest = createServerFn({ method: "POST" })
 
 /* ============= PHASE GATES ============= */
 
+// Canonical six-phase model — see src/lib/phases.ts. Gates exist for every
+// phase and a pass advances the project exactly one phase forward.
+const PHASES = PHASE_KEYS;
 
-const PHASES = ["initiation", "planning", "execution", "closure"] as const;
+async function activeInstanceId(supabase: any, userId: string): Promise<string | null> {
+  const { data } = await supabase
+    .from("profiles")
+    .select("current_project_instance_id")
+    .eq("id", userId)
+    .maybeSingle();
+  return (data?.current_project_instance_id as string | null) ?? null;
+}
 
 export const listGates = createServerFn({ method: "GET" })
   .middleware([requireProgrammeAccess])
   .handler(async ({ context }) => {
-    let { data } = await context.supabase
-      .from("phase_gates")
-      .select("*")
-      .eq("user_id", context.userId);
-    if (!data || data.length === 0) {
-      const rows = PHASES.map((p, i) => ({
-        user_id: context.userId,
-        phase: p,
-        status: i === 0 ? ("open" as const) : ("locked" as const),
-      }));
+    const instanceId = await activeInstanceId(context.supabase, context.userId);
+    const scoped = (q: any) => (instanceId ? q.eq("project_instance_id", instanceId) : q);
+
+    let { data } = await scoped(
+      context.supabase.from("phase_gates").select("*").eq("user_id", context.userId),
+    );
+    let rows = data ?? [];
+
+    // Backfill any phase that has no gate row yet (older runs only had four).
+    const missing = PHASES.filter((p: PhaseKey) => !rows.some((g: any) => g.phase === p));
+    if (missing.length > 0) {
       const { data: inserted } = await context.supabase
         .from("phase_gates")
-        .insert(rows)
+        .insert(
+          missing.map((p) => ({
+            user_id: context.userId,
+            project_instance_id: instanceId,
+            phase: p,
+            status:
+              p === "initiation" && rows.length === 0 ? ("open" as const) : ("locked" as const),
+          })),
+        )
         .select();
-      data = inserted ?? [];
+      rows = [...rows, ...(inserted ?? [])];
     }
-    return data.sort(
-      (a, b) => PHASES.indexOf(a.phase as typeof PHASES[number]) - PHASES.indexOf(b.phase as typeof PHASES[number]),
+
+    return rows.sort(
+      (a: any, b: any) =>
+        PHASES.indexOf(a.phase as PhaseKey) - PHASES.indexOf(b.phase as PhaseKey),
     );
   });
 
@@ -661,6 +690,8 @@ export const submitGate = createServerFn({ method: "POST" })
     z.object({
       phase: z.enum(PHASES),
       defence: z.string().min(20),
+      /** Set after the learner has been shown the outstanding-work warning. */
+      acknowledgeOutstanding: z.boolean().optional(),
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -670,13 +701,53 @@ export const submitGate = createServerFn({ method: "POST" })
       await assertProgrammeAccess(supabase, userId);
     }
 
-    // Pull artefacts for the AI panel
-    const [{ data: docs }, { data: raid }, { data: reports }, { data: gates }] = await Promise.all([
-      supabase.from("documents").select("title,quality_score,status").eq("user_id", userId),
-      supabase.from("raid_items").select("kind,title,severity,status").eq("user_id", userId),
-      supabase.from("status_reports").select("week_start,rag_summary,ai_score").eq("user_id", userId),
-      supabase.from("phase_gates").select("*").eq("user_id", userId),
-    ]);
+    const instanceId = await activeInstanceId(supabase, userId);
+    const scoped = (q: any) => (instanceId ? q.eq("project_instance_id", instanceId) : q);
+
+    // ---- Progression guards -------------------------------------------------
+    // 1. The gate can only be defended for the phase the learner is actually in.
+    const { data: stateRow } = await scoped(
+      supabase.from("simulation_state").select("phase").eq("user_id", userId),
+    ).maybeSingle();
+    const currentPhase = normalisePhase(stateRow?.phase as string | undefined);
+    if (currentPhase && currentPhase !== data.phase) {
+      return {
+        blocked: true as const,
+        reason: "wrong_phase" as const,
+        currentPhase,
+        message: `You are currently in ${PHASE_LABELS[currentPhase]}. Only the ${GATE_LABELS[currentPhase]} can be defended right now.`,
+      };
+    }
+
+    // 2. The phase readiness checklist must be satisfied — no hidden conditions.
+    const { getPhaseProgress } = await import("@/lib/phase.functions");
+    const progress = await getPhaseProgress();
+    if (!progress.gateReady) {
+      return {
+        blocked: true as const,
+        reason: "not_ready" as const,
+        currentPhase: progress.phase,
+        outstanding: progress.outstanding.map((it) => ({
+          key: it.key,
+          label: it.label,
+          pct: it.pct,
+          route: it.route,
+        })),
+        message: `${progress.outstanding.length} ${PHASE_LABELS[progress.phase]} deliverable${
+          progress.outstanding.length === 1 ? "" : "s"
+        } still outstanding before this gate can be defended.`,
+      };
+    }
+
+    // Pull artefacts for the AI panel (scoped to this project instance)
+    const [{ data: docs }, { data: raid }, { data: reports }, { data: changes }, { data: gates }] =
+      await Promise.all([
+        scoped(supabase.from("documents").select("title,quality_score,status").eq("user_id", userId)),
+        scoped(supabase.from("raid_items").select("kind,title,severity,status,mitigation").eq("user_id", userId)),
+        scoped(supabase.from("status_reports").select("week_start,rag_summary,ai_score").eq("user_id", userId)),
+        scoped(supabase.from("change_requests").select("title,status,decision_notes").eq("user_id", userId)),
+        scoped(supabase.from("phase_gates").select("*").eq("user_id", userId)),
+      ]);
 
     const Schema = z.object({
       decision: z.enum(["passed", "failed"]),
@@ -703,12 +774,14 @@ Evidence on file:
 - Documents: ${JSON.stringify(docs)}
 - RAID items: ${JSON.stringify(raid)}
 - Recent status reports: ${JSON.stringify(reports)}
+- Change decisions: ${JSON.stringify(changes)}
+- Phase deliverable checklist: ${JSON.stringify(progress.items.map((i) => ({ item: i.label, pct: i.pct })))}
 
 Decide: pass or fail this gate. Score 0-100. Be tough but fair. Failed means the phase cannot close — list specific conditions for re-review. Passed may still come with conditions. Concerns must be concrete (not "more detail needed" — name what is missing).`;
 
     const { object } = await generateObject({ model: getModel(), schema: Schema, prompt });
 
-    await supabase
+    await scoped(supabase
       .from("phase_gates")
       .update({
         status: object.decision,
@@ -717,29 +790,42 @@ Decide: pass or fail this gate. Score 0-100. Be tough but fair. Failed means the
         decided_at: new Date().toISOString(),
       })
       .eq("user_id", userId)
-      .eq("phase", data.phase);
+      .eq("phase", data.phase));
 
-    // Unlock next phase on pass
+    // Pass advances the project exactly ONE phase and opens only the next gate.
     if (object.decision === "passed") {
-      const idx = PHASES.indexOf(data.phase);
-      if (idx >= 0 && idx < PHASES.length - 1) {
-        const next = PHASES[idx + 1];
-        const nextGate = gates?.find((g) => g.phase === next);
+      const next = nextPhase(data.phase as PhaseKey);
+      if (next) {
+        const nextGate = (gates ?? []).find((g: any) => g.phase === next);
         if (nextGate && nextGate.status === "locked") {
           await supabase
             .from("phase_gates")
             .update({ status: "open", opened_at: new Date().toISOString() })
             .eq("id", nextGate.id);
+        } else if (!nextGate) {
+          await supabase.from("phase_gates").insert({
+            user_id: userId,
+            project_instance_id: instanceId,
+            phase: next,
+            status: "open",
+            opened_at: new Date().toISOString(),
+          });
         }
-        await supabase
+        await scoped(supabase
           .from("simulation_state")
           .update({ phase: next })
-          .eq("user_id", userId);
+          .eq("user_id", userId));
+        if (instanceId) {
+          await supabase
+            .from("project_instances")
+            .update({ current_phase: next })
+            .eq("id", instanceId);
+        }
       }
       // Chapter triggers: pilot gate closes ch.8, any later passed gate closes ch.11.
       try {
         const { tickChapterBySlug } = await import("@/lib/chapters.functions");
-        if (data.phase === "execution") {
+        if (data.phase === "execution" || data.phase === "go-live") {
           await tickChapterBySlug(supabase, userId, "pilot-golive");
         }
         await tickChapterBySlug(supabase, userId, "phase-gate");
@@ -748,7 +834,7 @@ Decide: pass or fail this gate. Score 0-100. Be tough but fair. Failed means the
       }
     }
 
-    return object;
+    return { blocked: false as const, ...object, advancedTo: object.decision === "passed" ? nextPhase(data.phase as PhaseKey) : null };
   });
 
 /* ============= MEETINGS ============= */

@@ -176,6 +176,32 @@ export const finalizeRun = createServerFn({ method: "POST" })
     const instanceId = profile?.current_project_instance_id;
     if (!instanceId) throw new Error("No active project to finalise");
 
+    // Safeguard: a run can only be finalised from Closure, after the Closure
+    // governance gate has been passed. Prevents certificates from mid-project.
+    const { data: simState } = await supabase
+      .from("simulation_state")
+      .select("phase")
+      .eq("user_id", userId)
+      .eq("project_instance_id", instanceId)
+      .maybeSingle();
+    if ((simState?.phase ?? "initiation") !== "closure") {
+      throw new Error(
+        "You can only finalise the project from the Closure phase. Pass the remaining governance gates first.",
+      );
+    }
+    const { data: closureGate } = await supabase
+      .from("phase_gates")
+      .select("status")
+      .eq("user_id", userId)
+      .eq("project_instance_id", instanceId)
+      .eq("phase", "closure")
+      .maybeSingle();
+    if (closureGate?.status !== "passed") {
+      throw new Error(
+        "The Closure gate hasn't been passed yet. Submit Closure for governance review before finalising.",
+      );
+    }
+
     const { data: inst } = await supabase
       .from("project_instances")
       .select("id, display_name, project_templates(title)")

@@ -201,23 +201,26 @@ export const submitCharter = createServerFn({ method: "POST" })
       }
     }
 
-    // Notify sponsor in the inbox (simulated sponsor pings back)
+    // Governance review: sponsor either approves or requests changes. This also
+    // versions the charter into the deliverables library and emails the learner.
+    let decision: "approved" | "changes_requested" = "changes_requested";
     try {
-      await supabase.from("inbox_messages").insert({
-        user_id: userId,
-        sender_name: "David Okafor",
-        sender_role: "Executive Sponsor",
-        subject: `Received: Project Charter v${nextVersion}`,
-        body:
-          `Thanks — I've received v${nextVersion} of the Charter (${pct}% complete). I'll review the objectives, milestones and risks and come back with any change requests or approval.`,
-        tone: "supportive",
-        read: false,
+      const { reviewArtifact } = await import("./artifact-review.server");
+      const { review } = await reviewArtifact(supabase, userId, {
+        artifact_type: "project_charter",
+        title: "Project Charter",
+        payload,
+        completion_pct: pct,
+        source_table: "project_charters",
+        source_id: charter.id,
+        linked_task_id: charter.linked_task_id,
       });
+      decision = review.decision;
     } catch (e) {
-      console.error("charter sponsor inbox insert failed", e);
+      console.error("charter review failed", e);
     }
 
-    return { ok: true, version: nextVersion, completion_pct: pct };
+    return { ok: true, version: nextVersion, completion_pct: pct, decision };
   });
 
 /** Convenience: recompute completion on the fly (used by clients that want

@@ -159,19 +159,22 @@ export const submitRegister = createServerFn({ method: "POST" })
       submission: encoded,
     });
 
+    let decision: "approved" | "changes_requested" = "changes_requested";
     try {
-      await supabase.from("inbox_messages").insert({
-        user_id: userId,
-        sender_name: "David Okafor",
-        sender_role: "Executive Sponsor",
-        subject: `Received: Stakeholder Register v${nextVersion}`,
-        body: `Thanks — I've got v${nextVersion} of the Stakeholder Register (${pct}% complete). I'll flag anyone I think is missing.`,
-        tone: "supportive",
-        read: false,
+      const { reviewArtifact } = await import("./artifact-review.server");
+      const { review } = await reviewArtifact(supabase, userId, {
+        artifact_type: "stakeholder_register",
+        title: "Stakeholder Register",
+        payload,
+        completion_pct: pct,
+        source_table: "stakeholder_registers",
+        source_id: reg.id,
+        linked_task_id: reg.linked_task_id,
       });
+      decision = review.decision;
     } catch (e) {
-      console.error("register sponsor inbox insert failed", e);
+      console.error("register review failed", e);
     }
 
-    return { ok: true, version: nextVersion, completion_pct: pct };
+    return { ok: true, version: nextVersion, completion_pct: pct, decision };
   });

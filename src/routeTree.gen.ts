@@ -53,6 +53,7 @@ import { Route as AuthenticatedAppGeminiRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAppGatesRouteImport } from './routes/_authenticated/app.gates'
 import { Route as AuthenticatedAppGanttRouteImport } from './routes/_authenticated/app.gantt'
 import { Route as AuthenticatedAppDocumentsRouteImport } from './routes/_authenticated/app.documents'
+import { Route as AuthenticatedAppDeliverablesRouteImport } from './routes/_authenticated/app.deliverables'
 import { Route as AuthenticatedAppCompletedRouteImport } from './routes/_authenticated/app.completed'
 import { Route as AuthenticatedAppCommsRouteImport } from './routes/_authenticated/app.comms'
 import { Route as AuthenticatedAppCharterRouteImport } from './routes/_authenticated/app.charter'
@@ -304,6 +305,12 @@ const AuthenticatedAppDocumentsRoute =
     path: '/documents',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppDeliverablesRoute =
+  AuthenticatedAppDeliverablesRouteImport.update({
+    id: '/deliverables',
+    path: '/deliverables',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppCompletedRoute =
   AuthenticatedAppCompletedRouteImport.update({
     id: '/completed',
@@ -447,6 +454,7 @@ export interface FileRoutesByFullPath {
   '/app/charter': typeof AuthenticatedAppCharterRoute
   '/app/comms': typeof AuthenticatedAppCommsRoute
   '/app/completed': typeof AuthenticatedAppCompletedRoute
+  '/app/deliverables': typeof AuthenticatedAppDeliverablesRoute
   '/app/documents': typeof AuthenticatedAppDocumentsRoute
   '/app/gantt': typeof AuthenticatedAppGanttRoute
   '/app/gates': typeof AuthenticatedAppGatesRoute
@@ -511,6 +519,7 @@ export interface FileRoutesByTo {
   '/app/charter': typeof AuthenticatedAppCharterRoute
   '/app/comms': typeof AuthenticatedAppCommsRoute
   '/app/completed': typeof AuthenticatedAppCompletedRoute
+  '/app/deliverables': typeof AuthenticatedAppDeliverablesRoute
   '/app/documents': typeof AuthenticatedAppDocumentsRoute
   '/app/gantt': typeof AuthenticatedAppGanttRoute
   '/app/gates': typeof AuthenticatedAppGatesRoute
@@ -578,6 +587,7 @@ export interface FileRoutesById {
   '/_authenticated/app/charter': typeof AuthenticatedAppCharterRoute
   '/_authenticated/app/comms': typeof AuthenticatedAppCommsRoute
   '/_authenticated/app/completed': typeof AuthenticatedAppCompletedRoute
+  '/_authenticated/app/deliverables': typeof AuthenticatedAppDeliverablesRoute
   '/_authenticated/app/documents': typeof AuthenticatedAppDocumentsRoute
   '/_authenticated/app/gantt': typeof AuthenticatedAppGanttRoute
   '/_authenticated/app/gates': typeof AuthenticatedAppGatesRoute
@@ -645,6 +655,7 @@ export interface FileRouteTypes {
     | '/app/charter'
     | '/app/comms'
     | '/app/completed'
+    | '/app/deliverables'
     | '/app/documents'
     | '/app/gantt'
     | '/app/gates'
@@ -709,6 +720,7 @@ export interface FileRouteTypes {
     | '/app/charter'
     | '/app/comms'
     | '/app/completed'
+    | '/app/deliverables'
     | '/app/documents'
     | '/app/gantt'
     | '/app/gates'
@@ -775,6 +787,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/charter'
     | '/_authenticated/app/comms'
     | '/_authenticated/app/completed'
+    | '/_authenticated/app/deliverables'
     | '/_authenticated/app/documents'
     | '/_authenticated/app/gantt'
     | '/_authenticated/app/gates'
@@ -1148,6 +1161,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppDocumentsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/deliverables': {
+      id: '/_authenticated/app/deliverables'
+      path: '/deliverables'
+      fullPath: '/app/deliverables'
+      preLoaderRoute: typeof AuthenticatedAppDeliverablesRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/completed': {
       id: '/_authenticated/app/completed'
       path: '/completed'
@@ -1298,6 +1318,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppCharterRoute: typeof AuthenticatedAppCharterRoute
   AuthenticatedAppCommsRoute: typeof AuthenticatedAppCommsRoute
   AuthenticatedAppCompletedRoute: typeof AuthenticatedAppCompletedRoute
+  AuthenticatedAppDeliverablesRoute: typeof AuthenticatedAppDeliverablesRoute
   AuthenticatedAppDocumentsRoute: typeof AuthenticatedAppDocumentsRoute
   AuthenticatedAppGanttRoute: typeof AuthenticatedAppGanttRoute
   AuthenticatedAppGatesRoute: typeof AuthenticatedAppGatesRoute
@@ -1330,6 +1351,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppCharterRoute: AuthenticatedAppCharterRoute,
   AuthenticatedAppCommsRoute: AuthenticatedAppCommsRoute,
   AuthenticatedAppCompletedRoute: AuthenticatedAppCompletedRoute,
+  AuthenticatedAppDeliverablesRoute: AuthenticatedAppDeliverablesRoute,
   AuthenticatedAppDocumentsRoute: AuthenticatedAppDocumentsRoute,
   AuthenticatedAppGanttRoute: AuthenticatedAppGanttRoute,
   AuthenticatedAppGatesRoute: AuthenticatedAppGatesRoute,
