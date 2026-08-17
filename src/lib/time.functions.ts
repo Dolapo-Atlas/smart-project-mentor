@@ -16,49 +16,59 @@ export const getReadiness = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
+    // Multi-project scoping: readiness must only ever describe the ACTIVE run.
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("current_project_instance_id")
+      .eq("id", userId)
+      .maybeSingle();
+    const instanceId = profile?.current_project_instance_id ?? null;
+    const scope = <T>(q: T): T =>
+      instanceId ? ((q as any).eq("project_instance_id", instanceId) as T) : q;
+
     const [tasks, inbox, docs, meetings, raids, rels] = await Promise.all([
-      supabase
+      scope(supabase
         .from("tasks")
         .select("id,title,status,priority")
         .eq("user_id", userId)
-        .in("status", ["todo", "in_progress", "blocked", "changes_requested"]),
-      supabase
+        .in("status", ["todo", "in_progress", "blocked", "changes_requested"])),
+      scope(supabase
         .from("inbox_messages")
         .select("id,subject,sender_name")
         .eq("user_id", userId)
-        .eq("read", false),
-      supabase
+        .eq("read", false)),
+      scope(supabase
         .from("documents")
         .select("id,title,status")
         .eq("user_id", userId)
-        .in("status", ["pending", "draft", "changes_requested"]),
-      supabase
+        .in("status", ["pending", "draft", "changes_requested"])),
+      scope(supabase
         .from("meetings")
         .select("id,title,held,minutes,ai_summary,decisions,minutes_sent_at")
         .eq("user_id", userId)
-        .eq("held", true),
-      supabase
+        .eq("held", true)),
+      scope(supabase
         .from("raid_items")
         .select("id,title,kind,severity,status")
         .eq("user_id", userId)
         .eq("status", "open")
-        .eq("severity", "high"),
-      supabase
+        .eq("severity", "high")),
+      scope(supabase
         .from("stakeholder_relationships")
         .select("stakeholder_name,sentiment")
         .eq("user_id", userId)
-        .lt("sentiment", -20),
+        .lt("sentiment", -20)),
     ]);
 
     const meetingsMissingMinutes = (meetings.data ?? []).filter((m) => !m.minutes_sent_at);
 
     // System-processing work: Atlas is reviewing something. These are NOT
     // learner blockers and must never carry a penalty.
-    const { data: reviewing } = await supabase
+    const { data: reviewing } = await scope(supabase
       .from("tasks")
       .select("id,title")
       .eq("user_id", userId)
-      .in("status", ["submitted", "under_review"]);
+      .in("status", ["submitted", "under_review"]));
 
     const openTasks = tasks.data ?? [];
     const unread = inbox.data ?? [];
