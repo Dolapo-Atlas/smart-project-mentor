@@ -664,6 +664,13 @@ function CharterPage() {
             />
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
+            <span className="w-full text-xs text-muted-foreground">
+              {autoSaving || saveMutation.isPending
+                ? "Saving…"
+                : dirty
+                  ? "Unsaved changes kept safely — autosaving"
+                  : "All changes saved"}
+            </span>
             <Button
               size="sm"
               variant="outline"
