@@ -828,11 +828,9 @@ Decide: pass or fail this gate. Score 0-100. Be tough but fair. Failed means the
           });
         }
         // Fast-forward the project clock so day/week never lag behind the phase.
-        const { data: clock } = await scoped(supabase
-          .from("simulation_state")
-          .select("current_day")
-          .eq("user_id", userId)
-          .maybeSingle());
+        const { data: clock } = await scoped(
+          supabase.from("simulation_state").select("current_day").eq("user_id", userId),
+        ).maybeSingle();
         const targetDay = Math.max(clock?.current_day ?? 1, PHASE_START_DAY[next]);
         await scoped(supabase
           .from("simulation_state")
