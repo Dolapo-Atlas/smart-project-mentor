@@ -7,6 +7,7 @@ import {
 } from "./templates";
 
 const ACTIVE_TASK_STATUSES = ["todo", "in_progress", "blocked"];
+const OPEN_OR_SUBMITTED_STATUSES = ["todo", "in_progress", "blocked", "submitted"];
 
 type TaskRow = {
   id: string;
