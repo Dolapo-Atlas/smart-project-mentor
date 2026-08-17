@@ -373,19 +373,31 @@ const DEFAULT_BUDGET: Array<{ category: string; description: string; amount: num
 export const seedBudgetIfEmpty = createServerFn({ method: "POST" })
   .middleware([requireProgrammeAccess])
   .handler(async ({ context }) => {
-    const { count } = await context.supabase
+    const instanceId = await activeInstanceId(context.supabase, context.userId);
+    let q = context.supabase
       .from("budget_lines")
       .select("*", { count: "exact", head: true })
       .eq("user_id", context.userId);
+    if (instanceId) q = q.eq("project_instance_id", instanceId);
+    const { count } = await q;
     if ((count ?? 0) > 0) return { seeded: false };
     const rows = DEFAULT_BUDGET.map((b) => ({
       user_id: context.userId,
+      project_instance_id: instanceId ?? undefined,
       category: b.category,
       description: b.description,
       amount: b.amount,
       kind: "planned" as const,
     }));
-    const { error } = await context.supabase.from("budget_lines").insert(rows);
+    // Idempotent: a unique index on (user_id, project_instance_id, category,
+    // description, kind) makes a concurrent second seed a no-op instead of a
+    // duplicate baseline.
+    const { error } = await context.supabase
+      .from("budget_lines")
+      .upsert(rows, {
+        onConflict: "user_id,project_instance_id,category,description,kind",
+        ignoreDuplicates: true,
+      });
     if (error) throw error;
     return { seeded: true };
   });
@@ -393,11 +405,13 @@ export const seedBudgetIfEmpty = createServerFn({ method: "POST" })
 export const listBudget = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data, error } = await context.supabase
+    const instanceId = await activeInstanceId(context.supabase, context.userId);
+    let query = context.supabase
       .from("budget_lines")
       .select("*")
-      .eq("user_id", context.userId)
-      .order("line_date", { ascending: false });
+      .eq("user_id", context.userId);
+    if (instanceId) query = query.eq("project_instance_id", instanceId);
+    const { data, error } = await query.order("line_date", { ascending: false });
     if (error) throw error;
     return data ?? [];
   });
