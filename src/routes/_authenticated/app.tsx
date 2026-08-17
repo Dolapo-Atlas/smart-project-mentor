@@ -84,6 +84,11 @@ const PHASE_NAV: Record<string, NavItem[]> = {
     { to: "/app/health", label: "Health", icon: Activity },
     { to: "/app/progress", label: "Progress", icon: Gauge },
   ],
+  "go-live": [
+    { to: "/app/gates", label: "Go-live gate", icon: Gavel },
+    { to: "/app/health", label: "Health", icon: Activity },
+    { to: "/app/reports", label: "Reports", icon: FileBarChart2 },
+  ],
   closure: [
     { to: "/app/reports", label: "Reports", icon: FileBarChart2 },
     { to: "/app/lessons", label: "Retros", icon: Sparkles },
@@ -157,6 +162,7 @@ function normalisePhase(p?: string | null): keyof typeof PHASE_NAV {
   if (k.startsWith("plan")) return "planning";
   if (k.startsWith("exec")) return "execution";
   if (k.startsWith("mon")) return "monitoring";
+  if (k.startsWith("go")) return "go-live";
   if (k.startsWith("clos")) return "closure";
   return "execution";
 }
@@ -270,7 +276,12 @@ function AppLayout() {
     exact ? pathname === to : pathname === to || pathname.startsWith(to + "/");
 
   const phaseKey = normalisePhase(overview?.state?.phase as string | undefined);
-  const phaseLabel = phaseKey.charAt(0).toUpperCase() + phaseKey.slice(1);
+  const phaseLabel =
+    phaseKey === "go-live"
+      ? "Go-Live"
+      : phaseKey === "monitoring"
+        ? "Monitoring & Control"
+        : phaseKey.charAt(0).toUpperCase() + phaseKey.slice(1);
   const NAV: NavItem[] = [...PINNED, ...PHASE_NAV[phaseKey]];
   const navTos = new Set(NAV.map((n) => n.to));
   const MORE_GROUPS_FILTERED = MORE_GROUPS.map((g) => ({

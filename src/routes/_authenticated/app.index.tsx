@@ -83,6 +83,16 @@ function Dashboard() {
     if (!activeId) return;
     if (typeof window === "undefined") return;
     if (autoOpenedRef.current === activeId) return;
+    // Day-one prompt only. A learner opening the project on a new device or
+    // browser mid-simulation must not be told to send their "first response".
+    const simDay = Number((overview as any)?.state?.current_day ?? 1);
+    const simPhase = String((overview as any)?.state?.phase ?? "initiation").toLowerCase();
+    if (simDay > 1 || !simPhase.startsWith("init")) {
+      autoOpenedRef.current = activeId;
+      window.localStorage.setItem(`atlas.brief-seen.${activeId}`, "1");
+      markFirstRunDone(activeId);
+      return;
+    }
     const key = `atlas.brief-seen.${activeId}`;
     if (window.localStorage.getItem(key) === "1") {
       markFirstRunDone(activeId);
@@ -92,7 +102,7 @@ function Dashboard() {
     window.localStorage.setItem(key, "1");
     setEmailPromptOpen(true);
     trackLearner("first_email_prompt_shown", { projectInstanceId: activeId });
-  }, [activeId]);
+  }, [activeId, overview]);
 
   const handleBriefOpenChange = (next: boolean) => {
     setBriefOpen(next);
