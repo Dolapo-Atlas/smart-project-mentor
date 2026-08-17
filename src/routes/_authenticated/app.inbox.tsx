@@ -415,9 +415,15 @@ function Inbox() {
                 </div>
               )}
               {(() => {
-                const role =
-                  rosterMap[selected.sender_name]?.role ??
-                  LEGACY_SENDER_ROLE_MAP[selected.sender_name];
+                 // Unknown senders (e.g. governance reviewers like Emma Collins,
+                 // who sit outside the project roster) used to render no Reply
+                 // button at all. Because unanswered mail counts towards
+                 // readiness, that produced an unanswerable blocker, so unknown
+                 // senders now route their reply to the Project Manager.
+                 const role =
+                   rosterMap[selected.sender_name]?.role ??
+                   LEGACY_SENDER_ROLE_MAP[selected.sender_name] ??
+                   "pm";
                 const isSystem = selected.sender_name === "Project Update";
                 if (isSystem) return null;
                 const hasPackSection = PACK_BLOCK.test(selected.body);

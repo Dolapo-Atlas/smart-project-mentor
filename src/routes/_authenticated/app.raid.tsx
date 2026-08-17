@@ -4,7 +4,7 @@ import { WhyThisMatters } from "@/components/why-this-matters";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
-  listRaid, createRaid, updateRaidStatus, deleteRaid, submitRaidLog,
+  listRaid, createRaid, updateRaidStatus, deleteRaid, submitRaidLog, assignRaidOwner,
 } from "@/lib/raid.functions";
 import { listTasksRich, submitTaskWithWork } from "@/lib/tasks.functions";
 import { encodeSubmission, evaluateRaid } from "@/lib/templates";
@@ -68,6 +68,7 @@ function RaidPage() {
   const addRaid = useServerFn(createRaid);
   const setStatusFn = useServerFn(updateRaidStatus);
   const delRaidFn = useServerFn(deleteRaid);
+  const assignOwnerFn = useServerFn(assignRaidOwner);
   const submitRaidFn = useServerFn(submitRaidLog);
   const fetchTasks = useServerFn(listTasksRich);
   const submitTaskFn = useServerFn(submitTaskWithWork);
@@ -217,6 +218,18 @@ function RaidPage() {
   const del = useMutation({
     mutationFn: (id: string) => delRaidFn({ data: { id } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["raid"] }),
+  });
+  // Ownership can be added after an entry exists — governance and closure both
+  // chase unowned items, so the log must stay editable.
+  const [ownerDraft, setOwnerDraft] = useState<Record<string, string>>({});
+  const assignOwner = useMutation({
+    mutationFn: (v: { id: string; owner: string }) => assignOwnerFn({ data: v }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["raid"] });
+      qc.invalidateQueries({ queryKey: ["readiness"] });
+      toast.success("Owner assigned — the log now shows accountability.");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
 
   const counts: Record<Kind, number> = { risk: 0, assumption: 0, issue: 0, dependency: 0 };
@@ -472,7 +485,34 @@ function RaidPage() {
                     {r.mitigation && <div className="mt-1 text-xs"><span className="font-semibold">Mitigation: </span><span className="text-muted-foreground">{r.mitigation}</span></div>}
                     {(r as any).comments && <div className="mt-1 text-xs italic text-muted-foreground">"{(r as any).comments}"</div>}
                   </td>
-                  <td className="px-4 py-3 text-xs">{r.owner ?? <span className="text-muted-foreground">Unassigned</span>}</td>
+                  <td className="px-4 py-3 text-xs">
+                    {String(r.owner ?? "").trim() ? (
+                      r.owner
+                    ) : (
+                      <div className="flex flex-col gap-1">
+                        <span className="text-muted-foreground">Unassigned</span>
+                        <div className="flex items-center gap-1">
+                          <Input
+                            value={ownerDraft[r.id] ?? ""}
+                            onChange={(e) => setOwnerDraft((d) => ({ ...d, [r.id]: e.target.value }))}
+                            placeholder="Name an owner"
+                            className="h-7 w-32 text-xs"
+                          />
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 px-2 text-[11px]"
+                            disabled={(ownerDraft[r.id] ?? "").trim().length < 2 || assignOwner.isPending}
+                            onClick={() =>
+                              assignOwner.mutate({ id: r.id, owner: (ownerDraft[r.id] ?? "").trim() })
+                            }
+                          >
+                            Assign
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </td>
                   <td className="px-4 py-3">
                     <span className={`rounded-md border px-2 py-0.5 text-[11px] capitalize ${priorityStyle[pri]}`}>{pri}</span>
                   </td>

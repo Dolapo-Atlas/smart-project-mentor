@@ -339,6 +339,35 @@ export const deleteRaid = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/**
+ * Assign (or reassign) ownership and mitigation on an existing RAID entry.
+ * Stakeholders chase unowned items during governance and closure, so the log
+ * has to be editable after it is first written — not only at creation time.
+ */
+export const assignRaidOwner = createServerFn({ method: "POST" })
+  .middleware([requireProgrammeAccess])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        owner: z.string().trim().min(2).max(120),
+        mitigation: z.string().trim().max(2000).optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const patch: { owner: string; mitigation?: string } = { owner: data.owner };
+    if (data.mitigation) patch.mitigation = data.mitigation;
+    const { error } = await context.supabase
+      .from("raid_items")
+      .update(patch)
+      .eq("id", data.id)
+      .eq("user_id", context.userId);
+    if (error) throw error;
+    await recomputeRiskRag(context.supabase, context.userId);
+    return { ok: true };
+  });
+
 export const submitRaidLog = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
