@@ -72,39 +72,46 @@ async function scoreRun(
   const stake = clamp((avgSent + 100) / 2);
   const stakeDetail = `${stakeholders.length} stakeholder relationships · avg sentiment ${Math.round(avgSent)}`;
 
-  // Tasks (25%) — done on time / done late / open
+  // Tasks (25%) — finished on time / finished late / open.
+  // A submission that has been reviewed lands on `approved`/`completed`, so the
+  // finished set must cover the whole lifecycle, not just the legacy `done`.
+  const FINISHED = new Set(["done", "approved", "completed", "closed"]);
   const total = tasks.length || 1;
-  const onTime = tasks.filter(
-    (t: any) =>
-      t.status === "done" &&
-      t.completed_at &&
-      (!t.due_at || new Date(t.completed_at) <= new Date(t.due_at)),
+  const finished = tasks.filter((t: any) => FINISHED.has(t.status) && t.completed_at);
+  const onTime = finished.filter(
+    (t: any) => !t.due_at || new Date(t.completed_at) <= new Date(t.due_at),
   ).length;
-  const late = tasks.filter(
-    (t: any) =>
-      t.status === "done" &&
-      t.completed_at &&
-      t.due_at &&
-      new Date(t.completed_at) > new Date(t.due_at),
+  const late = finished.filter(
+    (t: any) => t.due_at && new Date(t.completed_at) > new Date(t.due_at),
   ).length;
   const tasksScore = clamp((onTime * 100 + late * 60) / total);
   const tasksDetail = `${onTime}/${tasks.length} on time, ${late} late`;
 
-  // Budget (15%) — actual vs forecast variance
+  // Budget (15%) — estimate at completion against the approved baseline, using the
+  // same convention as the budget briefing: baseline = planned, spend = actual +
+  // invoice, EAC = spend + forecast. Underspend is not a failure; overspend is.
+  let baseline = 0;
   let forecast = 0;
-  let actual = 0;
+  let spend = 0;
   for (const b of budget) {
-    if (b.kind === "forecast") forecast += Number(b.amount);
-    if (b.kind === "actual") actual += Number(b.amount);
+    const amt = Number(b.amount) || 0;
+    if (b.kind === "planned") baseline += amt;
+    else if (b.kind === "forecast") forecast += amt;
+    else spend += amt; // actual, invoice
   }
+  const eac = spend + forecast;
   let budgetScore = 80;
-  if (forecast > 0) {
-    const variance = Math.abs(actual - forecast) / forecast;
-    budgetScore = clamp(100 - variance * 200);
+  let budgetDetail = "No budget lines logged";
+  if (baseline > 0) {
+    const overrun = Math.max(0, eac - baseline) / baseline;
+    const underrun = Math.max(0, baseline - eac) / baseline;
+    // Overspend costs 300 points per unit of baseline; a large underspend costs a
+    // little too, because it signals a forecast that was never brought in line.
+    budgetScore = clamp(100 - overrun * 300 - Math.max(0, underrun - 0.15) * 60);
+    budgetDetail = `Forecast outturn £${Math.round(eac).toLocaleString()} vs approved £${Math.round(baseline).toLocaleString()} (spent £${Math.round(spend).toLocaleString()})`;
+  } else if (forecast > 0 || spend > 0) {
+    budgetDetail = `Spent £${Math.round(spend).toLocaleString()} · forecast £${Math.round(forecast).toLocaleString()}`;
   }
-  const budgetDetail = forecast
-    ? `Actual £${Math.round(actual).toLocaleString()} vs forecast £${Math.round(forecast).toLocaleString()}`
-    : "No budget lines logged";
 
   // RAID (15%) — risks logged & closed vs realised
   const risks = raid.filter((r: any) => r.kind === "risk").length;
