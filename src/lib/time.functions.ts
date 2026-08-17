@@ -3,18 +3,12 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { ARCHETYPE_SENTIMENT } from "./pm.functions";
 import { generateStakeholderMessage } from "./sim.functions";
+import { PHASE_KEYS, type PhaseKey } from "@/lib/phases";
 
 const ModeSchema = z.enum(["day", "week", "sprint", "steerco", "golive"]);
 
-const PHASE_ORDER = [
-  "initiation",
-  "planning",
-  "execution",
-  "monitoring",
-  "go-live",
-  "closure",
-] as const;
-type Phase = (typeof PHASE_ORDER)[number];
+const PHASE_ORDER = PHASE_KEYS;
+type Phase = PhaseKey;
 
 type StoryBeat = { at: string; beat: string };
 
@@ -27,7 +21,7 @@ export const getReadiness = createServerFn({ method: "GET" })
         .from("tasks")
         .select("id,title,status,priority")
         .eq("user_id", userId)
-        .in("status", ["todo", "in_progress", "blocked"]),
+        .in("status", ["todo", "in_progress", "blocked", "changes_requested"]),
       supabase
         .from("inbox_messages")
         .select("id,subject,sender_name")
@@ -37,7 +31,7 @@ export const getReadiness = createServerFn({ method: "GET" })
         .from("documents")
         .select("id,title,status")
         .eq("user_id", userId)
-        .eq("status", "pending"),
+        .in("status", ["pending", "draft", "changes_requested"]),
       supabase
         .from("meetings")
         .select("id,title,held,minutes,ai_summary,decisions,minutes_sent_at")
@@ -57,6 +51,14 @@ export const getReadiness = createServerFn({ method: "GET" })
     ]);
 
     const meetingsMissingMinutes = (meetings.data ?? []).filter((m) => !m.minutes_sent_at);
+
+    // System-processing work: Atlas is reviewing something. These are NOT
+    // learner blockers and must never carry a penalty.
+    const { data: reviewing } = await supabase
+      .from("tasks")
+      .select("id,title")
+      .eq("user_id", userId)
+      .in("status", ["submitted", "under_review"]);
 
     const openTasks = tasks.data ?? [];
     const unread = inbox.data ?? [];
@@ -79,6 +81,7 @@ export const getReadiness = createServerFn({ method: "GET" })
 
     return {
       openTasks: openTasks.map((t) => ({ id: t.id, title: t.title })),
+      systemProcessing: (reviewing ?? []).map((t) => ({ id: t.id, title: t.title })),
       unreadInbox: unread.map((m) => ({ id: m.id, from: m.sender_name, subject: m.subject })),
       unsubmittedDocs: unsubmitted.map((d) => ({ id: d.id, title: d.title })),
       meetingsMissingMinutes: meetingsMissingMinutes.map((m) => ({ id: m.id, title: m.title })),
@@ -205,19 +208,17 @@ export const advanceTime = createServerFn({ method: "POST" })
       sentimentDeltas[s.name] = (sentimentDeltas[s.name] ?? 0) - 3;
     }
 
-    // 4. Phase advancement check
-    let newPhase: string = state.phase;
-    if (readiness.blockerCount === 0) {
-      const np = nextPhase(state.phase);
-      if (np && (data.mode === "sprint" || data.mode === "steerco" || data.mode === "golive")) {
-        newPhase = np;
-        beats.push({
-          at: new Date().toISOString(),
-          beat: `Phase advanced: ${state.phase} → ${np}.`,
-        });
-        sentimentDeltas["David Okafor"] = (sentimentDeltas["David Okafor"] ?? 0) + 4;
-        reputationDelta += 4;
-      }
+    // 4. The clock NEVER changes the project phase. Phase progression is owned
+    //    solely by the governance gate system (submitGate in pm.functions.ts).
+    //    Advancing time only moves days, triggers events and applies
+    //    consequences. See src/lib/phases.ts for the canonical model.
+    const newPhase: string = state.phase;
+    if (readiness.blockerCount === 0 && data.mode !== "day") {
+      reputationDelta += 2;
+      beats.push({
+        at: new Date().toISOString(),
+        beat: `Time advanced with a clean slate — the board noted the discipline. Defend the phase gate to move phase.`,
+      });
     }
 
     // ---- Apply sentiment deltas ----

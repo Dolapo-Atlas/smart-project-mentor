@@ -512,43 +512,64 @@ export type Database = {
       }
       documents: {
         Row: {
+          approved_at: string | null
+          artifact_type: string | null
           content_excerpt: string | null
           created_at: string
           id: string
           mime_type: string | null
           project_instance_id: string | null
           quality_score: number | null
+          review_feedback: Json | null
+          reviewed_at: string | null
+          reviewer_name: string | null
           size_bytes: number | null
           status: string
           storage_path: string
+          submitted_at: string | null
           title: string
           user_id: string
+          version: number
         }
         Insert: {
+          approved_at?: string | null
+          artifact_type?: string | null
           content_excerpt?: string | null
           created_at?: string
           id?: string
           mime_type?: string | null
           project_instance_id?: string | null
           quality_score?: number | null
+          review_feedback?: Json | null
+          reviewed_at?: string | null
+          reviewer_name?: string | null
           size_bytes?: number | null
           status?: string
           storage_path: string
+          submitted_at?: string | null
           title: string
           user_id: string
+          version?: number
         }
         Update: {
+          approved_at?: string | null
+          artifact_type?: string | null
           content_excerpt?: string | null
           created_at?: string
           id?: string
           mime_type?: string | null
           project_instance_id?: string | null
           quality_score?: number | null
+          review_feedback?: Json | null
+          reviewed_at?: string | null
+          reviewer_name?: string | null
           size_bytes?: number | null
           status?: string
           storage_path?: string
+          submitted_at?: string | null
           title?: string
           user_id?: string
+          version?: number
         }
         Relationships: [
           {
@@ -1323,6 +1344,83 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      project_artifacts: {
+        Row: {
+          approved_at: string | null
+          artifact_type: string
+          content_markdown: string | null
+          created_at: string
+          id: string
+          is_latest: boolean
+          payload: Json
+          project_instance_id: string | null
+          project_name: string | null
+          review_result: Json | null
+          reviewer_name: string | null
+          simulated_role: string | null
+          source_id: string | null
+          source_table: string | null
+          status: string
+          submitted_at: string | null
+          title: string
+          updated_at: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          approved_at?: string | null
+          artifact_type: string
+          content_markdown?: string | null
+          created_at?: string
+          id?: string
+          is_latest?: boolean
+          payload?: Json
+          project_instance_id?: string | null
+          project_name?: string | null
+          review_result?: Json | null
+          reviewer_name?: string | null
+          simulated_role?: string | null
+          source_id?: string | null
+          source_table?: string | null
+          status?: string
+          submitted_at?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+          version?: number
+        }
+        Update: {
+          approved_at?: string | null
+          artifact_type?: string
+          content_markdown?: string | null
+          created_at?: string
+          id?: string
+          is_latest?: boolean
+          payload?: Json
+          project_instance_id?: string | null
+          project_name?: string | null
+          review_result?: Json | null
+          reviewer_name?: string | null
+          simulated_role?: string | null
+          source_id?: string | null
+          source_table?: string | null
+          status?: string
+          submitted_at?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_artifacts_project_instance_id_fkey"
+            columns: ["project_instance_id"]
+            isOneToOne: false
+            referencedRelation: "project_instances"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       project_chapters: {
         Row: {
@@ -2557,7 +2655,13 @@ export type Database = {
       budget_kind: "planned" | "actual" | "invoice" | "forecast"
       cr_risk: "low" | "medium" | "high"
       cr_status: "draft" | "submitted" | "approved" | "rejected"
-      gate_phase: "initiation" | "planning" | "execution" | "closure"
+      gate_phase:
+        | "initiation"
+        | "planning"
+        | "execution"
+        | "closure"
+        | "monitoring"
+        | "go-live"
       gate_status: "locked" | "open" | "passed" | "failed"
       meeting_kind: "standup" | "steering" | "vendor" | "retro"
       rag_status: "green" | "amber" | "red"
@@ -2705,7 +2809,14 @@ export const Constants = {
       budget_kind: ["planned", "actual", "invoice", "forecast"],
       cr_risk: ["low", "medium", "high"],
       cr_status: ["draft", "submitted", "approved", "rejected"],
-      gate_phase: ["initiation", "planning", "execution", "closure"],
+      gate_phase: [
+        "initiation",
+        "planning",
+        "execution",
+        "closure",
+        "monitoring",
+        "go-live",
+      ],
       gate_status: ["locked", "open", "passed", "failed"],
       meeting_kind: ["standup", "steering", "vendor", "retro"],
       rag_status: ["green", "amber", "red"],

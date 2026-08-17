@@ -121,6 +121,7 @@ const MORE_GROUPS: NavGroup[] = [
       { to: "/app/raid", label: "RAID log", icon: ShieldAlert },
       { to: "/app/budget", label: "Budget", icon: Wallet },
       { to: "/app/documents", label: "Documents", icon: FileText },
+      { to: "/app/deliverables", label: "Deliverables", icon: FileText },
       { to: "/app/templates", label: "Templates", icon: LayoutTemplate },
     ],
   },

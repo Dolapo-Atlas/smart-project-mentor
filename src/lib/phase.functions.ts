@@ -1,7 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import {
+  PHASE_LABELS,
+  PHASE_READY_THRESHOLD,
+  phaseOrFirst,
+  type PhaseKey,
+} from "@/lib/phases";
 
-export type PhaseKey = "initiation" | "planning" | "execution" | "monitoring" | "go-live" | "closure";
+export type { PhaseKey };
 
 export type PhaseItem = {
   key: string;
@@ -9,6 +15,8 @@ export type PhaseItem = {
   pct: number;
   route: string;
   hint?: string;
+  /** True once this item counts as delivered for phase progression. */
+  done?: boolean;
 };
 
 export type PhaseProgress = {
@@ -16,6 +24,10 @@ export type PhaseProgress = {
   phaseLabel: string;
   overall: number;
   items: PhaseItem[];
+  /** Checklist entries still blocking the phase gate. */
+  outstanding: PhaseItem[];
+  /** True when every checklist item is delivered and the gate can be defended. */
+  gateReady: boolean;
 };
 
 function pct(n: number, target: number) {
@@ -38,25 +50,7 @@ function bestOf(...values: Array<number | null | undefined>) {
   return Math.max(0, ...values.map((v) => v ?? 0));
 }
 
-function normalisePhase(p?: string | null): PhaseKey {
-  const k = (p ?? "").toLowerCase().trim();
-  if (k.startsWith("init")) return "initiation";
-  if (k.startsWith("plan")) return "planning";
-  if (k.startsWith("exec")) return "execution";
-  if (k.startsWith("mon")) return "monitoring";
-  if (k.startsWith("go")) return "go-live";
-  if (k.startsWith("clos")) return "closure";
-  return "execution";
-}
-
-const LABELS: Record<PhaseKey, string> = {
-  initiation: "Initiation",
-  planning: "Planning",
-  execution: "Execution",
-  monitoring: "Monitoring & Control",
-  "go-live": "Go Live",
-  closure: "Closure",
-};
+const LABELS = PHASE_LABELS;
 
 type TaskRow = {
   title?: string | null;
@@ -150,7 +144,7 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
       scoped(supabase.from("project_outcomes").select("id").eq("user_id", userId)),
     ]);
 
-    const phase = normalisePhase(state?.phase as string | undefined);
+    const phase = phaseOrFirst(state?.phase as string | undefined);
     const D = (docs ?? []) as DocRow[];
     const R = (raid ?? []) as RaidRow[];
     const S = (stakeholders ?? []) as StakeholderRow[];
@@ -422,8 +416,18 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
       ];
     }
 
+    items = items.map((it) => ({ ...it, done: it.pct >= PHASE_READY_THRESHOLD }));
+
     const overall =
       items.length === 0 ? 0 : Math.round(items.reduce((s, it) => s + it.pct, 0) / items.length);
+    const outstanding = items.filter((it) => !it.done);
 
-    return { phase, phaseLabel: LABELS[phase], overall, items };
+    return {
+      phase,
+      phaseLabel: LABELS[phase],
+      overall,
+      items,
+      outstanding,
+      gateReady: outstanding.length === 0,
+    };
   });
