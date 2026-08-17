@@ -473,20 +473,51 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
       ];
     } else {
       // closure
-      const finalDeliv = bestOf(
-        pct(D.filter((d) => d.status === "approved").length, Math.max(3, D.length)),
-        taskAveragePct(/final deliverable|final delivery|deliverable|closure|close.?out/i, "documents"),
+      // Closure items must key off closure-specific evidence only. Falling back
+      // to linked_area ("documents", "reports") matched any approved task from
+      // earlier phases and made the whole phase read 100% on entry.
+      const deliverableTypes = [
+        "project_charter",
+        "stakeholder_register",
+        "project_schedule",
+        "wbs",
+        "resource_plan",
+        "communication_plan",
+        "risk_response_plan",
+        "uat_plan",
+        "training_plan",
+        "cutover_plan",
+      ];
+      const approvedTypes = new Set(
+        A.filter((a) => String(a.status ?? "").toLowerCase() === "approved").map((a) => String(a.artifact_type ?? "")),
       );
-      const handover = bestOf(docPct(/handover|hand.?over|transition/i), taskBestPct(/handover|hand.?over|transition|support model/i, "documents"));
-      const lessons = bestOf(pct(RE.length, 3), lessonArtifactPct(), taskBestPct(/lessons learned|lesson|retrospective|post.?mortem/i));
-      const closureReport = bestOf(docPct(/closure|close.?out|final report/i), taskBestPct(/closure report|close.?out|final report|project closure/i, ["documents", "reports"]));
+      const deliveredCount = deliverableTypes.filter((t) => approvedTypes.has(t)).length;
+      const finalDeliv = bestOf(
+        pct(deliveredCount, deliverableTypes.length),
+        pct(D.filter((d) => ["approved", "reviewed"].includes(String(d.status ?? "").toLowerCase())).length, Math.max(3, D.length)),
+      );
+      const handover = bestOf(
+        artifactTypePct("handover_note"),
+        docPct(/handover|hand.?over|transition note|transition plan/i),
+        taskBestPct(/handover|hand.?over|transition note|support model/i),
+      );
+      const lessons = bestOf(
+        artifactTypePct("lessons_learned"),
+        lessonArtifactPct(),
+        taskBestPct(/lessons learned|retrospective|post.?mortem/i),
+      );
+      const closureReport = bestOf(
+        artifactTypePct("closure_report"),
+        docPct(/closure report|close.?out report|final report/i),
+        taskBestPct(/closure report|close.?out report|final report|project closure/i),
+      );
       const closureGate = G.find((g) => String(g.phase).toLowerCase() === "closure");
       const sponsorApproval = bestOf(
         // Same self-reference rule as Go-Live: the sponsor sign-off happens at
         // the Closure gate itself, so an open gate satisfies this item.
         closureGate && closureGate.status !== "locked" ? 100 : 0,
         O.length > 0 ? 100 : 0,
-        taskBestPct(/sponsor approval|closure approval|sign.?off|phase gate|closure gate/i, "gates"),
+        taskBestPct(/sponsor approval|closure approval|closure sign.?off|closure gate/i),
       );
       items = [
         { key: "final", label: "Final Deliverables", pct: finalDeliv, route: "/app/documents" },
