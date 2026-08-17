@@ -23,6 +23,7 @@ import { PhaseReadinessPanel } from "@/components/dashboard/phase-readiness-pane
 import { FirstWinPanel } from "@/components/dashboard/first-win-panel";
 import { SubscriptionNotices } from "@/components/dashboard/subscription-notices";
 import { GuidedTour } from "@/components/guided-tour";
+import { MilestoneWatcher } from "@/components/milestones/milestone-watcher";
 import { getMyAccess } from "@/lib/access.functions";
 import { useEffect, useRef, useState } from "react";
 import { trackLearner } from "@/lib/learner-events";
@@ -173,6 +174,7 @@ function Dashboard() {
 
   return (
     <div className="space-y-6">
+      <MilestoneWatcher />
       <header className="atlas-rise flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
         <div className="min-w-0">
           <div className="truncate text-xs uppercase tracking-[0.2em] text-muted-foreground">
