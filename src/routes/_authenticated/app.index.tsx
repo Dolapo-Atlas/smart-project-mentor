@@ -25,6 +25,8 @@ import { SubscriptionNotices } from "@/components/dashboard/subscription-notices
 import { GuidedTour } from "@/components/guided-tour";
 import { MilestoneWatcher } from "@/components/milestones/milestone-watcher";
 import { getMyAccess } from "@/lib/access.functions";
+import { getCompletionState } from "@/lib/completion.functions";
+import { CompletionHub } from "@/components/completion/completion-hub";
 import { useEffect, useRef, useState } from "react";
 import { trackLearner } from "@/lib/learner-events";
 
@@ -41,6 +43,7 @@ function Dashboard() {
   const fetchActive = useServerFn(getActiveProject);
   const fetchAccess = useServerFn(getMyAccess);
   const markTour = useServerFn(markTourCompleted);
+  const fetchCompletion = useServerFn(getCompletionState);
 
 
   const { data: overview } = useQuery({ queryKey: ["overview"], queryFn: () => fetchOverview() });
@@ -49,10 +52,18 @@ function Dashboard() {
     queryFn: () => fetchActive(),
   });
   useQuery({ queryKey: ["my-access"], queryFn: () => fetchAccess() });
+  const { data: completion } = useQuery({
+    queryKey: ["completion-state"],
+    queryFn: () => fetchCompletion() as Promise<any>,
+  });
+  const isCompleted = !!completion?.completed;
 
   const [briefOpen, setBriefOpen] = useState(false);
   const [emailPromptOpen, setEmailPromptOpen] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
+  // Completed runs default to the completion hub. "Review completed project"
+  // flips this on so the archived workspace can be read, never mutated.
+  const [reviewMode, setReviewMode] = useState(false);
   const [focusMode, setFocusMode] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     return window.localStorage.getItem("atlas.focus-mode") === "1";
@@ -172,18 +183,37 @@ function Dashboard() {
   const tpl = (active as any)?.project_templates;
   const projectTitle = (active as any)?.display_name ?? tpl?.title ?? state?.project_name ?? "Digital Care Records Rollout";
 
+  // Completed run → completion hub replaces the active workspace as Home.
+  if (isCompleted && !reviewMode) {
+    return <CompletionHub state={completion as any} onReviewWorkspace={() => setReviewMode(true)} />;
+  }
+
   return (
     <div className="space-y-6">
-      <MilestoneWatcher />
+      {!isCompleted && <MilestoneWatcher />}
+      {isCompleted && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface-cream px-4 py-3">
+          <div className="text-sm">
+            <span className="font-medium">Review mode.</span>{" "}
+            <span className="text-muted-foreground">
+              This project is complete and archived — nothing here can be changed.
+            </span>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => setReviewMode(false)}>
+            Back to completion summary
+          </Button>
+        </div>
+      )}
       <header className="atlas-rise flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
         <div className="min-w-0">
           <div className="truncate text-xs uppercase tracking-[0.2em] text-muted-foreground">
             {projectTitle} · Day {state?.current_day ?? 1} · Week {state?.current_week ?? 1}
           </div>
           <h1 className="mt-2 font-display text-3xl font-medium tracking-tight md:text-4xl">
-            {greeting}, {name}.
+            {isCompleted ? `${projectTitle} — archived workspace` : `${greeting}, ${name}.`}
           </h1>
         </div>
+        {!isCompleted && (
         <div className="-mx-1 flex shrink-0 flex-nowrap gap-2 overflow-x-auto px-1 pb-1 atlas-no-scrollbar sm:flex-wrap sm:overflow-visible">
           <ActionChip
             tone={focusMode ? "orange" : "lilac"}
@@ -225,17 +255,26 @@ function Dashboard() {
             {summon.isPending ? "Drafting…" : "New stakeholder email"}
           </ActionChip>
         </div>
+        )}
       </header>
 
       <SubscriptionNotices />
 
-      {!firstRunActive && (
+      {!firstRunActive && !isCompleted && (
         <div className="atlas-rise atlas-rise-1">
           <TimeControls />
         </div>
       )}
 
-      {!firstRunActive && (focusMode ? (
+      {isCompleted ? (
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="min-w-0 space-y-6">
+            <TaskSummaryStrip />
+            <TaskBoard />
+          </div>
+          <ProjectSidePanel />
+        </div>
+      ) : !firstRunActive && (focusMode ? (
         <div
           className="mx-auto max-w-2xl space-y-4"
         >
