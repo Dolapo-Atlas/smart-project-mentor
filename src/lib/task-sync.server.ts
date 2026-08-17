@@ -97,6 +97,9 @@ export async function markSubmittedArtifactTasks(
 }
 
 export async function reconcileSubmittedArtifactTasks(supabase: any, userId: string) {
+  // Approved deliverables close their originating task outright, so completed
+  // initiation/planning work stops lingering on the board in later phases.
+  await reconcileApprovedArtifactTasks(supabase, userId);
   try {
     const { data: report } = await supabase
       .from("status_reports")
