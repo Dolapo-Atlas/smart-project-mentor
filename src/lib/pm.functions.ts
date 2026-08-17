@@ -198,7 +198,7 @@ export const listStatusReports = createServerFn({ method: "GET" })
       .from("status_reports")
       .select("*")
       .eq("user_id", context.userId)
-      .order("week_start", { ascending: false });
+      .order("sim_week", { ascending: false });
     if (error) throw error;
     return data ?? [];
   });
@@ -208,6 +208,7 @@ export const upsertStatusReport = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z.object({
       week_start: z.string().optional(),
+      sim_week: z.number().int().positive().optional(),
       rag_summary: Rag,
       achievements: z.string().optional(),
       next_week: z.string().optional(),
@@ -222,7 +223,34 @@ export const upsertStatusReport = createServerFn({ method: "POST" })
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    const week_start = data.week_start ?? mondayOf(new Date());
+    // Reports are keyed to the SIMULATION week, never the learner's real
+    // calendar week: several simulation weeks can pass on one real day, and
+    // each of them must be able to carry its own report.
+    const instanceId = await activeInstanceId(context.supabase, context.userId);
+    let clockQuery = context.supabase
+      .from("simulation_state")
+      .select("current_week,current_day")
+      .eq("user_id", context.userId);
+    if (instanceId) clockQuery = clockQuery.eq("project_instance_id", instanceId);
+    const { data: clock } = await clockQuery.maybeSingle();
+    const sim_week = Math.max(
+      1,
+      data.sim_week ?? clock?.current_week ?? (clock?.current_day ? Math.ceil(clock.current_day / 7) : 1),
+    );
+    // week_start stays as a human-readable label for the simulation week,
+    // derived from the project start date — not from today's date.
+    let simStart = new Date();
+    if (instanceId) {
+      const { data: inst } = await context.supabase
+        .from("project_instances")
+        .select("started_at")
+        .eq("id", instanceId)
+        .maybeSingle();
+      if (inst?.started_at) simStart = new Date(inst.started_at);
+    }
+    const weekDate = new Date(simStart);
+    weekDate.setDate(weekDate.getDate() + (sim_week - 1) * 7);
+    const week_start = data.week_start ?? mondayOf(weekDate);
     // Batch 2: block empty submissions. Weak-but-genuine attempts still pass.
     if (data.submit) {
       const missing: string[] = [];
@@ -238,6 +266,8 @@ export const upsertStatusReport = createServerFn({ method: "POST" })
     }
     const base = {
       user_id: context.userId,
+      project_instance_id: instanceId,
+      sim_week,
       week_start,
       rag_summary: data.rag_summary,
       achievements: data.achievements ?? null,
@@ -250,7 +280,7 @@ export const upsertStatusReport = createServerFn({ method: "POST" })
     };
     const { data: row, error } = await context.supabase
       .from("status_reports")
-      .upsert(base, { onConflict: "user_id,week_start" })
+      .upsert(base, { onConflict: "user_id,project_instance_id,sim_week" })
       .select()
       .single();
     if (error) throw error;
@@ -269,7 +299,7 @@ export const upsertStatusReport = createServerFn({ method: "POST" })
         const prompt = `You are a programme sponsor reviewing a weekly status report from your project coordinator on the "${projectCtx.name}" project.
 ${projectCtx.domainGuard}
 
-Week: ${week_start}
+Week: simulation week ${sim_week} (w/c ${week_start})
 RAG: ${data.rag_summary}
 Achievements:
 ${data.achievements || "(none)"}
@@ -305,7 +335,7 @@ Score 0-100. A good status report has: concrete achievements with evidence, name
             user_id: context.userId,
             sender_name: sponsor.name,
             sender_role: sponsor.title,
-            subject: `Re: Week ${week_start} status`,
+            subject: `Re: Week ${sim_week} status`,
             body: object.sponsor_reaction,
             tone: object.score >= 70 ? "supportive" : object.score >= 50 ? "curious" : "frustrated",
           });
@@ -328,7 +358,7 @@ Score 0-100. A good status report has: concrete achievements with evidence, name
       }
       try {
         const values = {
-          period: `Week of ${week_start}`,
+          period: `Simulation week ${sim_week}`,
           rag: data.rag_summary,
           achievements: data.achievements ?? "",
           next_week: data.next_week ?? "",
