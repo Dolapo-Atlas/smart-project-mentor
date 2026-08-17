@@ -69,7 +69,16 @@ const PACK_BLOCK = /─{5,}\s*\nBEFORE YOU RESPOND\n([\s\S]*?)\n─{5,}\s*\n?/;
 function Inbox() {
   const qc = useQueryClient();
   const { onboarding } = Route.useSearch();
-  const onboardingMode = onboarding === 1;
+  // Pack state is tracked per project instance, so a brand new simulation asks
+  // the learner to read its own Initiation Pack again.
+  const {
+    packOpened: packSeen,
+    markPackOpened,
+    required: firstTaskRequired,
+  } = useFirstEmailGate();
+  // The guided first-email treatment applies whenever the day-one task is
+  // still outstanding, not only when arriving via ?onboarding=1.
+  const onboardingMode = onboarding === 1 || firstTaskRequired;
   const { settings: voice } = useVoiceSettings();
   const fetchInbox = useServerFn(listInbox);
   const markFn = useServerFn(markRead);
@@ -134,13 +143,6 @@ function Inbox() {
   const [replyBody, setReplyBody] = useState("");
   const [packOpen, setPackOpen] = useState(false);
   const [remindOpen, setRemindOpen] = useState(false);
-  // Pack state is tracked per project instance, so a brand new simulation asks
-  // the learner to read its own Initiation Pack again.
-  const {
-    packOpened: packSeen,
-    markPackOpened,
-    required: firstTaskRequired,
-  } = useFirstEmailGate();
   const openPack = () => {
     setPackOpen(true);
     setRemindOpen(false);
