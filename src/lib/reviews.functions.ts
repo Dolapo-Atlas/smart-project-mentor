@@ -3,6 +3,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { generateObject } from "ai";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
+import { getProjectCtx } from "./pm.functions";
 
 const MODEL = "google/gemini-3-flash-preview";
 function getModel() {
@@ -112,7 +113,9 @@ Raw heuristic scores (use as anchors, adjust ±10 with judgement):
 - Decision quality: ${rawDecision}
 
 Tone: warm, candid, specific. Address the coordinator as "you". No corporate fluff.
-Highlights = what they did well. Improvements = concrete things to try next week.`;
+Highlights = what they did well. Improvements = concrete things to try next week.
+
+${(await getProjectCtx(supabase, userId)).domainGuard}`;
 
     const { object } = await generateObject({
       model: getModel(),
