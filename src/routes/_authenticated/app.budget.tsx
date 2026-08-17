@@ -6,7 +6,7 @@ import { BudgetBriefing } from "@/components/dashboard/budget-briefing";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listBudget, addBudgetLine, deleteBudgetLine, seedBudgetIfEmpty } from "@/lib/pm.functions";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Trash2, Plus } from "lucide-react";
