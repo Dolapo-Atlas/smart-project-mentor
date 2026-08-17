@@ -89,7 +89,7 @@ export const MilestoneCard = React.forwardRef<
             <p>{simulatedRole}</p>
             {m.kind === "completion" ? (
               <>
-                {duration && <p>{duration} simulated project</p>}
+                {duration && <p>{duration}</p>}
                 {deliverables && <p>{deliverables} deliverables completed</p>}
                 {credential && credential !== "Not yet issued" && (
                   <p className="flex items-center gap-2 text-surface-orange-accent">
