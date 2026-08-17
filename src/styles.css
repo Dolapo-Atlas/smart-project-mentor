@@ -157,8 +157,8 @@
   --surface-orange: oklch(0.975 0.025 60);
   --surface-orange-border: oklch(0.915 0.055 55);
   --surface-orange-accent: oklch(0.52 0.16 45);
-  --surface-cream: oklch(0.978 0.03 90);
-  --surface-cream-border: oklch(0.915 0.05 88);
+  --surface-cream: oklch(0.965 0.03 90);
+  --surface-cream-border: oklch(0.88 0.05 88);
   --surface-cream-accent: oklch(0.46 0.09 75);
   --surface-green: oklch(0.975 0.025 155);
   --surface-green-border: oklch(0.915 0.05 155);
