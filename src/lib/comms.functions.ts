@@ -379,6 +379,9 @@ export const sendComm = createServerFn({ method: "POST" })
       const prompt = `You are simulating "${sh.name}, ${sh.title}" on the "${projectName}" project.
 Project state: phase=${state?.phase}, health=${state?.health}, reputation=${state?.reputation}/100, progress=${state?.progress}/100.
 
+AUTHORITATIVE PROJECT FACTS (the only figures that exist — quote them exactly):
+${factsBlock}
+
 Current workspace evidence you can see:
 ${evidence.evidenceSummary}
 
@@ -452,6 +455,7 @@ Choose sentiment honestly: positive, neutral, pushback, concerned, or ignored (i
               project: {
                 projectName,
                 coordinatorName: firstName,
+                factsBlock,
                 phase: state?.phase,
                 health: state?.health,
                 reputation: state?.reputation,
