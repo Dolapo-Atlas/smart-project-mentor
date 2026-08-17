@@ -149,6 +149,8 @@ function CharterPage() {
   const firstTime = useFirstTimeMode("template.project_charter");
   const [charterExampleOpen, setCharterExampleOpen] = useState(false);
   const [packOpen, setPackOpen] = useState(false);
+  const [autoSaving, setAutoSaving] = useState(false);
+  const draftKey = charterQuery.data?.id ? `atlas.charter-draft.${charterQuery.data.id}` : null;
 
   const focusKeys = useMemo(() => {
     const t = taskQuery.data as any;
@@ -167,8 +169,23 @@ function CharterPage() {
 
   useEffect(() => {
     if (charterQuery.data) {
-      setValues((charterQuery.data.payload as Record<string, string>) ?? {});
-      setDirty(false);
+      const server = (charterQuery.data.payload as Record<string, string>) ?? {};
+      // Unsaved keystrokes are kept locally so switching modules (or a reload)
+      // never wipes work in progress.
+      let local: Record<string, string> | null = null;
+      if (typeof window !== "undefined" && draftKey) {
+        try {
+          const raw = window.localStorage.getItem(draftKey);
+          if (raw) local = JSON.parse(raw) as Record<string, string>;
+        } catch {
+          local = null;
+        }
+      }
+      const merged = { ...server, ...(local ?? {}) };
+      setValues(merged);
+      const hasLocalEdits =
+        !!local && Object.keys(merged).some((k) => (merged[k] ?? "") !== (server[k] ?? ""));
+      setDirty(hasLocalEdits);
     }
   }, [charterQuery.data?.id]);
 
@@ -200,6 +217,7 @@ function CharterPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["charter"] });
       setDirty(false);
+      if (typeof window !== "undefined" && draftKey) window.localStorage.removeItem(draftKey);
       toast.success("Draft saved.");
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Save failed"),
@@ -220,6 +238,7 @@ function CharterPage() {
       qc.invalidateQueries({ queryKey: ["overview"] });
       qc.invalidateQueries({ queryKey: ["phase-progress"] });
       setDirty(false);
+      if (typeof window !== "undefined" && draftKey) window.localStorage.removeItem(draftKey);
       toast.success(`Charter v${r.version} submitted to sponsor for approval.`);
     },
     onError: (e) => {
@@ -236,6 +255,37 @@ function CharterPage() {
     setValues((prev) => ({ ...prev, [key]: v }));
     setDirty(true);
   }
+
+  // Mirror every keystroke into localStorage immediately (survives navigation)
+  useEffect(() => {
+    if (typeof window === "undefined" || !draftKey) return;
+    if (!dirty) return;
+    try {
+      window.localStorage.setItem(draftKey, JSON.stringify(values));
+    } catch {
+      /* storage full or blocked — server autosave below still covers it */
+    }
+  }, [values, dirty, draftKey]);
+
+  // Debounced autosave to the server so the draft is durable across devices.
+  useEffect(() => {
+    if (!dirty || !charterQuery.data?.id) return;
+    const id = charterQuery.data.id;
+    const handle = window.setTimeout(async () => {
+      try {
+        setAutoSaving(true);
+        await saveFn({ data: { id, payload: values } });
+        setDirty(false);
+        if (draftKey) window.localStorage.removeItem(draftKey);
+        qc.invalidateQueries({ queryKey: ["charter"] });
+      } catch {
+        /* keep dirty so the local copy and a later retry still protect the work */
+      } finally {
+        setAutoSaving(false);
+      }
+    }, 1200);
+    return () => window.clearTimeout(handle);
+  }, [values, dirty, charterQuery.data?.id, draftKey]);
 
   function exportPdf() {
     const doc = new jsPDF({ unit: "pt", format: "a4" });
@@ -616,6 +666,13 @@ function CharterPage() {
             />
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
+            <span className="w-full text-xs text-muted-foreground">
+              {autoSaving || saveMutation.isPending
+                ? "Saving…"
+                : dirty
+                  ? "Unsaved changes kept safely — autosaving"
+                  : "All changes saved"}
+            </span>
             <Button
               size="sm"
               variant="outline"
