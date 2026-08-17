@@ -142,6 +142,7 @@ const MORE_GROUPS: NavGroup[] = [
     items: [
       { to: "/app/learning", label: "Competencies", icon: Compass },
       { to: "/app/lessons", label: "Retrospectives", icon: Sparkles },
+      { to: "/app/milestones", label: "Milestones", icon: Award },
       { to: "/app/results", label: "Final review & certificate", icon: Award },
     ],
   },
