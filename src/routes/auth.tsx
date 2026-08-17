@@ -12,9 +12,8 @@ import { AtlasMark } from "@/components/landing/atlas-chrome";
 import { CheckCircle2, Sparkles, ShieldCheck } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    mode: search.mode === "signup" ? ("signup" as const) : ("signin" as const),
-  }),
+  validateSearch: (search: Record<string, unknown>): { mode?: "signin" | "signup" } =>
+    search.mode === "signup" ? { mode: "signup" } : {},
   head: () => ({
     meta: [
       { title: "Sign in — Atlas" },
@@ -28,7 +27,7 @@ function AuthPage() {
   const navigate = useNavigate();
   const { mode: initialMode } = Route.useSearch();
   const fetchActiveProject = useServerFn(getActiveProject);
-  const [mode, setMode] = useState<"signin" | "signup">(initialMode);
+  const [mode, setMode] = useState<"signin" | "signup">(initialMode ?? "signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
