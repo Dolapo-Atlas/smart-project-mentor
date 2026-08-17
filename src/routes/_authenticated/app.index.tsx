@@ -31,9 +31,6 @@ import { useEffect, useRef, useState } from "react";
 import { trackLearner } from "@/lib/learner-events";
 
 export const Route = createFileRoute("/_authenticated/app/")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    review: search.review === "1" || search.review === true ? true : undefined,
-  }),
   component: Dashboard,
 });
 
@@ -41,7 +38,6 @@ export const Route = createFileRoute("/_authenticated/app/")({
 function Dashboard() {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const { review } = Route.useSearch();
   const fetchOverview = useServerFn(getOverview);
   const genMessage = useServerFn(generateStakeholderMessage);
   const fetchActive = useServerFn(getActiveProject);
