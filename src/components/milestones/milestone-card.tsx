@@ -33,7 +33,7 @@ export const MilestoneCard = React.forwardRef<
     <div
       ref={ref}
       className={cn(
-        "relative flex aspect-[4/5] w-full flex-col overflow-hidden bg-surface-cream p-[5%]",
+        "@container relative flex aspect-[4/5] w-full flex-col overflow-hidden bg-surface-cream p-[5%]",
         className,
       )}
     >
