@@ -48,7 +48,16 @@ export type FunnelEvent =
   | "inbox_opened"
   | "first_reply_sent"
   | "day_advanced"
-  | "subscription_activated";
+  | "subscription_activated"
+  // Atlas Challenges (public mini-simulation funnel)
+  | "challenge_page_view"
+  | "challenge_started"
+  | "decision_1_completed"
+  | "decision_2_completed"
+  | "challenge_completed"
+  | "score_shared"
+  | "full_atlas_clicked"
+  | "atlas_signup_from_challenge";
 
 /** Meta standard-event mapping so ad optimisation works out of the box. */
 const META_EVENTS: Partial<Record<FunnelEvent, { name: string; standard: boolean }>> = {

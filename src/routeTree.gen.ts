@@ -20,6 +20,7 @@ import { Route as ReportCodeRouteImport } from './routes/report.$code'
 import { Route as InviteCodeRouteImport } from './routes/invite.$code'
 import { Route as EnrolSuccessRouteImport } from './routes/enrol.success'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
+import { Route as ChallengeFridayCrisisRouteImport } from './routes/challenge.friday-crisis'
 import { Route as CertificatePreviewRouteImport } from './routes/certificate.preview'
 import { Route as CertificateCodeRouteImport } from './routes/certificate.$code'
 import { Route as CertSlugRouteImport } from './routes/cert.$slug'
@@ -128,6 +129,11 @@ const EnrolSuccessRoute = EnrolSuccessRouteImport.update({
 const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   id: '/email/unsubscribe',
   path: '/email/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChallengeFridayCrisisRoute = ChallengeFridayCrisisRouteImport.update({
+  id: '/challenge/friday-crisis',
+  path: '/challenge/friday-crisis',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CertificatePreviewRoute = CertificatePreviewRouteImport.update({
@@ -443,6 +449,7 @@ export interface FileRoutesByFullPath {
   '/cert/$slug': typeof CertSlugRoute
   '/certificate/$code': typeof CertificateCodeRoute
   '/certificate/preview': typeof CertificatePreviewRoute
+  '/challenge/friday-crisis': typeof ChallengeFridayCrisisRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/enrol/success': typeof EnrolSuccessRoute
   '/invite/$code': typeof InviteCodeRoute
@@ -509,6 +516,7 @@ export interface FileRoutesByTo {
   '/cert/$slug': typeof CertSlugRoute
   '/certificate/$code': typeof CertificateCodeRoute
   '/certificate/preview': typeof CertificatePreviewRoute
+  '/challenge/friday-crisis': typeof ChallengeFridayCrisisRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/enrol/success': typeof EnrolSuccessRoute
   '/invite/$code': typeof InviteCodeRoute
@@ -578,6 +586,7 @@ export interface FileRoutesById {
   '/cert/$slug': typeof CertSlugRoute
   '/certificate/$code': typeof CertificateCodeRoute
   '/certificate/preview': typeof CertificatePreviewRoute
+  '/challenge/friday-crisis': typeof ChallengeFridayCrisisRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/enrol/success': typeof EnrolSuccessRoute
   '/invite/$code': typeof InviteCodeRoute
@@ -647,6 +656,7 @@ export interface FileRouteTypes {
     | '/cert/$slug'
     | '/certificate/$code'
     | '/certificate/preview'
+    | '/challenge/friday-crisis'
     | '/email/unsubscribe'
     | '/enrol/success'
     | '/invite/$code'
@@ -713,6 +723,7 @@ export interface FileRouteTypes {
     | '/cert/$slug'
     | '/certificate/$code'
     | '/certificate/preview'
+    | '/challenge/friday-crisis'
     | '/email/unsubscribe'
     | '/enrol/success'
     | '/invite/$code'
@@ -781,6 +792,7 @@ export interface FileRouteTypes {
     | '/cert/$slug'
     | '/certificate/$code'
     | '/certificate/preview'
+    | '/challenge/friday-crisis'
     | '/email/unsubscribe'
     | '/enrol/success'
     | '/invite/$code'
@@ -847,6 +859,7 @@ export interface RootRouteChildren {
   CertSlugRoute: typeof CertSlugRoute
   CertificateCodeRoute: typeof CertificateCodeRoute
   CertificatePreviewRoute: typeof CertificatePreviewRoute
+  ChallengeFridayCrisisRoute: typeof ChallengeFridayCrisisRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   EnrolSuccessRoute: typeof EnrolSuccessRoute
   InviteCodeRoute: typeof InviteCodeRoute
@@ -941,6 +954,13 @@ declare module '@tanstack/react-router' {
       path: '/email/unsubscribe'
       fullPath: '/email/unsubscribe'
       preLoaderRoute: typeof EmailUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/challenge/friday-crisis': {
+      id: '/challenge/friday-crisis'
+      path: '/challenge/friday-crisis'
+      fullPath: '/challenge/friday-crisis'
+      preLoaderRoute: typeof ChallengeFridayCrisisRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/certificate/preview': {
@@ -1444,6 +1464,7 @@ const rootRouteChildren: RootRouteChildren = {
   CertSlugRoute: CertSlugRoute,
   CertificateCodeRoute: CertificateCodeRoute,
   CertificatePreviewRoute: CertificatePreviewRoute,
+  ChallengeFridayCrisisRoute: ChallengeFridayCrisisRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   EnrolSuccessRoute: EnrolSuccessRoute,
   InviteCodeRoute: InviteCodeRoute,
