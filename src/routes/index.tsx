@@ -38,6 +38,7 @@ import atlasMark from "@/assets/atlas-mark.png.asset.json";
 import { AutoDemo } from "@/components/auto-demo";
 import { DemoVideo } from "@/components/landing/demo-video";
 import { HeroStage } from "@/components/landing/hero-stage";
+import { SimulationExplainer } from "@/components/landing/simulation-explainer";
 import { getReferralStats } from "@/lib/signup.functions";
 
 export const Route = createFileRoute("/")({
