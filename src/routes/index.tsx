@@ -75,6 +75,7 @@ const signupSchema = z.object({
 
 const NAV_LINKS = [
   { href: "#how", label: "How It Works" },
+  { href: "#simulation", label: "Simulation" },
   { href: "#experience", label: "Experience" },
   { href: "#readiness", label: "What You Receive" },
   { href: "#faq", label: "FAQ" },
@@ -100,6 +101,7 @@ function Landing() {
         <DemoWalkthrough />
         <Features />
         <HowItWorks />
+        <SimulationExplainer />
         <ReadinessOffer />
         <Experience />
         <WhyAtlas />
