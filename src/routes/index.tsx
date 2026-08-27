@@ -38,6 +38,7 @@ import atlasMark from "@/assets/atlas-mark.png.asset.json";
 import { AutoDemo } from "@/components/auto-demo";
 import { DemoVideo } from "@/components/landing/demo-video";
 import { HeroStage } from "@/components/landing/hero-stage";
+import { SimulationExplainer } from "@/components/landing/simulation-explainer";
 import { getReferralStats } from "@/lib/signup.functions";
 
 export const Route = createFileRoute("/")({
@@ -74,6 +75,7 @@ const signupSchema = z.object({
 
 const NAV_LINKS = [
   { href: "#how", label: "How It Works" },
+  { href: "#simulation", label: "Simulation" },
   { href: "#experience", label: "Experience" },
   { href: "#readiness", label: "What You Receive" },
   { href: "#faq", label: "FAQ" },
@@ -99,6 +101,7 @@ function Landing() {
         <DemoWalkthrough />
         <Features />
         <HowItWorks />
+        <SimulationExplainer />
         <ReadinessOffer />
         <Experience />
         <WhyAtlas />
