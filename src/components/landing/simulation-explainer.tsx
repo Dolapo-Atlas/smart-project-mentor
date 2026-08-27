@@ -186,7 +186,7 @@ export function SimulationExplainer() {
           </Reveal>
 
           {/* Card 4 — What you actually do (wide) */}
-          <Reveal delay={160} className="md:col-span-2">
+          <Reveal delay={160} className="md:col-span-2 lg:col-span-2">
             <Card variant="soft" tone="neutral" className="h-full">
               <CardHeader>
                 <CardTagChip tone="neutral">What you actually do</CardTagChip>
@@ -263,7 +263,7 @@ export function SimulationExplainer() {
           </Reveal>
 
           {/* Closing CTA banner */}
-          <Reveal delay={280} className="md:col-span-2">
+          <Reveal delay={280} className="md:col-span-2 lg:col-span-2">
             <Card variant="soft" tone="navy" className="h-full">
               <CardContent className="flex h-full flex-col justify-between gap-6 p-6 sm:flex-row sm:items-center sm:p-8">
                 <div className="max-w-md">
