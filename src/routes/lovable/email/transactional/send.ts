@@ -13,6 +13,75 @@ const SENDER_DOMAIN = "notify.atlassim.co"
 // Can be the root domain when display_from_root is enabled — this is cosmetic only.
 const FROM_DOMAIN = "atlassim.co"
 
+/**
+ * SECURITY POLICY
+ * ---------------
+ * This route is a narrowly scoped wrapper, not a generic mailer.
+ *
+ *  - Ordinary authenticated users may only trigger allowlisted templates.
+ *  - The recipient is ALWAYS derived server-side: either the authenticated
+ *    user's own verified address, or a fixed internal address for internal
+ *    notices. Client-supplied recipients are ignored.
+ *  - Template data is filtered to an allowlist of short scalar fields per
+ *    template; no HTML, subject or body content is ever accepted from the
+ *    client.
+ *  - Admins (public.user_roles / has_role) may send any registered template
+ *    to an explicit recipient for support/operational purposes.
+ *  - Per-user hourly rate limit.
+ */
+
+/** Templates an ordinary signed-in user may trigger about themselves. */
+const SELF_SEND_TEMPLATES: Record<string, readonly string[]> = {
+  'unlock-confirmation': ['name', 'first_name', 'amount_paid', 'continue_url'],
+  'enrolment-confirmation': ['name', 'amount', 'reference'],
+  'early-access-welcome': ['name', 'referral_code'],
+}
+
+/** Templates that always go to the internal Atlas inbox, never to a learner. */
+const INTERNAL_TEMPLATES: Record<string, readonly string[]> = {
+  'purchase-admin-alert': [
+    'name',
+    'email',
+    'plan',
+    'amount',
+    'region',
+    'price_id',
+    'started_at',
+  ],
+  'early-access-signup': [
+    'name',
+    'email',
+    'desired_role',
+    'country',
+    'experience_level',
+    'submitted_at',
+  ],
+}
+
+/** Fixed internal recipient for INTERNAL_TEMPLATES. */
+const INTERNAL_RECIPIENT = 'rasaqdolapo@gmail.com'
+
+/** Max emails per authenticated user per hour. */
+const RATE_LIMIT_PER_HOUR = 12
+
+const MAX_FIELD_LENGTH = 300
+
+function sanitiseTemplateData(
+  raw: Record<string, any>,
+  allowedKeys: readonly string[],
+): Record<string, string> {
+  const clean: Record<string, string> = {}
+  for (const key of allowedKeys) {
+    const value = raw[key]
+    if (value === undefined || value === null) continue
+    if (typeof value === 'object') continue
+    const asText = String(value).slice(0, MAX_FIELD_LENGTH).replace(/[<>]/g, '')
+    if (asText.length === 0) continue
+    clean[key] = asText
+  }
+  return clean
+}
+
 function redactEmail(email: string | null | undefined): string {
   if (!email) return '***'
   const [localPart, domain] = email.split('@')
@@ -61,18 +130,20 @@ export const Route = createFileRoute("/lovable/email/transactional/send")({
 
         // Parse request body
         let templateName: string
-        let recipientEmail: string
+        let requestedRecipient: string | undefined
         let idempotencyKey: string
         let messageId: string
-        let templateData: Record<string, any> = {}
+        let rawTemplateData: Record<string, any> = {}
         try {
           const body = await request.json()
-          templateName = body.templateName || body.template_name
-          recipientEmail = body.recipientEmail || body.recipient_email
+          templateName = String(body.templateName || body.template_name || '')
+          const candidate = body.recipientEmail || body.recipient_email
+          requestedRecipient = typeof candidate === 'string' ? candidate : undefined
           messageId = crypto.randomUUID()
-          idempotencyKey = body.idempotencyKey || body.idempotency_key || messageId
+          const key = body.idempotencyKey || body.idempotency_key
+          idempotencyKey = typeof key === 'string' ? key.slice(0, 200) : messageId
           if (body.templateData && typeof body.templateData === 'object') {
-            templateData = body.templateData
+            rawTemplateData = body.templateData
           }
         } catch {
           return Response.json(
@@ -101,21 +172,78 @@ export const Route = createFileRoute("/lovable/email/transactional/send")({
           )
         }
 
-        // Resolve effective recipient: template-level `to` takes precedence over
-        // the caller-provided recipientEmail. This allows notification templates
-        // to always send to a fixed address (e.g., site owner from env var).
-        const effectiveRecipient = template.to || recipientEmail
+        // 2. Authorisation + server-side recipient/content derivation.
+        const { data: isAdmin } = await supabase.rpc('has_role', {
+          _user_id: user.id,
+          _role: 'admin',
+        })
 
-        if (!effectiveRecipient) {
+        let effectiveRecipient: string
+        let templateData: Record<string, any>
+
+        if (SELF_SEND_TEMPLATES[templateName]) {
+          // Learner-facing notice: always to the authenticated user's own address.
+          if (!user.email) {
+            return Response.json(
+              { error: 'Authenticated account has no email address' },
+              { status: 403 }
+            )
+          }
+          effectiveRecipient = user.email
+          templateData = sanitiseTemplateData(
+            rawTemplateData,
+            SELF_SEND_TEMPLATES[templateName]!,
+          )
+        } else if (INTERNAL_TEMPLATES[templateName]) {
+          // Operational notice: fixed internal inbox, never a client-supplied address.
+          effectiveRecipient = template.to || INTERNAL_RECIPIENT
+          templateData = sanitiseTemplateData(
+            rawTemplateData,
+            INTERNAL_TEMPLATES[templateName]!,
+          )
+        } else if (isAdmin === true) {
+          // Admins may use any registered template for support operations.
+          effectiveRecipient = template.to || requestedRecipient || user.email || ''
+          templateData = rawTemplateData
+          if (!effectiveRecipient) {
+            return Response.json(
+              { error: 'recipientEmail is required for this template' },
+              { status: 400 }
+            )
+          }
+        } else {
+          console.warn('Blocked non-allowlisted email send', {
+            templateName,
+            user_id: user.id,
+          })
           return Response.json(
-            {
-              error: 'recipientEmail is required (unless the template defines a fixed recipient)',
-            },
-            { status: 400 }
+            { error: 'Not permitted to send this email' },
+            { status: 403 }
           )
         }
 
-        // 2. Check suppression list (fail-closed: if we can't verify, don't send)
+        // 3. Per-user hourly rate limit (tracked against the resolved recipient
+        //    plus the acting account via metadata).
+        const since = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+        const { count: recentCount, error: rateError } = await supabase
+          .from('email_send_log')
+          .select('id', { count: 'exact', head: true })
+          .eq('recipient_email', effectiveRecipient.toLowerCase())
+          .gte('created_at', since)
+
+        if (rateError) {
+          console.error('Rate limit check failed — refusing to send', rateError)
+          return Response.json({ error: 'Failed to verify send quota' }, { status: 500 })
+        }
+
+        if (!isAdmin && (recentCount ?? 0) >= RATE_LIMIT_PER_HOUR) {
+          return Response.json(
+            { error: 'Too many emails requested. Please try again later.' },
+            { status: 429 }
+          )
+        }
+
+        // 4. Check suppression list (fail-closed: if we can't verify, don't send)
         const { data: suppressed, error: suppressionError } = await supabase
           .from('suppressed_emails')
           .select('id')
@@ -149,7 +277,7 @@ export const Route = createFileRoute("/lovable/email/transactional/send")({
           return Response.json({ success: false, reason: 'email_suppressed' })
         }
 
-        // 3. Get or create unsubscribe token (one token per email address)
+        // 5. Get or create unsubscribe token (one token per email address)
         const normalizedEmail = effectiveRecipient.toLowerCase()
         let unsubscribeToken: string
 
@@ -251,7 +379,7 @@ export const Route = createFileRoute("/lovable/email/transactional/send")({
           return Response.json({ success: false, reason: 'email_suppressed' })
         }
 
-        // 4. Render React Email template to HTML and plain text
+        // 6. Render React Email template to HTML and plain text
         const element = React.createElement(template.component, templateData)
         const html = await render(element)
         const plainText = await render(element, { plainText: true })
@@ -262,7 +390,7 @@ export const Route = createFileRoute("/lovable/email/transactional/send")({
             ? template.subject(templateData)
             : template.subject
 
-        // 5. Enqueue the pre-rendered email for async processing by the dispatcher.
+        // 7. Enqueue the pre-rendered email for async processing by the dispatcher.
         // The dispatcher (process-email-queue) handles sending, retries, and rate-limit backoff.
 
         // Log pending BEFORE enqueue so we have a record even if enqueue crashes
