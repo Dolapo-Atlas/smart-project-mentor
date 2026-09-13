@@ -159,24 +159,35 @@ export const Route = createFileRoute("/lovable/email/transactional/send")({
           )
         }
 
-        // 1. Look up template from registry (early — needed to resolve recipient)
-        const template = TEMPLATES[templateName]
-
-        if (!template) {
-          console.error('Template not found in registry', { templateName })
-          return Response.json(
-            {
-              error: `Template '${templateName}' not found. Available: ${Object.keys(TEMPLATES).join(', ')}`,
-            },
-            { status: 404 }
-          )
-        }
-
-        // 2. Authorisation + server-side recipient/content derivation.
+        // 1. Authorisation first — never disclose registry contents to callers
+        // who are not permitted to send anything.
         const { data: isAdmin } = await supabase.rpc('has_role', {
           _user_id: user.id,
           _role: 'admin',
         })
+
+        const isAllowlisted =
+          Boolean(SELF_SEND_TEMPLATES[templateName]) ||
+          Boolean(INTERNAL_TEMPLATES[templateName])
+
+        if (!isAllowlisted && isAdmin !== true) {
+          console.warn('Blocked non-allowlisted email send', {
+            templateName,
+            user_id: user.id,
+          })
+          return Response.json(
+            { error: 'Not permitted to send this email' },
+            { status: 403 }
+          )
+        }
+
+        // 2. Look up template from registry (needed to resolve recipient)
+        const template = TEMPLATES[templateName]
+
+        if (!template) {
+          console.error('Template not found in registry', { templateName })
+          return Response.json({ error: 'Unknown template' }, { status: 404 })
+        }
 
         let effectiveRecipient: string
         let templateData: Record<string, any>
