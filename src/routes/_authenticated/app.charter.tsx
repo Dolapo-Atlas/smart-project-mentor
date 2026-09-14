@@ -143,7 +143,36 @@ function CharterPage() {
 
   const template = TEMPLATES.project_charter;
   const [values, setValues] = useState<Record<string, string>>({});
-  const [mode, setMode] = useState<"edit" | "preview">("edit");
+  const isMobile = useIsMobile();
+  const [mode, setMode] = useState<"guided" | "edit" | "preview">("guided");
+  const [modeChosen, setModeChosen] = useState(false);
+  // Guided Builder is the default on phones; desktop defaults to the full
+  // workspace. The learner's explicit choice always wins and is remembered.
+  useEffect(() => {
+    if (modeChosen) return;
+    try {
+      const saved = window.localStorage.getItem("atlas.charter-mode");
+      if (saved === "guided" || saved === "edit") {
+        setMode(saved);
+        setModeChosen(true);
+        return;
+      }
+    } catch {
+      /* ignore */
+    }
+    setMode(isMobile ? "guided" : "edit");
+  }, [isMobile, modeChosen]);
+  function chooseMode(next: "guided" | "edit" | "preview") {
+    setMode(next);
+    if (next !== "preview") {
+      setModeChosen(true);
+      try {
+        window.localStorage.setItem("atlas.charter-mode", next);
+      } catch {
+        /* ignore */
+      }
+    }
+  }
   const [dirty, setDirty] = useState(false);
   const [showAllFields, setShowAllFields] = useState(false);
   const firstTime = useFirstTimeMode("template.project_charter");
@@ -151,6 +180,7 @@ function CharterPage() {
   const [packOpen, setPackOpen] = useState(false);
   const [autoSaving, setAutoSaving] = useState(false);
   const draftKey = charterQuery.data?.id ? `atlas.charter-draft.${charterQuery.data.id}` : null;
+
 
   const focusKeys = useMemo(() => {
     const t = taskQuery.data as any;
