@@ -35,7 +35,14 @@ export const SIDE_EVENTS = [
   "stakeholder_request_started",
   "stakeholder_request_sent",
   "stakeholder_response_received",
+  // Guided Project Charter Builder
+  "charter_builder_started",
+  "charter_section_completed",
+  "charter_draft_reviewed",
+  "charter_submitted",
+  "charter_builder_abandoned",
 ] as const;
+
 
 export type SideEvent = (typeof SIDE_EVENTS)[number];
 
