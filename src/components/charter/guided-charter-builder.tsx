@@ -104,6 +104,14 @@ const STEPS: StepDef[] = [
   { id: "review", title: "Review and submit", instruction: "", pointer: "", prompts: [], keys: [] },
 ];
 
+
+/** Coarse device bucket recorded with every builder analytics event. */
+function deviceType(): "mobile" | "tablet" | "desktop" {
+  if (typeof window === "undefined") return "desktop";
+  const w = window.innerWidth;
+  return w < 768 ? "mobile" : w < 1024 ? "tablet" : "desktop";
+}
+
 export const CHARTER_REFLECTION_KEY = "key_decision";
 
 /** Local, non-generative tidy-up: whitespace, sentence case, bullet alignment. */
@@ -251,7 +259,8 @@ export function GuidedCharterBuilder(props: {
     }
     setIndex(start);
     setHydrated(true);
-    trackLearner("charter_builder_started", { props: { charter_id: charterId, resumed_step: start } });
+    trackLearner("charter_builder_started", { props: {
+          device_type: deviceType(), charter_id: charterId, resumed_step: start } });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [charterId]);
 
@@ -278,6 +287,7 @@ export function GuidedCharterBuilder(props: {
       if (rags[index] === "green") return;
       trackLearner("charter_builder_abandoned", {
         props: {
+          device_type: deviceType(),
           charter_id: charterId,
           section: step.id,
           step: index + 1,
@@ -307,6 +317,7 @@ export function GuidedCharterBuilder(props: {
       if (rags[index] === "green") {
         trackLearner("charter_section_completed", {
           props: {
+          device_type: deviceType(),
             charter_id: charterId,
             section: step.id,
             step: index + 1,
@@ -328,7 +339,8 @@ export function GuidedCharterBuilder(props: {
     if (isReview && !reviewedRef.current) {
       reviewedRef.current = true;
       trackLearner("charter_draft_reviewed", {
-        props: { charter_id: charterId, completion_pct: completionPct },
+        props: {
+          device_type: deviceType(), charter_id: charterId, completion_pct: completionPct },
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -588,7 +600,8 @@ export function GuidedCharterBuilder(props: {
                   return;
                 }
                 trackLearner("charter_submitted", {
-                  props: { charter_id: charterId, completion_pct: completionPct, mode: "guided" },
+                  props: {
+          device_type: deviceType(), charter_id: charterId, completion_pct: completionPct, mode: "guided" },
                 });
                 onSubmit();
               }}
