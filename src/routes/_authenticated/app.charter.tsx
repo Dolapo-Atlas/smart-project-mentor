@@ -408,16 +408,23 @@ function CharterPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             <Button
+              variant={mode === "guided" ? "default" : "outline"}
+              size="sm"
+              onClick={() => chooseMode("guided")}
+            >
+              <Compass className="mr-2 h-3.5 w-3.5" /> Guided builder
+            </Button>
+            <Button
               variant={mode === "edit" ? "default" : "outline"}
               size="sm"
-              onClick={() => setMode("edit")}
+              onClick={() => chooseMode("edit")}
             >
-              <Pencil className="mr-2 h-3.5 w-3.5" /> Edit
+              <Pencil className="mr-2 h-3.5 w-3.5" /> Full workspace
             </Button>
             <Button
               variant={mode === "preview" ? "default" : "outline"}
               size="sm"
-              onClick={() => setMode("preview")}
+              onClick={() => chooseMode("preview")}
             >
               <Eye className="mr-2 h-3.5 w-3.5" /> Preview
             </Button>
@@ -428,6 +435,7 @@ function CharterPage() {
               <Download className="mr-2 h-3.5 w-3.5" /> Export PDF
             </Button>
           </div>
+
         </header>
 
         <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
