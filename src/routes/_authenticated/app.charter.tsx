@@ -448,6 +448,7 @@ function CharterPage() {
 
         <TaskContextPanel taskId={search.task} />
 
+        {mode !== "guided" && (<>
         {firstTime.hydrated && !firstTime.decided && (
           <FirstTimeChoiceCard
             label="Project Charter"
