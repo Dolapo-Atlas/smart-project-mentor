@@ -504,8 +504,36 @@ function CharterPage() {
           }
           tip="Fill in the fields in order. Each one builds on the last."
         />
+        </>)}
 
-        {mode === "edit" ? (
+        {mode === "guided" ? (
+          <GuidedCharterBuilder
+            charterId={charter.id}
+            values={values}
+            setField={setField}
+            lockedKeys={
+              hasFullAccess
+                ? undefined
+                : new Set(
+                    template.fields
+                      .map((f) => f.key)
+                      .filter((k) => !FREE_FIELD_KEYS.has(k)),
+                  )
+            }
+            completionPct={completionPct}
+            saving={autoSaving || saveMutation.isPending}
+            dirty={dirty}
+            canSubmit={hasFullAccess && completionPct >= 40}
+            submitting={submitMutation.isPending}
+            onSubmit={() => submitMutation.mutate()}
+            onUnlockNeeded={() =>
+              document.getElementById("charter-unlock")?.scrollIntoView({ behavior: "smooth" })
+            }
+            onOpenPack={() => setPackOpen(true)}
+            onSwitchToFull={() => chooseMode("edit")}
+          />
+        ) : mode === "edit" ? (
+
           (() => {
             const focused = focusSet
               ? template.fields.filter((f) => focusSet.has(f.key))
