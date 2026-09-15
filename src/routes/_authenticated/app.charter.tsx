@@ -34,6 +34,12 @@ import { getOverview } from "@/lib/sim.functions";
 import { getTaskById } from "@/lib/tasks.functions";
 import { isPaywallError } from "@/lib/paywall";
 import { useNavigate } from "@tanstack/react-router";
+import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  GuidedCharterBuilder,
+  CHARTER_REFLECTION_KEY,
+} from "@/components/charter/guided-charter-builder";
+
 import { TaskContextPanel } from "@/components/mentor/task-context-panel";
 import { WhyThisMatters } from "@/components/why-this-matters";
 import { formatMinor } from "@/lib/money";
