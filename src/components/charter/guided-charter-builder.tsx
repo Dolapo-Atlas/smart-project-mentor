@@ -274,7 +274,7 @@ export function GuidedCharterBuilder(props: {
     trackLearner("charter_builder_started", { props: {
           device_type: deviceType(), charter_id: charterId, resumed_step: start } });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [charterId]);
+  }, [charterId, hasValues, hydrated]);
 
   useEffect(() => {
     if (!hydrated) return;
