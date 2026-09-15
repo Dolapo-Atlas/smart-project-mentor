@@ -34,6 +34,9 @@ import { getOverview } from "@/lib/sim.functions";
 import { getTaskById } from "@/lib/tasks.functions";
 import { isPaywallError } from "@/lib/paywall";
 import { useNavigate } from "@tanstack/react-router";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { GuidedCharterBuilder } from "@/components/charter/guided-charter-builder";
+
 import { TaskContextPanel } from "@/components/mentor/task-context-panel";
 import { WhyThisMatters } from "@/components/why-this-matters";
 import { formatMinor } from "@/lib/money";
@@ -402,16 +405,23 @@ function CharterPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             <Button
+              variant={mode === "guided" ? "default" : "outline"}
+              size="sm"
+              onClick={() => chooseMode("guided")}
+            >
+              <Compass className="mr-2 h-3.5 w-3.5" /> Guided builder
+            </Button>
+            <Button
               variant={mode === "edit" ? "default" : "outline"}
               size="sm"
-              onClick={() => setMode("edit")}
+              onClick={() => chooseMode("edit")}
             >
-              <Pencil className="mr-2 h-3.5 w-3.5" /> Edit
+              <Pencil className="mr-2 h-3.5 w-3.5" /> Full workspace
             </Button>
             <Button
               variant={mode === "preview" ? "default" : "outline"}
               size="sm"
-              onClick={() => setMode("preview")}
+              onClick={() => chooseMode("preview")}
             >
               <Eye className="mr-2 h-3.5 w-3.5" /> Preview
             </Button>
@@ -422,6 +432,7 @@ function CharterPage() {
               <Download className="mr-2 h-3.5 w-3.5" /> Export PDF
             </Button>
           </div>
+
         </header>
 
         <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
@@ -434,6 +445,7 @@ function CharterPage() {
 
         <TaskContextPanel taskId={search.task} />
 
+        {mode !== "guided" && (<>
         {firstTime.hydrated && !firstTime.decided && (
           <FirstTimeChoiceCard
             label="Project Charter"
@@ -489,8 +501,36 @@ function CharterPage() {
           }
           tip="Fill in the fields in order. Each one builds on the last."
         />
+        </>)}
 
-        {mode === "edit" ? (
+        {mode === "guided" ? (
+          <GuidedCharterBuilder
+            charterId={charter.id}
+            values={values}
+            setField={setField}
+            lockedKeys={
+              hasFullAccess
+                ? undefined
+                : new Set(
+                    template.fields
+                      .map((f) => f.key)
+                      .filter((k) => !FREE_FIELD_KEYS.has(k)),
+                  )
+            }
+            completionPct={completionPct}
+            saving={autoSaving || saveMutation.isPending}
+            dirty={dirty}
+            canSubmit={hasFullAccess && completionPct >= 40}
+            submitting={submitMutation.isPending}
+            onSubmit={() => submitMutation.mutate()}
+            onUnlockNeeded={() =>
+              document.getElementById("charter-unlock")?.scrollIntoView({ behavior: "smooth" })
+            }
+            onOpenPack={() => setPackOpen(true)}
+            onSwitchToFull={() => chooseMode("edit")}
+          />
+        ) : mode === "edit" ? (
+
           (() => {
             const focused = focusSet
               ? template.fields.filter((f) => focusSet.has(f.key))

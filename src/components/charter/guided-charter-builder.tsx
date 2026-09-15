@@ -243,9 +243,21 @@ export function GuidedCharterBuilder(props: {
   // Resume at the saved step, else the first section that isn't complete.
   const [index, setIndex] = useState(0);
   const [hydrated, setHydrated] = useState(false);
+  const hasValues = Object.keys(values).length > 0;
   useEffect(() => {
+    if (hydrated) return;
+    // Wait for the saved draft to load so an existing Charter resumes at the
+    // right place instead of snapping back to step 1.
+    let saved: string | null = null;
+    try {
+      saved = window.localStorage.getItem(stepKey);
+    } catch {
+      saved = null;
+    }
+    if (saved === null && !hasValues) return;
     let start = 0;
     try {
+
       const raw = window.localStorage.getItem(stepKey);
       if (raw !== null) start = Math.min(STEPS.length - 1, Math.max(0, Number(raw) || 0));
       else {
@@ -262,7 +274,7 @@ export function GuidedCharterBuilder(props: {
     trackLearner("charter_builder_started", { props: {
           device_type: deviceType(), charter_id: charterId, resumed_step: start } });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [charterId]);
+  }, [charterId, hasValues, hydrated]);
 
   useEffect(() => {
     if (!hydrated) return;
