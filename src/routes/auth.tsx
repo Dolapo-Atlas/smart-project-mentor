@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { AtlasMark } from "@/components/landing/atlas-chrome";
+import { takePostAuthRedirect } from "@/lib/post-auth-redirect";
 import { CheckCircle2, Sparkles, ShieldCheck } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
@@ -61,6 +62,13 @@ function AuthPage() {
 
       sessionStorage.removeItem("oauth_intent");
       sessionStorage.removeItem("oauth_pending");
+
+      // Return the learner to a saved destination (e.g. an MCP consent screen).
+      const saved = takePostAuthRedirect();
+      if (saved) {
+        window.location.replace(saved);
+        return;
+      }
 
       let hasActiveProject = false;
       try {

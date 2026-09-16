@@ -1,0 +1,127 @@
+{
+  "version": 1,
+  "sdk_version": "2.0.4",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://ldcqsdypnjbsyebzqdrp.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "atlas-a-coordinator-s-diary",
+      "version": "0.1.0",
+      "title": "Atlas-A coordinator's diary"
+    },
+    "tools": [
+      {
+        "name": "list_projects",
+        "title": "List my simulation projects",
+        "description": "List the signed-in learner's Atlas simulation projects with phase, status and progress.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_project_status",
+        "title": "Get project status",
+        "description": "Get the current day, phase, health, progress and next milestone for one of the learner's simulation projects.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "project_instance_id": {
+              "type": "string",
+              "description": "The project instance id, as returned by list_projects."
+            }
+          },
+          "required": [
+            "project_instance_id"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_tasks",
+        "title": "List project tasks",
+        "description": "List the learner's simulation tasks, optionally filtered to one project and/or one status (todo, in_progress, submitted, done).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "project_instance_id": {
+              "description": "Limit to one project instance id.",
+              "type": "string"
+            },
+            "status": {
+              "description": "Limit to a single task status.",
+              "type": "string"
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_raid_items",
+        "title": "List RAID log entries",
+        "description": "List the learner's RAID log entries (risks, assumptions, issues, dependencies), optionally filtered to one project.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "project_instance_id": {
+              "description": "Limit to one project instance id.",
+              "type": "string"
+            },
+            "kind": {
+              "description": "Limit to one RAID kind, e.g. risk or issue.",
+              "type": "string"
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_certificates",
+        "title": "List my Atlas certificates",
+        "description": "List the signed-in learner's Atlas completion certificates with grade, score and verification code.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}

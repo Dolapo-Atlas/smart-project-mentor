@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { getActiveProject } from "@/lib/projects.functions";
 import { trackLearner } from "@/lib/learner-events";
+import { takePostAuthRedirect } from "@/lib/post-auth-redirect";
 
 export const Route = createFileRoute("/auth-callback")({
   component: AuthCallback,
@@ -33,6 +34,13 @@ function AuthCallback() {
       sessionStorage.removeItem("oauth_pending");
 
       trackLearner("signed_in", { props: { via: "oauth" } });
+
+      // Return the learner to a saved destination (e.g. an MCP consent screen).
+      const saved = takePostAuthRedirect();
+      if (saved) {
+        window.location.replace(saved);
+        return;
+      }
 
       let hasActiveProject = false;
       try {
