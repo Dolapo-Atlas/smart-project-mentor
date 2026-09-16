@@ -106,6 +106,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
+      { rel: "icon", type: "image/png", href: "/favicon.png" },
+
       // Preload the fonts used above the fold so text is laid out with the real
       // metrics on first paint — without this the page visibly reflows/jumps
       // when Fraunces/Inter swap in.
