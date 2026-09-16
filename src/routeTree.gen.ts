@@ -69,6 +69,7 @@ import { Route as AuthenticatedAdminLandingRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminIntegrityRouteImport } from './routes/_authenticated/admin.integrity'
 import { Route as AuthenticatedAdminEvalsRouteImport } from './routes/_authenticated/admin.evals'
 import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin.analytics'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
@@ -396,6 +397,11 @@ const AuthenticatedAdminAnalyticsRoute =
     path: '/admin/analytics',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LovableEmailTransactionalSendRoute =
   LovableEmailTransactionalSendRouteImport.update({
     id: '/lovable/email/transactional/send',
@@ -455,6 +461,7 @@ export interface FileRoutesByFullPath {
   '/invite/$code': typeof InviteCodeRoute
   '/report/$code': typeof ReportCodeRoute
   '/verify/$code': typeof VerifyCodeRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/evals': typeof AuthenticatedAdminEvalsRoute
   '/admin/integrity': typeof AuthenticatedAdminIntegrityRoute
@@ -522,6 +529,7 @@ export interface FileRoutesByTo {
   '/invite/$code': typeof InviteCodeRoute
   '/report/$code': typeof ReportCodeRoute
   '/verify/$code': typeof VerifyCodeRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/evals': typeof AuthenticatedAdminEvalsRoute
   '/admin/integrity': typeof AuthenticatedAdminIntegrityRoute
@@ -592,6 +600,7 @@ export interface FileRoutesById {
   '/invite/$code': typeof InviteCodeRoute
   '/report/$code': typeof ReportCodeRoute
   '/verify/$code': typeof VerifyCodeRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/_authenticated/admin/evals': typeof AuthenticatedAdminEvalsRoute
   '/_authenticated/admin/integrity': typeof AuthenticatedAdminIntegrityRoute
@@ -662,6 +671,7 @@ export interface FileRouteTypes {
     | '/invite/$code'
     | '/report/$code'
     | '/verify/$code'
+    | '/.lovable/oauth/consent'
     | '/admin/analytics'
     | '/admin/evals'
     | '/admin/integrity'
@@ -729,6 +739,7 @@ export interface FileRouteTypes {
     | '/invite/$code'
     | '/report/$code'
     | '/verify/$code'
+    | '/.lovable/oauth/consent'
     | '/admin/analytics'
     | '/admin/evals'
     | '/admin/integrity'
@@ -798,6 +809,7 @@ export interface FileRouteTypes {
     | '/invite/$code'
     | '/report/$code'
     | '/verify/$code'
+    | '/.lovable/oauth/consent'
     | '/_authenticated/admin/analytics'
     | '/_authenticated/admin/evals'
     | '/_authenticated/admin/integrity'
@@ -865,6 +877,7 @@ export interface RootRouteChildren {
   InviteCodeRoute: typeof InviteCodeRoute
   ReportCodeRoute: typeof ReportCodeRoute
   VerifyCodeRoute: typeof VerifyCodeRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   ApiPublicEarlyAccessRoute: typeof ApiPublicEarlyAccessRoute
   ApiPublicGeminiTestRoute: typeof ApiPublicGeminiTestRoute
   ApiPublicTtsRoute: typeof ApiPublicTtsRoute
@@ -1299,6 +1312,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAnalyticsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/transactional/send': {
       id: '/lovable/email/transactional/send'
       path: '/lovable/email/transactional/send'
@@ -1470,6 +1490,7 @@ const rootRouteChildren: RootRouteChildren = {
   InviteCodeRoute: InviteCodeRoute,
   ReportCodeRoute: ReportCodeRoute,
   VerifyCodeRoute: VerifyCodeRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   ApiPublicEarlyAccessRoute: ApiPublicEarlyAccessRoute,
   ApiPublicGeminiTestRoute: ApiPublicGeminiTestRoute,
   ApiPublicTtsRoute: ApiPublicTtsRoute,
