@@ -1799,7 +1799,7 @@ function Faq() {
 function SiteFooter() {
   return (
     <footer className="border-t border-border/60 bg-card/40">
-      <div className="mx-auto grid max-w-7xl gap-10 px-6 py-14 lg:grid-cols-[1.4fr_1fr_1fr] lg:px-10">
+      <div className="mx-auto grid max-w-7xl gap-10 px-6 py-14 sm:grid-cols-2 lg:grid-cols-[1.3fr_1fr_1fr_1fr] lg:px-10">
         <div>
           <Link to="/" className="flex items-center gap-2 font-display text-lg font-semibold">
             <AtlasMark className="h-6 w-6" /> Atlas
