@@ -5,5 +5,8 @@
   <url><loc>https://atlassim.co/toolkit/raid-log</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://atlassim.co/toolkit/project-charter</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://atlassim.co/toolkit/project-schedule</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://atlassim.co/toolkit/stakeholder-management</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://atlassim.co/toolkit/project-status-report</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://atlassim.co/toolkit/steering-committee</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://atlassim.co/challenge/friday-crisis</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
 </urlset>
