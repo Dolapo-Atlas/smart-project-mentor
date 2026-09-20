@@ -18,7 +18,10 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ToolkitIndexRouteImport } from './routes/toolkit.index'
 import { Route as VerifyCodeRouteImport } from './routes/verify.$code'
+import { Route as ToolkitSteeringCommitteeRouteImport } from './routes/toolkit.steering-committee'
+import { Route as ToolkitStakeholderManagementRouteImport } from './routes/toolkit.stakeholder-management'
 import { Route as ToolkitRaidLogRouteImport } from './routes/toolkit.raid-log'
+import { Route as ToolkitProjectStatusReportRouteImport } from './routes/toolkit.project-status-report'
 import { Route as ToolkitProjectScheduleRouteImport } from './routes/toolkit.project-schedule'
 import { Route as ToolkitProjectCharterRouteImport } from './routes/toolkit.project-charter'
 import { Route as ReportCodeRouteImport } from './routes/report.$code'
@@ -128,11 +131,29 @@ const VerifyCodeRoute = VerifyCodeRouteImport.update({
   path: '/verify/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ToolkitSteeringCommitteeRoute =
+  ToolkitSteeringCommitteeRouteImport.update({
+    id: '/toolkit/steering-committee',
+    path: '/toolkit/steering-committee',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ToolkitStakeholderManagementRoute =
+  ToolkitStakeholderManagementRouteImport.update({
+    id: '/toolkit/stakeholder-management',
+    path: '/toolkit/stakeholder-management',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ToolkitRaidLogRoute = ToolkitRaidLogRouteImport.update({
   id: '/toolkit/raid-log',
   path: '/toolkit/raid-log',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ToolkitProjectStatusReportRoute =
+  ToolkitProjectStatusReportRouteImport.update({
+    id: '/toolkit/project-status-report',
+    path: '/toolkit/project-status-report',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ToolkitProjectScheduleRoute = ToolkitProjectScheduleRouteImport.update({
   id: '/toolkit/project-schedule',
   path: '/toolkit/project-schedule',
@@ -501,7 +522,10 @@ export interface FileRoutesByFullPath {
   '/report/$code': typeof ReportCodeRoute
   '/toolkit/project-charter': typeof ToolkitProjectCharterRoute
   '/toolkit/project-schedule': typeof ToolkitProjectScheduleRoute
+  '/toolkit/project-status-report': typeof ToolkitProjectStatusReportRoute
   '/toolkit/raid-log': typeof ToolkitRaidLogRoute
+  '/toolkit/stakeholder-management': typeof ToolkitStakeholderManagementRoute
+  '/toolkit/steering-committee': typeof ToolkitSteeringCommitteeRoute
   '/verify/$code': typeof VerifyCodeRoute
   '/toolkit/': typeof ToolkitIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -575,7 +599,10 @@ export interface FileRoutesByTo {
   '/report/$code': typeof ReportCodeRoute
   '/toolkit/project-charter': typeof ToolkitProjectCharterRoute
   '/toolkit/project-schedule': typeof ToolkitProjectScheduleRoute
+  '/toolkit/project-status-report': typeof ToolkitProjectStatusReportRoute
   '/toolkit/raid-log': typeof ToolkitRaidLogRoute
+  '/toolkit/stakeholder-management': typeof ToolkitStakeholderManagementRoute
+  '/toolkit/steering-committee': typeof ToolkitSteeringCommitteeRoute
   '/verify/$code': typeof VerifyCodeRoute
   '/toolkit': typeof ToolkitIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -652,7 +679,10 @@ export interface FileRoutesById {
   '/report/$code': typeof ReportCodeRoute
   '/toolkit/project-charter': typeof ToolkitProjectCharterRoute
   '/toolkit/project-schedule': typeof ToolkitProjectScheduleRoute
+  '/toolkit/project-status-report': typeof ToolkitProjectStatusReportRoute
   '/toolkit/raid-log': typeof ToolkitRaidLogRoute
+  '/toolkit/stakeholder-management': typeof ToolkitStakeholderManagementRoute
+  '/toolkit/steering-committee': typeof ToolkitSteeringCommitteeRoute
   '/verify/$code': typeof VerifyCodeRoute
   '/toolkit/': typeof ToolkitIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -729,7 +759,10 @@ export interface FileRouteTypes {
     | '/report/$code'
     | '/toolkit/project-charter'
     | '/toolkit/project-schedule'
+    | '/toolkit/project-status-report'
     | '/toolkit/raid-log'
+    | '/toolkit/stakeholder-management'
+    | '/toolkit/steering-committee'
     | '/verify/$code'
     | '/toolkit/'
     | '/.lovable/oauth/consent'
@@ -803,7 +836,10 @@ export interface FileRouteTypes {
     | '/report/$code'
     | '/toolkit/project-charter'
     | '/toolkit/project-schedule'
+    | '/toolkit/project-status-report'
     | '/toolkit/raid-log'
+    | '/toolkit/stakeholder-management'
+    | '/toolkit/steering-committee'
     | '/verify/$code'
     | '/toolkit'
     | '/.lovable/oauth/consent'
@@ -879,7 +915,10 @@ export interface FileRouteTypes {
     | '/report/$code'
     | '/toolkit/project-charter'
     | '/toolkit/project-schedule'
+    | '/toolkit/project-status-report'
     | '/toolkit/raid-log'
+    | '/toolkit/stakeholder-management'
+    | '/toolkit/steering-committee'
     | '/verify/$code'
     | '/toolkit/'
     | '/.lovable/oauth/consent'
@@ -953,7 +992,10 @@ export interface RootRouteChildren {
   ReportCodeRoute: typeof ReportCodeRoute
   ToolkitProjectCharterRoute: typeof ToolkitProjectCharterRoute
   ToolkitProjectScheduleRoute: typeof ToolkitProjectScheduleRoute
+  ToolkitProjectStatusReportRoute: typeof ToolkitProjectStatusReportRoute
   ToolkitRaidLogRoute: typeof ToolkitRaidLogRoute
+  ToolkitStakeholderManagementRoute: typeof ToolkitStakeholderManagementRoute
+  ToolkitSteeringCommitteeRoute: typeof ToolkitSteeringCommitteeRoute
   VerifyCodeRoute: typeof VerifyCodeRoute
   ToolkitIndexRoute: typeof ToolkitIndexRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
@@ -1034,11 +1076,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VerifyCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/toolkit/steering-committee': {
+      id: '/toolkit/steering-committee'
+      path: '/toolkit/steering-committee'
+      fullPath: '/toolkit/steering-committee'
+      preLoaderRoute: typeof ToolkitSteeringCommitteeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/toolkit/stakeholder-management': {
+      id: '/toolkit/stakeholder-management'
+      path: '/toolkit/stakeholder-management'
+      fullPath: '/toolkit/stakeholder-management'
+      preLoaderRoute: typeof ToolkitStakeholderManagementRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/toolkit/raid-log': {
       id: '/toolkit/raid-log'
       path: '/toolkit/raid-log'
       fullPath: '/toolkit/raid-log'
       preLoaderRoute: typeof ToolkitRaidLogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/toolkit/project-status-report': {
+      id: '/toolkit/project-status-report'
+      path: '/toolkit/project-status-report'
+      fullPath: '/toolkit/project-status-report'
+      preLoaderRoute: typeof ToolkitProjectStatusReportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/toolkit/project-schedule': {
@@ -1615,7 +1678,10 @@ const rootRouteChildren: RootRouteChildren = {
   ReportCodeRoute: ReportCodeRoute,
   ToolkitProjectCharterRoute: ToolkitProjectCharterRoute,
   ToolkitProjectScheduleRoute: ToolkitProjectScheduleRoute,
+  ToolkitProjectStatusReportRoute: ToolkitProjectStatusReportRoute,
   ToolkitRaidLogRoute: ToolkitRaidLogRoute,
+  ToolkitStakeholderManagementRoute: ToolkitStakeholderManagementRoute,
+  ToolkitSteeringCommitteeRoute: ToolkitSteeringCommitteeRoute,
   VerifyCodeRoute: VerifyCodeRoute,
   ToolkitIndexRoute: ToolkitIndexRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
