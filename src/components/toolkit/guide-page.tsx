@@ -177,13 +177,13 @@ export function GuidePage({ guide }: { guide: Guide }) {
           <ul className="mt-4 space-y-3">
             {others.map((g) => (
               <li key={g.slug}>
-                <Link
-                  to={`/toolkit/${g.slug}` as string}
+                <a
+                  href={`/toolkit/${g.slug}`}
                   className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-card/60 px-5 py-4 transition hover:-translate-y-0.5"
                 >
                   <span className="font-medium">{g.h1}</span>
                   <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                </Link>
+                </a>
               </li>
             ))}
           </ul>

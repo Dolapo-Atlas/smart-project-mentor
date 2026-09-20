@@ -1821,6 +1821,42 @@ function SiteFooter() {
           </ul>
         </div>
         <div>
+          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+            Free guides
+          </p>
+          <ul className="mt-4 space-y-2 text-sm">
+            <li>
+              <Link to="/toolkit" className="text-foreground/80 transition hover:text-foreground">
+                Project toolkit
+              </Link>
+            </li>
+            <li>
+              <a
+                href="/toolkit/raid-log"
+                className="text-foreground/80 transition hover:text-foreground"
+              >
+                What is a RAID log?
+              </a>
+            </li>
+            <li>
+              <a
+                href="/toolkit/project-charter"
+                className="text-foreground/80 transition hover:text-foreground"
+              >
+                Project charter template
+              </a>
+            </li>
+            <li>
+              <a
+                href="/toolkit/project-schedule"
+                className="text-foreground/80 transition hover:text-foreground"
+              >
+                Project schedule & WBS
+              </a>
+            </li>
+          </ul>
+        </div>
+        <div>
           <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Connect</p>
           <ul className="mt-4 flex items-center gap-3">
             {[
