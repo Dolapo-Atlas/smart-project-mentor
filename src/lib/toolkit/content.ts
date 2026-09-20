@@ -374,6 +374,341 @@ export const GUIDES: Guide[] = [
       utm: "project-schedule",
     },
   },
+
+  {
+    slug: "stakeholder-management",
+    nav: "Stakeholders",
+    title: "Stakeholder Management Plan: How to Map and Manage Stakeholders | Atlas",
+    metaDescription:
+      "Stakeholder management explained for project coordinators: how to identify, map and manage the people who can make or break your project. Free stakeholder map template.",
+    h1: "Stakeholder management plan",
+    standFirst:
+      "Most projects do not fail on schedules. They fail because a senior person nobody mapped turns against the project in month two. A stakeholder plan is how you see that coming.",
+    readMinutes: 6,
+    sections: [
+      {
+        heading: "Start with who, not what",
+        body: [
+          "Before the plan, before the schedule, list everyone affected by the project and everyone who can affect it. Those are different sets, and the second one is the one that surprises coordinators.",
+          "On a hospital rollout, the obvious stakeholders are the sponsor and the clinical leads. The dangerous ones are quieter: the ward manager whose rotas the training disrupts, the records clerk whose job the system changes.",
+        ],
+      },
+      {
+        heading: "The influence and interest map",
+        body: [
+          "Place each stakeholder on two axes: how much influence they have over the project, and how interested they are in it. That gives you four kinds of people and four different jobs.",
+        ],
+        bullets: [
+          "High influence, high interest — manage closely. Weekly contact, early drafts, no surprises.",
+          "High influence, low interest — keep satisfied. Short, well-timed updates; do not flood them, but never let them hear about a problem from someone else.",
+          "Low influence, high interest — keep informed. They often become your allies and your early-warning system.",
+          "Low influence, low interest — monitor. Do not ignore them; influence changes when the project starts to bite.",
+        ],
+      },
+      {
+        heading: "What each person actually wants",
+        body: [
+          "Under every stakeholder's stated position is a practical worry. The sponsor worries about being blamed for the budget. The clinical lead worries about patient safety headlines. The ward manager worries about staffing the ward while nurses are in training.",
+          "Write that worry down next to their name. When you communicate, answer the worry first and the project detail second.",
+        ],
+      },
+      {
+        heading: "Revisit the map monthly",
+        body: [
+          "People move. A stakeholder who was supportive goes quiet. A quiet department starts emailing concerns. The map is only useful if it reflects this month, so review it before every steering committee and after any difficult conversation.",
+        ],
+      },
+    ],
+    example: {
+      caption: "Worked example — stakeholder map entries from a records rollout",
+      columns: ["Stakeholder", "Role", "Influence / Interest", "What they worry about", "Your approach"],
+      rows: [
+        [
+          "David Okafor",
+          "Sponsor",
+          "High / High",
+          "Being blamed if the £1.2m budget or go-live date slips",
+          "Weekly written update; raise risks early with options attached",
+        ],
+        [
+          "Dr. Rachel Adeyemi",
+          "Clinical lead",
+          "High / High",
+          "Patient safety and clinical time lost to a poorly designed system",
+          "Involve in design decisions; never present a clinical change as settled",
+        ],
+        [
+          "Margaret Hughes",
+          "Ward manager",
+          "Medium / High",
+          "Staffing the ward while nurses attend training sessions",
+          "Plan training around rotas; agree session sizes with her directly",
+        ],
+        [
+          "IT service desk lead",
+          "Support",
+          "Medium / Low",
+          "A flood of go-live calls landing on an understaffed desk",
+          "Early briefing on volumes; agree a floorwalker plan before go-live",
+        ],
+      ],
+    },
+    template: {
+      heading: "Free stakeholder map template",
+      intro:
+        "One row per person, not per department. Departments do not get nervous in steering committees — people do.",
+      fields: [
+        { label: "Name and role", hint: "A person, not 'the finance team'" },
+        { label: "Influence", hint: "High, medium or low over this project" },
+        { label: "Interest", hint: "How much they care, today" },
+        { label: "What they worry about", hint: "Their practical concern, in their terms" },
+        { label: "What you need from them", hint: "Decisions, time, sign-off, information" },
+        { label: "How you will engage", hint: "Format and frequency" },
+        { label: "Current sentiment", hint: "Supportive, neutral, resistant — and why" },
+        { label: "Last contact", hint: "A date, so nobody drifts" },
+      ],
+    },
+    faqs: [
+      {
+        q: "What is a stakeholder management plan?",
+        a: "A working document that lists the people who can affect or are affected by a project, maps their influence and interest, and records how you will engage each one.",
+      },
+      {
+        q: "How do you identify stakeholders?",
+        a: "List everyone the project changes something for, then everyone whose decision or support the project needs. Talk to the sponsor and team leads to catch people the org chart does not reveal.",
+      },
+      {
+        q: "How often should you update a stakeholder map?",
+        a: "At least monthly, and immediately after any significant conversation, decision or staffing change that shifts influence or sentiment.",
+      },
+    ],
+    cta: {
+      heading: "Manage stakeholders who write back",
+      body:
+        "In the Atlas simulation you answer real-shaped emails from a sponsor, a clinical lead and a ward manager. They remember what you promised, react to how you write, and report on you at the steering committee.",
+      label: "Try the simulation free",
+      utm: "stakeholder-management",
+    },
+  },
+
+  {
+    slug: "project-status-report",
+    nav: "Status report",
+    title: "Project Status Report Template: What Sponsors Actually Read | Atlas",
+    metaDescription:
+      "How to write a project status report a sponsor reads in two minutes: RAG status, milestones, risks and decisions needed. Free weekly status report template and example.",
+    h1: "Project status report template",
+    standFirst:
+      "A status report has one job: let a busy sponsor answer three questions in two minutes — are we on track, what changed, and what do you need from me?",
+    readMinutes: 5,
+    sections: [
+      {
+        heading: "The two-minute rule",
+        body: [
+          "Sponsors do not read status reports; they scan them. If the overall status is on page three, the report has failed regardless of its content.",
+          "Put the RAG status, the one-line summary and any decisions needed at the top. Everything else is evidence for people who want it.",
+        ],
+      },
+      {
+        heading: "What RAG status really means",
+        body: [
+          "Green, amber and red are commitments, not decorations. Green means you will hit the date and budget without the sponsor doing anything. Amber means you have a problem you can still manage inside the project. Red means you cannot recover without a decision or help from above.",
+          "Coordinators get into trouble reporting amber as green to look competent. The first red then lands as a shock, and shocks are what destroy a sponsor's trust.",
+        ],
+      },
+      {
+        heading: "What to include, every time",
+        body: [
+          "Keep the structure identical week to week. Sponsors build a reading habit around a fixed shape, and a change of format reads as a change of status.",
+        ],
+        bullets: [
+          "Overall RAG status and one sentence explaining it.",
+          "Progress since the last report — two or three lines, outcomes not activity.",
+          "Milestones — the next few dates, with any movement explained.",
+          "Top risks and issues — from the RAID log, not invented fresh.",
+          "Decisions needed — what you need, from whom, by when.",
+          "Budget position — one line against the authorised figure.",
+        ],
+      },
+      {
+        heading: "Write the ask, not the essay",
+        body: [
+          "The most valuable line in any status report is a clear decision request: \"We need the clinical lead to confirm the triage form by Friday, or go-live moves a week.\" That sentence is worth more than three pages of narrative.",
+        ],
+      },
+    ],
+    example: {
+      caption: "Worked example — the top of a weekly status report",
+      columns: ["Section", "Written as"],
+      rows: [
+        [
+          "Status",
+          "AMBER — data migration test failed at 4% mismatch; recovery plan agreed, date held for now.",
+        ],
+        [
+          "Progress",
+          "Training sessions booked for wards A–C. Field mapping signed off by the clinical lead.",
+        ],
+        [
+          "Next milestones",
+          "Migration re-test 21 March; training complete 4 April; go-live 25 April (unchanged).",
+        ],
+        [
+          "Decision needed",
+          "Approve two extra evening training sessions (£1,400 within contingency) by Friday.",
+        ],
+        [
+          "Budget",
+          "£418,000 committed of £1,200,000 authorised; contingency intact.",
+        ],
+      ],
+    },
+    template: {
+      heading: "Free status report template",
+      intro:
+        "Copy this shape and keep it identical every week. The discipline is the value.",
+      fields: [
+        { label: "Report date and period", hint: "So nobody confuses this week's with last week's" },
+        { label: "Overall RAG status", hint: "Plus one sentence of explanation, no more" },
+        { label: "Progress this period", hint: "Outcomes delivered, not meetings attended" },
+        { label: "Milestones", hint: "Dates, and any movement with the reason" },
+        { label: "Top risks and issues", hint: "Pulled from the RAID log, with owners" },
+        { label: "Decisions needed", hint: "What, from whom, by when" },
+        { label: "Budget position", hint: "Committed against authorised, in one line" },
+      ],
+    },
+    faqs: [
+      {
+        q: "What should a project status report include?",
+        a: "Overall RAG status with a one-line explanation, progress since the last report, upcoming milestones, top risks and issues, decisions needed with owners and dates, and the budget position.",
+      },
+      {
+        q: "What does RAG status mean?",
+        a: "Red, amber, green. Green means on track without intervention; amber means a problem the project can still manage itself; red means recovery needs a decision or help from the sponsor.",
+      },
+      {
+        q: "How often should you send a status report?",
+        a: "Weekly is the common rhythm for active projects. Whatever the frequency, keep it fixed and the format identical so readers build a habit around it.",
+      },
+    ],
+    cta: {
+      heading: "Report status to a steering committee that pushes back",
+      body:
+        "In the Atlas simulation you submit status reports to a steering committee that reads them. Choose the honest RAG, defend your numbers, and see what happens when you soften bad news.",
+      label: "Try the simulation free",
+      utm: "project-status-report",
+    },
+  },
+
+  {
+    slug: "steering-committee",
+    nav: "Steering committee",
+    title: "What Is a Project Steering Committee? Agenda, Roles and Template | Atlas",
+    metaDescription:
+      "A project steering committee makes the decisions a project team cannot. What it does, who sits on it, a steering committee agenda template and how to prepare.",
+    h1: "What is a project steering committee?",
+    standFirst:
+      "A steering committee is the group that makes the decisions the project team has no authority to make: money, scope, dates and whether the project continues at all.",
+    readMinutes: 6,
+    sections: [
+      {
+        heading: "What it is actually for",
+        body: [
+          "A steering committee is not a progress meeting. Progress is handled in the status report. The committee exists to decide: approve a gate, accept a change, release contingency, or stop the project.",
+          "If a steering meeting ends with no decisions and no escalations answered, it was a read-out, not a steering committee.",
+        ],
+      },
+      {
+        heading: "Who sits on it",
+        body: [
+          "Keep it small. Every member should be there because they own a decision, not because their department expects a seat.",
+        ],
+        bullets: [
+          "The sponsor, who chairs it and owns the budget.",
+          "A senior representative of the people who will use or be changed by the result — on a hospital rollout, the clinical lead.",
+          "A senior representative of the teams delivering or operating it — IT or operations.",
+          "The project manager or coordinator, who attends to present and to record, not to vote.",
+        ],
+      },
+      {
+        heading: "The agenda that works",
+        body: [
+          "A workable steering agenda fits on one page and is organised by decisions, not by department updates.",
+        ],
+        bullets: [
+          "Overall status and one-paragraph summary — two minutes, no surprises here if reporting has been honest.",
+          "Decisions required today — each with a recommendation and the cost of deferring.",
+          "Risks and issues above the project's authority — the ones the project cannot fix alone.",
+          "Milestones and gate position — what the next gate needs and whether it is on track.",
+          "Actions from last time — closed, or explained.",
+        ],
+      },
+      {
+        heading: "How to prepare as the coordinator",
+        body: [
+          "Send the pack two working days ahead. Pre-wire the difficult decision: speak to the sponsor and the affected member before the meeting so the discussion starts from the real position, not from a cold slide.",
+          "During the meeting, record decisions and actions as they are made and read them back before close. A decision that is not minuted did not happen.",
+        ],
+      },
+    ],
+    example: {
+      caption: "Worked example — decisions brought to a records rollout steering committee",
+      columns: ["Decision needed", "Recommendation", "If deferred"],
+      rows: [
+        [
+          "Approve two extra evening training sessions, £1,400 from contingency",
+          "Approve — protects go-live date",
+          "Ward staff untrained at go-live; slower triage in week one",
+        ],
+        [
+          "Accept a one-week slip on data migration re-test",
+          "Accept — fixes root cause instead of masking it",
+          "Go-live with a 4% record mismatch risk",
+        ],
+        [
+          "Confirm outpatients stay out of scope after a department request",
+          "Confirm — protects budget and timeline",
+          "Scope grows without budget; charter is undermined",
+        ],
+      ],
+    },
+    template: {
+      heading: "Free steering committee agenda template",
+      intro:
+        "One page. If the pack needs a contents page, it is too long for the meeting.",
+      fields: [
+        { label: "Date, attendees, apologies", hint: "Quorum matters for decisions" },
+        { label: "Overall status", hint: "RAG plus one paragraph" },
+        { label: "Decisions required today", hint: "Each with a recommendation and the cost of delay" },
+        { label: "Escalated risks and issues", hint: "Only those above the project's authority" },
+        { label: "Milestones and gate position", hint: "What the next gate requires" },
+        { label: "Actions from previous meeting", hint: "Closed or explained" },
+        { label: "Any other business", hint: "Two minutes, strictly" },
+        { label: "Decisions and actions log", hint: "Read back before the meeting closes" },
+      ],
+    },
+    faqs: [
+      {
+        q: "What does a project steering committee do?",
+        a: "It makes the decisions beyond the project team's authority: approving stage gates, changes to scope, budget or dates, releasing contingency, and continuing or stopping the project.",
+      },
+      {
+        q: "Who should attend a steering committee?",
+        a: "The sponsor as chair, senior representatives of the people affected and the teams delivering, and the project manager or coordinator to present and record. Membership is tied to decisions owned, not seniority for its own sake.",
+      },
+      {
+        q: "How often should a steering committee meet?",
+        a: "Monthly is typical, with extra sessions at stage gates. Frequency matters less than the rule that the meeting produces decisions, not just updates.",
+      },
+    ],
+    cta: {
+      heading: "Face a steering committee that asks hard questions",
+      body:
+        "In the Atlas simulation you prepare for steering committees, choose what to escalate, and answer for your decisions. The committee remembers your earlier reports — consistency matters.",
+      label: "Try the simulation free",
+      utm: "steering-committee",
+    },
+  },
 ];
 
 export function guideBySlug(slug: string) {
