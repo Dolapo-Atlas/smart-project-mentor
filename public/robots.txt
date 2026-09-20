@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Disallow: /app
+Disallow: /app/
+Disallow: /onboarding
+Disallow: /orientation
+Disallow: /auth
+Disallow: /auth-callback
+Disallow: /reset-password
+Disallow: /.lovable/
+
+Sitemap: https://atlassim.co/sitemap.xml

@@ -16,7 +16,11 @@ import { Route as AuthCallbackRouteImport } from './routes/auth-callback'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ToolkitIndexRouteImport } from './routes/toolkit.index'
 import { Route as VerifyCodeRouteImport } from './routes/verify.$code'
+import { Route as ToolkitRaidLogRouteImport } from './routes/toolkit.raid-log'
+import { Route as ToolkitProjectScheduleRouteImport } from './routes/toolkit.project-schedule'
+import { Route as ToolkitProjectCharterRouteImport } from './routes/toolkit.project-charter'
 import { Route as ReportCodeRouteImport } from './routes/report.$code'
 import { Route as InviteCodeRouteImport } from './routes/invite.$code'
 import { Route as EnrolSuccessRouteImport } from './routes/enrol.success'
@@ -114,9 +118,29 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ToolkitIndexRoute = ToolkitIndexRouteImport.update({
+  id: '/toolkit/',
+  path: '/toolkit/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const VerifyCodeRoute = VerifyCodeRouteImport.update({
   id: '/verify/$code',
   path: '/verify/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ToolkitRaidLogRoute = ToolkitRaidLogRouteImport.update({
+  id: '/toolkit/raid-log',
+  path: '/toolkit/raid-log',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ToolkitProjectScheduleRoute = ToolkitProjectScheduleRouteImport.update({
+  id: '/toolkit/project-schedule',
+  path: '/toolkit/project-schedule',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ToolkitProjectCharterRoute = ToolkitProjectCharterRouteImport.update({
+  id: '/toolkit/project-charter',
+  path: '/toolkit/project-charter',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReportCodeRoute = ReportCodeRouteImport.update({
@@ -475,7 +499,11 @@ export interface FileRoutesByFullPath {
   '/enrol/success': typeof EnrolSuccessRoute
   '/invite/$code': typeof InviteCodeRoute
   '/report/$code': typeof ReportCodeRoute
+  '/toolkit/project-charter': typeof ToolkitProjectCharterRoute
+  '/toolkit/project-schedule': typeof ToolkitProjectScheduleRoute
+  '/toolkit/raid-log': typeof ToolkitRaidLogRoute
   '/verify/$code': typeof VerifyCodeRoute
+  '/toolkit/': typeof ToolkitIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/evals': typeof AuthenticatedAdminEvalsRoute
@@ -545,7 +573,11 @@ export interface FileRoutesByTo {
   '/enrol/success': typeof EnrolSuccessRoute
   '/invite/$code': typeof InviteCodeRoute
   '/report/$code': typeof ReportCodeRoute
+  '/toolkit/project-charter': typeof ToolkitProjectCharterRoute
+  '/toolkit/project-schedule': typeof ToolkitProjectScheduleRoute
+  '/toolkit/raid-log': typeof ToolkitRaidLogRoute
   '/verify/$code': typeof VerifyCodeRoute
+  '/toolkit': typeof ToolkitIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/evals': typeof AuthenticatedAdminEvalsRoute
@@ -618,7 +650,11 @@ export interface FileRoutesById {
   '/enrol/success': typeof EnrolSuccessRoute
   '/invite/$code': typeof InviteCodeRoute
   '/report/$code': typeof ReportCodeRoute
+  '/toolkit/project-charter': typeof ToolkitProjectCharterRoute
+  '/toolkit/project-schedule': typeof ToolkitProjectScheduleRoute
+  '/toolkit/raid-log': typeof ToolkitRaidLogRoute
   '/verify/$code': typeof VerifyCodeRoute
+  '/toolkit/': typeof ToolkitIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/_authenticated/admin/evals': typeof AuthenticatedAdminEvalsRoute
@@ -691,7 +727,11 @@ export interface FileRouteTypes {
     | '/enrol/success'
     | '/invite/$code'
     | '/report/$code'
+    | '/toolkit/project-charter'
+    | '/toolkit/project-schedule'
+    | '/toolkit/raid-log'
     | '/verify/$code'
+    | '/toolkit/'
     | '/.lovable/oauth/consent'
     | '/admin/analytics'
     | '/admin/evals'
@@ -761,7 +801,11 @@ export interface FileRouteTypes {
     | '/enrol/success'
     | '/invite/$code'
     | '/report/$code'
+    | '/toolkit/project-charter'
+    | '/toolkit/project-schedule'
+    | '/toolkit/raid-log'
     | '/verify/$code'
+    | '/toolkit'
     | '/.lovable/oauth/consent'
     | '/admin/analytics'
     | '/admin/evals'
@@ -833,7 +877,11 @@ export interface FileRouteTypes {
     | '/enrol/success'
     | '/invite/$code'
     | '/report/$code'
+    | '/toolkit/project-charter'
+    | '/toolkit/project-schedule'
+    | '/toolkit/raid-log'
     | '/verify/$code'
+    | '/toolkit/'
     | '/.lovable/oauth/consent'
     | '/_authenticated/admin/analytics'
     | '/_authenticated/admin/evals'
@@ -903,7 +951,11 @@ export interface RootRouteChildren {
   EnrolSuccessRoute: typeof EnrolSuccessRoute
   InviteCodeRoute: typeof InviteCodeRoute
   ReportCodeRoute: typeof ReportCodeRoute
+  ToolkitProjectCharterRoute: typeof ToolkitProjectCharterRoute
+  ToolkitProjectScheduleRoute: typeof ToolkitProjectScheduleRoute
+  ToolkitRaidLogRoute: typeof ToolkitRaidLogRoute
   VerifyCodeRoute: typeof VerifyCodeRoute
+  ToolkitIndexRoute: typeof ToolkitIndexRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   ApiPublicEarlyAccessRoute: typeof ApiPublicEarlyAccessRoute
   ApiPublicGeminiTestRoute: typeof ApiPublicGeminiTestRoute
@@ -968,11 +1020,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/toolkit/': {
+      id: '/toolkit/'
+      path: '/toolkit'
+      fullPath: '/toolkit/'
+      preLoaderRoute: typeof ToolkitIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/verify/$code': {
       id: '/verify/$code'
       path: '/verify/$code'
       fullPath: '/verify/$code'
       preLoaderRoute: typeof VerifyCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/toolkit/raid-log': {
+      id: '/toolkit/raid-log'
+      path: '/toolkit/raid-log'
+      fullPath: '/toolkit/raid-log'
+      preLoaderRoute: typeof ToolkitRaidLogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/toolkit/project-schedule': {
+      id: '/toolkit/project-schedule'
+      path: '/toolkit/project-schedule'
+      fullPath: '/toolkit/project-schedule'
+      preLoaderRoute: typeof ToolkitProjectScheduleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/toolkit/project-charter': {
+      id: '/toolkit/project-charter'
+      path: '/toolkit/project-charter'
+      fullPath: '/toolkit/project-charter'
+      preLoaderRoute: typeof ToolkitProjectCharterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/report/$code': {
@@ -1533,7 +1613,11 @@ const rootRouteChildren: RootRouteChildren = {
   EnrolSuccessRoute: EnrolSuccessRoute,
   InviteCodeRoute: InviteCodeRoute,
   ReportCodeRoute: ReportCodeRoute,
+  ToolkitProjectCharterRoute: ToolkitProjectCharterRoute,
+  ToolkitProjectScheduleRoute: ToolkitProjectScheduleRoute,
+  ToolkitRaidLogRoute: ToolkitRaidLogRoute,
   VerifyCodeRoute: VerifyCodeRoute,
+  ToolkitIndexRoute: ToolkitIndexRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   ApiPublicEarlyAccessRoute: ApiPublicEarlyAccessRoute,
   ApiPublicGeminiTestRoute: ApiPublicGeminiTestRoute,
