@@ -61,12 +61,42 @@ function matchesArtifact(task: TaskRow, template: TemplateKind) {
   }
 }
 
+/**
+ * The learner's currently open project instance. Every reconciliation read and
+ * write below MUST be scoped to it: a learner can have several simulations, and
+ * an approved deliverable from a finished run must never close a task on a
+ * brand new project.
+ */
+async function activeInstanceId(supabase: any, userId: string): Promise<string | null> {
+  try {
+    const { data } = await supabase
+      .from("profiles")
+      .select("current_project_instance_id")
+      .eq("id", userId)
+      .maybeSingle();
+    return (data as any)?.current_project_instance_id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function scopeTo(query: any, instanceId: string | null) {
+  return instanceId ? query.eq("project_instance_id", instanceId) : query;
+}
+
 export async function markSubmittedArtifactTasks(
   supabase: any,
   userId: string,
-  args: { template: TemplateKind; submission?: string; linkedTaskId?: string | null },
+  args: {
+    template: TemplateKind;
+    submission?: string;
+    linkedTaskId?: string | null;
+    instanceId?: string | null;
+  },
 ) {
-  return markSubmittedArtifactTasksImpl(supabase, userId, args);
+  const instanceId =
+    args.instanceId !== undefined ? args.instanceId : await activeInstanceId(supabase, userId);
+  return markSubmittedArtifactTasksImpl(supabase, userId, { ...args, instanceId });
 }
 
 /** artifact_type in project_artifacts -> the template matcher used for tasks. */
@@ -92,21 +122,33 @@ const ARTIFACT_TEMPLATE_MATCH: Record<string, (task: TaskRow) => boolean> = {
  * Closes tasks whose deliverable has already been approved. Without this,
  * initiation/planning tasks stay on the board after the learner has moved on.
  */
-export async function reconcileApprovedArtifactTasks(supabase: any, userId: string) {
+export async function reconcileApprovedArtifactTasks(
+  supabase: any,
+  userId: string,
+  instanceIdArg?: string | null,
+) {
   try {
-    const { data: artifacts } = await supabase
-      .from("project_artifacts")
-      .select("artifact_type,status,approved_at")
-      .eq("user_id", userId)
-      .eq("status", "approved");
+    const instanceId =
+      instanceIdArg !== undefined ? instanceIdArg : await activeInstanceId(supabase, userId);
+    const { data: artifacts } = await scopeTo(
+      supabase
+        .from("project_artifacts")
+        .select("artifact_type,status,approved_at")
+        .eq("user_id", userId)
+        .eq("status", "approved"),
+      instanceId,
+    );
     const approved = new Set<string>((artifacts ?? []).map((a: any) => a.artifact_type));
     if (approved.size === 0) return;
 
-    const { data: tasks } = await supabase
-      .from("tasks")
-      .select("id,title,description,status,category,linked_area,linked_module_route")
-      .eq("user_id", userId)
-      .in("status", OPEN_OR_SUBMITTED_STATUSES);
+    const { data: tasks } = await scopeTo(
+      supabase
+        .from("tasks")
+        .select("id,title,description,status,category,linked_area,linked_module_route")
+        .eq("user_id", userId)
+        .in("status", OPEN_OR_SUBMITTED_STATUSES),
+      instanceId,
+    );
     const rows = (tasks ?? []) as TaskRow[];
     if (rows.length === 0) return;
 
@@ -130,13 +172,21 @@ export async function reconcileApprovedArtifactTasks(supabase: any, userId: stri
 async function markSubmittedArtifactTasksImpl(
   supabase: any,
   userId: string,
-  args: { template: TemplateKind; submission?: string; linkedTaskId?: string | null },
+  args: {
+    template: TemplateKind;
+    submission?: string;
+    linkedTaskId?: string | null;
+    instanceId?: string | null;
+  },
 ) {
-  const { data: tasks, error } = await supabase
-    .from("tasks")
-    .select("id,title,description,status,category,linked_area,linked_module_route")
-    .eq("user_id", userId)
-    .in("status", ACTIVE_TASK_STATUSES);
+  const { data: tasks, error } = await scopeTo(
+    supabase
+      .from("tasks")
+      .select("id,title,description,status,category,linked_area,linked_module_route")
+      .eq("user_id", userId)
+      .in("status", ACTIVE_TASK_STATUSES),
+    args.instanceId ?? null,
+  );
   if (error) throw error;
 
   const matched = ((tasks ?? []) as TaskRow[]).filter((task) => {
@@ -163,15 +213,22 @@ async function markSubmittedArtifactTasksImpl(
 }
 
 export async function reconcileSubmittedArtifactTasks(supabase: any, userId: string) {
+  // Everything below is scoped to the project the learner currently has open,
+  // so work delivered on a previous simulation can never pre-complete tasks on
+  // a newly started one.
+  const instanceId = await activeInstanceId(supabase, userId);
   // Approved deliverables close their originating task outright, so completed
   // initiation/planning work stops lingering on the board in later phases.
-  await reconcileApprovedArtifactTasks(supabase, userId);
+  await reconcileApprovedArtifactTasks(supabase, userId, instanceId);
   try {
-    const { data: report } = await supabase
-      .from("status_reports")
-      .select("week_start,rag_summary,achievements,next_week,risks_blockers,decisions_needed,budget_note,submitted_at")
-      .eq("user_id", userId)
-      .not("submitted_at", "is", null)
+    const { data: report } = await scopeTo(
+      supabase
+        .from("status_reports")
+        .select("week_start,rag_summary,achievements,next_week,risks_blockers,decisions_needed,budget_note,submitted_at")
+        .eq("user_id", userId)
+        .not("submitted_at", "is", null),
+      instanceId,
+    )
       .order("submitted_at", { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -187,6 +244,7 @@ export async function reconcileSubmittedArtifactTasks(supabase: any, userId: str
       };
       await markSubmittedArtifactTasks(supabase, userId, {
         template: "status_report",
+        instanceId,
         submission: encodeSubmission({ kind: "template", template: "status_report", values, readiness: evaluateStatusReport(values) }),
       });
     }
@@ -195,16 +253,19 @@ export async function reconcileSubmittedArtifactTasks(supabase: any, userId: str
   }
 
   try {
-    const { data: charter } = await supabase
-      .from("project_charters")
-      .select("payload,submitted_at")
-      .eq("user_id", userId)
-      .not("submitted_at", "is", null)
-      .maybeSingle();
+    const { data: charter } = await scopeTo(
+      supabase
+        .from("project_charters")
+        .select("payload,submitted_at")
+        .eq("user_id", userId)
+        .not("submitted_at", "is", null),
+      instanceId,
+    ).maybeSingle();
     if (charter) {
       const values = (charter.payload ?? {}) as Record<string, string>;
       await markSubmittedArtifactTasks(supabase, userId, {
         template: "project_charter",
+        instanceId,
         submission: encodeSubmission({ kind: "template", template: "project_charter", values, readiness: evaluateCharter(values) }),
       });
     }
@@ -213,16 +274,19 @@ export async function reconcileSubmittedArtifactTasks(supabase: any, userId: str
   }
 
   try {
-    const { data: register } = await supabase
-      .from("stakeholder_registers")
-      .select("payload,submitted_at")
-      .eq("user_id", userId)
-      .not("submitted_at", "is", null)
-      .maybeSingle();
+    const { data: register } = await scopeTo(
+      supabase
+        .from("stakeholder_registers")
+        .select("payload,submitted_at")
+        .eq("user_id", userId)
+        .not("submitted_at", "is", null),
+      instanceId,
+    ).maybeSingle();
     if (register) {
       const values = (register.payload ?? {}) as Record<string, string>;
       await markSubmittedArtifactTasks(supabase, userId, {
         template: "stakeholder_register",
+        instanceId,
         submission: encodeSubmission({
           kind: "template",
           template: "stakeholder_register",
@@ -236,16 +300,19 @@ export async function reconcileSubmittedArtifactTasks(supabase: any, userId: str
   }
 
   try {
-    const { data: lessons } = await supabase
-      .from("lessons_learned_docs")
-      .select("payload,submitted_at")
-      .eq("user_id", userId)
-      .not("submitted_at", "is", null)
-      .maybeSingle();
+    const { data: lessons } = await scopeTo(
+      supabase
+        .from("lessons_learned_docs")
+        .select("payload,submitted_at")
+        .eq("user_id", userId)
+        .not("submitted_at", "is", null),
+      instanceId,
+    ).maybeSingle();
     if (lessons) {
       const values = (lessons.payload ?? {}) as Record<string, string>;
       await markSubmittedArtifactTasks(supabase, userId, {
         template: "lessons_learned",
+        instanceId,
         submission: encodeSubmission({
           kind: "template",
           template: "lessons_learned",
