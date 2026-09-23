@@ -11,6 +11,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { getActiveProject } from "@/lib/projects.functions";
 import { getOverview } from "@/lib/sim.functions";
+import { scenarioFor, type ScenarioPack } from "@/lib/scenarios";
+import { useRoster } from "@/lib/roster";
+import { STAKEHOLDER_PROFILES } from "@/lib/stakeholder-profiles";
 import {
   ArrowRight,
   Info,
@@ -73,9 +76,12 @@ export function ProjectInitiationPack({ open, onOpenChange, firstRun }: Props) {
     ((overview?.profile as any)?.role as string | undefined)?.trim() ||
     "Project Coordinator";
 
+  const scenario = scenarioFor(tpl?.slug as string | undefined);
+
   const activeIcon =
     TABS.find((t) => t.label === tab)?.icon ?? Compass;
   const ActiveIcon = activeIcon;
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -150,14 +156,21 @@ export function ProjectInitiationPack({ open, onOpenChange, firstRun }: Props) {
               key={tab}
               className="mt-4 animate-in fade-in-0 slide-in-from-bottom-1 space-y-5 rounded-3xl border border-border bg-card p-4 text-sm leading-relaxed text-foreground/85 shadow-sm duration-300 sm:p-6"
             >
-              {tab === "Overview" && <OverviewTab />}
-              {tab === "Objectives & Success" && <ObjectivesTab />}
-              {tab === "Scope" && <ScopeTab />}
-              {tab === "Timeline & Budget" && <TimelineTab />}
-              {tab === "Stakeholders" && <StakeholdersTab />}
-              {tab === "Risks & Assumptions" && <RisksTab />}
-              {tab === "Current Issues" && <IssuesTab />}
-              {tab === "Your Role" && <RoleTab roleTitle={roleTitle} />}
+              {scenario ? (
+                <ScenarioTab tab={tab} scenario={scenario} roleTitle={roleTitle} />
+              ) : (
+                <>
+                  {tab === "Overview" && <OverviewTab />}
+                  {tab === "Objectives & Success" && <ObjectivesTab />}
+                  {tab === "Scope" && <ScopeTab />}
+                  {tab === "Timeline & Budget" && <TimelineTab />}
+                  {tab === "Stakeholders" && <StakeholdersTab />}
+                  {tab === "Risks & Assumptions" && <RisksTab />}
+                  {tab === "Current Issues" && <IssuesTab />}
+                  {tab === "Your Role" && <RoleTab roleTitle={roleTitle} />}
+                </>
+              )}
+
             </div>
 
             <p className="mt-5 text-xs text-muted-foreground">
@@ -674,6 +687,240 @@ function RoleTab({ roleTitle }: { roleTitle: string }) {
           />
         </Card>
       </section>
+    </>
+  );
+}
+
+/* ---------------- Scenario-driven pack (data from src/lib/scenarios.ts) --------------- */
+
+function ScenarioTab({
+  tab,
+  scenario,
+  roleTitle,
+}: {
+  tab: Tab;
+  scenario: ScenarioPack;
+  roleTitle: string;
+}) {
+  const roster = useRoster();
+
+  if (tab === "Overview") {
+    return (
+      <>
+        <section>
+          <H>Why this programme exists</H>
+          {scenario.overview.why.map((p) => (
+            <p key={p} className="mt-2">{p}</p>
+          ))}
+          <p className="mt-3 text-xs uppercase tracking-wider text-muted-foreground">
+            {scenario.overview.challengesLabel}
+          </p>
+          <Bullets items={scenario.overview.challenges} />
+        </section>
+
+        <section>
+          <H>How this programme is run</H>
+          <Card tone="navy">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-accent-orange">
+              {scenario.methodLabel}
+            </div>
+            {scenario.methodBlurb.map((p) => (
+              <p key={p} className="mt-2">{p}</p>
+            ))}
+          </Card>
+        </section>
+
+        <section>
+          <H>Current position</H>
+          <Card>
+            {scenario.overview.position.map((p) => (
+              <p key={p} className="mt-2 first:mt-0">{p}</p>
+            ))}
+          </Card>
+        </section>
+      </>
+    );
+  }
+
+  if (tab === "Objectives & Success") {
+    return (
+      <>
+        <section>
+          <H>Programme objective</H>
+          {scenario.objectives.objective.map((p) => (
+            <p key={p} className="mt-2">{p}</p>
+          ))}
+          <p className="mt-3 text-xs uppercase tracking-wider text-muted-foreground">
+            {scenario.objectives.aimsLabel}
+          </p>
+          <Bullets items={scenario.objectives.aims} />
+        </section>
+
+        <section>
+          <H>What success looks like</H>
+          {scenario.objectives.successIntro.map((p) => (
+            <p key={p} className="mt-2">{p}</p>
+          ))}
+          <Bullets items={scenario.objectives.expectations} />
+        </section>
+
+        {scenario.objectives.caution && (
+          <Card tone="warn">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-accent-orange">
+              Important
+            </div>
+            <p className="mt-1">{scenario.objectives.caution}</p>
+          </Card>
+        )}
+      </>
+    );
+  }
+
+  if (tab === "Scope") {
+    return (
+      <>
+        <section>
+          <H>Currently in scope</H>
+          <Bullets items={scenario.scope.includes} />
+        </section>
+        <section>
+          <H>Currently out of scope</H>
+          <Bullets items={scenario.scope.excludes} />
+        </section>
+        <Card tone="warn">
+          <p>{scenario.scope.changeNote}</p>
+        </Card>
+      </>
+    );
+  }
+
+  if (tab === "Timeline & Budget") {
+    return (
+      <>
+        <section>
+          <H>Delivery timeline</H>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <Card tone="warn">
+              <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                {scenario.timeline.windowLabel}
+              </div>
+              <div className="mt-1 font-display text-2xl font-medium">
+                {scenario.timeline.windowValue}
+              </div>
+            </Card>
+            <Card tone="green">
+              <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                Approved budget
+              </div>
+              <div className="mt-1 font-display text-2xl font-medium">
+                {scenario.timeline.budgetValue}
+              </div>
+            </Card>
+          </div>
+          <p className="mt-3">{scenario.timeline.budgetNote}</p>
+        </section>
+
+        <section>
+          <H>Stage gates and milestones</H>
+          <div className="mt-2 space-y-2">
+            {scenario.timeline.milestones.map((m) => (
+              <div
+                key={m.label}
+                className="flex flex-col gap-1 rounded-2xl border border-border bg-muted/40 p-3 sm:flex-row sm:items-baseline sm:gap-4"
+              >
+                <div className="w-28 shrink-0 text-[11px] font-semibold uppercase tracking-wider text-accent-orange">
+                  {m.when}
+                </div>
+                <div>
+                  <div className="font-medium text-foreground">{m.label}</div>
+                  <p className="text-sm">{m.detail}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section>
+          <H>Hard constraints</H>
+          <Bullets items={scenario.timeline.constraints} />
+        </section>
+      </>
+    );
+  }
+
+  if (tab === "Stakeholders") {
+    return (
+      <>
+        <H>Key stakeholders</H>
+        <div className="space-y-3">
+          {roster.map((s) => (
+            <Card key={s.name} tone="lilac">
+              <div className="font-medium text-foreground">{s.name}</div>
+              <div className="text-[11px] uppercase tracking-wider text-accent-orange">
+                {s.title}
+              </div>
+              <p className="mt-1.5 text-sm">
+                {STAKEHOLDER_PROFILES[s.role]?.summary ??
+                  "A programme participant with their own priorities and pressures."}
+              </p>
+            </Card>
+          ))}
+        </div>
+        <p className="text-xs text-muted-foreground">
+          This tab provides project context only. Sentiment and concerns live in
+          the Stakeholders module.
+        </p>
+      </>
+    );
+  }
+
+  if (tab === "Risks & Assumptions") {
+    return (
+      <>
+        <section>
+          <H>Known risks</H>
+          <Bullets items={scenario.risks.risks} />
+        </section>
+        <section>
+          <H>Current assumptions</H>
+          <Bullets items={scenario.risks.assumptions} />
+          <p className="mt-3 text-muted-foreground">
+            Assumptions become risks or issues the moment evidence changes.
+            Record them in your RAID log rather than trusting them.
+          </p>
+        </section>
+      </>
+    );
+  }
+
+  if (tab === "Current Issues") {
+    return (
+      <>
+        <H>Live issues you are inheriting</H>
+        <Bullets items={scenario.issues} />
+        <Card tone="warn">
+          <p>
+            These are real, open and unowned. Leaving them unrecorded does not
+            make them go away — governance will ask you about each one.
+          </p>
+        </Card>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <H>Your role — {roleTitle}</H>
+      {scenario.roleNote.map((p) => (
+        <p key={p} className="mt-2">{p}</p>
+      ))}
+      <Card tone="navy">
+        <p>
+          You work for {scenario.organisation}. Decisions you cannot make
+          yourself should be escalated with a recommendation, not just a
+          question.
+        </p>
+      </Card>
     </>
   );
 }

@@ -10,8 +10,10 @@ import { loadRoster, rosterByRole, rosterByName, DEFAULT_ROSTER, type RosterMemb
 import { encodeSubmission, evaluateStatusReport } from "./templates";
 import { markSubmittedArtifactTasks } from "./task-sync.server";
 import { projectFactsPrompt, factsFor } from "./project-facts";
+import { scenarioFor } from "@/lib/scenarios";
 import {
   PHASE_KEYS,
+
   PHASE_LABELS,
   GATE_LABELS,
   nextPhase,
@@ -76,6 +78,12 @@ export async function getProjectCtx(supabase: any, userId: string) {
     jargon = `Use e-commerce jargon: conversion rate, checkout funnel, PIM, PDP, cart abandonment, SKUs, payment gateway, fulfilment, returns, storefront theme, Core Web Vitals, A/B tests, cohort LTV.`;
   } else if (isEv) {
     jargon = `Use EV/energy jargon: DC fast charging, OCPP, grid connection, load balancing, kW/kWh, back-office / CPO platform, site commissioning, DNO approvals, uptime SLAs.`;
+  }
+  // A scenario pack, where one exists, overrides the keyword heuristics and
+  // also carries a tone guide so each simulation sounds like a different place.
+  const scenario = scenarioFor(slug);
+  if (scenario) {
+    jargon = `${scenario.jargon}\n\nTONE: ${scenario.toneGuide}`;
   }
   const domainGuardText = isHealth
     ? ""
@@ -413,7 +421,21 @@ export const seedBudgetIfEmpty = createServerFn({ method: "POST" })
     if (instanceId) q = q.eq("project_instance_id", instanceId);
     const { count } = await q;
     if ((count ?? 0) > 0) return { seeded: false };
-    const rows = DEFAULT_BUDGET.map((b) => ({
+
+    // Each scenario has its own baseline cost structure; fall back to the
+    // Digital Care Records baseline when a template has no scenario pack.
+    let baseline = DEFAULT_BUDGET;
+    if (instanceId) {
+      const { data: inst } = await context.supabase
+        .from("project_instances")
+        .select("project_templates(slug)")
+        .eq("id", instanceId)
+        .maybeSingle();
+      const sc = scenarioFor((inst as any)?.project_templates?.slug);
+      if (sc) baseline = sc.budget;
+    }
+
+    const rows = baseline.map((b) => ({
       user_id: context.userId,
       project_instance_id: instanceId ?? undefined,
       category: b.category,
