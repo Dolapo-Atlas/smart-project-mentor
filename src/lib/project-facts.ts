@@ -63,8 +63,9 @@ export const PROJECT_FACTS_BY_SLUG: Record<string, ProjectFacts> = {
     totalBudget: 1_650_000,
     durationDays: 84,
     timelineLabel: "12 weeks",
-    unitLabel: "",
-    vendor: "Meridian Workplace",
+    unitLabel: "480 staff across 3 floors",
+    vendor: "Hartwell Movers",
+
   },
   "new-product-launch": {
     slug: "new-product-launch",
