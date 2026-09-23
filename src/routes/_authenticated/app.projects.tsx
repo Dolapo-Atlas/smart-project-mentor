@@ -198,6 +198,8 @@ function ProjectsPicker() {
   });
 
   const sorted = [...templates].sort((a, b) => {
+    // Playable projects always come before "coming soon" ones
+    if (a.is_playable !== b.is_playable) return a.is_playable ? -1 : 1;
     if (sort === "duration") return a.duration_days - b.duration_days;
     if (sort === "difficulty") {
       const rank = { Beginner: 1, Intermediate: 2, Advanced: 3 } as Record<string, number>;
