@@ -213,15 +213,22 @@ async function markSubmittedArtifactTasksImpl(
 }
 
 export async function reconcileSubmittedArtifactTasks(supabase: any, userId: string) {
+  // Everything below is scoped to the project the learner currently has open,
+  // so work delivered on a previous simulation can never pre-complete tasks on
+  // a newly started one.
+  const instanceId = await activeInstanceId(supabase, userId);
   // Approved deliverables close their originating task outright, so completed
   // initiation/planning work stops lingering on the board in later phases.
-  await reconcileApprovedArtifactTasks(supabase, userId);
+  await reconcileApprovedArtifactTasks(supabase, userId, instanceId);
   try {
-    const { data: report } = await supabase
-      .from("status_reports")
-      .select("week_start,rag_summary,achievements,next_week,risks_blockers,decisions_needed,budget_note,submitted_at")
-      .eq("user_id", userId)
-      .not("submitted_at", "is", null)
+    const { data: report } = await scopeTo(
+      supabase
+        .from("status_reports")
+        .select("week_start,rag_summary,achievements,next_week,risks_blockers,decisions_needed,budget_note,submitted_at")
+        .eq("user_id", userId)
+        .not("submitted_at", "is", null),
+      instanceId,
+    )
       .order("submitted_at", { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -237,6 +244,7 @@ export async function reconcileSubmittedArtifactTasks(supabase: any, userId: str
       };
       await markSubmittedArtifactTasks(supabase, userId, {
         template: "status_report",
+        instanceId,
         submission: encodeSubmission({ kind: "template", template: "status_report", values, readiness: evaluateStatusReport(values) }),
       });
     }
@@ -245,16 +253,19 @@ export async function reconcileSubmittedArtifactTasks(supabase: any, userId: str
   }
 
   try {
-    const { data: charter } = await supabase
-      .from("project_charters")
-      .select("payload,submitted_at")
-      .eq("user_id", userId)
-      .not("submitted_at", "is", null)
-      .maybeSingle();
+    const { data: charter } = await scopeTo(
+      supabase
+        .from("project_charters")
+        .select("payload,submitted_at")
+        .eq("user_id", userId)
+        .not("submitted_at", "is", null),
+      instanceId,
+    ).maybeSingle();
     if (charter) {
       const values = (charter.payload ?? {}) as Record<string, string>;
       await markSubmittedArtifactTasks(supabase, userId, {
         template: "project_charter",
+        instanceId,
         submission: encodeSubmission({ kind: "template", template: "project_charter", values, readiness: evaluateCharter(values) }),
       });
     }
@@ -263,16 +274,19 @@ export async function reconcileSubmittedArtifactTasks(supabase: any, userId: str
   }
 
   try {
-    const { data: register } = await supabase
-      .from("stakeholder_registers")
-      .select("payload,submitted_at")
-      .eq("user_id", userId)
-      .not("submitted_at", "is", null)
-      .maybeSingle();
+    const { data: register } = await scopeTo(
+      supabase
+        .from("stakeholder_registers")
+        .select("payload,submitted_at")
+        .eq("user_id", userId)
+        .not("submitted_at", "is", null),
+      instanceId,
+    ).maybeSingle();
     if (register) {
       const values = (register.payload ?? {}) as Record<string, string>;
       await markSubmittedArtifactTasks(supabase, userId, {
         template: "stakeholder_register",
+        instanceId,
         submission: encodeSubmission({
           kind: "template",
           template: "stakeholder_register",
@@ -286,16 +300,19 @@ export async function reconcileSubmittedArtifactTasks(supabase: any, userId: str
   }
 
   try {
-    const { data: lessons } = await supabase
-      .from("lessons_learned_docs")
-      .select("payload,submitted_at")
-      .eq("user_id", userId)
-      .not("submitted_at", "is", null)
-      .maybeSingle();
+    const { data: lessons } = await scopeTo(
+      supabase
+        .from("lessons_learned_docs")
+        .select("payload,submitted_at")
+        .eq("user_id", userId)
+        .not("submitted_at", "is", null),
+      instanceId,
+    ).maybeSingle();
     if (lessons) {
       const values = (lessons.payload ?? {}) as Record<string, string>;
       await markSubmittedArtifactTasks(supabase, userId, {
         template: "lessons_learned",
+        instanceId,
         submission: encodeSubmission({
           kind: "template",
           template: "lessons_learned",
