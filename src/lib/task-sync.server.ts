@@ -61,12 +61,42 @@ function matchesArtifact(task: TaskRow, template: TemplateKind) {
   }
 }
 
+/**
+ * The learner's currently open project instance. Every reconciliation read and
+ * write below MUST be scoped to it: a learner can have several simulations, and
+ * an approved deliverable from a finished run must never close a task on a
+ * brand new project.
+ */
+async function activeInstanceId(supabase: any, userId: string): Promise<string | null> {
+  try {
+    const { data } = await supabase
+      .from("profiles")
+      .select("current_project_instance_id")
+      .eq("id", userId)
+      .maybeSingle();
+    return (data as any)?.current_project_instance_id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function scopeTo(query: any, instanceId: string | null) {
+  return instanceId ? query.eq("project_instance_id", instanceId) : query;
+}
+
 export async function markSubmittedArtifactTasks(
   supabase: any,
   userId: string,
-  args: { template: TemplateKind; submission?: string; linkedTaskId?: string | null },
+  args: {
+    template: TemplateKind;
+    submission?: string;
+    linkedTaskId?: string | null;
+    instanceId?: string | null;
+  },
 ) {
-  return markSubmittedArtifactTasksImpl(supabase, userId, args);
+  const instanceId =
+    args.instanceId !== undefined ? args.instanceId : await activeInstanceId(supabase, userId);
+  return markSubmittedArtifactTasksImpl(supabase, userId, { ...args, instanceId });
 }
 
 /** artifact_type in project_artifacts -> the template matcher used for tasks. */
