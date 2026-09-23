@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { scenarioFor } from "@/lib/scenarios";
 
 export const listProjectTemplates = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -193,7 +194,7 @@ export const markIntroSeen = createServerFn({ method: "POST" })
     // Seed the welcome email for this project instance (idempotent).
     const { data: inst } = await supabase
       .from("project_instances")
-      .select("id, display_name, project_templates(title, pm_name, pm_role, sponsor_name, sponsor_role, key_skills)")
+      .select("id, display_name, project_templates(slug, title, pm_name, pm_role, sponsor_name, sponsor_role, key_skills)")
       .eq("id", data.instanceId)
       .maybeSingle();
 
@@ -236,7 +237,9 @@ export const markIntroSeen = createServerFn({ method: "POST" })
         (profile as any)?.career_goal?.trim() ||
         "Project Coordinator";
 
-      const body = `Hi ${firstName},
+      const scenario = scenarioFor(tpl.slug);
+
+      const genericBody = `Hi ${firstName},
 
 Welcome to ${projectTitle}. We're delighted you've joined us as our new ${roleTitle}.
 
@@ -264,16 +267,21 @@ Welcome to the team.
 ${pmName}
 ${pmRole}`;
 
+      const body = scenario
+        ? scenario.welcome.body({ firstName, roleTitle, pmName, pmRole })
+        : genericBody;
+
       const { error: inboxErr } = await supabase.from("inbox_messages").insert({
         user_id: userId,
         project_instance_id: data.instanceId,
         sender_name: pmName,
         sender_role: pmRole,
-        subject: `Welcome to ${projectTitle}`,
-        tone: "supportive",
+        subject: scenario ? scenario.welcome.subject : `Welcome to ${projectTitle}`,
+        tone: scenario ? scenario.welcome.tone : "supportive",
         body,
       });
       if (inboxErr) throw inboxErr;
+
 
       // Seed the four first-day objectives as real tasks so they appear in
       // Tasks, What's Next and the dashboard — not just buried in the email.
@@ -284,7 +292,7 @@ ${pmRole}`;
         .eq("project_instance_id", data.instanceId);
 
       if (!existingTasks || existingTasks === 0) {
-        const objectives = [
+        const objectives = scenario ? scenario.firstTasks : [
           {
             title: "Draft the Project Charter",
             description: "There isn't a charter on file yet — that's your first deliverable. Capture scope, objectives, success criteria, assumptions, constraints and governance in the Charter module, then submit it for sponsor approval.",
