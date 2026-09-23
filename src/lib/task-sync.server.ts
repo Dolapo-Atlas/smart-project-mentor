@@ -122,21 +122,33 @@ const ARTIFACT_TEMPLATE_MATCH: Record<string, (task: TaskRow) => boolean> = {
  * Closes tasks whose deliverable has already been approved. Without this,
  * initiation/planning tasks stay on the board after the learner has moved on.
  */
-export async function reconcileApprovedArtifactTasks(supabase: any, userId: string) {
+export async function reconcileApprovedArtifactTasks(
+  supabase: any,
+  userId: string,
+  instanceIdArg?: string | null,
+) {
   try {
-    const { data: artifacts } = await supabase
-      .from("project_artifacts")
-      .select("artifact_type,status,approved_at")
-      .eq("user_id", userId)
-      .eq("status", "approved");
+    const instanceId =
+      instanceIdArg !== undefined ? instanceIdArg : await activeInstanceId(supabase, userId);
+    const { data: artifacts } = await scopeTo(
+      supabase
+        .from("project_artifacts")
+        .select("artifact_type,status,approved_at")
+        .eq("user_id", userId)
+        .eq("status", "approved"),
+      instanceId,
+    );
     const approved = new Set<string>((artifacts ?? []).map((a: any) => a.artifact_type));
     if (approved.size === 0) return;
 
-    const { data: tasks } = await supabase
-      .from("tasks")
-      .select("id,title,description,status,category,linked_area,linked_module_route")
-      .eq("user_id", userId)
-      .in("status", OPEN_OR_SUBMITTED_STATUSES);
+    const { data: tasks } = await scopeTo(
+      supabase
+        .from("tasks")
+        .select("id,title,description,status,category,linked_area,linked_module_route")
+        .eq("user_id", userId)
+        .in("status", OPEN_OR_SUBMITTED_STATUSES),
+      instanceId,
+    );
     const rows = (tasks ?? []) as TaskRow[];
     if (rows.length === 0) return;
 
@@ -160,13 +172,21 @@ export async function reconcileApprovedArtifactTasks(supabase: any, userId: stri
 async function markSubmittedArtifactTasksImpl(
   supabase: any,
   userId: string,
-  args: { template: TemplateKind; submission?: string; linkedTaskId?: string | null },
+  args: {
+    template: TemplateKind;
+    submission?: string;
+    linkedTaskId?: string | null;
+    instanceId?: string | null;
+  },
 ) {
-  const { data: tasks, error } = await supabase
-    .from("tasks")
-    .select("id,title,description,status,category,linked_area,linked_module_route")
-    .eq("user_id", userId)
-    .in("status", ACTIVE_TASK_STATUSES);
+  const { data: tasks, error } = await scopeTo(
+    supabase
+      .from("tasks")
+      .select("id,title,description,status,category,linked_area,linked_module_route")
+      .eq("user_id", userId)
+      .in("status", ACTIVE_TASK_STATUSES),
+    args.instanceId ?? null,
+  );
   if (error) throw error;
 
   const matched = ((tasks ?? []) as TaskRow[]).filter((task) => {
