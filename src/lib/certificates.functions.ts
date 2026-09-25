@@ -8,7 +8,7 @@ export const getCertificateStatus = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     const { buildCertificatePayload } = await import("@/lib/certificate-data.server");
-    const { qrDataUrl, verificationUrl } = await import("@/lib/certificates.server");
+    const { verificationUrl } = await import("@/lib/certificates.server");
 
     const { data: existing } = await supabase
       .from("certificates")
@@ -23,7 +23,10 @@ export const getCertificateStatus = createServerFn({ method: "GET" })
       return {
         issued: true as const,
         certificate: existing,
-        qrCodeUrl: await qrDataUrl(existing.verification_code),
+        // Keep this frequently used status response small and edge-safe. The
+        // verification URL printed on the certificate remains authoritative;
+        // public certificate pages can generate their QR independently.
+        qrCodeUrl: null as string | null,
         verificationUrl: verificationUrl(existing.verification_code),
         eligible: true,
         reason: undefined as string | undefined,
