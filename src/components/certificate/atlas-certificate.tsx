@@ -169,8 +169,7 @@ export function AtlasCertificate({
         <p className="mx-auto mt-[2.2cqw] max-w-[86%] text-center text-[1.1cqw] leading-relaxed text-[#6B7280]">
           This credential confirms that the recipient completed a structured Atlas
           simulated workplace experience and demonstrated practical capability across
-          the competencies listed above. It records simulated experience and does not
-          represent employment.
+          the competencies listed above.
         </p>
 
         {/* Signature + verification */}
