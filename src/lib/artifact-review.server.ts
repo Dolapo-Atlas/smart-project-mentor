@@ -57,7 +57,7 @@ export async function reviewArtifact(
   userId: string,
   args: ReviewArtifactArgs,
 ): Promise<{ review: ArtifactReview; version: number }> {
-  const reviewerName = args.reviewer_name ?? "David Okafor";
+  let reviewerName = args.reviewer_name ?? "David Okafor";
   const reviewerRole = args.reviewer_role ?? "Executive Sponsor";
 
   const content = payloadToMarkdown(args.title, args.payload as Record<string, unknown>);
@@ -75,10 +75,12 @@ export async function reviewArtifact(
     if (profile?.current_project_instance_id) {
       const { data: inst } = await supabase
         .from("project_instances")
-        .select("display_name, project_templates(slug, title)")
+        .select("display_name, project_templates(slug, title, sponsor_name)")
         .eq("id", profile.current_project_instance_id)
         .maybeSingle();
       slug = (inst as any)?.project_templates?.slug ?? null;
+      const tplSponsor = (inst as any)?.project_templates?.sponsor_name as string | undefined;
+      if (!args.reviewer_name && tplSponsor) reviewerName = tplSponsor;
       projectName = projectName ?? (inst as any)?.display_name ?? (inst as any)?.project_templates?.title ?? null;
     }
   } catch (e) {
@@ -154,7 +156,22 @@ Judge it the way a real sponsor would: are objectives, scope, owners, dates, ris
     if (withStatus.includes(args.source_table)) {
       patch.status = approved ? "approved" : "changes_requested";
     }
-    await supabase.from(args.source_table).update(patch).eq("id", args.source_id).eq("user_id", userId);
+    let { error: upErr } = await supabase
+      .from(args.source_table)
+      .update(patch)
+      .eq("id", args.source_id)
+      .eq("user_id", userId);
+    // Not every source table has `approved_at` — retry without it so the
+    // decision itself is never silently dropped.
+    if (upErr && "approved_at" in patch) {
+      delete patch.approved_at;
+      ({ error: upErr } = await supabase
+        .from(args.source_table)
+        .update(patch)
+        .eq("id", args.source_id)
+        .eq("user_id", userId));
+    }
+    if (upErr) console.error("artifact source update failed", upErr);
   } catch (e) {
     console.error("artifact source update failed", e);
   }
