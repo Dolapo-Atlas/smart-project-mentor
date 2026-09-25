@@ -67,7 +67,7 @@ function matchesArtifact(task: TaskRow, template: TemplateKind) {
  * an approved deliverable from a finished run must never close a task on a
  * brand new project.
  */
-async function activeInstanceId(supabase: any, userId: string): Promise<string | null> {
+export async function activeInstanceId(supabase: any, userId: string): Promise<string | null> {
   try {
     const { data } = await supabase
       .from("profiles")
