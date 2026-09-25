@@ -57,7 +57,7 @@ export async function reviewArtifact(
   userId: string,
   args: ReviewArtifactArgs,
 ): Promise<{ review: ArtifactReview; version: number }> {
-  const reviewerName = args.reviewer_name ?? "David Okafor";
+  let reviewerName = args.reviewer_name ?? "David Okafor";
   const reviewerRole = args.reviewer_role ?? "Executive Sponsor";
 
   const content = payloadToMarkdown(args.title, args.payload as Record<string, unknown>);
@@ -75,10 +75,12 @@ export async function reviewArtifact(
     if (profile?.current_project_instance_id) {
       const { data: inst } = await supabase
         .from("project_instances")
-        .select("display_name, project_templates(slug, title)")
+        .select("display_name, project_templates(slug, title, sponsor_name)")
         .eq("id", profile.current_project_instance_id)
         .maybeSingle();
       slug = (inst as any)?.project_templates?.slug ?? null;
+      const tplSponsor = (inst as any)?.project_templates?.sponsor_name as string | undefined;
+      if (!args.reviewer_name && tplSponsor) reviewerName = tplSponsor;
       projectName = projectName ?? (inst as any)?.display_name ?? (inst as any)?.project_templates?.title ?? null;
     }
   } catch (e) {
