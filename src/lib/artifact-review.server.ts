@@ -156,7 +156,22 @@ Judge it the way a real sponsor would: are objectives, scope, owners, dates, ris
     if (withStatus.includes(args.source_table)) {
       patch.status = approved ? "approved" : "changes_requested";
     }
-    await supabase.from(args.source_table).update(patch).eq("id", args.source_id).eq("user_id", userId);
+    let { error: upErr } = await supabase
+      .from(args.source_table)
+      .update(patch)
+      .eq("id", args.source_id)
+      .eq("user_id", userId);
+    // Not every source table has `approved_at` — retry without it so the
+    // decision itself is never silently dropped.
+    if (upErr && "approved_at" in patch) {
+      delete patch.approved_at;
+      ({ error: upErr } = await supabase
+        .from(args.source_table)
+        .update(patch)
+        .eq("id", args.source_id)
+        .eq("user_id", userId));
+    }
+    if (upErr) console.error("artifact source update failed", upErr);
   } catch (e) {
     console.error("artifact source update failed", e);
   }
