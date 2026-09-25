@@ -30,6 +30,10 @@ export function CredentialPanel() {
   const status = useQuery({
     queryKey: ["certificate-status"],
     queryFn: () => fetchStatus() as Promise<any>,
+    retry: 3,
+    retryDelay: (n) => 600 * (n + 1),
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const issueMut = useMutation({
@@ -46,10 +50,23 @@ export function CredentialPanel() {
       ),
   });
 
-  if (status.isLoading) {
+  if (status.isLoading || (status.isFetching && !status.data?.certificate)) {
     return (
       <div className="mt-8 flex items-center gap-2 rounded-3xl border border-border bg-card p-6 text-sm text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" /> Preparing your credential…
+      </div>
+    );
+  }
+
+  if (status.isError) {
+    return (
+      <div className="mt-8 rounded-3xl border border-border bg-card p-6 text-sm shadow-sm">
+        <p className="text-muted-foreground">
+          We couldn't load your credential just now. Your certificate is safe.
+        </p>
+        <Button variant="outline" className="mt-3" onClick={() => status.refetch()}>
+          <RefreshCw className="mr-2 h-4 w-4" /> Try again
+        </Button>
       </div>
     );
   }
