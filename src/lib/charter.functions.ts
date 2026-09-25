@@ -39,11 +39,11 @@ export const getOrCreateCharter = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }): Promise<CharterRow> => {
     const { supabase, userId } = context;
-    const { data: existing } = await supabase
-      .from("project_charters")
-      .select("*")
-      .eq("user_id", userId)
-      .maybeSingle();
+    const { activeInstanceId } = await import("./task-sync.server");
+    const instanceId = await activeInstanceId(supabase, userId);
+    let q = supabase.from("project_charters").select("*").eq("user_id", userId);
+    q = instanceId ? q.eq("project_instance_id", instanceId) : q.is("project_instance_id", null);
+    const { data: existing } = await q.maybeSingle();
     if (existing) {
       if (data.task_id && existing.linked_task_id !== data.task_id) {
         const { data: updated } = await supabase
@@ -60,10 +60,11 @@ export const getOrCreateCharter = createServerFn({ method: "POST" })
       .from("project_charters")
       .insert({
         user_id: userId,
+        project_instance_id: instanceId,
         linked_task_id: data.task_id ?? null,
         payload: {},
         completion_pct: 0,
-      })
+      } as any)
       .select("*")
       .single();
     if (error) throw error;
@@ -101,11 +102,11 @@ export const saveCharterDraft = createServerFn({ method: "POST" })
 export const listCharterVersions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data: charter } = await context.supabase
-      .from("project_charters")
-      .select("id")
-      .eq("user_id", context.userId)
-      .maybeSingle();
+    const { activeInstanceId } = await import("./task-sync.server");
+    const instanceId = await activeInstanceId(context.supabase, context.userId);
+    let q = context.supabase.from("project_charters").select("id").eq("user_id", context.userId);
+    q = instanceId ? q.eq("project_instance_id", instanceId) : q.is("project_instance_id", null);
+    const { data: charter } = await q.maybeSingle();
     if (!charter) return [];
     const { data } = await context.supabase
       .from("project_charter_versions")
