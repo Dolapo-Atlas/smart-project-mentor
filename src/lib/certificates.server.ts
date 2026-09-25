@@ -1,5 +1,4 @@
 import { randomBytes } from "crypto";
-import QRCode from "qrcode";
 
 export const COMPLETION_THRESHOLD = 60;
 
@@ -28,6 +27,10 @@ export function verificationUrl(code: string): string {
 
 export async function qrDataUrl(code: string): Promise<string | null> {
   try {
+    // qrcode pulls in Node inheritance shims that are incompatible with the
+    // production worker. Load it only for pages that explicitly need a QR;
+    // certificate status and eligibility must never import it at startup.
+    const { default: QRCode } = await import("qrcode");
     return await QRCode.toDataURL(verificationUrl(code), {
       margin: 0,
       width: 320,
