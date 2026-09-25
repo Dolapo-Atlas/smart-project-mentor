@@ -570,7 +570,7 @@ function CharterPage() {
                     : "border-border bg-card"
                 }`}
               >
-                <label className="text-sm font-semibold text-foreground">
+                <label htmlFor={`charter-${f.key}`} className="text-sm font-semibold text-foreground">
                   {f.label}
                   {f.required && <span className="ml-1 text-destructive">*</span>}
                 </label>
@@ -579,6 +579,7 @@ function CharterPage() {
                 )}
                 {f.kind === "textarea" ? (
                   <Textarea
+                    id={`charter-${f.key}`}
                     className="mt-2"
                     rows={4}
                     placeholder={f.placeholder}
@@ -587,6 +588,7 @@ function CharterPage() {
                   />
                 ) : (
                   <Input
+                    id={`charter-${f.key}`}
                     className="mt-2"
                     placeholder={f.placeholder}
                     value={values[f.key] ?? ""}
