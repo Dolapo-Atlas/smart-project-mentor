@@ -37,11 +37,11 @@ export const getOrCreateRegister = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }): Promise<RegisterRow> => {
     const { supabase, userId } = context;
-    const { data: existing } = await supabase
-      .from("stakeholder_registers")
-      .select("*")
-      .eq("user_id", userId)
-      .maybeSingle();
+    const { activeInstanceId } = await import("./task-sync.server");
+    const instanceId = await activeInstanceId(supabase, userId);
+    let q = supabase.from("stakeholder_registers").select("*").eq("user_id", userId);
+    q = instanceId ? q.eq("project_instance_id", instanceId) : q.is("project_instance_id", null);
+    const { data: existing } = await q.maybeSingle();
     if (existing) {
       if (data.task_id && existing.linked_task_id !== data.task_id) {
         const { data: updated } = await supabase
@@ -58,10 +58,11 @@ export const getOrCreateRegister = createServerFn({ method: "POST" })
       .from("stakeholder_registers")
       .insert({
         user_id: userId,
+        project_instance_id: instanceId,
         linked_task_id: data.task_id ?? null,
         payload: {},
         completion_pct: 0,
-      })
+      } as any)
       .select("*")
       .single();
     if (error) throw error;
@@ -96,11 +97,11 @@ export const saveRegisterDraft = createServerFn({ method: "POST" })
 export const listRegisterVersions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data: reg } = await context.supabase
-      .from("stakeholder_registers")
-      .select("id")
-      .eq("user_id", context.userId)
-      .maybeSingle();
+    const { activeInstanceId } = await import("./task-sync.server");
+    const instanceId = await activeInstanceId(context.supabase, context.userId);
+    let q = context.supabase.from("stakeholder_registers").select("id").eq("user_id", context.userId);
+    q = instanceId ? q.eq("project_instance_id", instanceId) : q.is("project_instance_id", null);
+    const { data: reg } = await q.maybeSingle();
     if (!reg) return [];
     const { data } = await context.supabase
       .from("stakeholder_register_versions")
