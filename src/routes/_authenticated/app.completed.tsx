@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { listCompletedWork } from "@/lib/tasks.functions";
 import { formatDistanceToNow } from "date-fns";
 import { Sparkles, ArrowLeft } from "lucide-react";
+import { SubmissionView } from "@/components/tasks/submission-view";
 
 export const Route = createFileRoute("/_authenticated/app/completed")({
   component: CompletedWork,
@@ -57,7 +58,7 @@ function CompletedWork() {
             {t.submission && (
               <div className="mt-3 rounded-md border border-border bg-background p-3 text-sm">
                 <div className="text-[11px] uppercase tracking-wider text-muted-foreground">What you submitted</div>
-                <div className="mt-1 whitespace-pre-wrap">{t.submission}</div>
+                <SubmissionView raw={t.submission} />
               </div>
             )}
 
