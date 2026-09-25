@@ -88,6 +88,19 @@ export async function reviewArtifact(
   }
   const facts = factsFor(slug);
   const factsBlock = projectFactsPrompt({ slug });
+  let currentPhase = "initiation";
+  try {
+    const { data: sim } = await supabase
+      .from("simulation_state")
+      .select("phase")
+      .eq("user_id", userId)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (sim?.phase) currentPhase = String(sim.phase);
+  } catch {
+    /* keep default */
+  }
 
   const { version } = await recordArtifactVersion(supabase, userId, {
     artifact_type: args.artifact_type,
@@ -121,6 +134,7 @@ HOW TO REVIEW:
 - Judge only whether the coordinator's document is CONSISTENT with those facts (correct budget, currency, timeline, footprint, vendor) and whether it is specific, complete and usable.
 - If the document contradicts an approved fact, say which fact it contradicts and what the correct figure is.
 - Never request changes solely because you think the timeline or budget is unrealistic.
+- The project is currently in the ${currentPhase} phase. Only refer to moving to the next phase in the canonical order (initiation → planning → execution → monitoring → go-live → closure); never tell them to jump ahead.
 
 Submission:
 ${content}
