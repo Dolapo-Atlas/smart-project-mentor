@@ -151,8 +151,8 @@ Verify credential: ${verifyUrl}
         <div className="flex flex-col gap-3">
           <div className="flex flex-wrap gap-2">
             <Button asChild>
-              <a href={`/certificate/${code}?download=1`} target="_blank" rel="noreferrer">
-                <Download className="mr-2 h-4 w-4" /> Download certificate
+              <a href={`/certificate/${code}?download=1`}>
+                <Download className="mr-2 h-4 w-4" /> Save certificate PDF
               </a>
             </Button>
             <Button variant="outline" asChild>
@@ -252,8 +252,7 @@ Verify credential: ${verifyUrl}
               </div>
             </dl>
             <p className="mt-3 text-xs text-muted-foreground">
-              This is simulated workplace experience — not employment. Suggested file name:{" "}
-              {fileName}.pdf
+              Suggested file name: {fileName}.pdf
             </p>
           </details>
         </div>

@@ -1,8 +1,10 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import { Download, Loader2, Printer, Share2 } from "lucide-react";
 import { getPublicCredential } from "@/lib/certificates.functions";
 import { AtlasCertificate } from "@/components/certificate/atlas-certificate";
-import { exportElementToPdf } from "@/lib/pdf-export";
+import { Button } from "@/components/ui/button";
+import { exportElementToPdf, exportElementToPdfFile } from "@/lib/pdf-export";
 
 export const Route = createFileRoute("/certificate/$code")({
   loader: async ({ params }) => {
@@ -42,6 +44,9 @@ function CertificatePage() {
   const { certificate, qrCodeUrl, verificationUrl } = Route.useLoaderData();
   const sheetRef = useRef<HTMLDivElement>(null);
   const [busy, setBusy] = useState(false);
+  const [preparedFile, setPreparedFile] = useState<File | null>(null);
+
+  const filename = `Atlas-Certificate-${certificate.verification_code}.pdf`;
 
   async function downloadPdf() {
     if (!sheetRef.current || busy) return;
@@ -49,11 +54,38 @@ function CertificatePage() {
     try {
       await exportElementToPdf(
         sheetRef.current,
-        `Atlas-Certificate-${certificate.verification_code}.pdf`,
+        filename,
       );
     } finally {
       setBusy(false);
     }
+  }
+
+  async function preparePdf() {
+    if (!sheetRef.current || busy) return;
+    setBusy(true);
+    try {
+      setPreparedFile(await exportElementToPdfFile(sheetRef.current, filename));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function savePreparedPdf() {
+    if (!preparedFile) return;
+    const shareData = { files: [preparedFile], title: "Atlas certificate" };
+    if (navigator.share && navigator.canShare?.(shareData)) {
+      await navigator.share(shareData);
+      return;
+    }
+    const href = URL.createObjectURL(preparedFile);
+    const anchor = document.createElement("a");
+    anchor.href = href;
+    anchor.download = filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(href), 1_000);
   }
 
   useEffect(() => {
@@ -64,7 +96,7 @@ function CertificatePage() {
       return () => clearTimeout(t);
     }
     if (params.get("download") === "1") {
-      const t = setTimeout(() => void downloadPdf(), 900);
+      const t = setTimeout(() => void preparePdf(), 300);
       return () => clearTimeout(t);
     }
   }, []);
@@ -80,22 +112,20 @@ function CertificatePage() {
           />
         </div>
 
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-sm print:hidden">
-          <button
-            type="button"
-            onClick={downloadPdf}
-            disabled={busy}
-            className="rounded-full bg-[#0B1F3A] px-5 py-2 font-medium text-white hover:opacity-90 disabled:opacity-60"
-          >
-            {busy ? "Preparing PDF…" : "Download A4 PDF"}
-          </button>
-          <button
-            type="button"
-            onClick={() => window.print()}
-            className="rounded-full bg-[#0B1F3A] px-5 py-2 font-medium text-white hover:opacity-90"
-          >
-            Print
-          </button>
+        <div className="sticky bottom-3 z-10 mx-auto mt-6 flex max-w-max flex-wrap items-center justify-center gap-3 rounded-2xl border border-border bg-background/95 p-3 text-sm shadow-lg backdrop-blur print:hidden">
+          {preparedFile ? (
+            <Button type="button" onClick={() => void savePreparedPdf()}>
+              <Share2 className="mr-2 h-4 w-4" /> Save PDF to this device
+            </Button>
+          ) : (
+            <Button type="button" onClick={() => void preparePdf()} disabled={busy}>
+              {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+              {busy ? "Preparing PDF…" : "Prepare certificate PDF"}
+            </Button>
+          )}
+          <Button type="button" variant="outline" onClick={() => window.print()}>
+            <Printer className="mr-2 h-4 w-4" /> Print
+          </Button>
           <a
             href={`/verify/${certificate.verification_code}`}
             className="rounded-full border border-neutral-300 bg-white px-5 py-2 font-medium text-neutral-700 hover:border-neutral-400"

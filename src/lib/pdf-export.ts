@@ -7,6 +7,14 @@ export async function exportElementToPdf(
   filename: string,
   opts: { background?: string; multipage?: boolean } = {},
 ) {
+  const pdf = await renderElementToPdf(el, opts);
+  pdf.save(filename);
+}
+
+async function renderElementToPdf(
+  el: HTMLElement,
+  opts: { background?: string; multipage?: boolean } = {},
+) {
   const [{ default: html2canvas }, jspdf] = await Promise.all([
     import("html2canvas-pro"),
     import("jspdf"),
@@ -44,5 +52,14 @@ export async function exportElementToPdf(
     }
   }
 
-  pdf.save(filename);
+  return pdf;
+}
+
+export async function exportElementToPdfFile(
+  el: HTMLElement,
+  filename: string,
+  opts: { background?: string; multipage?: boolean } = {},
+) {
+  const pdf = await renderElementToPdf(el, opts);
+  return new File([pdf.output("blob")], filename, { type: "application/pdf" });
 }
