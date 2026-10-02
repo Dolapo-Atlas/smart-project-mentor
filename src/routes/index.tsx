@@ -176,10 +176,10 @@ function Nav({ scrolled }: { scrolled: boolean }) {
           : "border-b border-transparent bg-transparent",
       ].join(" ")}
     >
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-10">
-        <Link to="/" className="flex items-center gap-2.5 font-display text-2xl font-semibold tracking-tight">
-          <AtlasMark className="h-10 w-10" />
-          Atlas
+      <div className="mx-auto grid h-16 max-w-7xl grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-1 px-4 sm:flex sm:justify-between sm:gap-3 sm:px-6 lg:px-10">
+        <Link to="/" className="flex min-w-0 items-center gap-2 font-display text-xl font-semibold tracking-tight sm:gap-2.5 sm:text-2xl">
+          <AtlasMark className="h-9 w-9 shrink-0 sm:h-10 sm:w-10" />
+          <span className="truncate">Atlas</span>
         </Link>
         <nav className="hidden items-center gap-1 md:flex">
           {NAV_LINKS.map((l) => (
@@ -195,14 +195,14 @@ function Nav({ scrolled }: { scrolled: boolean }) {
         <div className="flex items-center gap-2">
           <Link
             to="/auth"
-            className="inline-flex rounded-full px-4 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+            className="inline-flex shrink-0 whitespace-nowrap rounded-full px-2 py-2 text-xs text-muted-foreground transition-colors hover:text-foreground sm:px-4 sm:text-sm"
           >
             Log In
           </Link>
           <Link
             to="/auth"
             search={{ mode: "signup" }}
-            className="group inline-flex items-center gap-1.5 rounded-full bg-accent-orange px-4 py-2 text-sm font-medium text-accent-orange-foreground shadow-[0_1px_0_rgba(255,255,255,0.25)_inset,0_8px_24px_-12px_rgba(217,119,6,0.6)] transition-all hover:-translate-y-0.5 hover:shadow-[0_1px_0_rgba(255,255,255,0.3)_inset,0_12px_28px_-12px_rgba(217,119,6,0.7)]"
+            className="group inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-accent-orange px-3 py-2 text-xs font-medium text-accent-orange-foreground shadow-[0_1px_0_rgba(255,255,255,0.25)_inset,0_8px_24px_-12px_rgba(217,119,6,0.6)] transition-all hover:-translate-y-0.5 hover:shadow-[0_1px_0_rgba(255,255,255,0.3)_inset,0_12px_28px_-12px_rgba(217,119,6,0.7)] sm:gap-1.5 sm:px-4 sm:text-sm"
           >
             Start Experience
             <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
@@ -269,7 +269,7 @@ function Hero() {
       />
       <div className="mx-auto grid max-w-7xl items-center gap-14 px-5 sm:px-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:gap-20 lg:px-10">
         <div>
-          <Reveal>
+          <div>
             <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card/70 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur">
               <span className="relative flex h-1.5 w-1.5">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent-orange opacity-60" />
@@ -277,19 +277,19 @@ function Hero() {
               </span>
               Atlas Project Readiness Experience — Available Now
             </span>
-          </Reveal>
-          <Reveal delay={80}>
+          </div>
+          <div>
             <h1 className="mt-6 font-display text-[clamp(2.6rem,6.2vw,5.25rem)] font-bold leading-[1.02] tracking-[-0.02em] text-foreground">
               Recruiters can tell when your answers are{" "}
               <span className="text-accent-orange">only theoretical</span>.
             </h1>
-          </Reveal>
-          <Reveal delay={160}>
+          </div>
+          <div>
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">
               You&rsquo;ve studied the theory and earned the certifications. Atlas helps you practise realistic project situations, build practical judgement and prepare stronger interview answers.
             </p>
-          </Reveal>
-          <Reveal delay={240}>
+          </div>
+          <div>
             <div className="mt-9 flex flex-wrap items-center gap-3">
               <Link
                 to="/auth"
@@ -307,18 +307,18 @@ function Hero() {
                 See How Atlas Works
               </a>
             </div>
-          </Reveal>
-          <Reveal delay={320}>
+          </div>
+          <div>
             <p className="mt-7 flex items-center gap-2 text-xs leading-relaxed text-muted-foreground/90 sm:text-[13px]">
               <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-accent-orange" />
               Realistic workplace scenarios · Performance feedback · Verifiable Atlas credential
             </p>
-          </Reveal>
+          </div>
         </div>
 
-        <Reveal delay={140} className="relative">
+        <div className="relative">
           <HeroStage />
-        </Reveal>
+        </div>
       </div>
     </section>
   );
