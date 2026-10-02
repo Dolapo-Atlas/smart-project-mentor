@@ -20,6 +20,7 @@ import "@fontsource/inter/500.css";
 import "@fontsource/inter/600.css";
 import frauncesLatin600 from "@fontsource/fraunces/files/fraunces-latin-600-normal.woff2?url";
 import frauncesLatin400 from "@fontsource/fraunces/files/fraunces-latin-400-normal.woff2?url";
+import frauncesLatin700 from "@fontsource/fraunces/files/fraunces-latin-700-normal.woff2?url";
 import interLatin400 from "@fontsource/inter/files/inter-latin-400-normal.woff2?url";
 import interLatin500 from "@fontsource/inter/files/inter-latin-500-normal.woff2?url";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,12 +48,13 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+function ErrorComponent({ error, reset }: { error: unknown; reset: () => void }) {
+  const reportableError = error instanceof Error ? error : new Error(String(error));
   console.error(error);
   const router = useRouter();
   useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
+    reportLovableError(reportableError, { boundary: "tanstack_root_error_component" });
+  }, [reportableError]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -113,6 +115,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       // when Fraunces/Inter swap in.
       { rel: "preload", href: frauncesLatin600, as: "font", type: "font/woff2", crossOrigin: "anonymous" },
       { rel: "preload", href: frauncesLatin400, as: "font", type: "font/woff2", crossOrigin: "anonymous" },
+      { rel: "preload", href: frauncesLatin700, as: "font", type: "font/woff2", crossOrigin: "anonymous" },
       { rel: "preload", href: interLatin400, as: "font", type: "font/woff2", crossOrigin: "anonymous" },
       { rel: "preload", href: interLatin500, as: "font", type: "font/woff2", crossOrigin: "anonymous" },
     ],
