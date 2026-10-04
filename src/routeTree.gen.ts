@@ -27,6 +27,7 @@ import { Route as ChallengeFridayCrisisRouteImport } from './routes/challenge.fr
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as EnrolSuccessRouteImport } from './routes/enrol.success'
 import { Route as InviteCodeRouteImport } from './routes/invite.$code'
+import { Route as PrototypeOfficeRouteImport } from './routes/prototype.office'
 import { Route as ReportCodeRouteImport } from './routes/report.$code'
 import { Route as ToolkitIndexRouteImport } from './routes/toolkit.index'
 import { Route as ToolkitProjectCharterRouteImport } from './routes/toolkit.project-charter'
@@ -176,6 +177,11 @@ const EnrolSuccessRoute = EnrolSuccessRouteImport.update({
 const InviteCodeRoute = InviteCodeRouteImport.update({
   id: '/invite/$code',
   path: '/invite/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrototypeOfficeRoute = PrototypeOfficeRouteImport.update({
+  id: '/prototype/office',
+  path: '/prototype/office',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReportCodeRoute = ReportCodeRouteImport.update({
@@ -519,6 +525,7 @@ export interface FileRoutesByFullPath {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/enrol/success': typeof EnrolSuccessRoute
   '/invite/$code': typeof InviteCodeRoute
+  '/prototype/office': typeof PrototypeOfficeRoute
   '/report/$code': typeof ReportCodeRoute
   '/toolkit/project-charter': typeof ToolkitProjectCharterRoute
   '/toolkit/project-schedule': typeof ToolkitProjectScheduleRoute
@@ -596,6 +603,7 @@ export interface FileRoutesByTo {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/enrol/success': typeof EnrolSuccessRoute
   '/invite/$code': typeof InviteCodeRoute
+  '/prototype/office': typeof PrototypeOfficeRoute
   '/report/$code': typeof ReportCodeRoute
   '/toolkit/project-charter': typeof ToolkitProjectCharterRoute
   '/toolkit/project-schedule': typeof ToolkitProjectScheduleRoute
@@ -676,6 +684,7 @@ export interface FileRoutesById {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/enrol/success': typeof EnrolSuccessRoute
   '/invite/$code': typeof InviteCodeRoute
+  '/prototype/office': typeof PrototypeOfficeRoute
   '/report/$code': typeof ReportCodeRoute
   '/toolkit/project-charter': typeof ToolkitProjectCharterRoute
   '/toolkit/project-schedule': typeof ToolkitProjectScheduleRoute
@@ -756,6 +765,7 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/enrol/success'
     | '/invite/$code'
+    | '/prototype/office'
     | '/report/$code'
     | '/toolkit/project-charter'
     | '/toolkit/project-schedule'
@@ -833,6 +843,7 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/enrol/success'
     | '/invite/$code'
+    | '/prototype/office'
     | '/report/$code'
     | '/toolkit/project-charter'
     | '/toolkit/project-schedule'
@@ -912,6 +923,7 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/enrol/success'
     | '/invite/$code'
+    | '/prototype/office'
     | '/report/$code'
     | '/toolkit/project-charter'
     | '/toolkit/project-schedule'
@@ -989,6 +1001,7 @@ export interface RootRouteChildren {
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   EnrolSuccessRoute: typeof EnrolSuccessRoute
   InviteCodeRoute: typeof InviteCodeRoute
+  PrototypeOfficeRoute: typeof PrototypeOfficeRoute
   ReportCodeRoute: typeof ReportCodeRoute
   ToolkitProjectCharterRoute: typeof ToolkitProjectCharterRoute
   ToolkitProjectScheduleRoute: typeof ToolkitProjectScheduleRoute
@@ -1137,6 +1150,13 @@ declare module '@tanstack/react-router' {
       path: '/invite/$code'
       fullPath: '/invite/$code'
       preLoaderRoute: typeof InviteCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/prototype/office': {
+      id: '/prototype/office'
+      path: '/prototype/office'
+      fullPath: '/prototype/office'
+      preLoaderRoute: typeof PrototypeOfficeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/report/$code': {
@@ -1675,6 +1695,7 @@ const rootRouteChildren: RootRouteChildren = {
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   EnrolSuccessRoute: EnrolSuccessRoute,
   InviteCodeRoute: InviteCodeRoute,
+  PrototypeOfficeRoute: PrototypeOfficeRoute,
   ReportCodeRoute: ReportCodeRoute,
   ToolkitProjectCharterRoute: ToolkitProjectCharterRoute,
   ToolkitProjectScheduleRoute: ToolkitProjectScheduleRoute,
