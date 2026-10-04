@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { Bell, Sparkles, X } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { useEffect, useRef, useState } from "react";
+import { Bell, Send, Sparkles, X } from "lucide-react";
+import { askOfficeAtlas } from "@/lib/office-ask.functions";
 
 export const Route = createFileRoute("/prototype/office")({
   head: () => ({
@@ -83,6 +85,7 @@ function Furniture({ kind }: { kind: Zone["furniture"] }) {
 function OfficePrototype() {
   const [hover, setHover] = useState<string | null>(null);
   const [open, setOpen] = useState<Zone | null>(null);
+  const [askOpen, setAskOpen] = useState(false);
 
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden bg-background text-foreground">
@@ -155,9 +158,74 @@ function OfficePrototype() {
         </div>
       )}
 
-      <button className="fixed bottom-5 right-5 z-30 inline-flex items-center gap-2 rounded-full bg-navy px-4 py-2.5 text-sm font-medium text-navy-foreground shadow-soft-lift hover:opacity-90">
+      {askOpen && <AskAtlasPanel zone={open?.name} onClose={() => setAskOpen(false)} />}
+
+      <button onClick={() => setAskOpen((v) => !v)} aria-expanded={askOpen}
+        className="fixed bottom-5 right-5 z-30 inline-flex items-center gap-2 rounded-full bg-navy px-4 py-2.5 text-sm font-medium text-navy-foreground shadow-soft-lift hover:opacity-90">
         <Sparkles className="h-4 w-4 text-accent-orange" /> Ask Atlas
       </button>
+    </div>
+  );
+}
+
+type Turn = { role: "learner" | "mentor"; content: string };
+const SUGGESTIONS = ["What should I do first today?", "What are the biggest risks to the move date?", "Who do I speak to about the budget?"];
+
+function AskAtlasPanel({ zone, onClose }: { zone?: string; onClose: () => void }) {
+  const ask = useServerFn(askOfficeAtlas);
+  const [turns, setTurns] = useState<Turn[]>([]);
+  const [q, setQ] = useState("");
+  const [busy, setBusy] = useState(false);
+  const endRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [turns, busy]);
+
+  async function send(text: string) {
+    const question = text.trim();
+    if (!question || busy) return;
+    const history = turns;
+    setTurns([...history, { role: "learner", content: question }]);
+    setQ("");
+    setBusy(true);
+    try {
+      const r = await ask({ data: { question, zone, history } });
+      setTurns((t) => [...t, { role: "mentor", content: r.answer }]);
+    } catch {
+      setTurns((t) => [...t, { role: "mentor", content: "I couldn't answer just now. Please try again." }]);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="fixed bottom-20 right-5 z-40 flex max-h-[70vh] w-[min(92vw,380px)] flex-col rounded-2xl border border-border bg-card shadow-soft-lift">
+      <div className="flex items-center justify-between border-b border-border px-4 py-3">
+        <div>
+          <div className="text-sm font-semibold">Ask Atlas</div>
+          <div className="text-[11px] text-muted-foreground">Office Relocation{zone ? ` · ${zone}` : ""}</div>
+        </div>
+        <button onClick={onClose} aria-label="Close Ask Atlas" className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
+      </div>
+      <div className="flex-1 space-y-3 overflow-y-auto px-4 py-3 text-sm">
+        {turns.length === 0 && (
+          <div className="space-y-2">
+            <p className="text-muted-foreground">Ask anything about the Ridgeway move.</p>
+            {SUGGESTIONS.map((s) => (
+              <button key={s} onClick={() => send(s)} className="block w-full rounded-lg border border-border px-3 py-2 text-left text-xs hover:bg-muted">{s}</button>
+            ))}
+          </div>
+        )}
+        {turns.map((t, i) => (
+          <div key={i} className={t.role === "learner" ? "ml-8 rounded-xl bg-navy px-3 py-2 text-navy-foreground" : "mr-4 whitespace-pre-wrap rounded-xl bg-muted px-3 py-2"}>{t.content}</div>
+        ))}
+        {busy && <div className="mr-4 rounded-xl bg-muted px-3 py-2 text-muted-foreground">Thinking…</div>}
+        <div ref={endRef} />
+      </div>
+      <form onSubmit={(e) => { e.preventDefault(); send(q); }} className="flex gap-2 border-t border-border p-3">
+        <input value={q} onChange={(e) => setQ(e.target.value)} maxLength={600} placeholder="Ask a question…"
+          className="flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+        <button type="submit" disabled={busy || !q.trim()} aria-label="Send"
+          className="rounded-lg bg-navy px-3 text-navy-foreground disabled:opacity-50"><Send className="h-4 w-4" /></button>
+      </form>
     </div>
   );
 }
