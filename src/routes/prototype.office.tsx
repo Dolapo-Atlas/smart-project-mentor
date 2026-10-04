@@ -99,7 +99,7 @@ function OfficePrototype() {
         </div>
       </header>
 
-      <main className="relative flex flex-1 items-center justify-center py-10">
+      <main className="relative flex flex-1 items-center justify-center pb-10 pt-24">
         <div className="relative aspect-[4/3] w-[min(92vw,900px)]" style={{ perspective: "1600px" }}>
           <div className="absolute inset-0 rounded-3xl border border-border bg-muted/60 shadow-soft-lift"
             style={{ transform: "rotateX(52deg) rotateZ(-32deg)", transformStyle: "preserve-3d" }}>
@@ -112,47 +112,35 @@ function OfficePrototype() {
                   onClick={() => setOpen(z)} aria-label={z.name}
                   className={`absolute rounded-xl border-2 transition-all duration-300 ${z.tone} ${active ? "shadow-soft-lift ring-2 ring-accent-orange" : ""}`}
                   style={{ left: `${z.x}%`, top: `${z.y}%`, width: `${z.w}%`, height: `${z.h}%`,
-                    transform: active ? "translateZ(14px)" : "translateZ(0)" }}>
+                    transformStyle: "preserve-3d", transform: active ? "translateZ(14px)" : "translateZ(0)" }}>
                   <Furniture kind={z.furniture} />
+                  <Billboard>
+                    {z.id === "wall" && (
+                      <div className="w-44 rounded-lg bg-navy p-3 text-left text-[11px] text-navy-foreground shadow-soft-lift">
+                        <div className="mb-1.5 font-semibold uppercase tracking-widest opacity-70">Project Wall</div>
+                        <Row k="Overall status" v={<span className="inline-flex items-center gap-1"><i className="h-2 w-2 rounded-full bg-success" />Green</span>} />
+                        <Row k="Move date" v="84 days" />
+                        <Row k="Open risks" v="2" />
+                        <Row k="Open issues" v="1" />
+                        <Row k="Next milestone" v="Design Sign-off" />
+                      </div>
+                    )}
+                    {z.id === "pm" && (
+                      <>
+                        <div className="animate-bounce whitespace-nowrap rounded-full bg-accent-orange px-3 py-1 text-[11px] font-medium text-accent-orange-foreground shadow-soft">Sarah wants to speak with you.</div>
+                        <Person label="Sarah Williams" tone="bg-accent-orange" />
+                      </>
+                    )}
+                    {z.id === "desk" && <Person label="You" tone="bg-navy" />}
+                    {z.id !== "wall" && (
+                      <span className={`whitespace-nowrap rounded-full border border-border bg-card px-2.5 py-0.5 text-[11px] font-medium shadow-soft transition ${active ? "scale-110 text-accent-orange" : "text-foreground/80"}`}>{z.name}</span>
+                    )}
+                  </Billboard>
                 </button>
               );
             })}
           </div>
 
-          {/* Upright labels & overlays (not tilted, so they stay readable) */}
-          <Overlay x={18} y={6} >
-            <div className="w-44 rounded-lg bg-navy p-3 text-[11px] text-navy-foreground shadow-soft-lift">
-              <div className="mb-1.5 font-semibold uppercase tracking-widest opacity-70">Project Wall</div>
-              <Row k="Overall status" v={<span className="inline-flex items-center gap-1"><i className="h-2 w-2 rounded-full bg-success" />Green</span>} />
-              <Row k="Move date" v="84 days" />
-              <Row k="Open risks" v="2" />
-              <Row k="Open issues" v="1" />
-              <Row k="Next milestone" v="Design Sign-off" />
-            </div>
-          </Overlay>
-          <Overlay x={20} y={40}>
-            <div className="animate-bounce rounded-full bg-accent-orange px-3 py-1 text-[11px] font-medium text-accent-orange-foreground shadow-soft">
-              Sarah wants to speak with you.
-            </div>
-            <Person label="Sarah Williams" tone="bg-accent-orange" />
-          </Overlay>
-          <Overlay x={58} y={62}>
-            <Person label="You" tone="bg-navy" />
-          </Overlay>
-
-          {ZONES.filter((z) => z.id !== "wall").map((z) => {
-            const pos: Record<string, [number, number]> = {
-              meeting: [56, 16], finance: [84, 34], pm: [12, 56], desk: [44, 52], it: [80, 60], facilities: [22, 84], hr: [72, 92],
-            };
-            const [x, y] = pos[z.id];
-            return (
-              <Overlay key={z.id} x={x} y={y}>
-                <span className={`rounded-full border border-border bg-card/90 px-2.5 py-0.5 text-[11px] font-medium shadow-soft transition ${hover === z.id ? "scale-110 text-accent-orange" : "text-foreground/80"}`}>
-                  {z.name}
-                </span>
-              </Overlay>
-            );
-          })}
         </div>
       </main>
 
@@ -174,10 +162,11 @@ function OfficePrototype() {
   );
 }
 
-function Overlay({ x, y, children }: { x: number; y: number; children: React.ReactNode }) {
+function Billboard({ children }: { children: React.ReactNode }) {
+  // Counter-rotates the floor tilt so labels and people stand upright.
   return (
-    <div className="pointer-events-none absolute z-10 flex -translate-x-1/2 -translate-y-full flex-col items-center gap-1"
-      style={{ left: `${x}%`, top: `${y}%` }}>
+    <div className="pointer-events-none absolute left-1/2 top-1/2 flex flex-col items-center gap-1"
+      style={{ transform: "translate(-50%,-100%) rotateZ(32deg) rotateX(-52deg) translateZ(10px)", transformOrigin: "50% 100%" }}>
       {children}
     </div>
   );
