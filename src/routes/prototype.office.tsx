@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { Bell, Send, Sparkles, X } from "lucide-react";
 import { askOfficeAtlas } from "@/lib/office-ask.functions";
+import officeImg from "@/assets/ridgeway-office-iso.jpg";
 
 export const Route = createFileRoute("/prototype/office")({
   head: () => ({
@@ -45,6 +46,18 @@ const ZONES: Zone[] = [
     blurb: "Space planning, building works window and the move vendor — the physical side of the move." },
   { id: "hr", name: "HR", x: 66, y: 62, w: 30, h: 32, tone: "bg-surface-lilac border-surface-lilac-border", furniture: "desks",
     blurb: "Staff concerns, consultation and communications for the 480 people moving." },
+];
+
+// Hotspot areas (% of the office illustration)
+const HOTSPOTS = [
+  { id: "wall", x: 7, y: 4, w: 15, h: 23 },
+  { id: "meeting", x: 32, y: 1, w: 35, h: 36 },
+  { id: "finance", x: 68, y: 3, w: 29, h: 34 },
+  { id: "pm", x: 1, y: 34, w: 29, h: 28 },
+  { id: "desk", x: 33, y: 31, w: 22, h: 28 },
+  { id: "it", x: 60, y: 34, w: 37, h: 28 },
+  { id: "facilities", x: 0, y: 62, w: 45, h: 38 },
+  { id: "hr", x: 57, y: 56, w: 41, h: 44 },
 ];
 
 function Furniture({ kind }: { kind: Zone["furniture"] }) {
@@ -102,48 +115,26 @@ function OfficePrototype() {
         </div>
       </header>
 
-      <main className="relative flex flex-1 items-center justify-center pb-10 pt-24">
-        <div className="relative aspect-[4/3] w-[min(92vw,900px)]" style={{ perspective: "1600px" }}>
-          <div className="absolute inset-0 rounded-3xl border border-border bg-muted/60 shadow-soft-lift"
-            style={{ transform: "rotateX(52deg) rotateZ(-32deg)", transformStyle: "preserve-3d" }}>
-            {ZONES.map((z) => {
-              const active = hover === z.id;
-              return (
-                <button key={z.id} type="button"
-                  onMouseEnter={() => setHover(z.id)} onMouseLeave={() => setHover(null)}
-                  onFocus={() => setHover(z.id)} onBlur={() => setHover(null)}
-                  onClick={() => setOpen(z)} aria-label={z.name}
-                  className={`absolute rounded-xl border-2 transition-all duration-300 ${z.tone} ${active ? "shadow-soft-lift ring-2 ring-accent-orange" : ""}`}
-                  style={{ left: `${z.x}%`, top: `${z.y}%`, width: `${z.w}%`, height: `${z.h}%`,
-                    transformStyle: "preserve-3d", transform: active ? "translateZ(14px)" : "translateZ(0)" }}>
-                  <Furniture kind={z.furniture} />
-                  <Billboard>
-                    {z.id === "wall" && (
-                      <div className="w-44 rounded-lg bg-navy p-3 text-left text-[11px] text-navy-foreground shadow-soft-lift">
-                        <div className="mb-1.5 font-semibold uppercase tracking-widest opacity-70">Project Wall</div>
-                        <Row k="Overall status" v={<span className="inline-flex items-center gap-1"><i className="h-2 w-2 rounded-full bg-success" />Green</span>} />
-                        <Row k="Move date" v="84 days" />
-                        <Row k="Open risks" v="2" />
-                        <Row k="Open issues" v="1" />
-                        <Row k="Next milestone" v="Design Sign-off" />
-                      </div>
-                    )}
-                    {z.id === "pm" && (
-                      <>
-                        <div className="animate-bounce whitespace-nowrap rounded-full bg-accent-orange px-3 py-1 text-[11px] font-medium text-accent-orange-foreground shadow-soft">Sarah wants to speak with you.</div>
-                        <Person label="Sarah Williams" tone="bg-accent-orange" />
-                      </>
-                    )}
-                    {z.id === "desk" && <Person label="You" tone="bg-navy" />}
-                    {z.id !== "wall" && (
-                      <span className={`whitespace-nowrap rounded-full border border-border bg-card px-2.5 py-0.5 text-[11px] font-medium shadow-soft transition ${active ? "scale-110 text-accent-orange" : "text-foreground/80"}`}>{z.name}</span>
-                    )}
-                  </Billboard>
-                </button>
-              );
-            })}
+      <main className="relative flex flex-1 items-center justify-center overflow-auto p-2 sm:p-4">
+        <div className="relative w-full max-w-[1600px] min-w-[720px] overflow-hidden rounded-2xl shadow-soft-lift">
+          <img src={officeImg} alt="Ridgeway Group office floor" width={1920} height={1280} className="block h-auto w-full select-none" draggable={false} />
+          {HOTSPOTS.map((h) => {
+            const z = ZONES.find((zz) => zz.id === h.id)!;
+            const active = hover === h.id;
+            return (
+              <button key={h.id} type="button" aria-label={z.name}
+                onMouseEnter={() => setHover(h.id)} onMouseLeave={() => setHover(null)}
+                onFocus={() => setHover(h.id)} onBlur={() => setHover(null)}
+                onClick={() => setOpen(z)}
+                className={`absolute rounded-xl transition duration-300 ${active ? "bg-accent-orange/10 ring-2 ring-accent-orange/70" : ""}`}
+                style={{ left: `${h.x}%`, top: `${h.y}%`, width: `${h.w}%`, height: `${h.h}%` }}>
+                <span className={`pointer-events-none absolute left-1/2 top-2 -translate-x-1/2 whitespace-nowrap rounded-full bg-navy px-3 py-1 text-[11px] font-medium text-navy-foreground shadow-soft transition ${active ? "opacity-100" : "opacity-0"}`}>{z.name}</span>
+              </button>
+            );
+          })}
+          <div className="pointer-events-none absolute" style={{ left: "21%", top: "36%" }}>
+            <div className="-translate-x-1/2 animate-bounce whitespace-nowrap rounded-full bg-accent-orange px-3 py-1 text-[11px] font-medium text-accent-orange-foreground shadow-soft">Sarah wants to speak with you</div>
           </div>
-
         </div>
       </main>
 
