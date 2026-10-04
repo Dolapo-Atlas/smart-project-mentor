@@ -169,11 +169,15 @@ function Inbox() {
         if (first) {
           try {
             await submitTask({ data: { id: first.id, submission: input.body } });
-            trackLearner("first_task_completed", { props: { via: "inbox_reply" } });
           } catch {
             // Non-blocking: the reply itself already landed.
           }
         }
+      }
+      if (onboardingMode) {
+        // The first reply is the learner's first finished piece of work,
+        // whether or not a task row was linked to the email.
+        trackLearner("first_task_completed", { props: { via: "inbox_reply" } });
       }
       if (onboardingMode) {
         // The reply itself is the first finished piece of work, so it consumes
