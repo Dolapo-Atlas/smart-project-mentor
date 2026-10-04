@@ -21,6 +21,7 @@ import { FirstEmailPrompt } from "@/components/dashboard/first-email-prompt";
 import { WelcomeBackPanel } from "@/components/dashboard/welcome-back-panel";
 import { PhaseReadinessPanel } from "@/components/dashboard/phase-readiness-panel";
 import { FirstWinPanel } from "@/components/dashboard/first-win-panel";
+import { NextCharterCard } from "@/components/dashboard/next-charter-card";
 import { SubscriptionNotices } from "@/components/dashboard/subscription-notices";
 import { GuidedTour } from "@/components/guided-tour";
 import { MilestoneWatcher } from "@/components/milestones/milestone-watcher";
@@ -287,6 +288,7 @@ function Dashboard() {
         <div
           className="mx-auto max-w-2xl space-y-4"
         >
+          <NextCharterCard />
           <FirstWinPanel projectId={activeId} onOpenBrief={() => setBriefOpen(true)} />
           <div className="rounded-lg border border-accent-orange/30 bg-accent-orange/5 px-4 py-3 text-xs text-foreground/80">
             <span className="font-medium text-foreground">Focus mode.</span>{" "}
@@ -298,6 +300,7 @@ function Dashboard() {
       ) : (
         <div className="space-y-6">
           <WelcomeBackPanel />
+          <NextCharterCard />
           <FirstWinPanel projectId={activeId} onOpenBrief={() => setBriefOpen(true)} />
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
             <div className="min-w-0 space-y-6">

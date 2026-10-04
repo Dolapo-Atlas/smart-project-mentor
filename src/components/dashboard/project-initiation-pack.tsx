@@ -185,10 +185,15 @@ export function ProjectInitiationPack({ open, onOpenChange, firstRun }: Props) {
         <div className="shrink-0 border-t border-border bg-card px-4 py-3 sm:px-8 sm:py-4">
           <div className="mx-auto flex max-w-4xl flex-wrap items-center gap-3">
             {firstRun ? (
-              <Button size="lg" onClick={() => onOpenChange(false)}>
-                <ArrowRight className="mr-2 h-4 w-4" />
-                I’ve read the Project Initiation Pack
-              </Button>
+              <>
+                <Button size="lg" onClick={() => onOpenChange(false)}>
+                  <ArrowRight className="mr-2 h-4 w-4" />
+                  I’ve read it — back to the email
+                </Button>
+                <span className="text-xs text-muted-foreground">
+                  Next: reply to the email so the project can start.
+                </span>
+              </>
             ) : (
               <Button asChild onClick={() => onOpenChange(false)}>
                 <Link to="/app/tasks">
