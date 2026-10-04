@@ -5,7 +5,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { TEMPLATES } from '@/lib/email-templates/registry'
 
 // Configuration baked in at scaffold time
-const SITE_NAME = "smart-project-mentor"
+const SITE_NAME = "Atlas"
 // SENDER_DOMAIN is the verified sender subdomain FQDN (e.g., "notify.example.com").
 // It MUST match the subdomain delegated to Lovable's nameservers. NEVER use the root domain.
 const SENDER_DOMAIN = "notify.atlassim.co"
@@ -35,6 +35,7 @@ const SELF_SEND_TEMPLATES: Record<string, readonly string[]> = {
   'unlock-confirmation': ['name', 'first_name', 'amount_paid', 'continue_url'],
   'enrolment-confirmation': ['name', 'amount', 'reference'],
   'early-access-welcome': ['name', 'referral_code'],
+  'charter-nudge': ['name', 'pm_name', 'project_name', 'app_url'],
 }
 
 /** Templates that always go to the internal Atlas inbox, never to a learner. */

@@ -22,8 +22,10 @@ import { template as earlyAccessWelcome } from './early-access-welcome'
 import { template as enrolmentConfirmation } from './enrolment-confirmation'
 import { template as unlockConfirmation } from './unlock-confirmation'
 import { template as purchaseAdminAlert } from './purchase-admin-alert'
+import { template as charterNudge } from './charter-nudge'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
+  'charter-nudge': charterNudge,
   'early-access-signup': earlyAccessSignup,
   'early-access-welcome': earlyAccessWelcome,
   'enrolment-confirmation': enrolmentConfirmation,
