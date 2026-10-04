@@ -327,6 +327,11 @@ export function GuidedCharterBuilder(props: {
       const seconds = Math.round((Date.now() - enteredAt.current) / 1000);
       // Only counted when the learner's own content is genuinely in the field.
       if (rags[index] === "green") {
+        if (index === 0) {
+          toast.success("First section done — your charter has started.", {
+            description: "That's the hardest part. Keep going, one short step at a time.",
+          });
+        }
         trackLearner("charter_section_completed", {
           props: {
           device_type: deviceType(),

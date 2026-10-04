@@ -3,6 +3,8 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   PHASE_LABELS,
   PHASE_READY_THRESHOLD,
+  PHASE_KEYS,
+  phaseIndex,
   phaseOrFirst,
   type PhaseKey,
 } from "@/lib/phases";
@@ -533,6 +535,26 @@ export const getPhaseProgress = createServerFn({ method: "GET" })
     const overall =
       items.length === 0 ? 0 : Math.round(items.reduce((s, it) => s + it.pct, 0) / items.length);
     const outstanding = items.filter((it) => !it.done);
+
+    // Keep the run's stored progress in step with the live checklist so the
+    // admin tracking page and project list show real progress (best-effort).
+    if (instanceId) {
+      const runPct = Math.min(
+        100,
+        Math.round(((phaseIndex(phase) + overall / 100) / PHASE_KEYS.length) * 100),
+      );
+      try {
+        await supabase
+          .from("project_instances")
+          .update({ progress_pct: runPct })
+          .eq("id", instanceId)
+          .eq("user_id", userId)
+          .neq("progress_pct", runPct)
+          .is("completed_at", null);
+      } catch {
+        /* non-fatal */
+      }
+    }
 
     return {
       phase,
