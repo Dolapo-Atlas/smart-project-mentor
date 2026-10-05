@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest, getRequestHeader } from "@tanstack/react-start/server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /**
@@ -143,15 +144,57 @@ export const nudgeStalledCharter = createServerFn({ method: "POST" })
 
     const sender = welcome.data?.[0];
     const name = profile?.preferred_name || profile?.first_name || "there";
+    const pmName = sender?.sender_name ?? "Project Manager";
     await supabase.from("inbox_messages").insert({
       user_id: userId,
       project_instance_id: instanceId,
-      sender_name: sender?.sender_name ?? "Project Manager",
+      sender_name: pmName,
       sender_role: sender?.sender_role ?? "Project Manager",
       subject: NUDGE_SUBJECT,
       body: `Hi ${name},\n\nThanks again for your reply yesterday. The next thing I need from you is a first go at the Project Charter.\n\nDon't worry about getting it perfect. Just start with the purpose: what problem is this project solving, and why now? Two or three sentences is plenty. The step-by-step builder will walk you through the rest.\n\nShout if anything is unclear.`,
       tone: "supportive",
       read: false,
     } as never);
+
+    // Also send the nudge to the learner's registered email address. The send
+    // route derives the recipient from the authenticated account, so we just
+    // forward the caller's bearer token. Failure here must not break the
+    // in-app nudge, which has already been delivered.
+    try {
+      const { data: instance } = await supabase
+        .from("project_instances")
+        .select("display_name, project_templates(title)")
+        .eq("id", instanceId)
+        .maybeSingle();
+      const projectName =
+        (instance as any)?.display_name ||
+        (instance as any)?.project_templates?.title ||
+        "your project";
+
+      const origin = new URL(getRequest().url).origin;
+      const authHeader = getRequestHeader("Authorization");
+      if (authHeader) {
+        await fetch(`${origin}/lovable/email/transactional/send`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: authHeader,
+          },
+          body: JSON.stringify({
+            templateName: "charter-nudge",
+            idempotencyKey: `charter-nudge-${instanceId}`,
+            templateData: {
+              name,
+              pm_name: pmName,
+              project_name: projectName,
+              app_url: `${origin}/app`,
+            },
+          }),
+        });
+      }
+    } catch (err) {
+      console.warn("Charter nudge email failed (in-app nudge still sent)", err);
+    }
+
     return { sent: true };
   });
