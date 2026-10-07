@@ -350,9 +350,6 @@ function ExperienceGap() {
             The problem is not always knowledge. It is the{" "}
             <span className="italic text-accent-orange">experience gap</span>.
           </h2>
-          <p className="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-            When a recruiter asks how you would handle a difficult stakeholder, an unresolved risk or a delayed project, memorised answers are often not enough. Atlas gives you realistic project situations to work through before your interview or first project role exposes that gap.
-          </p>
           <Link
             to="/auth"
             search={{ mode: "signup" }}
