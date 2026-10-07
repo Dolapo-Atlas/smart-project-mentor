@@ -270,23 +270,28 @@ function Hero() {
       <div className="mx-auto grid max-w-7xl items-center gap-14 px-5 sm:px-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:gap-20 lg:px-10">
         <div>
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card/70 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur">
+            <span className="inline-flex items-center gap-2 rounded-full border border-accent-orange/30 bg-card/80 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground backdrop-blur">
               <span className="relative flex h-1.5 w-1.5">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent-orange opacity-60" />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent-orange" />
               </span>
-              Atlas Project Readiness Experience — Available Now
+              Early Access — First 100 Learners
             </span>
           </div>
           <div>
-            <h1 className="mt-6 font-display text-[clamp(2.6rem,6.2vw,5.25rem)] font-bold leading-[1.02] tracking-[-0.02em] text-foreground">
-              Recruiters can tell when your answers are{" "}
-              <span className="text-accent-orange">only theoretical</span>.
+            <h1 className="mt-7 font-display text-[clamp(2.4rem,5.6vw,4.75rem)] font-bold leading-[1.04] tracking-[-0.025em] text-foreground">
+              You need <span className="text-accent-orange">experience</span> to get the opportunity.
+              <span className="mt-3 block text-foreground/70">
+                But you need the <span className="text-accent-orange">opportunity</span> to get experience.
+              </span>
             </h1>
           </div>
           <div>
-            <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">
-              You&rsquo;ve studied the theory and earned the certifications. Atlas helps you practise realistic project situations, build practical judgement and prepare stronger interview answers.
+            <p className="mt-7 font-display text-xl font-semibold text-foreground sm:text-2xl">
+              Atlas gives you another way to build it.
+            </p>
+            <p className="mt-4 max-w-xl text-lg leading-relaxed text-muted-foreground">
+              Step into realistic simulated workplaces, make decisions, work with stakeholders, complete real-world tasks and build practical experience before someone gives you the job.
             </p>
           </div>
           <div>
@@ -294,24 +299,24 @@ function Hero() {
               <Link
                 to="/auth"
                 search={{ mode: "signup" }}
-                className="group inline-flex items-center gap-2 rounded-full bg-accent-orange px-6 py-3 text-sm font-medium text-accent-orange-foreground shadow-[0_1px_0_rgba(255,255,255,0.25)_inset,0_12px_30px_-12px_rgba(217,119,6,0.6)] transition-all hover:-translate-y-0.5 hover:shadow-[0_1px_0_rgba(255,255,255,0.3)_inset,0_18px_36px_-12px_rgba(217,119,6,0.7)]"
+                className="group inline-flex items-center gap-2 rounded-full bg-accent-orange px-7 py-3.5 text-sm font-semibold text-accent-orange-foreground shadow-[0_1px_0_rgba(255,255,255,0.25)_inset,0_12px_30px_-12px_rgba(217,119,6,0.6)] transition-all hover:-translate-y-0.5 hover:shadow-[0_1px_0_rgba(255,255,255,0.3)_inset,0_18px_36px_-12px_rgba(217,119,6,0.7)]"
               >
-                Start Your First Project Scenario
+                Join the first 100 learners
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
               <a
                 href="#how"
-                className="group inline-flex items-center gap-2 rounded-full border border-border bg-card/70 px-6 py-3 text-sm font-medium text-foreground backdrop-blur transition-all hover:-translate-y-0.5 hover:bg-card"
+                className="group inline-flex items-center gap-2 rounded-full px-5 py-3.5 text-sm font-medium text-foreground underline-offset-4 transition-colors hover:underline"
               >
                 <PlayCircle className="h-4 w-4 text-accent-orange" />
-                See How Atlas Works
+                See Atlas in action
               </a>
             </div>
           </div>
           <div>
             <p className="mt-7 flex items-center gap-2 text-xs leading-relaxed text-muted-foreground/90 sm:text-[13px]">
               <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-accent-orange" />
-              Realistic workplace scenarios · Performance feedback · Verifiable Atlas credential
+              Realistic simulations · AI stakeholders · Practical work · Evidence of capability
             </p>
           </div>
         </div>
