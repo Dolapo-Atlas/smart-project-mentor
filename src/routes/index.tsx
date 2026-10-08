@@ -459,6 +459,9 @@ function LogoAtlassian() {
       </svg>
       <span className="font-display text-lg font-semibold uppercase tracking-[0.04em]">Atlassian</span>
     </div>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /*  Experience showcase                                                */
 /* ------------------------------------------------------------------ */
