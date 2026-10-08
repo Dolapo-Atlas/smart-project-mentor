@@ -96,8 +96,6 @@ function Landing() {
         <SocialProof />
         <AutoDemo />
         <DemoWalkthrough />
-        <Features />
-        <HowItWorks />
         <SimulationExplainer />
         <Experience />
         <WhyAtlas />
