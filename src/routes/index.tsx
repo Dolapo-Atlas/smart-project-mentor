@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { PLANS, formatPlanPrice } from "@/lib/plans";
 import {
   ArrowRight,
   Mail,
@@ -36,7 +35,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import atlasMark from "@/assets/atlas-mark.png.asset.json";
 import { AutoDemo } from "@/components/auto-demo";
-import { DemoVideo } from "@/components/landing/demo-video";
+import { DemoVideo, ATLAS_FOUNDER_VIDEO_URL, ATLAS_FOUNDER_VIDEO_POSTER } from "@/components/landing/demo-video";
 import { HeroStage } from "@/components/landing/hero-stage";
 import { SimulationExplainer } from "@/components/landing/simulation-explainer";
 import { getReferralStats } from "@/lib/signup.functions";
@@ -102,10 +101,8 @@ function Landing() {
         <Features />
         <HowItWorks />
         <SimulationExplainer />
-        <ReadinessOffer />
         <Experience />
         <WhyAtlas />
-        <Founder />
         <Faq />
       </main>
       <SiteFooter />
@@ -1883,7 +1880,7 @@ function SectionHeader({
   );
 }
 /* ------------------------------------------------------------------ */
-/*  Product walkthrough video                                          */
+/*  Product walkthrough video + founder note                           */
 /* ------------------------------------------------------------------ */
 
 function DemoWalkthrough() {
@@ -1907,27 +1904,52 @@ function DemoWalkthrough() {
           </Reveal>
         </div>
 
-        <Reveal delay={200} className="mt-12">
-          <DemoVideo />
-        </Reveal>
-
-        <Reveal delay={250}>
-          <div className="mx-auto mt-10 max-w-xl text-center">
-            <p className="text-[13px] leading-relaxed text-muted-foreground">
-              In just over a minute you will run a real project end to end, and leave with proof you can do the job.
-            </p>
-            <div className="mt-6">
-              <Link
-                to="/auth"
-                search={{ mode: "signup" }}
-                className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-all hover:-translate-y-0.5"
-              >
-                Start Your Atlas Experience
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-              </Link>
+        <div className="mt-12 grid items-center gap-10 lg:mt-16 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-16">
+          <Reveal delay={200}>
+            <div className="mx-auto w-full max-w-[340px]">
+              <DemoVideo
+                src={ATLAS_FOUNDER_VIDEO_URL}
+                poster={ATLAS_FOUNDER_VIDEO_POSTER}
+                aspectRatio="9 / 16"
+              />
             </div>
-          </div>
-        </Reveal>
+          </Reveal>
+
+          <Reveal delay={250}>
+            <div>
+              <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Founder note</p>
+              <h3 className="mt-4 font-display text-[clamp(1.7rem,3vw,2.4rem)] font-medium leading-[1.1] tracking-[-0.02em]">
+                Built by someone who lived the problem.
+              </h3>
+              <div className="mt-6 space-y-4 text-[17px] leading-relaxed text-muted-foreground">
+                <p>I built TryNextRole to help people get interviews.</p>
+                <p>Then I realised the biggest challenge begins after getting hired.</p>
+                <p className="text-foreground/90">
+                  Atlas helps aspiring and early-career professionals — coordinators, PMOs, business analysts, scrum masters, change managers and project managers — gain real-world experience by managing realistic projects before stepping into them at work.
+                </p>
+              </div>
+              <div className="mt-8 inline-flex items-center gap-3">
+                <span className="grid h-10 w-10 place-items-center rounded-full bg-accent-orange text-accent-orange-foreground font-display text-sm font-semibold">
+                  DR
+                </span>
+                <div className="text-left">
+                  <p className="font-display text-sm font-medium">Dolapo Rasaq</p>
+                  <p className="text-xs text-muted-foreground">Founder, Atlas</p>
+                </div>
+              </div>
+              <div className="mt-10">
+                <Link
+                  to="/auth"
+                  search={{ mode: "signup" }}
+                  className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-all hover:-translate-y-0.5"
+                >
+                  Start Your Atlas Experience
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                </Link>
+              </div>
+            </div>
+          </Reveal>
+        </div>
       </div>
     </section>
   );
