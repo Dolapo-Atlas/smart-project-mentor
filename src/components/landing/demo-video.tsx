@@ -2,20 +2,29 @@ import { useEffect, useRef, useState } from "react";
 import { PlayCircle } from "lucide-react";
 import demoAsset from "@/assets/atlas-demo.mp4.asset.json";
 import posterAsset from "@/assets/atlas-demo-poster.jpg.asset.json";
+import founderVideoAsset from "@/assets/atlas-founder-video.mp4.asset.json";
+import founderPosterAsset from "@/assets/atlas-founder-video-poster.jpg.asset.json";
 
 export const ATLAS_DEMO_URL = demoAsset.url;
 export const ATLAS_DEMO_POSTER = posterAsset.url;
+export const ATLAS_FOUNDER_VIDEO_URL = founderVideoAsset.url;
+export const ATLAS_FOUNDER_VIDEO_POSTER = founderPosterAsset.url;
 
 /**
- * Landscape product demo video (16:9). Autoplays muted when scrolled into view
- * and shows a play affordance when autoplay is blocked (iOS low-power mode).
+ * Product demo video. Autoplays muted when scrolled into view and shows a
+ * play affordance when autoplay is blocked (iOS low-power mode).
+ * Supports landscape (16/9) and portrait (9/16) source videos.
  */
 export function DemoVideo({
   src = ATLAS_DEMO_URL,
+  poster = ATLAS_DEMO_POSTER,
+  aspectRatio = "16 / 9",
   onPlay,
   className = "",
 }: {
   src?: string;
+  poster?: string;
+  aspectRatio?: string;
   onPlay?: () => void;
   className?: string;
 }) {
@@ -50,14 +59,12 @@ export function DemoVideo({
   return (
     <div
       className={`relative mx-auto w-full max-w-5xl overflow-hidden rounded-2xl bg-black/5 shadow-2xl ${className}`}
-      style={{ aspectRatio: "16 / 9" }}
+      style={{ aspectRatio }}
     >
       <video
         ref={ref}
         src={src}
-        poster={ATLAS_DEMO_POSTER}
-        width={1920}
-        height={1080}
+        poster={poster}
         muted
         playsInline
         loop
