@@ -34,7 +34,6 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import atlasMark from "@/assets/atlas-mark.png.asset.json";
-import { AutoDemo } from "@/components/auto-demo";
 import { DemoVideo, ATLAS_FOUNDER_VIDEO_URL, ATLAS_FOUNDER_VIDEO_POSTER } from "@/components/landing/demo-video";
 import { HeroStage } from "@/components/landing/hero-stage";
 import { SimulationExplainer } from "@/components/landing/simulation-explainer";
@@ -94,10 +93,9 @@ function Landing() {
         <Hero />
         <ExperienceGap />
         <SocialProof />
-        <AutoDemo />
+        <Experience />
         <DemoWalkthrough />
         <SimulationExplainer />
-        <Experience />
         <WhyAtlas />
         <Faq />
       </main>
