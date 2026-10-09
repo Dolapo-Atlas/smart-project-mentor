@@ -101,13 +101,16 @@ export function SimulationExplainer() {
                         search={{ mode: "signup" }}
                         className="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-accent-orange px-5 py-3 text-sm font-medium text-accent-orange-foreground transition-all hover:-translate-y-0.5"
                       >
-                        Create your account
+                        Start your first day
                         <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                       </Link>
                     ) : (
-                      <div className="flex items-center gap-2 rounded-full border border-border bg-background/60 px-4 py-2.5 text-xs font-medium text-muted-foreground">
-                        <Clock className="h-3.5 w-3.5" />
-                        {p.detail}
+                      <div
+                        aria-disabled="true"
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-border bg-background/60 px-5 py-3 text-sm font-medium text-muted-foreground"
+                      >
+                        <Clock className="h-4 w-4" />
+                        Coming soon
                       </div>
                     )}
                   </CardContent>

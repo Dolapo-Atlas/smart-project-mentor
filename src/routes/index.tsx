@@ -1570,40 +1570,15 @@ function DemoWalkthrough() {
   return (
     <section id="walkthrough" className="relative border-y border-border bg-card/40 py-20 sm:py-28">
       <div className="mx-auto max-w-6xl px-5 sm:px-6 lg:px-10">
-        <div className="text-center">
-          <Reveal>
-            <p className="text-xs uppercase tracking-[0.22em] text-accent-orange">Product walkthrough</p>
-          </Reveal>
+        <Reveal>
+          <h2 className="font-display text-[clamp(1.8rem,3.4vw,2.7rem)] font-medium leading-[1.1] tracking-[-0.02em]">
+            Built by someone who lived the problem.
+          </h2>
+        </Reveal>
+
+        <div className="mt-10 grid items-center gap-10 lg:mt-12 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-16">
           <Reveal delay={100}>
-            <h2 className="mx-auto mt-4 max-w-3xl font-display text-[clamp(1.8rem,3.4vw,2.7rem)] font-medium leading-[1.1] tracking-[-0.02em]">
-              See how Atlas turns theory into real project judgement
-            </h2>
-          </Reveal>
-          <Reveal delay={150}>
-            <p className="mx-auto mt-5 max-w-2xl text-[16px] leading-relaxed text-muted-foreground">
-              Watch the demo to see a realistic project scenario in action: emails, decisions, risks,
-              stakeholders and the consequences that build practical confidence.
-            </p>
-          </Reveal>
-        </div>
-
-        <div className="mt-12 grid items-center gap-10 lg:mt-16 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-16">
-          <Reveal delay={200}>
-            <div className="mx-auto w-full max-w-[340px]">
-              <DemoVideo
-                src={ATLAS_FOUNDER_VIDEO_URL}
-                poster={ATLAS_FOUNDER_VIDEO_POSTER}
-                aspectRatio="9 / 16"
-              />
-            </div>
-          </Reveal>
-
-          <Reveal delay={250}>
             <div>
-              <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Founder note</p>
-              <h3 className="mt-4 font-display text-[clamp(1.7rem,3vw,2.4rem)] font-medium leading-[1.1] tracking-[-0.02em]">
-                Built by someone who lived the problem.
-              </h3>
               <div className="mt-6 space-y-4 text-[17px] leading-relaxed text-muted-foreground">
                 <p>I built TryNextRole to help people get interviews.</p>
                 <p>Then I realised the biggest challenge begins after getting hired.</p>
