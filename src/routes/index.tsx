@@ -327,11 +327,11 @@ function Hero() {
 /* ------------------------------------------------------------------ */
 
 const GAP_POINTS = [
-  "Manage a realistic workplace project",
-  "Respond to stakeholder emails",
-  "Handle risks, tasks and changing priorities",
-  "Make decisions and experience the consequences",
-  "Build practical judgement and interview confidence",
+  "No experience. No job. No way to get the experience.",
+  "You know the theory. But what do you actually do?",
+  "You will make mistakes. Better to make your first ones somewhere safe.",
+  "The first day at work shouldn't be the first day you've done the work.",
+  "Experience real consequences before the consequences are real.",
 ];
 
 function ExperienceGap() {
@@ -1605,6 +1605,15 @@ function DemoWalkthrough() {
                   <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                 </Link>
               </div>
+            </div>
+          </Reveal>
+          <Reveal delay={200}>
+            <div className="mx-auto w-full max-w-[340px]">
+              <DemoVideo
+                src={ATLAS_FOUNDER_VIDEO_URL}
+                poster={ATLAS_FOUNDER_VIDEO_POSTER}
+                aspectRatio="9 / 16"
+              />
             </div>
           </Reveal>
         </div>
