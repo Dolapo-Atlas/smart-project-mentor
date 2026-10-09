@@ -94,10 +94,9 @@ function Landing() {
         <Hero />
         <ExperienceGap />
         <SocialProof />
-        <AutoDemo />
+        <Experience />
         <DemoWalkthrough />
         <SimulationExplainer />
-        <Experience />
         <WhyAtlas />
         <Faq />
       </main>
