@@ -29,6 +29,7 @@ function justPaid(paidAt: string | null | undefined) {
 
 export function SubscriptionNotices() {
   const fetchAccess = useServerFn(getMyAccess);
+  const notifyUnlock = useServerFn(sendUnlockNotices);
   const { data: access } = useQuery({ queryKey: ["my-access"], queryFn: () => fetchAccess() });
   const [celebrating, setCelebrating] = useState(false);
   const [dismissed, setDismissed] = useState(false);
@@ -60,13 +61,6 @@ export function SubscriptionNotices() {
     });
 
     void (async () => {
-      const { data } = await supabase.auth.getUser();
-      const user = data.user;
-      if (!user?.email) return;
-      const name =
-        (user.user_metadata?.display_name as string | undefined) ||
-        (user.user_metadata?.full_name as string | undefined) ||
-        "";
       // Amount and currency come from the confirmed payment record only.
       const amount = formatMinor(purchase.amount, purchase.currency);
       const origin = window.location.origin;
