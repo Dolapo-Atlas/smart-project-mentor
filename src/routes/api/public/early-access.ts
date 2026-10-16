@@ -1,13 +1,7 @@
-import * as React from 'react'
-import { render } from 'react-email'
 import { createClient } from '@supabase/supabase-js'
 import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
-import { TEMPLATES } from '@/lib/email-templates/registry'
-
-const SITE_NAME = 'Atlas'
-const SENDER_DOMAIN = 'notify.atlassim.co'
-const FROM_DOMAIN = 'atlassim.co'
+import { sendTemplateEmail } from '@/lib/email-templates/send-email'
 
 const schema = z.object({
   name: z.string().min(1).max(120),
@@ -17,12 +11,6 @@ const schema = z.object({
   experience_level: z.string().min(1).max(60),
   referred_by_code: z.string().min(1).max(32).optional().nullable(),
 })
-
-function generateToken(): string {
-  const bytes = new Uint8Array(32)
-  crypto.getRandomValues(bytes)
-  return Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('')
-}
 
 export const Route = createFileRoute('/api/public/early-access')({
   server: {
