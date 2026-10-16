@@ -9,7 +9,7 @@ import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
 
 // Configuration
-const SITE_NAME = "Atlas-A coordinator's diary"
+const SITE_NAME = "Atlas"
 const SENDER_DOMAIN = "notify.atlassim.co"
 const ROOT_DOMAIN = "atlassim.co"
 const FROM_DOMAIN = "atlassim.co"
