@@ -7,7 +7,7 @@ import { AlertTriangle, PartyPopper, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getMyAccess } from "@/lib/access.functions";
 import { supabase } from "@/integrations/supabase/client";
-import { sendTransactionalEmail } from "@/lib/email/send";
+import { sendUnlockNotices } from "@/lib/email-notices.functions";
 import { trackLearner } from "@/lib/learner-events";
 import { formatMinor } from "@/lib/money";
 
@@ -70,30 +70,15 @@ export function SubscriptionNotices() {
       // Amount and currency come from the confirmed payment record only.
       const amount = formatMinor(purchase.amount, purchase.currency);
       const origin = window.location.origin;
-      await sendTransactionalEmail({
-        templateName: "unlock-confirmation",
-        recipientEmail: user.email,
-        idempotencyKey: `unlock-confirmation-${purchase.id}`,
-        templateData: {
-          name,
-          first_name: name.split(/\s+/)[0] ?? "",
-          amount_paid: amount,
-          // Deep link back to the saved Project Charter position.
-          continue_url: `${origin}/app/charter`,
-        },
-      });
-      await sendTransactionalEmail({
-        templateName: "purchase-admin-alert",
-        recipientEmail: user.email,
-        idempotencyKey: `unlock-admin-${purchase.id}`,
-        templateData: {
-          name,
-          email: user.email,
-          plan: "Atlas Project Readiness Experience",
+      await notifyUnlock({
+        data: {
+          purchaseId: purchase.id,
           amount,
-          region: purchase.country ?? "",
-          price_id: purchase.currency,
-          started_at: purchase.paidAt ?? new Date().toISOString(),
+          currency: purchase.currency,
+          country: purchase.country ?? undefined,
+          paidAt: purchase.paidAt ?? undefined,
+          // Deep link back to the saved Project Charter position.
+          continueUrl: `${origin}/app/charter`,
         },
       });
     })();
