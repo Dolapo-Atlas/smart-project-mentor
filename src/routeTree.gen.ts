@@ -79,6 +79,7 @@ import { Route as AuthenticatedProjectIntroTemplateIdRouteImport } from './route
 import { Route as ApiPublicEarlyAccessRouteImport } from './routes/api/public/early-access'
 import { Route as ApiPublicGeminiTestRouteImport } from './routes/api/public/gemini-test'
 import { Route as ApiPublicTtsRouteImport } from './routes/api/public/tts'
+import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as AuthenticatedAppTemplateKindRouteImport } from './routes/_authenticated/app.template.$kind'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
@@ -461,6 +462,11 @@ const ApiPublicTtsRoute = ApiPublicTtsRouteImport.update({
   path: '/api/public/tts',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LovableEmailEventsRoute = LovableEmailEventsRouteImport.update({
+  id: '/lovable/email/events',
+  path: '/lovable/email/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   id: '/lovable/email/suppression',
   path: '/lovable/email/suppression',
@@ -576,6 +582,7 @@ export interface FileRoutesByFullPath {
   '/api/public/early-access': typeof ApiPublicEarlyAccessRoute
   '/api/public/gemini-test': typeof ApiPublicGeminiTestRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
+  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/template/$kind': typeof AuthenticatedAppTemplateKindRoute
@@ -654,6 +661,7 @@ export interface FileRoutesByTo {
   '/api/public/early-access': typeof ApiPublicEarlyAccessRoute
   '/api/public/gemini-test': typeof ApiPublicGeminiTestRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
+  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/template/$kind': typeof AuthenticatedAppTemplateKindRoute
@@ -735,6 +743,7 @@ export interface FileRoutesById {
   '/api/public/early-access': typeof ApiPublicEarlyAccessRoute
   '/api/public/gemini-test': typeof ApiPublicGeminiTestRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
+  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/template/$kind': typeof AuthenticatedAppTemplateKindRoute
@@ -816,6 +825,7 @@ export interface FileRouteTypes {
     | '/api/public/early-access'
     | '/api/public/gemini-test'
     | '/api/public/tts'
+    | '/lovable/email/events'
     | '/lovable/email/suppression'
     | '/app/'
     | '/app/template/$kind'
@@ -894,6 +904,7 @@ export interface FileRouteTypes {
     | '/api/public/early-access'
     | '/api/public/gemini-test'
     | '/api/public/tts'
+    | '/lovable/email/events'
     | '/lovable/email/suppression'
     | '/app'
     | '/app/template/$kind'
@@ -974,6 +985,7 @@ export interface FileRouteTypes {
     | '/api/public/early-access'
     | '/api/public/gemini-test'
     | '/api/public/tts'
+    | '/lovable/email/events'
     | '/lovable/email/suppression'
     | '/_authenticated/app/'
     | '/_authenticated/app/template/$kind'
@@ -1015,6 +1027,7 @@ export interface RootRouteChildren {
   ApiPublicEarlyAccessRoute: typeof ApiPublicEarlyAccessRoute
   ApiPublicGeminiTestRoute: typeof ApiPublicGeminiTestRoute
   ApiPublicTtsRoute: typeof ApiPublicTtsRoute
+  LovableEmailEventsRoute: typeof LovableEmailEventsRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -1516,6 +1529,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicTtsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable/email/events': {
+      id: '/lovable/email/events'
+      path: '/lovable/email/events'
+      fullPath: '/lovable/email/events'
+      preLoaderRoute: typeof LovableEmailEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/suppression': {
       id: '/lovable/email/suppression'
       path: '/lovable/email/suppression'
@@ -1709,6 +1729,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicEarlyAccessRoute: ApiPublicEarlyAccessRoute,
   ApiPublicGeminiTestRoute: ApiPublicGeminiTestRoute,
   ApiPublicTtsRoute: ApiPublicTtsRoute,
+  LovableEmailEventsRoute: LovableEmailEventsRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
