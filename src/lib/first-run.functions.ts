@@ -171,15 +171,39 @@ export const nudgeStalledCharter = createServerFn({ method: "POST" })
         "your project";
 
       const origin = new URL(getRequest().url).origin;
-      await nudgeEmail({
-        data: {
-          instanceId,
-          name,
-          pmName,
-          projectName,
-          appUrl: `${origin}/app`,
-        },
-      });
+      const claims: any = context.claims ?? {};
+      const recipient: string = (claims.email ?? "").toString().toLowerCase();
+      if (!recipient) return { sent: true };
+
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+      try {
+        const result = await sendTemplateEmail("charter-nudge", recipient, {
+          templateData: {
+            name,
+            pm_name: pmName,
+            project_name: projectName,
+            app_url: `${origin}/app`,
+          },
+          idempotencyKey: `charter-nudge-${instanceId}`,
+        });
+        const { error: logError } = await supabaseAdmin.from("email_send_log").insert({
+          template_name: "charter-nudge",
+          recipient_email: recipient,
+          status: result.sent ? "sent" : "suppressed",
+        });
+        if (logError) console.error("email_send_log insert failed", { error: logError });
+      } catch (sendErr) {
+        const message = sendErr instanceof Error ? sendErr.message : String(sendErr);
+        const { error: logError } = await supabaseAdmin.from("email_send_log").insert({
+          template_name: "charter-nudge",
+          recipient_email: recipient,
+          status: "failed",
+          error_message: message.slice(0, 1000),
+        });
+        if (logError) console.error("email_send_log insert failed", { error: logError });
+        throw sendErr;
+      }
     } catch (err) {
       console.warn("Charter nudge email failed (in-app nudge still sent)", err);
     }
