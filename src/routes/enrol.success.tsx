@@ -7,7 +7,7 @@ import { Loader2, Mail, CheckCircle2, ArrowRight, AlertTriangle } from "lucide-r
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { getEnrolmentStatus, claimEnrolment } from "@/lib/landing.functions";
-import { sendTransactionalEmail } from "@/lib/email/send";
+import { sendEnrolmentConfirmation } from "@/lib/email-notices.functions";
 import { initTrackers, track } from "@/lib/landing-analytics";
 
 export const Route = createFileRoute("/enrol/success")({
