@@ -6,7 +6,6 @@ import confetti from "canvas-confetti";
 import { AlertTriangle, PartyPopper, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getMyAccess } from "@/lib/access.functions";
-import { supabase } from "@/integrations/supabase/client";
 import { sendUnlockNotices } from "@/lib/email-notices.functions";
 import { trackLearner } from "@/lib/learner-events";
 import { formatMinor } from "@/lib/money";

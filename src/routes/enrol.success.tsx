@@ -62,20 +62,13 @@ function EnrolSuccess() {
     if (!signedIn) return;
     (async () => {
       await claim({ data: { reference: ref! } }).catch(() => null);
-      const { data: session } = await supabase.auth.getUser();
-      const email = session.user?.email;
-      if (email) {
-        await sendTransactionalEmail({
-          templateName: "enrolment-confirmation",
-          recipientEmail: email,
-          idempotencyKey: `enrolment-confirmation-${ref}`,
-          templateData: {
-            name: data.firstName ?? undefined,
-            amount: `${data.currency} ${data.amount.toLocaleString()}`,
-            reference: ref,
-          },
-        }).catch(() => null);
-      }
+      await confirmEnrolment({
+        data: {
+          reference: ref!,
+          firstName: data.firstName ?? undefined,
+          amount: `${data.currency} ${data.amount.toLocaleString()}`,
+        },
+      }).catch(() => null);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paid, signedIn]);
