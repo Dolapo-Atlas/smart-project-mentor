@@ -1,13 +1,7 @@
-import * as React from 'react'
-import { render } from 'react-email'
 import { createClient } from '@supabase/supabase-js'
 import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
-import { TEMPLATES } from '@/lib/email-templates/registry'
-
-const SITE_NAME = 'Atlas'
-const SENDER_DOMAIN = 'notify.atlassim.co'
-const FROM_DOMAIN = 'atlassim.co'
+import { sendTemplateEmail } from '@/lib/email-templates/send-email'
 
 const schema = z.object({
   name: z.string().min(1).max(120),
@@ -17,12 +11,6 @@ const schema = z.object({
   experience_level: z.string().min(1).max(60),
   referred_by_code: z.string().min(1).max(32).optional().nullable(),
 })
-
-function generateToken(): string {
-  const bytes = new Uint8Array(32)
-  crypto.getRandomValues(bytes)
-  return Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('')
-}
 
 export const Route = createFileRoute('/api/public/early-access')({
   server: {
@@ -60,95 +48,49 @@ export const Route = createFileRoute('/api/public/early-access')({
 
         const userReferralCode: string | null = inserted?.referral_code ?? null
 
-        // Helper: render + enqueue a template (best-effort)
+        // Helper: render + send a template through managed delivery (best-effort).
+        // Suppression and unsubscribe are enforced by Lovable at send time.
         async function sendTemplate(
           templateName: string,
           recipient: string,
           templateData: Record<string, any>,
           idempotencyKey: string,
         ) {
-          const tpl = TEMPLATES[templateName]
-          if (!tpl) throw new Error(`Template missing: ${templateName}`)
-          const element = React.createElement(tpl.component, templateData)
-          const html = await render(element)
-          const text = await render(element, { plainText: true })
-          const subject =
-            typeof tpl.subject === 'function' ? tpl.subject(templateData) : tpl.subject
-          const messageId = crypto.randomUUID()
           const recipientLc = recipient.toLowerCase()
-
-          // Suppression check
-          const { data: suppressed } = await supabase
-            .from('suppressed_emails')
-            .select('id')
-            .eq('email', recipientLc)
-            .maybeSingle()
-          if (suppressed) return
-
-          // Ensure unsubscribe token exists
-          const { data: existing } = await supabase
-            .from('email_unsubscribe_tokens')
-            .select('token, used_at')
-            .eq('email', recipientLc)
-            .maybeSingle()
-
-          let unsubscribeToken = existing?.token
-          if (!existing) {
-            unsubscribeToken = generateToken()
-            await supabase
-              .from('email_unsubscribe_tokens')
-              .upsert(
-                { token: unsubscribeToken, email: recipientLc },
-                { onConflict: 'email', ignoreDuplicates: true },
-              )
-            const { data: stored } = await supabase
-              .from('email_unsubscribe_tokens')
-              .select('token')
-              .eq('email', recipientLc)
-              .maybeSingle()
-            unsubscribeToken = stored?.token ?? unsubscribeToken
+          try {
+            const result = await sendTemplateEmail(templateName, recipientLc, {
+              templateData,
+              idempotencyKey,
+            })
+            const { error: logError } = await supabase.from('email_send_log').insert({
+              template_name: templateName,
+              recipient_email: recipientLc,
+              status: result.sent ? 'sent' : 'suppressed',
+            })
+            if (logError) console.error('email_send_log insert failed', { error: logError })
+          } catch (err) {
+            const message = err instanceof Error ? err.message : String(err)
+            const { error: logError } = await supabase.from('email_send_log').insert({
+              template_name: templateName,
+              recipient_email: recipientLc,
+              status: 'failed',
+              error_message: message.slice(0, 1000),
+            })
+            if (logError) console.error('email_send_log insert failed', { error: logError })
+            throw err
           }
-
-          await supabase.from('email_send_log').insert({
-            message_id: messageId,
-            template_name: templateName,
-            recipient_email: recipientLc,
-            status: 'pending',
-          })
-
-          const { error: enqueueError } = await supabase.rpc('enqueue_email', {
-            queue_name: 'transactional_emails',
-            payload: {
-              message_id: messageId,
-              to: recipientLc,
-              from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
-              sender_domain: SENDER_DOMAIN,
-              subject,
-              html,
-              text,
-              purpose: 'transactional',
-              label: templateName,
-              idempotency_key: idempotencyKey,
-              unsubscribe_token: unsubscribeToken,
-              queued_at: new Date().toISOString(),
-            },
-          })
-          if (enqueueError) console.error('enqueue_email failed', enqueueError)
         }
 
         // 2. Admin notification (best-effort)
         try {
-          const adminTpl = TEMPLATES['early-access-signup']
           const adminRecipients = ['rasaqdolapo@gmail.com', 'fuhad.dolapo@gmail.com']
-          if (adminTpl) {
-            for (const recipient of adminRecipients) {
-              await sendTemplate(
-                'early-access-signup',
-                recipient,
-                { ...parsed, submitted_at: inserted?.created_at ?? new Date().toISOString() },
-                `early-access-${inserted?.id}-${recipient}`,
-              )
-            }
+          for (const recipient of adminRecipients) {
+            await sendTemplate(
+              'early-access-signup',
+              recipient,
+              { ...parsed, submitted_at: inserted?.created_at ?? new Date().toISOString() },
+              `early-access-${inserted?.id}-${recipient}`,
+            )
           }
         } catch (err) {
           console.error('early-access notify failed', err)

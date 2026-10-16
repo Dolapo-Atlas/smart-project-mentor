@@ -7,7 +7,7 @@ import { Loader2, Mail, CheckCircle2, ArrowRight, AlertTriangle } from "lucide-r
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { getEnrolmentStatus, claimEnrolment } from "@/lib/landing.functions";
-import { sendTransactionalEmail } from "@/lib/email/send";
+import { sendEnrolmentConfirmation } from "@/lib/email-notices.functions";
 import { initTrackers, track } from "@/lib/landing-analytics";
 
 export const Route = createFileRoute("/enrol/success")({
@@ -38,6 +38,7 @@ function EnrolSuccess() {
   const navigate = useNavigate();
   const fetchStatus = useServerFn(getEnrolmentStatus);
   const claim = useServerFn(claimEnrolment);
+  const confirmEnrolment = useServerFn(sendEnrolmentConfirmation);
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -62,20 +63,13 @@ function EnrolSuccess() {
     if (!signedIn) return;
     (async () => {
       await claim({ data: { reference: ref! } }).catch(() => null);
-      const { data: session } = await supabase.auth.getUser();
-      const email = session.user?.email;
-      if (email) {
-        await sendTransactionalEmail({
-          templateName: "enrolment-confirmation",
-          recipientEmail: email,
-          idempotencyKey: `enrolment-confirmation-${ref}`,
-          templateData: {
-            name: data.firstName ?? undefined,
-            amount: `${data.currency} ${data.amount.toLocaleString()}`,
-            reference: ref,
-          },
-        }).catch(() => null);
-      }
+      await confirmEnrolment({
+        data: {
+          reference: ref!,
+          firstName: data.firstName ?? undefined,
+          amount: `${data.currency} ${data.amount.toLocaleString()}`,
+        },
+      }).catch(() => null);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paid, signedIn]);

@@ -68,9 +68,10 @@ export const recordSession = createServerFn({ method: "POST" })
 
     if (shouldNotifyLogin) {
       try {
-        const tpl = TEMPLATES["early-access-signup"];
         const recipients = ["rasaqdolapo@gmail.com", "fuhad.dolapo@gmail.com"];
-        if (tpl && email) {
+        if (email) {
+          const { sendLovableEmail } = await import("@lovable.dev/email-js");
+          const apiKey = process.env.LOVABLE_API_KEY;
           const templateData = {
             name: display,
             email,
@@ -79,42 +80,55 @@ export const recordSession = createServerFn({ method: "POST" })
             experience_level: "—",
             submitted_at: now,
           };
+          const tpl = TEMPLATES["early-access-signup"];
           const element = React.createElement(tpl.component, templateData);
           const html = await render(element);
           const text = await render(element, { plainText: true });
-          const baseSubject =
-            typeof tpl.subject === "function" ? tpl.subject(templateData) : tpl.subject;
+          const label = isFirstLogin ? "new-user-signup" : "user-login";
           const subject = isFirstLogin
             ? `New Atlas user: ${display}`
             : `Atlas login: ${display}`;
-          void baseSubject;
           const slot = new Date(now).toISOString().slice(0, 13); // hourly bucket
           for (const recipient of recipients) {
-            const messageId = crypto.randomUUID();
-            await supabaseAdmin.from("email_send_log").insert({
-              message_id: messageId,
-              template_name: isFirstLogin ? "new-user-signup" : "user-login",
-              recipient_email: recipient,
-              status: "pending",
-            });
-            await supabaseAdmin.rpc("enqueue_email", {
-              queue_name: "transactional_emails",
-              payload: {
-                message_id: messageId,
-                to: recipient,
-                from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
-                sender_domain: SENDER_DOMAIN,
-                subject,
-                html,
-                text,
-                purpose: "transactional",
-                label: isFirstLogin ? "new-user-signup" : "user-login",
-                idempotency_key: isFirstLogin
-                  ? `new-user-${userId}-${recipient}`
-                  : `login-${userId}-${slot}-${recipient}`,
-                queued_at: now,
-              },
-            });
+            try {
+              await sendLovableEmail(
+                {
+                  to: recipient,
+                  from: { name: SITE_NAME, address: `noreply@${FROM_DOMAIN}` },
+                  sender_domain: SENDER_DOMAIN,
+                  subject,
+                  html,
+                  text,
+                  purpose: "transactional",
+                  label,
+                  idempotency_key: isFirstLogin
+                    ? `new-user-${userId}-${recipient}`
+                    : `login-${userId}-${slot}-${recipient}`,
+                },
+                { apiKey: apiKey!, sendUrl: process.env.LOVABLE_SEND_URL },
+              );
+              const { error: logError } = await supabaseAdmin
+                .from("email_send_log")
+                .insert({
+                  template_name: label,
+                  recipient_email: recipient,
+                  status: "sent",
+                });
+              if (logError) console.error("email_send_log insert failed", { error: logError });
+            } catch (sendErr) {
+              const message = sendErr instanceof Error ? sendErr.message : String(sendErr);
+              const suppressed =
+                (sendErr as any)?.code === "recipient_suppressed";
+              const { error: logError } = await supabaseAdmin
+                .from("email_send_log")
+                .insert({
+                  template_name: label,
+                  recipient_email: recipient,
+                  status: suppressed ? "suppressed" : "failed",
+                  error_message: suppressed ? undefined : message.slice(0, 1000),
+                });
+              if (logError) console.error("email_send_log insert failed", { error: logError });
+            }
           }
         }
       } catch (err) {

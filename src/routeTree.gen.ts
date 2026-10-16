@@ -15,7 +15,6 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthCallbackRouteImport } from './routes/auth-callback'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
@@ -24,7 +23,6 @@ import { Route as CertSlugRouteImport } from './routes/cert.$slug'
 import { Route as CertificateCodeRouteImport } from './routes/certificate.$code'
 import { Route as CertificatePreviewRouteImport } from './routes/certificate.preview'
 import { Route as ChallengeFridayCrisisRouteImport } from './routes/challenge.friday-crisis'
-import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as EnrolSuccessRouteImport } from './routes/enrol.success'
 import { Route as InviteCodeRouteImport } from './routes/invite.$code'
 import { Route as PrototypeOfficeRouteImport } from './routes/prototype.office'
@@ -79,14 +77,12 @@ import { Route as AuthenticatedProjectIntroTemplateIdRouteImport } from './route
 import { Route as ApiPublicEarlyAccessRouteImport } from './routes/api/public/early-access'
 import { Route as ApiPublicGeminiTestRouteImport } from './routes/api/public/gemini-test'
 import { Route as ApiPublicTtsRouteImport } from './routes/api/public/tts'
-import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
+import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
 import { Route as AuthenticatedAppTemplateKindRouteImport } from './routes/_authenticated/app.template.$kind'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
-import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
-import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -115,11 +111,6 @@ const McpRoute = McpRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const UnsubscribeRoute = UnsubscribeRouteImport.update({
-  id: '/unsubscribe',
-  path: '/unsubscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
 const Char91DotwellKnownChar93OauthProtectedResourceRoute =
@@ -162,11 +153,6 @@ const CertificatePreviewRoute = CertificatePreviewRouteImport.update({
 const ChallengeFridayCrisisRoute = ChallengeFridayCrisisRouteImport.update({
   id: '/challenge/friday-crisis',
   path: '/challenge/friday-crisis',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
-  id: '/email/unsubscribe',
-  path: '/email/unsubscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EnrolSuccessRoute = EnrolSuccessRouteImport.update({
@@ -461,9 +447,9 @@ const ApiPublicTtsRoute = ApiPublicTtsRouteImport.update({
   path: '/api/public/tts',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
-  id: '/lovable/email/suppression',
-  path: '/lovable/email/suppression',
+const LovableEmailEventsRoute = LovableEmailEventsRouteImport.update({
+  id: '/lovable/email/events',
+  path: '/lovable/email/events',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAppTemplateKindRoute =
@@ -488,22 +474,10 @@ const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
   path: '/lovable/email/auth/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LovableEmailQueueProcessRoute =
-  LovableEmailQueueProcessRouteImport.update({
-    id: '/lovable/email/queue/process',
-    path: '/lovable/email/queue/process',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const LovableEmailTransactionalPreviewRoute =
   LovableEmailTransactionalPreviewRouteImport.update({
     id: '/lovable/email/transactional/preview',
     path: '/lovable/email/transactional/preview',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const LovableEmailTransactionalSendRoute =
-  LovableEmailTransactionalSendRouteImport.update({
-    id: '/lovable/email/transactional/send',
-    path: '/lovable/email/transactional/send',
     getParentRoute: () => rootRouteImport,
   } as any)
 
@@ -513,7 +487,6 @@ export interface FileRoutesByFullPath {
   '/auth-callback': typeof AuthCallbackRoute
   '/mcp': typeof McpRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/unsubscribe': typeof UnsubscribeRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
   '/onboarding': typeof AuthenticatedOnboardingRoute
@@ -522,7 +495,6 @@ export interface FileRoutesByFullPath {
   '/certificate/$code': typeof CertificateCodeRoute
   '/certificate/preview': typeof CertificatePreviewRoute
   '/challenge/friday-crisis': typeof ChallengeFridayCrisisRoute
-  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/enrol/success': typeof EnrolSuccessRoute
   '/invite/$code': typeof InviteCodeRoute
   '/prototype/office': typeof PrototypeOfficeRoute
@@ -576,15 +548,13 @@ export interface FileRoutesByFullPath {
   '/api/public/early-access': typeof ApiPublicEarlyAccessRoute
   '/api/public/gemini-test': typeof ApiPublicGeminiTestRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
-  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/app/': typeof AuthenticatedAppIndexRoute
   '/app/template/$kind': typeof AuthenticatedAppTemplateKindRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
-  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
-  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -592,7 +562,6 @@ export interface FileRoutesByTo {
   '/auth-callback': typeof AuthCallbackRoute
   '/mcp': typeof McpRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/unsubscribe': typeof UnsubscribeRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/orientation': typeof AuthenticatedOrientationRoute
@@ -600,7 +569,6 @@ export interface FileRoutesByTo {
   '/certificate/$code': typeof CertificateCodeRoute
   '/certificate/preview': typeof CertificatePreviewRoute
   '/challenge/friday-crisis': typeof ChallengeFridayCrisisRoute
-  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/enrol/success': typeof EnrolSuccessRoute
   '/invite/$code': typeof InviteCodeRoute
   '/prototype/office': typeof PrototypeOfficeRoute
@@ -654,15 +622,13 @@ export interface FileRoutesByTo {
   '/api/public/early-access': typeof ApiPublicEarlyAccessRoute
   '/api/public/gemini-test': typeof ApiPublicGeminiTestRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
-  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/app': typeof AuthenticatedAppIndexRoute
   '/app/template/$kind': typeof AuthenticatedAppTemplateKindRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
-  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
-  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -672,7 +638,6 @@ export interface FileRoutesById {
   '/auth-callback': typeof AuthCallbackRoute
   '/mcp': typeof McpRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/unsubscribe': typeof UnsubscribeRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
@@ -681,7 +646,6 @@ export interface FileRoutesById {
   '/certificate/$code': typeof CertificateCodeRoute
   '/certificate/preview': typeof CertificatePreviewRoute
   '/challenge/friday-crisis': typeof ChallengeFridayCrisisRoute
-  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/enrol/success': typeof EnrolSuccessRoute
   '/invite/$code': typeof InviteCodeRoute
   '/prototype/office': typeof PrototypeOfficeRoute
@@ -735,15 +699,13 @@ export interface FileRoutesById {
   '/api/public/early-access': typeof ApiPublicEarlyAccessRoute
   '/api/public/gemini-test': typeof ApiPublicGeminiTestRoute
   '/api/public/tts': typeof ApiPublicTtsRoute
-  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/app/template/$kind': typeof AuthenticatedAppTemplateKindRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
-  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
-  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -753,7 +715,6 @@ export interface FileRouteTypes {
     | '/auth-callback'
     | '/mcp'
     | '/reset-password'
-    | '/unsubscribe'
     | '/.well-known/oauth-protected-resource'
     | '/app'
     | '/onboarding'
@@ -762,7 +723,6 @@ export interface FileRouteTypes {
     | '/certificate/$code'
     | '/certificate/preview'
     | '/challenge/friday-crisis'
-    | '/email/unsubscribe'
     | '/enrol/success'
     | '/invite/$code'
     | '/prototype/office'
@@ -816,15 +776,13 @@ export interface FileRouteTypes {
     | '/api/public/early-access'
     | '/api/public/gemini-test'
     | '/api/public/tts'
-    | '/lovable/email/suppression'
+    | '/lovable/email/events'
     | '/app/'
     | '/app/template/$kind'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
-    | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
-    | '/lovable/email/transactional/send'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -832,7 +790,6 @@ export interface FileRouteTypes {
     | '/auth-callback'
     | '/mcp'
     | '/reset-password'
-    | '/unsubscribe'
     | '/.well-known/oauth-protected-resource'
     | '/onboarding'
     | '/orientation'
@@ -840,7 +797,6 @@ export interface FileRouteTypes {
     | '/certificate/$code'
     | '/certificate/preview'
     | '/challenge/friday-crisis'
-    | '/email/unsubscribe'
     | '/enrol/success'
     | '/invite/$code'
     | '/prototype/office'
@@ -894,15 +850,13 @@ export interface FileRouteTypes {
     | '/api/public/early-access'
     | '/api/public/gemini-test'
     | '/api/public/tts'
-    | '/lovable/email/suppression'
+    | '/lovable/email/events'
     | '/app'
     | '/app/template/$kind'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
-    | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
-    | '/lovable/email/transactional/send'
   id:
     | '__root__'
     | '/'
@@ -911,7 +865,6 @@ export interface FileRouteTypes {
     | '/auth-callback'
     | '/mcp'
     | '/reset-password'
-    | '/unsubscribe'
     | '/.well-known/oauth-protected-resource'
     | '/_authenticated/app'
     | '/_authenticated/onboarding'
@@ -920,7 +873,6 @@ export interface FileRouteTypes {
     | '/certificate/$code'
     | '/certificate/preview'
     | '/challenge/friday-crisis'
-    | '/email/unsubscribe'
     | '/enrol/success'
     | '/invite/$code'
     | '/prototype/office'
@@ -974,15 +926,13 @@ export interface FileRouteTypes {
     | '/api/public/early-access'
     | '/api/public/gemini-test'
     | '/api/public/tts'
-    | '/lovable/email/suppression'
+    | '/lovable/email/events'
     | '/_authenticated/app/'
     | '/_authenticated/app/template/$kind'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
-    | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
-    | '/lovable/email/transactional/send'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -992,13 +942,11 @@ export interface RootRouteChildren {
   AuthCallbackRoute: typeof AuthCallbackRoute
   McpRoute: typeof McpRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
-  UnsubscribeRoute: typeof UnsubscribeRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   CertSlugRoute: typeof CertSlugRoute
   CertificateCodeRoute: typeof CertificateCodeRoute
   CertificatePreviewRoute: typeof CertificatePreviewRoute
   ChallengeFridayCrisisRoute: typeof ChallengeFridayCrisisRoute
-  EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   EnrolSuccessRoute: typeof EnrolSuccessRoute
   InviteCodeRoute: typeof InviteCodeRoute
   PrototypeOfficeRoute: typeof PrototypeOfficeRoute
@@ -1015,13 +963,11 @@ export interface RootRouteChildren {
   ApiPublicEarlyAccessRoute: typeof ApiPublicEarlyAccessRoute
   ApiPublicGeminiTestRoute: typeof ApiPublicGeminiTestRoute
   ApiPublicTtsRoute: typeof ApiPublicTtsRoute
-  LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
+  LovableEmailEventsRoute: typeof LovableEmailEventsRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
-  LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
-  LovableEmailTransactionalSendRoute: typeof LovableEmailTransactionalSendRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1066,13 +1012,6 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/unsubscribe': {
-      id: '/unsubscribe'
-      path: '/unsubscribe'
-      fullPath: '/unsubscribe'
-      preLoaderRoute: typeof UnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/.well-known/oauth-protected-resource': {
@@ -1129,13 +1068,6 @@ declare module '@tanstack/react-router' {
       path: '/challenge/friday-crisis'
       fullPath: '/challenge/friday-crisis'
       preLoaderRoute: typeof ChallengeFridayCrisisRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/email/unsubscribe': {
-      id: '/email/unsubscribe'
-      path: '/email/unsubscribe'
-      fullPath: '/email/unsubscribe'
-      preLoaderRoute: typeof EmailUnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/enrol/success': {
@@ -1516,11 +1448,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicTtsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/lovable/email/suppression': {
-      id: '/lovable/email/suppression'
-      path: '/lovable/email/suppression'
-      fullPath: '/lovable/email/suppression'
-      preLoaderRoute: typeof LovableEmailSuppressionRouteImport
+    '/lovable/email/events': {
+      id: '/lovable/email/events'
+      path: '/lovable/email/events'
+      fullPath: '/lovable/email/events'
+      preLoaderRoute: typeof LovableEmailEventsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/app/template/$kind': {
@@ -1551,25 +1483,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/lovable/email/queue/process': {
-      id: '/lovable/email/queue/process'
-      path: '/lovable/email/queue/process'
-      fullPath: '/lovable/email/queue/process'
-      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/lovable/email/transactional/preview': {
       id: '/lovable/email/transactional/preview'
       path: '/lovable/email/transactional/preview'
       fullPath: '/lovable/email/transactional/preview'
       preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lovable/email/transactional/send': {
-      id: '/lovable/email/transactional/send'
-      path: '/lovable/email/transactional/send'
-      fullPath: '/lovable/email/transactional/send'
-      preLoaderRoute: typeof LovableEmailTransactionalSendRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -1685,14 +1603,12 @@ const rootRouteChildren: RootRouteChildren = {
   AuthCallbackRoute: AuthCallbackRoute,
   McpRoute: McpRoute,
   ResetPasswordRoute: ResetPasswordRoute,
-  UnsubscribeRoute: UnsubscribeRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   CertSlugRoute: CertSlugRoute,
   CertificateCodeRoute: CertificateCodeRoute,
   CertificatePreviewRoute: CertificatePreviewRoute,
   ChallengeFridayCrisisRoute: ChallengeFridayCrisisRoute,
-  EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   EnrolSuccessRoute: EnrolSuccessRoute,
   InviteCodeRoute: InviteCodeRoute,
   PrototypeOfficeRoute: PrototypeOfficeRoute,
@@ -1709,13 +1625,11 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicEarlyAccessRoute: ApiPublicEarlyAccessRoute,
   ApiPublicGeminiTestRoute: ApiPublicGeminiTestRoute,
   ApiPublicTtsRoute: ApiPublicTtsRoute,
-  LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
+  LovableEmailEventsRoute: LovableEmailEventsRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
-  LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
-  LovableEmailTransactionalSendRoute: LovableEmailTransactionalSendRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
