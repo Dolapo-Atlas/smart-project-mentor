@@ -38,6 +38,7 @@ function EnrolSuccess() {
   const navigate = useNavigate();
   const fetchStatus = useServerFn(getEnrolmentStatus);
   const claim = useServerFn(claimEnrolment);
+  const confirmEnrolment = useServerFn(sendEnrolmentConfirmation);
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
 
   useEffect(() => {

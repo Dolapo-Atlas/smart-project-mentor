@@ -156,10 +156,9 @@ export const nudgeStalledCharter = createServerFn({ method: "POST" })
       read: false,
     } as never);
 
-    // Also send the nudge to the learner's registered email address. The send
-    // route derives the recipient from the authenticated account, so we just
-    // forward the caller's bearer token. Failure here must not break the
-    // in-app nudge, which has already been delivered.
+    // Also send the nudge to the learner's registered email address. The
+    // recipient is derived from the authenticated account server-side.
+    // Failure here must not break the in-app nudge, already delivered.
     try {
       const { data: instance } = await supabase
         .from("project_instances")
@@ -172,26 +171,15 @@ export const nudgeStalledCharter = createServerFn({ method: "POST" })
         "your project";
 
       const origin = new URL(getRequest().url).origin;
-      const authHeader = getRequestHeader("Authorization");
-      if (authHeader) {
-        await fetch(`${origin}/lovable/email/transactional/send`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: authHeader,
-          },
-          body: JSON.stringify({
-            templateName: "charter-nudge",
-            idempotencyKey: `charter-nudge-${instanceId}`,
-            templateData: {
-              name,
-              pm_name: pmName,
-              project_name: projectName,
-              app_url: `${origin}/app`,
-            },
-          }),
-        });
-      }
+      await nudgeEmail({
+        data: {
+          instanceId,
+          name,
+          pmName,
+          projectName,
+          appUrl: `${origin}/app`,
+        },
+      });
     } catch (err) {
       console.warn("Charter nudge email failed (in-app nudge still sent)", err);
     }
