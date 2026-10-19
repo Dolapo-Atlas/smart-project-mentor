@@ -49,6 +49,8 @@ export const Route = createFileRoute("/")({
           "Atlas is a workplace simulation platform where professionals learn by managing realistic projects, working with stakeholders, meetings, budgets, risks, and project decisions.",
       },
       { property: "og:title", content: "Atlas | Learn by Managing Realistic Projects" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       {
         property: "og:description",
         content:
@@ -93,6 +95,7 @@ function Landing() {
         <Hero />
         <ExperienceGap />
         <SocialProof />
+        <LearnerTestimonial />
         <Experience />
         <DemoWalkthrough />
         <SimulationExplainer />
@@ -389,6 +392,31 @@ function SocialProof() {
             Atlas references the methodologies of PMI, APM and Scrum.org, and mirrors workflows familiar to teams using Microsoft, Google and Atlassian tooling. Atlas is not affiliated with, endorsed by, or certified by any of these organisations.
           </p>
         </Reveal>
+      </div>
+    </section>
+  );
+}
+
+function LearnerTestimonial() {
+  return (
+    <section aria-label="Learner testimonial" className="border-b border-border/60 bg-navy py-16 text-navy-foreground sm:py-20">
+      <div className="mx-auto grid max-w-6xl gap-8 px-5 sm:px-6 lg:grid-cols-[1fr_2fr] lg:gap-16 lg:px-10">
+        <div>
+          <p className="text-sm font-medium text-accent-orange">From an Atlas learner</p>
+          <h2 className="mt-4 font-display text-3xl font-medium leading-tight">Beyond the theory.</h2>
+          <div className="mt-8 border-l-2 border-accent-orange pl-4">
+            <p className="font-display text-lg font-semibold">Michaella Essien</p>
+            <p className="mt-1 text-sm leading-relaxed text-navy-foreground/75">Project Manager · MBA in Project Management</p>
+            <p className="mt-2 text-xs text-navy-foreground/60">Shared on LinkedIn · 1 October 2026</p>
+          </div>
+        </div>
+        <figure>
+          <blockquote className="space-y-6 text-lg leading-relaxed sm:text-xl">
+            <p>“What I initially thought would be a simple simulation has actually been a practical way to apply concepts such as stakeholder management, project charters, RAID logs, project initiation, and kickoff preparation in a more realistic setting.</p>
+            <p>It has been interesting to see how the different pieces of project management connect beyond the theoretical side I’ve encountered in school.”</p>
+          </blockquote>
+          <figcaption className="mt-6 text-xs text-navy-foreground/60">Excerpt from Michaella’s LinkedIn post</figcaption>
+        </figure>
       </div>
     </section>
   );
