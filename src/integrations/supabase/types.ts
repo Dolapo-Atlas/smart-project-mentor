@@ -2615,15 +2615,6 @@ export type Database = {
     }
     Functions: {
       active_project_instance_id: { Args: { uid: string }; Returns: string }
-      delete_email: {
-        Args: { message_id: number; queue_name: string }
-        Returns: boolean
-      }
-      email_queue_dispatch: { Args: never; Returns: undefined }
-      enqueue_email: {
-        Args: { payload: Json; queue_name: string }
-        Returns: number
-      }
       gen_referral_code: { Args: never; Returns: string }
       has_active_subscription: { Args: { user_uuid: string }; Returns: boolean }
       has_role: {
@@ -2634,23 +2625,6 @@ export type Database = {
         Returns: boolean
       }
       is_email_allowed: { Args: { _email: string }; Returns: boolean }
-      move_to_dlq: {
-        Args: {
-          dlq_name: string
-          message_id: number
-          payload: Json
-          source_queue: string
-        }
-        Returns: number
-      }
-      read_email_batch: {
-        Args: { batch_size: number; queue_name: string; vt: number }
-        Returns: {
-          message: Json
-          msg_id: number
-          read_ct: number
-        }[]
-      }
       referral_stats: { Args: { code: string }; Returns: number }
     }
     Enums: {
