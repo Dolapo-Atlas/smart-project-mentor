@@ -511,7 +511,7 @@ function Inbox() {
                             className="rounded-full"
                             onClick={() => {
                               setReplyBody(q.body(selected.sender_name.split(" ")[0]));
-                              trackLearner("quick_reply_used", { props: { label: q.label } });
+                              
                             }}
                           >
                             {q.label}
