@@ -33,6 +33,25 @@ import { markFreePreviewComplete } from "@/lib/access.functions";
 import { trackLearner } from "@/lib/learner-events";
 import { useRoster, rosterByName } from "@/lib/roster";
 import { useFirstEmailGate } from "@/lib/use-first-email-gate";
+import { completeFirstChapter } from "@/lib/chapters.functions";
+
+const QUICK_REPLIES = [
+  {
+    label: "Ready to start",
+    body: (n: string) =>
+      `Hi ${n},\n\nThanks for bringing me onto the team. I've read the Project Initiation Pack and understand the objectives, budget and timeline. I'll start drafting the Project Charter now — is there anything you'd like me to prioritise first?\n\nBest regards`,
+  },
+  {
+    label: "Risk-minded",
+    body: (n: string) =>
+      `Hi ${n},\n\nThanks for the welcome. I've been through the pack and noted the key stakeholder groups and early risk areas. I'll get the Project Charter underway so we can agree scope early.\n\nKind regards`,
+  },
+  {
+    label: "Short and direct",
+    body: (n: string) =>
+      `Hi ${n},\n\nReceived — pack reviewed. Moving on to the Project Charter and Initiation deliverables now.\n\nThanks`,
+  },
+];
 
 export const Route = createFileRoute("/_authenticated/app/inbox")({
   validateSearch: (search: Record<string, unknown>) =>
@@ -143,6 +162,8 @@ function Inbox() {
   const [replyBody, setReplyBody] = useState("");
   const [packOpen, setPackOpen] = useState(false);
   const [remindOpen, setRemindOpen] = useState(false);
+  const [bridgeOpen, setBridgeOpen] = useState(false);
+  const completeCh1 = useServerFn(completeFirstChapter);
   const openPack = () => {
     setPackOpen(true);
     setRemindOpen(false);
@@ -201,6 +222,13 @@ function Inbox() {
       qc.invalidateQueries({ queryKey: ["phase-progress"] });
       qc.invalidateQueries({ queryKey: ["first-email-gate"] });
       if (onboardingMode) {
+        try {
+          await completeCh1();
+          qc.invalidateQueries({ queryKey: ["chapters"] });
+        } catch {
+          // Non-blocking.
+        }
+        setBridgeOpen(true);
         setOnboardingDone(true);
         toast.success(
           "First response sent. Your Project Manager will come back to you — head to Tasks for your next move.",
@@ -469,6 +497,28 @@ function Inbox() {
                     <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
                       Reply · To {selected.sender_name} · {subject}
                     </div>
+                    {onboardingMode && !onboardingDone && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <span className="w-full text-xs text-muted-foreground">
+                          Not sure what to say? Start from one of these, then make it yours:
+                        </span>
+                        {QUICK_REPLIES.map((q) => (
+                          <Button
+                            key={q.label}
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="rounded-full"
+                            onClick={() => {
+                              setReplyBody(q.body(selected.sender_name.split(" ")[0]));
+                              
+                            }}
+                          >
+                            {q.label}
+                          </Button>
+                        ))}
+                      </div>
+                    )}
                     <Textarea
                       value={replyBody}
                       onChange={(e) => setReplyBody(e.target.value)}
@@ -517,6 +567,36 @@ function Inbox() {
       </div>
 
       <ProjectInitiationPack open={packOpen} onOpenChange={setPackOpen} />
+
+      <Dialog open={bridgeOpen} onOpenChange={setBridgeOpen}>
+        <DialogContent className="max-w-md">
+          <div className="text-[10px] uppercase tracking-[0.2em] text-accent-orange">
+            Chapter 1 complete
+          </div>
+          <DialogTitle className="font-display text-2xl font-medium">
+            You're officially on the project.
+          </DialogTitle>
+          <DialogDescription>
+            Your Project Manager has your reply and the team now knows you're here.
+          </DialogDescription>
+          <div className="rounded-xl border border-border bg-muted/40 p-4 text-sm">
+            <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+              Your next small win
+            </div>
+            <p className="mt-1 font-medium">
+              Start the Project Charter — just the purpose and objectives for now.
+            </p>
+          </div>
+          <DialogFooter className="gap-2 sm:justify-end">
+            <Button variant="ghost" asChild>
+              <Link to="/app">Explore workspace</Link>
+            </Button>
+            <Button asChild>
+              <Link to="/app/charter">Continue to Project Charter</Link>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={remindOpen} onOpenChange={setRemindOpen}>
         <DialogContent className="max-w-md">

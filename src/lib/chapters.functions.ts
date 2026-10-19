@@ -234,3 +234,42 @@ export const completeChapter = createServerFn({ method: "POST" })
 
     return { ok: true };
   });
+// Day-one win: the learner's first email reply closes Chapter 1 for their
+// active project run. Idempotent; scoped to the caller's own instance.
+export const completeFirstChapter = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("current_project_instance_id")
+      .eq("id", userId)
+      .maybeSingle();
+    const instanceId = (profile as any)?.current_project_instance_id;
+    if (!instanceId) return { ok: false };
+    const { data: inst } = await supabase
+      .from("project_instances")
+      .select("template_id")
+      .eq("id", instanceId)
+      .maybeSingle();
+    const templateId = (inst as any)?.template_id;
+    if (!templateId) return { ok: false };
+    const { data: ch } = await (supabase as any)
+      .from("project_chapters")
+      .select("id,title")
+      .eq("template_id", templateId)
+      .eq("chapter_number", 1)
+      .maybeSingle();
+    if (!ch?.id) return { ok: false };
+    await (supabase as any).from("chapter_progress").upsert(
+      {
+        user_id: userId,
+        project_instance_id: instanceId,
+        chapter_id: ch.id,
+        status: "complete",
+        completed_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id,project_instance_id,chapter_id" },
+    );
+    return { ok: true, title: ch.title as string };
+  });
