@@ -274,7 +274,7 @@ function Hero() {
           </div>
           <div>
             <h1 className="mt-7 font-display text-[clamp(2.4rem,5.6vw,4.75rem)] font-bold leading-[1.04] tracking-[-0.025em] text-foreground">
-              You need <span className="text-accent-orange">experience</span> to get the opportunity.
+              You need <span className="text-accent-orange">experience</span> to get the opportunity.{" "}
               <span className="mt-3 block text-foreground/70">
                 But you need the <span className="text-accent-orange">opportunity</span> to get experience.
               </span>
@@ -299,13 +299,23 @@ function Hero() {
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
               <a
-                href="#how"
+                href="#experience"
+                onClick={(e) => {
+                  const el = document.getElementById("experience");
+                  if (!el) return;
+                  e.preventDefault();
+                  el.scrollIntoView({ behavior: "smooth", block: "start" });
+                  history.replaceState(null, "", "#experience");
+                }}
                 className="group inline-flex items-center gap-2 rounded-full px-5 py-3.5 text-sm font-medium text-foreground underline-offset-4 transition-colors hover:underline"
               >
                 <PlayCircle className="h-4 w-4 text-accent-orange" />
                 See Atlas in action
               </a>
             </div>
+            <p className="mt-4 text-sm font-medium text-foreground/80">
+              Atlas is currently free for the first 100 learners.
+            </p>
           </div>
           <div>
             <p className="mt-7 flex items-center gap-2 text-xs leading-relaxed text-muted-foreground/90 sm:text-[13px]">
@@ -1428,7 +1438,7 @@ function Faq() {
     },
     {
       q: "How long does the simulation run?",
-      a: "Each cohort runs across 6 in-game weeks of project time, paced to fit around real life.",
+      a: "The Digital Care Records project covers a six-month simulated timeline. You progress through the project across six in-game weeks, paced to fit around real life.",
     },
     {
       q: "Will I have a portfolio at the end?",
@@ -1528,20 +1538,23 @@ function SiteFooter() {
         <div>
           <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Connect</p>
           <ul className="mt-4 flex items-center gap-3">
-            {[
-              { icon: Twitter, href: "#" },
-              { icon: Linkedin, href: "#" },
-              { icon: Github, href: "#" },
-            ].map(({ icon: Icon, href }, i) => (
-              <li key={i}>
-                <a
-                  href={href}
-                  className="grid h-9 w-9 place-items-center rounded-full border border-border bg-background/60 text-muted-foreground transition hover:-translate-y-0.5 hover:text-foreground"
-                >
-                  <Icon className="h-4 w-4" />
-                </a>
-              </li>
-            ))}
+            <li>
+              <a
+                href="https://www.linkedin.com/company/atlas-sim"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Atlas on LinkedIn"
+                className="grid h-9 w-9 place-items-center rounded-full border border-border bg-background/60 text-muted-foreground transition hover:-translate-y-0.5 hover:text-foreground"
+              >
+                <Linkedin className="h-4 w-4" />
+              </a>
+            </li>
+          </ul>
+          <ul className="mt-5 space-y-2 text-sm">
+            <li><Link to="/privacy" className="text-foreground/80 transition hover:text-foreground">Privacy Policy</Link></li>
+            <li><Link to="/terms" className="text-foreground/80 transition hover:text-foreground">Terms of Use</Link></li>
+            <li><Link to="/cookies" className="text-foreground/80 transition hover:text-foreground">Cookie Policy</Link></li>
+            <li><Link to="/contact" className="text-foreground/80 transition hover:text-foreground">Contact</Link></li>
           </ul>
         </div>
       </div>
@@ -1550,6 +1563,9 @@ function SiteFooter() {
           <p>© {new Date().getFullYear()} Atlassim Technologies Limited. The companies and projects are fictional; the work is real practice.</p>
           <p>Made with care for professionals who learn by doing.</p>
         </div>
+        <p className="mx-auto max-w-7xl px-6 pb-6 text-xs leading-relaxed text-muted-foreground/80 lg:px-10">
+          Atlassim Technologies Ltd. Registered in England and Wales. Company No. 17378309. Registered office: 12 Beacon Place, Bletchley, Milton Keynes, MK2 2AG, United Kingdom.
+        </p>
       </div>
     </footer>
   );
