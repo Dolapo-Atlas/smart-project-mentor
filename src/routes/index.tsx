@@ -16,9 +16,7 @@ import {
   ChevronRight,
   Check,
   X,
-  Twitter,
   Linkedin,
-  Github,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
@@ -562,7 +560,7 @@ function Experience() {
   }, [api]);
 
   return (
-    <section id="experience" className="py-28 sm:py-36">
+    <section id="experience" className="scroll-mt-16 py-28 sm:py-36">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
         <SectionHeader
           eyebrow="Experience"
