@@ -4,4 +4,4 @@
 - [ ] Confirm transactional email send route is locked down and clear the `email_relay_abuse` security finding
 - [x] Learner unstick pack: fix first_task_completed + progress_pct tracking, "Next: draft charter" card, pack back-to-inbox, first-section win, PM follow-up nudge, clock hint
 - [x] Correct legal pages to match verified Atlas behaviour and verify public pages
-- [ ] Request publishing of the corrected legal pages
+- [x] Request publishing of the corrected legal pages (scheduled; deployment completion not yet verified)
