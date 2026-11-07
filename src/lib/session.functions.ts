@@ -72,6 +72,7 @@ export const recordSession = createServerFn({ method: "POST" })
         if (email) {
           const { sendLovableEmail } = await import("@lovable.dev/email-js");
           const apiKey = process.env.LOVABLE_API_KEY;
+          if (!apiKey) throw new Error("LOVABLE_API_KEY is not configured");
           const templateData = {
             name: display,
             email,
