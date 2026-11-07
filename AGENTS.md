@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
 
 - Public landing content above the fold must render visibly in server HTML without waiting for client hydration, so slow mobile connections never show a broken or empty first screen.
+- Session alerts use the dedicated account-activity email template, separate from early-access requests and authorization roles, so sign-ins are not misclassified as beta registrations.

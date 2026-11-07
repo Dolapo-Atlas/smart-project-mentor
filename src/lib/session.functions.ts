@@ -75,12 +75,11 @@ export const recordSession = createServerFn({ method: "POST" })
           const templateData = {
             name: display,
             email,
-            desired_role: "Beta Tester",
             country: country ?? "—",
-            experience_level: "—",
-            submitted_at: now,
+            occurred_at: now,
+            activity: isFirstLogin ? "signup" : "login",
           };
-          const tpl = TEMPLATES["early-access-signup"];
+          const tpl = TEMPLATES["account-activity"];
           const element = React.createElement(tpl.component, templateData);
           const html = await render(element);
           const text = await render(element, { plainText: true });
@@ -105,7 +104,7 @@ export const recordSession = createServerFn({ method: "POST" })
                     ? `new-user-${userId}-${recipient}`
                     : `login-${userId}-${slot}-${recipient}`,
                 },
-                { apiKey: apiKey!, sendUrl: process.env.LOVABLE_SEND_URL },
+                { apiKey, sendUrl: process.env.LOVABLE_SEND_URL },
               );
               const { error: logError } = await supabaseAdmin
                 .from("email_send_log")
